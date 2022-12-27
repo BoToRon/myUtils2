@@ -671,7 +671,7 @@ export const npmRun = async (npmCommand) => {
         transpileFiles(promptVersioning);
     }
     async function prompCommitMessage(versionIncrement) {
-        colorLog('warning', '50-character limits ends at that line: * * * * * |');
+        delay(500).then(() => { colorLog('warning', '50-character limits ends at that line: * * * * * |'); console.log(); });
         const commitMessage = await questionAsPromise(`Enter commit type ${commitTypes} plus a message:`);
         function tryAgain(error) { colorLog('warning', error); prompCommitMessage(versionIncrement); return; }
         if (!zodCheck_sample(tryAgain, get_zValidCommitMessage(), commitMessage)) {
@@ -724,7 +724,7 @@ export const npmRun = async (npmCommand) => {
         function gitAddCommitPush() {
             execSync('git add .');
             successLog('git add . ✔️');
-            colorLog('info', 'Copypaste the commit message in the git commit editor, then save and close it:');
+            colorLog('info', 'Copypaste the commit message in the git commit editor, then save and CLOSE it:');
             colorLog('secondary', commitMessage);
             console.log('');
             execSync("git commit");
