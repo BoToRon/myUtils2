@@ -576,7 +576,7 @@ export const getMainDependencies = async (
 		async function getLatestVersion() {
 			type pck = { objects: [{ package: { version: string } }] }
 			const response: pck = (await new Promise((resolve) => {
-				try { fetch(`http://registry.npmjs.com/-/v1/search?text=isOdd&size=1`).then(res => res.json().then(x => resolve(x))) }
+				try { fetch(`http://registry.npmjs.com/-/v1/search?text=@botoron/utils&size=1`).then(res => res.json().then(x => resolve(x))) }
 				catch { return { objects: [{ package: { version: '0' } }] } }
 			}))
 			return response.objects[0].package.version
