@@ -1,16 +1,22 @@
 const _ = 'prevent imports and comments from collapsing'
-
-
 _
 import fs from 'fs'
 _
-import Eris from 'eris'
+import eris from 'eris'
+_
+import path from 'path'
 _
 import http from 'http'
 _
+import chalk from 'chalk'
+_
 import express from 'express'
 _
+import fetch from 'node-fetch'
+_
 import getReadLine from 'readline'
+_
+import { exec, execSync } from 'child_process'
 _
 import mongodb, { MongoClient } from 'mongodb'
 _
@@ -44,9 +50,8 @@ type validVariant = z.infer<typeof zValidVariants>
 type pipe_persistent_type<T> = (arg: T) => T
 
 export {
-	//chalk and node-fetch are imported dynamically by the one auto-delete-for-the-client function that uses each, so that vite doesn't detect them
-	_, bvToast, Eris, express, fromZodError, fs, getReadLine, http, mongodb, MongoClient, newToastFn, packageJson,
-	pipe_mutable_type, pipe_persistent_type, SafeParseReturnType, trackedVueComponent, validChalkColor,
-	validNpmCommand, validVariant, z, zSchema, zValidNpmCommand, zValidVariants, zValidVersionIncrement
+	_, bvToast, chalk, eris, exec, execSync, express, fetch, fromZodError, fs, getReadLine, http, mongodb, MongoClient,
+	newToastFn, packageJson, path, pipe_mutable_type, pipe_persistent_type, SafeParseReturnType, trackedVueComponent,
+	validChalkColor, validNpmCommand, validVariant, z, zSchema, zValidNpmCommand, zValidVariants, zValidVersionIncrement
 }
 

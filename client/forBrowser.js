@@ -1,5 +1,5 @@
 //TODO: create a way to make sure every project has the same package.json scripts and also create a way to automatize their compilation
-import { Eris, _, fromZodError, fs, getReadLine, mongodb, z, zValidNpmCommand, zValidVariants, zValidVersionIncrement } from './deps.js';
+import { _, chalk, eris, exec, execSync, express, fetch, fromZodError, fs, getReadLine, http, mongodb, path, z, zValidNpmCommand, zValidVariants, zValidVersionIncrement } from './deps.js';
 export const BTR = {
     /**Tr-Catch wrapper for functions. Starts as a placeholder, initialize it with typeF_get */
     tryF: (fn, args) => {
@@ -258,7 +258,7 @@ const mapArgsOfFnAgainstFn = (fn, ...argsArr) => {
 /**function to generate newToast_client with a predertemined $bvToast so it doesnt have to be passed everytime :D */
 export const newToast_client_get = ($bvToast) => {
     const newToast = (title, message, variant) => {
-        const colorLog_red = (message) => function () { colorLog('danger', message, true); };
+        const colorLog_red = (message) => function () { colorLog('danger', message); };
         zodCheck_sample(colorLog_red, zValidVariants, variant);
         $bvToast.toast(message, {
             toaster: 'b-toaster-bottom-right',
@@ -312,7 +312,7 @@ export const retryF = async (fn, args, retriesLeft, defaultReturn, delayBetweenR
     }
     catch (error) {
         const message = `retryF > ${fn.name} > ${retriesLeft} retriesLeft. {${error}}`;
-        colorLog('warning', `${message}`, false);
+        colorLog('warning', `${message}`);
         if (!retriesLeft) {
             return { data: defaultReturn, was: 'failure' };
         }
@@ -327,20 +327,20 @@ export const trackVueComponent = (name, componentConstructor) => {
         return;
     }
     zodCheck_sample(alert, BTR.zValidVueComponentName, name);
-    const logAllComponents = () => colorLog('dark', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`, true);
-    colorLog('primary', `Component '${name}' registered to Vue`, true);
+    const logAllComponents = () => colorLog('dark', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`);
+    colorLog('primary', `Component '${name}' registered to Vue`);
     if (!window.vueComponents) {
         window.vueComponents = [];
     }
     componentConstructor._name = name;
     componentConstructor.beforeCreate = () => {
         window.vueComponents.push(componentConstructor);
-        colorLog('success', `Component '${name}' created and added to window.vueComponents`, true);
+        colorLog('success', `Component '${name}' created and added to window.vueComponents`);
         logAllComponents();
     };
     componentConstructor.beforeDestroy = () => {
         selfFilter(window.vueComponents, (x) => x !== componentConstructor);
-        colorLog('danger', `Component '${name}' destroyed and removed from window.vueComponents`, true);
+        colorLog('danger', `Component '${name}' destroyed and removed from window.vueComponents`);
         logAllComponents();
     };
     return componentConstructor;

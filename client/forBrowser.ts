@@ -1,10 +1,9 @@
 //TODO: create a way to make sure every project has the same package.json scripts and also create a way to automatize their compilation
 
 import {
-	Eris,
-	_, bvToast, fromZodError, fs, getReadLine, mongodb, MongoClient, newToastFn, packageJson, pipe_mutable_type,
-	pipe_persistent_type, SafeParseReturnType, trackedVueComponent, validChalkColor, validNpmCommand,
-	validVariant, z, zSchema, zValidNpmCommand, zValidVariants, zValidVersionIncrement
+	_, bvToast, chalk, eris, exec, execSync, express, fetch, fromZodError, fs, getReadLine, http, mongodb, MongoClient,
+	newToastFn, packageJson, path, pipe_mutable_type, pipe_persistent_type, SafeParseReturnType, trackedVueComponent,
+	validChalkColor, validNpmCommand, validVariant, z, zSchema, zValidNpmCommand, zValidVariants, zValidVersionIncrement
 } from './deps.js'
 
 export const BTR = {
@@ -223,7 +222,7 @@ const mapArgsOfFnAgainstFn = <F extends (...args: any) => any>(fn: F, ...argsArr
 /**function to generate newToast_client with a predertemined $bvToast so it doesnt have to be passed everytime :D */
 export const newToast_client_get: (bvToast: bvToast) => newToastFn = ($bvToast: bvToast) => {
 	const newToast: newToastFn = (title: string, message: string, variant: validVariant) => {
-		const colorLog_red = (message: string) => function () { colorLog('danger', message, true) }
+		const colorLog_red = (message: string) => function () { colorLog('danger', message) }
 		zodCheck_sample(colorLog_red, zValidVariants, variant)
 
 		$bvToast.toast(message, {
@@ -282,7 +281,7 @@ export const retryF = async <F extends (...args: any) => any>(
 	}
 	catch (error) {
 		const message = `retryF > ${fn.name} > ${retriesLeft} retriesLeft. {${error}}`
-		colorLog('warning', `${message}`, false)
+		colorLog('warning', `${message}`)
 
 		if (!retriesLeft) { return { data: defaultReturn, was: 'failure' } }
 		await delay(delayBetweenRetries)
@@ -295,20 +294,20 @@ export const trackVueComponent = (name: string, componentConstructor: trackedVue
 	if (!BTR.zValidVueComponentName) { alert(`Error tracking Vue component, BTR.zValidVueComponentName hasn't been set yet`); return }
 	zodCheck_sample(alert, BTR.zValidVueComponentName, name)
 
-	const logAllComponents = () => colorLog('dark', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`, true)
-	colorLog('primary', `Component '${name}' registered to Vue`, true)
+	const logAllComponents = () => colorLog('dark', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`)
+	colorLog('primary', `Component '${name}' registered to Vue`)
 	if (!window.vueComponents) { window.vueComponents = [] }
 	componentConstructor._name = name as string
 
 	componentConstructor.beforeCreate = () => {
 		window.vueComponents.push(componentConstructor)
-		colorLog('success', `Component '${name}' created and added to window.vueComponents`, true)
+		colorLog('success', `Component '${name}' created and added to window.vueComponents`)
 		logAllComponents()
 	}
 
 	componentConstructor.beforeDestroy = () => {
 		selfFilter(window.vueComponents, (x) => x !== componentConstructor)
-		colorLog('danger', `Component '${name}' destroyed and removed from window.vueComponents`, true)
+		colorLog('danger', `Component '${name}' destroyed and removed from window.vueComponents`)
 		logAllComponents()
 	}
 

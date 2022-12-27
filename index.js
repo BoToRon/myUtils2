@@ -1,5 +1,5 @@
 //TODO: create a way to make sure every project has the same package.json scripts and also create a way to automatize their compilation
-import { Eris, _, fromZodError, fs, getReadLine, mongodb, z, zValidNpmCommand, zValidVariants, zValidVersionIncrement } from './deps.js';
+import { _, chalk, eris, exec, execSync, express, fetch, fromZodError, fs, getReadLine, http, mongodb, path, z, zValidNpmCommand, zValidVariants, zValidVersionIncrement } from './deps.js';
 export const BTR = {
     /**Tr-Catch wrapper for functions. Starts as a placeholder, initialize it with typeF_get */
     tryF: (fn, args) => {
@@ -258,7 +258,7 @@ const mapArgsOfFnAgainstFn = (fn, ...argsArr) => {
 /**function to generate newToast_client with a predertemined $bvToast so it doesnt have to be passed everytime :D */
 export const newToast_client_get = ($bvToast) => {
     const newToast = (title, message, variant) => {
-        const colorLog_red = (message) => function () { colorLog('danger', message, true); };
+        const colorLog_red = (message) => function () { colorLog('danger', message); };
         zodCheck_sample(colorLog_red, zValidVariants, variant);
         $bvToast.toast(message, {
             toaster: 'b-toaster-bottom-right',
@@ -312,7 +312,7 @@ export const retryF = async (fn, args, retriesLeft, defaultReturn, delayBetweenR
     }
     catch (error) {
         const message = `retryF > ${fn.name} > ${retriesLeft} retriesLeft. {${error}}`;
-        colorLog('warning', `${message}`, false);
+        colorLog('warning', `${message}`);
         if (!retriesLeft) {
             return { data: defaultReturn, was: 'failure' };
         }
@@ -327,20 +327,20 @@ export const trackVueComponent = (name, componentConstructor) => {
         return;
     }
     zodCheck_sample(alert, BTR.zValidVueComponentName, name);
-    const logAllComponents = () => colorLog('dark', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`, true);
-    colorLog('primary', `Component '${name}' registered to Vue`, true);
+    const logAllComponents = () => colorLog('dark', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`);
+    colorLog('primary', `Component '${name}' registered to Vue`);
     if (!window.vueComponents) {
         window.vueComponents = [];
     }
     componentConstructor._name = name;
     componentConstructor.beforeCreate = () => {
         window.vueComponents.push(componentConstructor);
-        colorLog('success', `Component '${name}' created and added to window.vueComponents`, true);
+        colorLog('success', `Component '${name}' created and added to window.vueComponents`);
         logAllComponents();
     };
     componentConstructor.beforeDestroy = () => {
         selfFilter(window.vueComponents, (x) => x !== componentConstructor);
-        colorLog('danger', `Component '${name}' destroyed and removed from window.vueComponents`, true);
+        colorLog('danger', `Component '${name}' destroyed and removed from window.vueComponents`);
         logAllComponents();
     };
     return componentConstructor;
@@ -434,7 +434,7 @@ _;
 /**FOR NODE-DEBUGGING ONLY. Log a message surrounded by a lot of asterisks for visibility, all in RED */
 export const colorLog_big = (variant, message) => {
     clientOrServer_screener('server', () => {
-        const log = (message) => colorLog(variant, message, true);
+        const log = (message) => colorLog(variant, message);
         const logAsterisks = (lines) => { for (let i = 0; i < lines; i++) {
             log('*'.repeat(150));
         } };
@@ -444,7 +444,7 @@ export const colorLog_big = (variant, message) => {
     });
 };
 /**console.log WITH COLORS :D */
-export const colorLog = async (variant, message, bold) => {
+export const colorLog = async (variant, message) => {
     const colors = {
         primary: 'blue',
         secondary: 'grey',
@@ -456,9 +456,8 @@ export const colorLog = async (variant, message, bold) => {
         dark: 'magenta',
         "outline-dark": 'magentaBright'
     };
-    const chalk = (await import('chalk')).default;
     const fn = chalk[colors[variant]];
-    console.log(bold ? fn.bold(message) : fn(message));
+    fn.bold(message);
 };
 /**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
 export const downloadFile_node = async (filename, fileFormat, data, killProcessAfterwards) => {
@@ -466,9 +465,9 @@ export const downloadFile_node = async (filename, fileFormat, data, killProcessA
         const formatted = stringify(data);
         const dateForFilename = timeStampToDate(Date.now(), true).replace(/\/| |\:/g, '_');
         const completeFilename = filename + '_' + dateForFilename + fileFormat;
-        colorLog('info', `Downloading ${completeFilename}..`, false);
+        colorLog('info', `Downloading ${completeFilename}..`);
         await fs.promises.writeFile(completeFilename, formatted);
-        colorLog('success', 'Done!', false);
+        colorLog('success', 'Done!');
         if (!killProcessAfterwards) {
             return;
         }
@@ -480,7 +479,6 @@ export const downloadFile_node = async (filename, fileFormat, data, killProcessA
 };
 /**fetch the latest package.json of my-utils */
 export const getLatestPackageJsonFromGithub = async () => {
-    const fetch = (await import('node-fetch')).default;
     const response = await new Promise((resolve) => {
         fetch('https://api.github.com/repos/botoron/utils/contents/package.json', { method: 'GET' }).then((res) => res.json().then((packageJson) => resolve(packageJson)));
     });
@@ -500,7 +498,6 @@ export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, 
     const { divineBot } = await getDivineBotAndError();
     const mongoClient = await getMongoClient();
     const io = startServerAndGetIO();
-    const z = await import('zod');
     myUtils_checkIfUpToDate(divineError);
     const tryF = tryF_get(divineError);
     showPackageJsonScripts_project();
@@ -510,7 +507,7 @@ export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, 
         const x = (typeof arg === 'string' ? arg : arg.stack);
         const error = `${x}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '');
         if (pingMeOnErrors) {
-            colorLog('danger', error, true);
+            colorLog('danger', error);
             return;
         }
         const theMessage = `<@470322452040515584> - (${appName}) \n ${error}`;
@@ -518,15 +515,15 @@ export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, 
         divineBot.createMessage('1055939528776495206', divineOptions);
     }
     async function getDivineBotAndError() {
-        const divineBot = Eris(erisToken);
+        const bot = eris(erisToken);
         connectToDiscord();
-        await until(divineBot.ready);
-        return { divineBot, divineError };
+        await until(bot.ready);
+        return { divineBot: bot, divineError };
         function connectToDiscord() {
             const divinePrepend = '***DivineBot:***';
-            divineBot.on('messageReactionAdd', (a, b, c) => role('add', a, b, c));
-            divineBot.on('messageReactionRemove', (a, b, c) => role('remove', a, b, c));
-            divineBot.on('disconnect', () => { colorLog('danger', `${divinePrepend}: Disconnected D: ... retrying!`, false); connectToDiscord(); });
+            bot.on('messageReactionAdd', (a, b, c) => role('add', a, b, c));
+            bot.on('messageReactionRemove', (a, b, c) => role('remove', a, b, c));
+            bot.on('disconnect', () => { colorLog('danger', `${divinePrepend}: Disconnected D: ... retrying!`); connectToDiscord(); });
             const idOfRoleAssigningMessage = '822523162724925473';
             connectToDiscord();
             function role(action, message, emoji, reactor) {
@@ -552,10 +549,10 @@ export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, 
             }
             async function connectToDiscord() {
                 try {
-                    divineBot.connect().then(() => colorLog('success', `${divinePrepend} Connected successfully^^`, false));
+                    bot.connect().then(() => colorLog('success', `${divinePrepend} Connected successfully^^`));
                 }
                 catch {
-                    colorLog('warning', `${divinePrepend} Failed to connect.. retrying >:D`, false);
+                    colorLog('warning', `${divinePrepend} Failed to connect.. retrying >:D`);
                     await delay(1000 * 10);
                     connectToDiscord();
                 }
@@ -580,7 +577,7 @@ export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, 
         const latestVersion = await getLatestVersion();
         const installedVersion = (await import('./package.json', { assert: { type: "json" } })).default.version;
         if (installedVersion === latestVersion) {
-            colorLog('info', '@botoron/my-utils is up to date 👍', false);
+            colorLog('info', '@botoron/my-utils is up to date 👍');
             return;
         }
         const failureMessage = getFailureMessage();
@@ -595,7 +592,8 @@ export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, 
         async function getLatestVersion() {
             const response = (await new Promise((resolve) => {
                 try {
-                    fetch(`http://registry.npmjs.com/-/v1/search?text=@botoron/utils&size=1`).then(res => res.json().then(x => resolve(x)));
+                    fetch(`http://registry.npmjs.com/-/v1/search?text=@botoron/utils&size=1`).
+                        then(res => res.json().then((x) => resolve(x)));
                 }
                 catch {
                     return { objects: [{ package: { version: '0' } }] };
@@ -614,9 +612,6 @@ export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, 
         console.table(data);
     }
     async function startServerAndGetIO() {
-        const express = (await import('express')).default;
-        const http = await import('http');
-        const path = await import('path');
         const app = express();
         const server = http.createServer(app);
         app.use(express.static(path.resolve() + '/public'));
@@ -651,12 +646,11 @@ export const killProcess = (variant, message) => {
 };
 /**Easily run the scripts of this package.json */
 export const npmRun = async (npmCommand) => {
-    const killCommandLine = () => killProcess('dark', 'Process over');
-    const successLog = (message) => colorLog('success', message, false);
     const questionAsPromise = (question) => new Promise(resolve => readline.question(question + '\n', resolve));
+    const killCommandLine = () => delay(3000).then(() => killProcess('dark', 'Process over'));
+    const successLog = (message) => colorLog('success', message);
     const readline = getReadLine.createInterface({ input: process.stdin, output: process.stdout });
     const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test)';
-    const { exec, execSync } = await import('child_process');
     if (npmCommand === 'gitPush') {
         prompCommitMessage(null);
     }
@@ -667,8 +661,9 @@ export const npmRun = async (npmCommand) => {
         transpileFiles(promptVersioning);
     }
     async function prompCommitMessage(versionIncrement) {
+        colorLog('warning', '50-character limits ends at that line: * * * * * |');
         const commitMessage = await questionAsPromise(`Enter commit type ${commitTypes} plus a message:`);
-        function tryAgain(error) { colorLog('warning', error, false); prompCommitMessage(versionIncrement); return; }
+        function tryAgain(error) { colorLog('warning', error); prompCommitMessage(versionIncrement); return; }
         if (!zodCheck_sample(tryAgain, get_zValidCommitMessage(), commitMessage)) {
             return;
         }
@@ -696,7 +691,7 @@ export const npmRun = async (npmCommand) => {
             const newChangelog = lines.join('\n');
             console.log({ newChangelog });
             await fs.promises.writeFile('./changelog.MD', newChangelog);
-            colorLog('info', 'commit added to the changelog for a yet-to-be-released version', false);
+            colorLog('info', 'commit added to the changelog for a yet-to-be-released version');
         }
         async function addLineAsNewVersion(versionIncrement) {
             const changelog = await fs.promises.readFile('./changelog.MD', 'utf8');
@@ -719,8 +714,8 @@ export const npmRun = async (npmCommand) => {
         function gitAddCommitPush() {
             execSync('git add .');
             successLog('git add . ✔️');
-            colorLog('info', 'Copypaste the commit message in the git commit editor, then save and close it:', false);
-            colorLog('secondary', commitMessage, true);
+            colorLog('info', 'Copypaste the commit message in the git commit editor, then save and close it:');
+            colorLog('secondary', commitMessage);
             console.log('');
             execSync("git commit");
             successLog('git commit ✔️');
@@ -729,13 +724,12 @@ export const npmRun = async (npmCommand) => {
         }
         async function upVersion_publish_updateChangelog_andKillCommandLine() {
             execSync(`npm version ${versionIncrement}`);
+            await delay(3000);
             execSync('npm publish');
             successLog('package.json up-version\'d and published to npm');
             await replaceTagsInChangelogWithNewVersion();
-            await delay(5000);
+            await delay(1000 * 10);
             killCommandLine();
-            //TODO: the version in the published package will still be behind 
-            //TODO: (because changelog only updated version after it gets upversion'd and published)
             async function replaceTagsInChangelogWithNewVersion() {
                 const updatedPackageJson = await import('./package.json', { assert: { type: "json" } });
                 const newVersion = updatedPackageJson.default.version;
@@ -749,7 +743,7 @@ export const npmRun = async (npmCommand) => {
     }
     async function promptVersioning() {
         const versionIncrement = await questionAsPromise('Type of package version increment (major, minor, patch)?');
-        function tryAgain(error) { colorLog('warning', error, false); promptVersioning(); }
+        function tryAgain(error) { colorLog('warning', error); promptVersioning(); }
         if (!zodCheck_sample(tryAgain, zValidVersionIncrement, versionIncrement)) {
             return;
         }

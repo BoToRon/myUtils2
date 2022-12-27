@@ -130,7 +130,7 @@ export declare const zPipe: <T>(zSchema: zSchema<T>, initialValue: T, ...fns: pi
 /**FOR NODE-DEBUGGING ONLY. Log a message surrounded by a lot of asterisks for visibility, all in RED */
 export declare const colorLog_big: (variant: z.infer<any>, message: string) => void;
 /**console.log WITH COLORS :D */
-export declare const colorLog: (variant: z.infer<any>, message: string, bold: boolean) => Promise<void>;
+export declare const colorLog: (variant: z.infer<any>, message: string) => Promise<void>;
 /**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
 export declare const downloadFile_node: (filename: string, fileFormat: '.txt' | '.json', data: unknown, killProcessAfterwards: boolean) => Promise<void>;
 /**fetch the latest package.json of my-utils */
