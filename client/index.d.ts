@@ -1,4 +1,40 @@
-import { bvToast, newToastFn, pipe_mutable_type, pipe_persistent_type, trackedVueComponent, zSchema } from './deps.js';
+import type { SafeParseReturnType } from 'zod';
+import { z } from 'zod';
+declare const zValidVariants: any;
+type toastOptions = {
+    toaster: string;
+    autoHideDelay: number;
+    solid: boolean;
+    variant: validVariant;
+    title: string;
+};
+type trackedVueComponent = {
+    _name: string;
+    beforeCreate?: () => void;
+    beforeDestroy?: () => void;
+};
+declare global {
+    interface Window {
+        vueComponents: trackedVueComponent[];
+        newToast: newToastFn;
+    }
+}
+type newToastFn = (title: string, message: string, variant: validVariant) => void;
+type bvToast = {
+    toast: (message: string, toastOptions: toastOptions) => void;
+};
+type zSchema<T> = {
+    safeParse: (x: T) => SafeParseReturnType<T, T>;
+};
+type validVariant = z.infer<typeof zValidVariants>;
+type pipe_persistent_type<T> = (arg: T) => T;
+type pipe_mutable_type = {
+    <T, A>(source: T, a: (value: T) => A): A;
+    <T, A, B>(source: T, a: (value: T) => A, b: (value: A) => B): B;
+    <T, A, B, C>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C): C;
+    <T, A, B, C, D>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D): D;
+    <T, A, B, C, D, E>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D, e: (value: D) => E): E;
+};
 export declare const BTR: {
     /**Tr-Catch wrapper for functions. Starts as a placeholder, initialize it with typeF_get */
     tryF: <T extends (...args: any) => any>(fn: T, args: Parameters<T>) => any;
@@ -129,3 +165,4 @@ export declare const zPipe: <T>(zSchema: zSchema<T>, initialValue: T, ...fns: pi
     error: string;
     failedAt: string;
 };
+export {};

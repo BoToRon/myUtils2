@@ -1,6 +1,23 @@
 //TODO: create a way to make sure every project has the same package.json scripts and also create a way to automatize their compilation
-import { fromZodError, zValidVariants, } from './deps.js';
+const _ = 'prevent imports and comments from collapsing';
+_;
+_;
+_;
+_;
+_;
+_;
+_;
+_;
+_;
+_;
+_;
+import { fromZodError } from 'zod-validation-error';
+_;
+_;
+import { z } from 'zod';
+const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark']);
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
+const zValidNpmCommand = z.enum(['gitPush', 'publish', 'transpile']);
 export const BTR = {
     /**Tr-Catch wrapper for functions. Starts as a placeholder, initialize it with typeF_get */
     tryF: (fn, args) => {

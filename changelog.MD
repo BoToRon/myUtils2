@@ -1,3 +1,4 @@
+##########test: making all packages normal dependencies
 ##########fix: vite breaking, hopefully v2.0
 ##########fix: removed all things that break vite hopefully
 ##########fix: the path to "deps" now adjust for clients

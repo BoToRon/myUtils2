@@ -1,8 +1,34 @@
 //TODO: create a way to make sure every project has the same package.json scripts and also create a way to automatize their compilation
-import { chalk, eris, exec, execSync, express, fetch, fs, getReadLine, http, mongodb, //DELETETHISFORCLIENT
-path, z, zValidNpmCommand, zValidVersionIncrement, //DELETETHISFORCLIENT
-_, fromZodError, zValidVariants, } from './deps.js';
+const _ = 'prevent imports and comments from collapsing';
+_;
+import fs from 'fs'; //DELETETHISFORCLIENT
+_;
+import eris from 'eris'; //DELETETHISFORCLIENT
+_;
+import path from 'path'; //DELETETHISFORCLIENT
+_;
+import http from 'http'; //DELETETHISFORCLIENT
+_;
+import chalk from 'chalk'; //DELETETHISFORCLIENT
+_;
+import express from 'express'; //DELETETHISFORCLIENT
+_;
+import fetch from 'node-fetch'; //DELETETHISFORCLIENT
+_;
+import getReadLine from 'readline'; //DELETETHISFORCLIENT
+_;
+import { exec, execSync } from 'child_process'; //DELETETHISFORCLIENT
+_;
+import mongodb from 'mongodb'; //DELETETHISFORCLIENT
+_;
+import { fromZodError } from 'zod-validation-error';
+_;
+_;
+import { z } from 'zod';
+const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark']);
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
+const zValidNpmCommand = z.enum(['gitPush', 'publish', 'transpile']);
+const zValidVersionIncrement = z.enum(['major', 'minor', 'patch']); //DELETETHISFORCLIENT
 export const BTR = {
     /**Tr-Catch wrapper for functions. Starts as a placeholder, initialize it with typeF_get */
     tryF: (fn, args) => {
@@ -742,27 +768,21 @@ export const npmRun = async (npmCommand) => {
         prompCommitMessage(versionIncrement);
     }
     function transpileFiles(followUp) {
-        exec('tsc --declaration --target esnext  index.ts deps.ts', async () => {
-            successLog('files transpiled ✔️');
-            await createdTrimmedVersionForBrowser('index.ts');
-            await createdTrimmedVersionForBrowser('deps.ts');
-            exec('tsc --declaration --target esnext  client/index.ts client/deps.ts', async () => {
+        const filename = 'index.ts';
+        exec('tsc --declaration --target esnext ' + filename, async () => {
+            successLog(filename + ' transpiled ✔️');
+            const indexTs = await fs.promises.readFile(filename, 'utf8');
+            const lines = indexTs.replaceAll('colorLog_big', 'colorLog').split('\n');
+            selfFilter(lines, (line) => !/DELETETHISFORCLIENT/.test(line));
+            const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x));
+            lines.splice(cutPoint, lines.length);
+            lines.push('const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)');
+            await fs.promises.writeFile(`./client/${filename}`, lines.join('\n'));
+            exec('tsc --declaration --target esnext client/index.ts ', async () => {
                 successLog('browser versions emitted ✔️');
                 await delay(500);
                 followUp();
             });
-            async function createdTrimmedVersionForBrowser(filename) {
-                const indexTs = await fs.promises.readFile(filename, 'utf8');
-                const lines = indexTs.replaceAll('colorLog_big', 'colorLog').split('\n');
-                selfFilter(lines, (line) => !/DELETETHISFORCLIENT/.test(line));
-                if (/index/.test(filename)) {
-                    const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x));
-                    lines.splice(cutPoint, lines.length);
-                    const parameters = filename.includes('ts') ? 'color: string, message: string' : 'color, message';
-                    lines.push('const colorLog = (' + parameters + ') => console.log(`%c${message}`, `color: ${color};`)');
-                }
-                await fs.promises.writeFile(`./client/${filename}`, lines.join('\n'));
-            }
         });
     }
 };
