@@ -769,7 +769,7 @@ export const npmRun = async (npmCommand) => {
             followUp();
             async function createdTrimmedVersionForBrowser(extension) {
                 const indexTs = await fs.promises.readFile(`./index${extension}`, 'utf8');
-                const lines = indexTs.replace('/\/ * UNCOMMENTTHISFORTHECLIENT ', '').replace("'./deps'", "'../deps'").split('\n');
+                const lines = indexTs.replace('/\/ * UNCOMMENTTHISFORTHECLIENT ', '').replace("'./deps", "'../deps").split('\n');
                 const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x));
                 if (cutPoint === -1) {
                     colorLog_big('danger', 'CUT POINT FOR REATING THE CLIENT-SIDE VERSION NOT FOUND');

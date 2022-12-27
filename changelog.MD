@@ -1,3 +1,4 @@
+##########fix: io was being returned as a promise
 ##########feat: indicator for the 50-char limit for commits
 ##########feat: .env vars get validited in getDeps
 ##########fix: change colorLog from async to sync

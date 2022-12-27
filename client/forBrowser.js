@@ -1,5 +1,5 @@
 //TODO: create a way to make sure every project has the same package.json scripts and also create a way to automatize their compilation
-import { _, chalk, eris, exec, execSync, express, fetch, fromZodError, fs, getReadLine, http, mongodb, path, z, zValidNpmCommand, zValidVariants, zValidVersionIncrement } from './deps.js';
+import { _, chalk, eris, exec, execSync, express, fetch, fromZodError, fs, getReadLine, http, mongodb, path, z, zValidNpmCommand, zValidVariants, zValidVersionIncrement } from '../deps.js';
 export const BTR = {
     /**Tr-Catch wrapper for functions. Starts as a placeholder, initialize it with typeF_get */
     tryF: (fn, args) => {
