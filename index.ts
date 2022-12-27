@@ -421,8 +421,8 @@ export const colorLog = (variant: validVariant, message: string) => {
 		"outline-dark": 'magentaBright'
 	}
 
-	const fn = chalk[colors[variant]]
-	fn.bold(message)
+	const color = chalk[colors[variant]]
+	console.log(color.bold(message))
 }
 
 /**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/

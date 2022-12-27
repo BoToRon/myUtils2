@@ -456,8 +456,8 @@ export const colorLog = (variant, message) => {
         dark: 'magenta',
         "outline-dark": 'magentaBright'
     };
-    const fn = chalk[colors[variant]];
-    fn.bold(message);
+    const color = chalk[colors[variant]];
+    console.log(color.bold(message));
 };
 /**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
 export const downloadFile_node = async (filename, fileFormat, data, killProcessAfterwards) => {

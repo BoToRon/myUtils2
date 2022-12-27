@@ -1,3 +1,4 @@
+##########feat: .env vars get validited in getDeps
 ##########fix: change colorLog from async to sync
 ##########test: testing what to leave out of the client
 					fix: killprocess was killing too fast, added delay
