@@ -636,8 +636,9 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 
 	const killCommandLine = () => killProcess('dark', 'Process over')
 	const successLog = (message: string) => colorLog('success', message, false)
-	const questionAsPromise = (question: string) => new Promise(resolve => readline.question(question + ' ', resolve)) as Promise<string>
+	const questionAsPromise = (question: string) => new Promise(resolve => readline.question(question + '\n', resolve)) as Promise<string>
 	const readline = getReadLine.createInterface({ input: process.stdin, output: process.stdout })
+	const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test)'
 	const { exec, execSync } = await import('child_process')
 
 	if (npmCommand === 'gitPush') { prompCommitMessage(null as unknown as string) }
@@ -646,11 +647,11 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 
 	async function prompCommitMessage(versionIncrement: string) {
 
-		const commitMessage = await questionAsPromise('What was changed for this version?')
+		const commitMessage = await questionAsPromise(`Enter commit type ${commitTypes} plus a message:`)
 		function tryAgain(error: string) { colorLog('warning', error, false); prompCommitMessage(versionIncrement); return }
 		if (!zodCheck_sample(tryAgain, get_zValidCommitMessage(), commitMessage)) { return }
 
-		if (npmCommand === 'gitPush') { await addLineToCurrentVersion() }
+		if (npmCommand === 'gitPush') { await addLineToFutureVersion() }
 		if (npmCommand === 'publish') { addLineAsNewVersion(versionIncrement) }
 		gitAddCommitPush()
 		if (npmCommand === 'gitPush') { killCommandLine() }
@@ -658,15 +659,15 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 
 		return
 
-		async function addLineToCurrentVersion() {
-			const changelog = await fs.promises.readFile('./changelog.MD', 'utf8')
+		async function addLineToFutureVersion() {
+			let changelog = await fs.promises.readFile('./changelog.MD', 'utf8')
+			while (['\n', ' '].includes(changelog[0])) { changelog = changelog.slice(1) }
 			const lines = changelog.split('\n')
-
-			lines.splice(0, 0, '#'.repeat(10) + commitMessage)
+			lines.splice(0, 0, ' '.repeat(10) + commitMessage)
 			const newChangelog = lines.join('\n')
 			console.log({ newChangelog })
 			await fs.promises.writeFile('./changelog.MD', newChangelog)
-			console.log('hi')
+			colorLog('info', 'commit added to the changelog for a yet-to-be-released version', false)
 		}
 
 		async function addLineAsNewVersion(versionIncrement: string) {
@@ -683,9 +684,8 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 		}
 
 		function get_zValidCommitMessage() {
-			const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test):'
-			const commitRegex = new RegExp(`(?<!.)${commitTypes}`)
-			return z.string().max(50).regex(commitRegex, `String must start with ${commitTypes}`)
+			const commitRegex = new RegExp(`(?<!.)${commitTypes}:`)
+			return z.string().min(15).max(50).regex(commitRegex, `String must start with ${commitTypes}:`)
 		}
 
 		function gitAddCommitPush() {
@@ -735,16 +735,16 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 		prompCommitMessage(versionIncrement)
 	}
 
-	function transpileFiles(followUp?: Function) {
+	function transpileFiles(followUp: Function) {
 		exec('tsc --declaration --target esnext index.ts', async () => {
 			successLog('files transpiled ✔️')
+			await createdTrimmedVersionForBrowser('.js')
+			await createdTrimmedVersionForBrowser('.ts')
+			successLog('browser versions emitted ✔️')
+			await delay(500)
+			followUp()
 
-			//await trimServerExclusiveFunctions('.js')
-			//await trimServerExclusiveFunctions('.ts')
-			successLog('files transpiled ✔️')
-			if (followUp) { followUp() }
-
-			async function trimServerExclusiveFunctions(extension: '.js' | '.ts') {
+			async function createdTrimmedVersionForBrowser(extension: '.js' | '.ts') {
 				const indexTs = await fs.promises.readFile(`./index${extension}`, 'utf8')
 				const lines = indexTs.replace('/\/ * UNCOMMENTTHISFORTHECLIENT ', '').replace("'./deps'", "'../deps'").split('\n')
 				const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x))
@@ -753,6 +753,8 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 				const newChangelog = lines.splice(0, cutPoint).join('\n')
 				await fs.promises.writeFile(`./client/forBrowser${extension}`, newChangelog)
 			}
+
+
 		})
 	}
 }

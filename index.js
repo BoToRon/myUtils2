@@ -645,7 +645,7 @@ export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, 
 export const killProcess = (variant, message) => {
     clientOrServer_screener('server', async () => {
         colorLog_big(variant, message);
-        await delay(500);
+        await delay(1000);
         process.kill(process.pid);
     });
 };
@@ -653,8 +653,9 @@ export const killProcess = (variant, message) => {
 export const npmRun = async (npmCommand) => {
     const killCommandLine = () => killProcess('dark', 'Process over');
     const successLog = (message) => colorLog('success', message, false);
-    const questionAsPromise = (question) => new Promise(resolve => readline.question(question + ' ', resolve));
+    const questionAsPromise = (question) => new Promise(resolve => readline.question(question + '\n', resolve));
     const readline = getReadLine.createInterface({ input: process.stdin, output: process.stdout });
+    const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test)';
     const { exec, execSync } = await import('child_process');
     if (npmCommand === 'gitPush') {
         prompCommitMessage(null);
@@ -666,22 +667,17 @@ export const npmRun = async (npmCommand) => {
         transpileFiles(promptVersioning);
     }
     async function prompCommitMessage(versionIncrement) {
-        const commitMessage = await questionAsPromise('What was changed for this version?');
-        console.log("🚀 ~ file: index.ts:642 ~ prompCommitMessage ~ commitMessage", commitMessage);
-        const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test)';
-        const commitRegex = new RegExp(`(?<!.) ${commitTypes}`);
-        const zValidCommitMessage = z.string().max(50).regex(commitRegex, `String must start with ${commitTypes}`);
+        const commitMessage = await questionAsPromise(`Enter commit type ${commitTypes} plus a message:`);
         function tryAgain(error) { colorLog('warning', error, false); prompCommitMessage(versionIncrement); return; }
-        if (!zodCheck_sample(tryAgain, zValidCommitMessage, commitMessage)) {
+        if (!zodCheck_sample(tryAgain, get_zValidCommitMessage(), commitMessage)) {
             return;
         }
         if (npmCommand === 'gitPush') {
-            await addLineToCurrentVersion();
+            await addLineToFutureVersion();
         }
         if (npmCommand === 'publish') {
             addLineAsNewVersion(versionIncrement);
         }
-        console.log('xx');
         gitAddCommitPush();
         if (npmCommand === 'gitPush') {
             killCommandLine();
@@ -690,14 +686,17 @@ export const npmRun = async (npmCommand) => {
             upVersion_publish_updateChangelog_andKillCommandLine();
         }
         return;
-        async function addLineToCurrentVersion() {
-            const changelog = await fs.promises.readFile('./changelog.MD', 'utf8');
+        async function addLineToFutureVersion() {
+            let changelog = await fs.promises.readFile('./changelog.MD', 'utf8');
+            while (['\n', ' '].includes(changelog[0])) {
+                changelog = changelog.slice(1);
+            }
             const lines = changelog.split('\n');
-            lines.splice(0, 0, '#'.repeat(10) + commitMessage);
+            lines.splice(0, 0, ' '.repeat(10) + commitMessage);
             const newChangelog = lines.join('\n');
             console.log({ newChangelog });
             await fs.promises.writeFile('./changelog.MD', newChangelog);
-            console.log('hi');
+            colorLog('info', 'commit added to the changelog for a yet-to-be-released version', false);
         }
         async function addLineAsNewVersion(versionIncrement) {
             const changelog = await fs.promises.readFile('./changelog.MD', 'utf8');
@@ -712,6 +711,10 @@ export const npmRun = async (npmCommand) => {
             lines.splice(0, 0, newLine);
             const newChangelog = lines.join('\n');
             await fs.promises.writeFile('./changelog.MD', newChangelog);
+        }
+        function get_zValidCommitMessage() {
+            const commitRegex = new RegExp(`(?<!.)${commitTypes}:`);
+            return z.string().min(15).max(50).regex(commitRegex, `String must start with ${commitTypes}:`);
         }
         function gitAddCommitPush() {
             execSync('git add .');
@@ -746,7 +749,6 @@ export const npmRun = async (npmCommand) => {
     }
     async function promptVersioning() {
         const versionIncrement = await questionAsPromise('Type of package version increment (major, minor, patch)?');
-        console.log("🚀 ~ file: index.ts:719 ~ promptVersioning ~ versionIncrement", versionIncrement);
         function tryAgain(error) { colorLog('warning', error, false); promptVersioning(); }
         if (!zodCheck_sample(tryAgain, zValidVersionIncrement, versionIncrement)) {
             return;
@@ -754,16 +756,14 @@ export const npmRun = async (npmCommand) => {
         prompCommitMessage(versionIncrement);
     }
     function transpileFiles(followUp) {
-        console.log("🚀 ~ file: index.ts:604 ~ transpileFiles ~ followUp", followUp);
         exec('tsc --declaration --target esnext index.ts', async () => {
             successLog('files transpiled ✔️');
-            //await trimServerExclusiveFunctions('.js')
-            //await trimServerExclusiveFunctions('.ts')
-            successLog('files transpiled ✔️');
-            if (followUp) {
-                followUp();
-            }
-            async function trimServerExclusiveFunctions(extension) {
+            await createdTrimmedVersionForBrowser('.js');
+            await createdTrimmedVersionForBrowser('.ts');
+            successLog('browser versions emitted ✔️');
+            await delay(500);
+            followUp();
+            async function createdTrimmedVersionForBrowser(extension) {
                 const indexTs = await fs.promises.readFile(`./index${extension}`, 'utf8');
                 const lines = indexTs.replace('/\/ * UNCOMMENTTHISFORTHECLIENT ', '').replace("'./deps'", "'../deps'").split('\n');
                 const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x));
