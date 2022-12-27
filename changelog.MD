@@ -1,3 +1,4 @@
+##########fix: removed all things that break vite hopefully
 ##########fix: the path to "deps" now adjust for clients
 ##########fix: io was being returned as a promise
 ##########feat: indicator for the 50-char limit for commits

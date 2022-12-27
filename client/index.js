@@ -1,5 +1,5 @@
 //TODO: create a way to make sure every project has the same package.json scripts and also create a way to automatize their compilation
-_, fromZodError, zValidVariants, } from './deps.js';
+import { fromZodError, zValidVariants, } from './deps.js';
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 export const BTR = {
     /**Tr-Catch wrapper for functions. Starts as a placeholder, initialize it with typeF_get */
@@ -418,4 +418,4 @@ export const zPipe = (zSchema, initialValue, ...fns) => {
         return pipeState;
     }, initialPipeState);
 };
-const colorLog = (color, message) => console.log(`%c${message}`, `color: ${color};`)
+const colorLog = (color, message) => console.log(`%c${message}`, `color: ${color};`);

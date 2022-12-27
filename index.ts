@@ -723,13 +723,14 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 			successLog('files transpiled ✔️')
 			await createdTrimmedVersionForBrowser('index.ts')
 			await createdTrimmedVersionForBrowser('deps.ts')
-			await createdTrimmedVersionForBrowser('index.js')
-			await createdTrimmedVersionForBrowser('deps.js')
-			successLog('browser versions emitted ✔️')
-			await delay(500)
-			followUp()
 
-			async function createdTrimmedVersionForBrowser(filename: 'index.ts' | 'deps.ts' | 'index.js' | 'deps.js') {
+			exec('tsc --declaration --target esnext  client/index.ts client/deps.ts', async () => {
+				successLog('browser versions emitted ✔️')
+				await delay(500)
+				followUp()
+			})
+
+			async function createdTrimmedVersionForBrowser(filename: 'index.ts' | 'deps.ts') {
 				const indexTs = await fs.promises.readFile(filename, 'utf8')
 				const lines = indexTs.replaceAll('colorLog_big', 'colorLog').split('\n')
 				selfFilter(lines, (line) => !/DELETETHISFORCLIENT/.test(line))
