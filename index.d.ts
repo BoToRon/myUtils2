@@ -1,4 +1,4 @@
-import { bvToast, newToastFn, packageJson, pipe_mutable_type, pipe_persistent_type, trackedVueComponent, zSchema } from './deps';
+import { bvToast, newToastFn, packageJson, pipe_mutable_type, pipe_persistent_type, trackedVueComponent, zSchema } from './deps.js';
 export declare const BTR: {
     /**Tr-Catch wrapper for functions. Starts as a placeholder, initialize it with typeF_get */
     tryF: <T extends (...args: any) => any>(fn: T, args: Parameters<T>) => any;

@@ -739,7 +739,7 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 			if (followUp) { followUp() }
 
 			async function trimServerExclusiveFunctions(extension: '.js' | '.ts') {
-				const indexTs = await fs.promises.readFile(`./client/forBrowser${extension}`, 'utf8')
+				const indexTs = await fs.promises.readFile(`./index${extension}`, 'utf8')
 				const lines = indexTs.replace('/\/ * UNCOMMENTTHISFORTHECLIENT ', '').replace("'./deps'", "'../deps'").split('\n')
 				const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x))
 				if (cutPoint === -1) { colorLog_big('danger', 'CUT POINT FOR REATING THE CLIENT-SIDE VERSION NOT FOUND'); return }
