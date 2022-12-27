@@ -624,7 +624,7 @@ export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, 
         const data = Object.entries(packageJson.scripts).map(x => ({ script: `${margin}npm run ${x[0]}${margin}`, command: x[1] }));
         console.table(data);
     }
-    async function startServerAndGetIO() {
+    function startServerAndGetIO() {
         const app = express();
         const server = http.createServer(app);
         app.use(express.static(path.resolve() + '/public'));
@@ -738,8 +738,8 @@ export const npmRun = async (npmCommand) => {
             execSync('npm publish');
             successLog('package.json up-version\'d and published to npm');
             await replaceTagsInChangelogWithNewVersion();
-            await delay(1000 * 10);
-            killCommandLine();
+            //await delay(1000 * 10)
+            //killCommandLine()
             async function replaceTagsInChangelogWithNewVersion() {
                 const updatedPackageJson = await import('./package.json', { assert: { type: "json" } });
                 const newVersion = updatedPackageJson.default.version;
