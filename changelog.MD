@@ -1,3 +1,4 @@
+##########fix: vite breaking, hopefully v2.0
 ##########fix: removed all things that break vite hopefully
 ##########fix: the path to "deps" now adjust for clients
 ##########fix: io was being returned as a promise
