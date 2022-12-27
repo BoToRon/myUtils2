@@ -489,19 +489,32 @@ export const getLatestPackageJsonFromGithub = async () => {
  * @param appName The name of the app, for the divine error ping
  * @param pingMeOnErrors Whether to ping me in Discord with the console.trace of errors or just colorLogBig
  * @param packageJson The package.json of the app, to compare the installed vs latest version of this myUtils package
- * @param erisToken The token for DivineBot, should reside in .env
- * @param mongoUri The uri for Mongo, should reside in .env
- * @param port The dev port, should reside in .env
+ * @param ERIS_TOKEN The token for DivineBot, should reside in .env
+ * @param MONGO_URI The uri for Mongo, should reside in .env
+ * @param PORT The dev port, should reside in .env
  * @returns divineBot, divineError, io, mongoClient, tryF
  */
-export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, erisToken, mongoUri, port) => {
-    const { divineBot } = await getDivineBotAndError();
-    const mongoClient = await getMongoClient();
+export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
+    checkEnviromentVariable(); // ! this must go first, as all other functions need the .env vars
     const io = startServerAndGetIO();
+    const mongoClient = await getMongoClient();
+    const { divineBot } = await getDivineBotAndError();
     myUtils_checkIfUpToDate(divineError);
-    const tryF = tryF_get(divineError);
     showPackageJsonScripts_project();
     return { divineBot, divineError, io, mongoClient, tryF };
+    function checkEnviromentVariable() {
+        let x = true;
+        check('ERIS_TOKEN', ERIS_TOKEN);
+        check('MONGO_URI', MONGO_URI);
+        check('PORT', PORT);
+        return x;
+        function check(name, variable) {
+            if (!variable) {
+                colorLog_big('danger', `Missing enviroment variable: ${name}`);
+                x = false;
+            }
+        }
+    }
     /**notify me about things breaking via discord, if pingMeOnErrors is passed as true */
     function divineError(arg) {
         const x = (typeof arg === 'string' ? arg : arg.stack);
@@ -515,7 +528,7 @@ export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, 
         divineBot.createMessage('1055939528776495206', divineOptions);
     }
     async function getDivineBotAndError() {
-        const bot = eris(erisToken);
+        const bot = eris(ERIS_TOKEN);
         connectToDiscord();
         await until(bot.ready);
         return { divineBot: bot, divineError };
@@ -560,7 +573,7 @@ export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, 
         }
     }
     async function getMongoClient() {
-        const mongo = new mongodb.MongoClient(mongoUri);
+        const mongo = new mongodb.MongoClient(MONGO_URI);
         let mongoClient = null;
         mongo.connect((err, client) => { if (err) {
             throw err;
@@ -616,24 +629,21 @@ export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, 
         const server = http.createServer(app);
         app.use(express.static(path.resolve() + '/public'));
         app.get('/', (_request, response) => response.sendFile(path.resolve() + 'public/index.html'));
-        server.listen(port, () => delay(1500).then(() => console.log(`server up at: http://localhost:${port}/`)));
+        server.listen(PORT, () => delay(1500).then(() => console.log(`server up at: http://localhost:${PORT}/`)));
         const io = require('socket.io')(server, { cors: { origin: '*', } });
         return io;
     }
-    function tryF_get(failureHandler) {
-        /**tryCatch wrapper for functions with DivineError as the error handler */
-        function tryF() {
-            const x = (fn, args) => {
-                try {
-                    return fn(...args);
-                }
-                catch (err) {
-                    failureHandler(err);
-                }
-            };
-            return x;
-        }
-        return tryF;
+    /**tryCatch wrapper for functions with DivineError as the error handler */
+    function tryF() {
+        const x = (fn, args) => {
+            try {
+                return fn(...args);
+            }
+            catch (err) {
+                divineError(err);
+            }
+        };
+        return x;
     }
 };
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */

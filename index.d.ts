@@ -140,9 +140,9 @@ export declare const getLatestPackageJsonFromGithub: () => Promise<string>;
  * @param appName The name of the app, for the divine error ping
  * @param pingMeOnErrors Whether to ping me in Discord with the console.trace of errors or just colorLogBig
  * @param packageJson The package.json of the app, to compare the installed vs latest version of this myUtils package
- * @param erisToken The token for DivineBot, should reside in .env
- * @param mongoUri The uri for Mongo, should reside in .env
- * @param port The dev port, should reside in .env
+ * @param ERIS_TOKEN The token for DivineBot, should reside in .env
+ * @param MONGO_URI The uri for Mongo, should reside in .env
+ * @param PORT The dev port, should reside in .env
  * @returns divineBot, divineError, io, mongoClient, tryF
  */
 export declare const getMainDependencies: (appName: string, packageJson: {
@@ -150,7 +150,7 @@ export declare const getMainDependencies: (appName: string, packageJson: {
     scripts: {
         [key: string]: string;
     };
-}, pingMeOnErrors: boolean, erisToken: string, mongoUri: string, port: number) => Promise<{
+}, pingMeOnErrors: boolean, ERIS_TOKEN: string | undefined, MONGO_URI: string | undefined, PORT: string | undefined) => Promise<{
     divineBot: any;
     divineError: (arg: string | Error) => void;
     io: Promise<any>;
