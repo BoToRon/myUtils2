@@ -36,18 +36,17 @@ declare global { interface Window { vueComponents: trackedVueComponent[], newToa
 type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
 type newToastFn = (title: string, message: string, variant: validVariant) => void
 type zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T> }
-const zValidNpmCommand = z.enum(['all', 'gitPush', 'transpile'])
+const zValidNpmCommand = z.enum(['gitPush', 'publish', 'transpile'])
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch'])
 type pck = { objects: [{ package: { version: string } }] }
 type validNpmCommand = z.infer<typeof zValidNpmCommand>
 type validVariant = z.infer<typeof zValidVariants>
-const zValidCommitMessage = z.string().min(5)
 type pipe_persistent_type<T> = (arg: T) => T
 
 export {
 	//chalk and node-fetch are imported dynamically by the one auto-delete-for-the-client function that uses each, so that vite doesn't detect them
 	_, bvToast, Eris, express, fromZodError, fs, getReadLine, http, mongodb, MongoClient, newToastFn, packageJson,
-	pipe_mutable_type, pipe_persistent_type, SafeParseReturnType, trackedVueComponent, validChalkColor, validNpmCommand,
-	validVariant, z, zSchema, zValidCommitMessage, zValidNpmCommand, zValidVariants, zValidVersionIncrement
+	pipe_mutable_type, pipe_persistent_type, SafeParseReturnType, trackedVueComponent, validChalkColor,
+	validNpmCommand, validVariant, z, zSchema, zValidNpmCommand, zValidVariants, zValidVersionIncrement
 }
 

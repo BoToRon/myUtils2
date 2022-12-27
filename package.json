@@ -5,9 +5,9 @@
 	"description": "Utilities of me for me",
 	"main": "index.js",
 	"scripts": {
+		"publish": "npm run npmRun --command=publish",
 		"test": "ts-node-esm test.ts",
 		"npmRun": "ts-node-esm --transpileOnly index.ts",
-		"all": "npm run npmRun --command=all",
 		"gitPush": "npm run npmRun --command=gitPush",
 		"transpile": "npm run npmRun --command=transpile",
 		"_tsIndex": "tsc --declaration --listEmittedFiles --target esnext index.ts",

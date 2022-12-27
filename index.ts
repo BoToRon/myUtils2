@@ -2,9 +2,9 @@
 
 import {
 	Eris,
-	_, bvToast, fromZodError, fs, getReadLine, mongodb, MongoClient, newToastFn, packageJson, pipe_mutable_type, pipe_persistent_type,
-	SafeParseReturnType, trackedVueComponent, validChalkColor, validNpmCommand, validVariant, z, zSchema,
-	zValidNpmCommand, zValidCommitMessage, zValidVariants, zValidVersionIncrement
+	_, bvToast, fromZodError, fs, getReadLine, mongodb, MongoClient, newToastFn, packageJson, pipe_mutable_type,
+	pipe_persistent_type, SafeParseReturnType, trackedVueComponent, validChalkColor, validNpmCommand,
+	validVariant, z, zSchema, zValidNpmCommand, zValidVariants, zValidVersionIncrement
 } from './deps.js'
 
 export const BTR = {
@@ -387,6 +387,9 @@ export const zPipe = <T>(zSchema: zSchema<T>, initialValue: T, ...fns: pipe_pers
 	}, initialPipeState)
 }
 
+
+
+
 _
 // * UNCOMMENTTHISFORTHECLIENT const colorLog = (color, message) => console.log(`%c${message}`, `color: ${color};`)
 _
@@ -622,8 +625,9 @@ export const getMainDependencies = async (
 }
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export const killProcess = (variant: validVariant, message: string) => {
-	clientOrServer_screener('server', () => {
+	clientOrServer_screener('server', async () => {
 		colorLog_big(variant, message)
+		await delay(1000)
 		process.kill(process.pid)
 	})
 }
@@ -638,22 +642,19 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 
 	if (npmCommand === 'gitPush') { prompCommitMessage(null as unknown as string) }
 	if (npmCommand === 'transpile') { transpileFiles(killCommandLine) }
-	if (npmCommand === 'all') { transpileFiles(promptVersioning) }
+	if (npmCommand === 'publish') { transpileFiles(promptVersioning) }
 
 	async function prompCommitMessage(versionIncrement: string) {
 
 		const commitMessage = await questionAsPromise('What was changed for this version?')
-		console.log("🚀 ~ file: index.ts:642 ~ prompCommitMessage ~ commitMessage", commitMessage)
-
 		function tryAgain(error: string) { colorLog('warning', error, false); prompCommitMessage(versionIncrement); return }
-		if (!zodCheck_sample(tryAgain, zValidCommitMessage, commitMessage)) { return }
+		if (!zodCheck_sample(tryAgain, get_zValidCommitMessage(), commitMessage)) { return }
 
 		if (npmCommand === 'gitPush') { await addLineToCurrentVersion() }
-		if (npmCommand === 'all') { addLineAsNewVersion(versionIncrement) }
-		console.log('xx')
+		if (npmCommand === 'publish') { addLineAsNewVersion(versionIncrement) }
 		gitAddCommitPush()
 		if (npmCommand === 'gitPush') { killCommandLine() }
-		if (npmCommand === 'all') { upVersion_publish_updateChangelog_andKillCommandLine() }
+		if (npmCommand === 'publish') { upVersion_publish_updateChangelog_andKillCommandLine() }
 
 		return
 
@@ -661,7 +662,7 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 			const changelog = await fs.promises.readFile('./changelog.MD', 'utf8')
 			const lines = changelog.split('\n')
 
-			lines.splice(0, 0, ' '.repeat(10) + commitMessage)
+			lines.splice(0, 0, '#'.repeat(10) + commitMessage)
 			const newChangelog = lines.join('\n')
 			console.log({ newChangelog })
 			await fs.promises.writeFile('./changelog.MD', newChangelog)
@@ -679,6 +680,12 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 			lines.splice(0, 0, newLine)
 			const newChangelog = lines.join('\n')
 			await fs.promises.writeFile('./changelog.MD', newChangelog)
+		}
+
+		function get_zValidCommitMessage() {
+			const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test):'
+			const commitRegex = new RegExp(`(?<!.)${commitTypes}`)
+			return z.string().max(50).regex(commitRegex, `String must start with ${commitTypes}`)
 		}
 
 		function gitAddCommitPush() {
@@ -723,18 +730,17 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 
 	async function promptVersioning() {
 		const versionIncrement = await questionAsPromise('Type of package version increment (major, minor, patch)?')
-		console.log("🚀 ~ file: index.ts:719 ~ promptVersioning ~ versionIncrement", versionIncrement)
-
 		function tryAgain(error: string) { colorLog('warning', error, false); promptVersioning() }
 		if (!zodCheck_sample(tryAgain, zValidVersionIncrement, versionIncrement)) { return }
 		prompCommitMessage(versionIncrement)
 	}
 
 	function transpileFiles(followUp?: Function) {
-		console.log("🚀 ~ file: index.ts:604 ~ transpileFiles ~ followUp", followUp)
 		exec('tsc --declaration --target esnext index.ts', async () => {
-			await trimServerExclusiveFunctions('.js')
-			await trimServerExclusiveFunctions('.ts')
+			successLog('files transpiled ✔️')
+
+			//await trimServerExclusiveFunctions('.js')
+			//await trimServerExclusiveFunctions('.ts')
 			successLog('files transpiled ✔️')
 			if (followUp) { followUp() }
 
@@ -783,7 +789,7 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
  */
 
 const command = process.env.npm_config_command as validNpmCommand
-zodCheckAndHandle(zValidNpmCommand, command, npmRun, [command], doNothing)
+zodCheckAndHandle(zValidNpmCommand, command, npmRun, [command], console.log)
 
 
 

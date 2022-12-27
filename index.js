@@ -1,5 +1,5 @@
 //TODO: create a way to make sure every project has the same package.json scripts and also create a way to automatize their compilation
-import { Eris, _, fromZodError, fs, getReadLine, mongodb, zValidNpmCommand, zValidCommitMessage, zValidVariants, zValidVersionIncrement } from './deps.js';
+import { Eris, _, fromZodError, fs, getReadLine, mongodb, z, zValidNpmCommand, zValidVariants, zValidVersionIncrement } from './deps.js';
 export const BTR = {
     /**Tr-Catch wrapper for functions. Starts as a placeholder, initialize it with typeF_get */
     tryF: (fn, args) => {
@@ -595,7 +595,7 @@ export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, 
         async function getLatestVersion() {
             const response = (await new Promise((resolve) => {
                 try {
-                    fetch(`http://registry.npmjs.com/-/v1/search?text=isOdd&size=1`).then(res => res.json().then(x => resolve(x)));
+                    fetch(`http://registry.npmjs.com/-/v1/search?text=@botoron/utils&size=1`).then(res => res.json().then(x => resolve(x)));
                 }
                 catch {
                     return { objects: [{ package: { version: '0' } }] };
@@ -643,8 +643,9 @@ export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, 
 };
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export const killProcess = (variant, message) => {
-    clientOrServer_screener('server', () => {
+    clientOrServer_screener('server', async () => {
         colorLog_big(variant, message);
+        await delay(500);
         process.kill(process.pid);
     });
 };
@@ -661,12 +662,15 @@ export const npmRun = async (npmCommand) => {
     if (npmCommand === 'transpile') {
         transpileFiles(killCommandLine);
     }
-    if (npmCommand === 'all') {
+    if (npmCommand === 'publish') {
         transpileFiles(promptVersioning);
     }
     async function prompCommitMessage(versionIncrement) {
         const commitMessage = await questionAsPromise('What was changed for this version?');
         console.log("🚀 ~ file: index.ts:642 ~ prompCommitMessage ~ commitMessage", commitMessage);
+        const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test)';
+        const commitRegex = new RegExp(`(?<!.) ${commitTypes}`);
+        const zValidCommitMessage = z.string().max(50).regex(commitRegex, `String must start with ${commitTypes}`);
         function tryAgain(error) { colorLog('warning', error, false); prompCommitMessage(versionIncrement); return; }
         if (!zodCheck_sample(tryAgain, zValidCommitMessage, commitMessage)) {
             return;
@@ -674,7 +678,7 @@ export const npmRun = async (npmCommand) => {
         if (npmCommand === 'gitPush') {
             await addLineToCurrentVersion();
         }
-        if (npmCommand === 'all') {
+        if (npmCommand === 'publish') {
             addLineAsNewVersion(versionIncrement);
         }
         console.log('xx');
@@ -682,14 +686,14 @@ export const npmRun = async (npmCommand) => {
         if (npmCommand === 'gitPush') {
             killCommandLine();
         }
-        if (npmCommand === 'all') {
+        if (npmCommand === 'publish') {
             upVersion_publish_updateChangelog_andKillCommandLine();
         }
         return;
         async function addLineToCurrentVersion() {
             const changelog = await fs.promises.readFile('./changelog.MD', 'utf8');
             const lines = changelog.split('\n');
-            lines.splice(0, 0, ' '.repeat(10) + commitMessage);
+            lines.splice(0, 0, '#'.repeat(10) + commitMessage);
             const newChangelog = lines.join('\n');
             console.log({ newChangelog });
             await fs.promises.writeFile('./changelog.MD', newChangelog);
@@ -752,8 +756,9 @@ export const npmRun = async (npmCommand) => {
     function transpileFiles(followUp) {
         console.log("🚀 ~ file: index.ts:604 ~ transpileFiles ~ followUp", followUp);
         exec('tsc --declaration --target esnext index.ts', async () => {
-            await trimServerExclusiveFunctions('.js');
-            await trimServerExclusiveFunctions('.ts');
+            successLog('files transpiled ✔️');
+            //await trimServerExclusiveFunctions('.js')
+            //await trimServerExclusiveFunctions('.ts')
             successLog('files transpiled ✔️');
             if (followUp) {
                 followUp();
@@ -802,4 +807,4 @@ export const npmRun = async (npmCommand) => {
  * (see mapArgsOfFnAgainstFn as an existing example)
  */
 const command = process.env.npm_config_command;
-zodCheckAndHandle(zValidNpmCommand, command, npmRun, [command], doNothing);
+zodCheckAndHandle(zValidNpmCommand, command, npmRun, [command], console.log);

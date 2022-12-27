@@ -56,6 +56,5 @@ declare const zValidNpmCommand: any;
 declare const zValidVersionIncrement: any;
 type validNpmCommand = z.infer<typeof zValidNpmCommand>;
 type validVariant = z.infer<typeof zValidVariants>;
-declare const zValidCommitMessage: any;
 type pipe_persistent_type<T> = (arg: T) => T;
-export { _, bvToast, Eris, express, fromZodError, fs, getReadLine, http, mongodb, MongoClient, newToastFn, packageJson, pipe_mutable_type, pipe_persistent_type, SafeParseReturnType, trackedVueComponent, validChalkColor, validNpmCommand, validVariant, z, zSchema, zValidCommitMessage, zValidNpmCommand, zValidVariants, zValidVersionIncrement };
+export { _, bvToast, Eris, express, fromZodError, fs, getReadLine, http, mongodb, MongoClient, newToastFn, packageJson, pipe_mutable_type, pipe_persistent_type, SafeParseReturnType, trackedVueComponent, validChalkColor, validNpmCommand, validVariant, z, zSchema, zValidNpmCommand, zValidVariants, zValidVersionIncrement };

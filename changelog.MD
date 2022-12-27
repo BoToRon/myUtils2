@@ -1,3 +1,4 @@
-          added versions for client
+##########fix: killprocess was killing too fast, added delay
+1.0.1     added versions for client
           just testing
-0. testing git
+1.0.0	    testing git

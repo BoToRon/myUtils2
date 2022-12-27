@@ -16,9 +16,8 @@ import { z } from 'zod';
 _;
 import { fromZodError } from 'zod-validation-error';
 const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark']);
-const zValidNpmCommand = z.enum(['all', 'gitPush', 'transpile']);
+const zValidNpmCommand = z.enum(['gitPush', 'publish', 'transpile']);
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch']);
-const zValidCommitMessage = z.string().min(5);
 export { 
 //chalk and node-fetch are imported dynamically by the one auto-delete-for-the-client function that uses each, so that vite doesn't detect them
-_, Eris, express, fromZodError, fs, getReadLine, http, mongodb, MongoClient, z, zValidCommitMessage, zValidNpmCommand, zValidVariants, zValidVersionIncrement };
+_, Eris, express, fromZodError, fs, getReadLine, http, mongodb, MongoClient, z, zValidNpmCommand, zValidVariants, zValidVersionIncrement };
