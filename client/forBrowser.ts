@@ -2,7 +2,7 @@
 
 import {
 	_, bvToast, chalk, eris, exec, execSync, express, fetch, fromZodError, fs, getReadLine, http, mongodb, MongoClient,
-	newToastFn, packageJson, path, pipe_mutable_type, pipe_persistent_type, SafeParseReturnType, trackedVueComponent,
+	newToastFn, path, pipe_mutable_type, pipe_persistent_type, SafeParseReturnType, trackedVueComponent,
 	validChalkColor, validNpmCommand, validVariant, z, zSchema, zValidNpmCommand, zValidVariants, zValidVersionIncrement
 } from './deps.js'
 

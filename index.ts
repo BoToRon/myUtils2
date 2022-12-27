@@ -2,7 +2,7 @@
 
 import {
 	_, bvToast, chalk, eris, exec, execSync, express, fetch, fromZodError, fs, getReadLine, http, mongodb, MongoClient,
-	newToastFn, packageJson, path, pipe_mutable_type, pipe_persistent_type, SafeParseReturnType, trackedVueComponent,
+	newToastFn, path, pipe_mutable_type, pipe_persistent_type, SafeParseReturnType, trackedVueComponent,
 	validChalkColor, validNpmCommand, validVariant, z, zSchema, zValidNpmCommand, zValidVariants, zValidVersionIncrement
 } from './deps.js'
 
@@ -407,7 +407,7 @@ export const colorLog_big = (variant: validVariant, message: string) => {
 	})
 }
 /**console.log WITH COLORS :D */
-export const colorLog = async (variant: validVariant, message: string) => {
+export const colorLog = (variant: validVariant, message: string) => {
 
 	const colors: { [key in validVariant]: validChalkColor } = {
 		primary: 'blue',
@@ -465,7 +465,7 @@ export const getLatestPackageJsonFromGithub = async () => {
  */
 export const getMainDependencies = async (
 	appName: string,
-	packageJson: packageJson,
+	packageJson: { version: string, scripts: { [key: string]: string } },
 	pingMeOnErrors: boolean,
 	erisToken: string,
 	mongoUri: string,
@@ -590,7 +590,7 @@ export const getMainDependencies = async (
 	 */
 	async function showPackageJsonScripts_project() {
 		const margin = ' '.repeat(10)
-		const data = Object.entries(packageJson.default.scripts).map(x => ({ script: `${margin}npm run ${x[0]}${margin}`, command: x[1] }))
+		const data = Object.entries(packageJson.scripts).map(x => ({ script: `${margin}npm run ${x[0]}${margin}`, command: x[1] }))
 		console.table(data)
 	}
 

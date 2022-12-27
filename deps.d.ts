@@ -18,17 +18,6 @@ type pipe_mutable_type = {
     <T, A, B, C, D>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D): D;
     <T, A, B, C, D, E>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D, e: (value: D) => E): E;
 };
-type packageJson = {
-    default: {
-        scripts: {
-            [key: string]: unknown;
-        };
-        name: string;
-        type: string;
-        version: string;
-        description: string;
-    };
-};
 declare const zValidVariants: any;
 type toastOptions = {
     toaster: string;
@@ -61,4 +50,4 @@ declare const zValidVersionIncrement: any;
 type validNpmCommand = z.infer<typeof zValidNpmCommand>;
 type validVariant = z.infer<typeof zValidVariants>;
 type pipe_persistent_type<T> = (arg: T) => T;
-export { _, bvToast, chalk, eris, exec, execSync, express, fetch, fromZodError, fs, getReadLine, http, mongodb, MongoClient, newToastFn, packageJson, path, pipe_mutable_type, pipe_persistent_type, SafeParseReturnType, trackedVueComponent, validChalkColor, validNpmCommand, validVariant, z, zSchema, zValidNpmCommand, zValidVariants, zValidVersionIncrement };
+export { _, bvToast, chalk, eris, exec, execSync, express, fetch, fromZodError, fs, getReadLine, http, mongodb, MongoClient, newToastFn, path, pipe_mutable_type, pipe_persistent_type, SafeParseReturnType, trackedVueComponent, validChalkColor, validNpmCommand, validVariant, z, zSchema, zValidNpmCommand, zValidVariants, zValidVersionIncrement };

@@ -444,7 +444,7 @@ export const colorLog_big = (variant, message) => {
     });
 };
 /**console.log WITH COLORS :D */
-export const colorLog = async (variant, message) => {
+export const colorLog = (variant, message) => {
     const colors = {
         primary: 'blue',
         secondary: 'grey',
@@ -608,7 +608,7 @@ export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, 
      */
     async function showPackageJsonScripts_project() {
         const margin = ' '.repeat(10);
-        const data = Object.entries(packageJson.default.scripts).map(x => ({ script: `${margin}npm run ${x[0]}${margin}`, command: x[1] }));
+        const data = Object.entries(packageJson.scripts).map(x => ({ script: `${margin}npm run ${x[0]}${margin}`, command: x[1] }));
         console.table(data);
     }
     async function startServerAndGetIO() {

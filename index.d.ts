@@ -1,4 +1,4 @@
-import { bvToast, newToastFn, packageJson, pipe_mutable_type, pipe_persistent_type, trackedVueComponent, zSchema } from './deps.js';
+import { bvToast, newToastFn, pipe_mutable_type, pipe_persistent_type, trackedVueComponent, zSchema } from './deps.js';
 export declare const BTR: {
     /**Tr-Catch wrapper for functions. Starts as a placeholder, initialize it with typeF_get */
     tryF: <T extends (...args: any) => any>(fn: T, args: Parameters<T>) => any;
@@ -130,7 +130,7 @@ export declare const zPipe: <T>(zSchema: zSchema<T>, initialValue: T, ...fns: pi
 /**FOR NODE-DEBUGGING ONLY. Log a message surrounded by a lot of asterisks for visibility, all in RED */
 export declare const colorLog_big: (variant: z.infer<any>, message: string) => void;
 /**console.log WITH COLORS :D */
-export declare const colorLog: (variant: z.infer<any>, message: string) => Promise<void>;
+export declare const colorLog: (variant: z.infer<any>, message: string) => void;
 /**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
 export declare const downloadFile_node: (filename: string, fileFormat: '.txt' | '.json', data: unknown, killProcessAfterwards: boolean) => Promise<void>;
 /**fetch the latest package.json of my-utils */
@@ -145,7 +145,12 @@ export declare const getLatestPackageJsonFromGithub: () => Promise<string>;
  * @param port The dev port, should reside in .env
  * @returns divineBot, divineError, io, mongoClient, tryF
  */
-export declare const getMainDependencies: (appName: string, packageJson: packageJson, pingMeOnErrors: boolean, erisToken: string, mongoUri: string, port: number) => Promise<{
+export declare const getMainDependencies: (appName: string, packageJson: {
+    version: string;
+    scripts: {
+        [key: string]: string;
+    };
+}, pingMeOnErrors: boolean, erisToken: string, mongoUri: string, port: number) => Promise<{
     divineBot: any;
     divineError: (arg: string | Error) => void;
     io: Promise<any>;

@@ -33,7 +33,6 @@ type pipe_mutable_type = {
 	//can always make it longer 😉
 }
 
-type packageJson = { default: { scripts: { [key: string]: unknown }, name: string, type: string, version: string, description: string } }
 const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'])
 type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: validVariant, title: string }
 type validChalkColor = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'white' | 'grey' | 'magentaBright'
@@ -51,7 +50,7 @@ type pipe_persistent_type<T> = (arg: T) => T
 
 export {
 	_, bvToast, chalk, eris, exec, execSync, express, fetch, fromZodError, fs, getReadLine, http, mongodb, MongoClient,
-	newToastFn, packageJson, path, pipe_mutable_type, pipe_persistent_type, SafeParseReturnType, trackedVueComponent,
-	validChalkColor, validNpmCommand, validVariant, z, zSchema, zValidNpmCommand, zValidVariants, zValidVersionIncrement
+	newToastFn, path, pipe_mutable_type, pipe_persistent_type, SafeParseReturnType, trackedVueComponent, validChalkColor,
+	validNpmCommand, validVariant, z, zSchema, zValidNpmCommand, zValidVariants, zValidVersionIncrement
 }
 
