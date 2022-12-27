@@ -77,6 +77,8 @@ export declare const toSingleLine: (sentence: string) => string;
 export declare function clientOrServer_is(): "server" | "client";
 /**For obligatory callbacks */
 export declare function doNothing(): void;
+/**Syntactic sugar for "null as unknown as T" */
+export declare const nullAs: <T>(x: null) => T;
 /**function to generate newToast_client with a predertemined $bvToast so it doesnt have to be passed everytime :D */
 export declare const newToast_client_get: (bvToast: bvToast) => newToastFn;
 /**Put the current function on-hold until the given condition is meet */
@@ -155,9 +157,9 @@ export declare const getMainDependencies: (appName: string, packageJson: {
     divineError: (arg: string | Error) => void;
     io: any;
     mongoClient: MongoClient;
-    tryF: () => <T extends (...args: any) => any>(fn: T, args: Parameters<T>) => any;
+    tryF: <T extends (...args: any) => any>(fn: T, args: Parameters<T>) => void;
 }>;
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
-export declare const killProcess: (variant: z.infer<any>, message: string) => void;
+export declare const killProcess: (variant: z.infer<any>, message: string) => Promise<void>;
 /**Easily run the scripts of this package.json */
 export declare const npmRun: (npmCommand: z.infer<any>) => Promise<void>;

@@ -9,8 +9,9 @@ import fetch from 'node-fetch';
 import getReadLine from 'readline';
 import { exec, execSync } from 'child_process';
 import mongodb, { MongoClient } from 'mongodb';
-import { z, type SafeParseReturnType } from 'zod';
 import { fromZodError } from 'zod-validation-error';
+import type { SafeParseReturnType } from 'zod';
+import { z } from 'zod';
 type pipe_mutable_type = {
     <T, A>(source: T, a: (value: T) => A): A;
     <T, A, B>(source: T, a: (value: T) => A, b: (value: A) => B): B;
@@ -50,4 +51,6 @@ declare const zValidVersionIncrement: any;
 type validNpmCommand = z.infer<typeof zValidNpmCommand>;
 type validVariant = z.infer<typeof zValidVariants>;
 type pipe_persistent_type<T> = (arg: T) => T;
-export { _, bvToast, chalk, eris, exec, execSync, express, fetch, fromZodError, fs, getReadLine, http, mongodb, MongoClient, newToastFn, path, pipe_mutable_type, pipe_persistent_type, SafeParseReturnType, trackedVueComponent, validChalkColor, validNpmCommand, validVariant, z, zSchema, zValidNpmCommand, zValidVariants, zValidVersionIncrement };
+export { chalk, eris, exec, execSync, express, fetch, fs, getReadLine, http, mongodb, MongoClient, //DELETETHISFORCLIENT
+path, validChalkColor, validNpmCommand, z, zValidNpmCommand, zValidVersionIncrement, //DELETETHISFORCLIENT
+_, bvToast, fromZodError, newToastFn, pipe_mutable_type, pipe_persistent_type, SafeParseReturnType, trackedVueComponent, validVariant, zSchema, zValidVariants, };

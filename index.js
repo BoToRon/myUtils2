@@ -1,5 +1,8 @@
 //TODO: create a way to make sure every project has the same package.json scripts and also create a way to automatize their compilation
-import { _, chalk, eris, exec, execSync, express, fetch, fromZodError, fs, getReadLine, http, mongodb, path, z, zValidNpmCommand, zValidVariants, zValidVersionIncrement } from './deps.js';
+import { chalk, eris, exec, execSync, express, fetch, fs, getReadLine, http, mongodb, //DELETETHISFORCLIENT
+path, z, zValidNpmCommand, zValidVersionIncrement, //DELETETHISFORCLIENT
+_, fromZodError, zValidVariants, } from './deps.js';
+const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 export const BTR = {
     /**Tr-Catch wrapper for functions. Starts as a placeholder, initialize it with typeF_get */
     tryF: (fn, args) => {
@@ -171,12 +174,14 @@ export const toOrdinal = (number) => {
 export const deepClone = (x) => JSON.parse(JSON.stringify(x)); //TODO; submit
 /**FOR CLIENT-SIDE CODE ONLY. Stringifies and downloads the provided data*/
 export const downloadFile_client = (filename, fileFormat, data) => {
-    clientOrServer_screener('client', () => {
-        const a = document.createElement('a');
-        a.href = window.URL.createObjectURL(new Blob([data], { type: 'text/plain' }));
-        a.download = `${filename}${fileFormat}`;
-        a.click();
-    });
+    if (isNode) {
+        colorLog_big('danger', 'downloadFile_client can only be run clientside!');
+        return;
+    }
+    const a = document.createElement('a');
+    a.href = window.URL.createObjectURL(new Blob([data], { type: 'text/plain' }));
+    a.download = `${filename}${fileFormat}`;
+    a.click();
 };
 /**Stringy an array/object so its readable, except for methods, eg: obj.sampleMethod becomes "[λ: sampleMethod]" */
 export const stringify = (x) => {
@@ -212,32 +217,19 @@ export const stringify = (x) => {
     });
     return JSON.stringify(stringified);
 };
-/**Wrapper for functions that can be run in either the client or server, with corresponding error handling/notifications */
-const clientOrServer_screener = async (wantedEnviremoent, successHandler) => {
-    const error = `'${successHandler.name}' is only meant for ${wantedEnviremoent}-side use! If you see this I messed up, pls report it`;
-    const clientOrServer_is = () => wantedEnviremoent;
-    const enviroment = clientOrServer_is();
-    if (enviroment === wantedEnviremoent) {
-        return await successHandler();
-    }
-    if (enviroment === 'server') {
-        colorLog_big('danger', error);
-    }
-    if (enviroment === 'client') {
-        alert(error);
-    }
-};
 /**FOR CLIENT-SIDE CODE ONLY. Copy anything to the clipboard, objects/arrays get parsed to be readable*/
 export const copyToClipboard = (x) => {
-    clientOrServer_screener('client', () => {
-        const text = stringify(x);
-        const a = document.createElement('textarea');
-        a.innerHTML = text;
-        document.body.appendChild(a);
-        a.select();
-        document.execCommand('copy');
-        document.body.removeChild(a);
-    });
+    if (isNode) {
+        colorLog_big('danger', 'copyToClipboard can only be run clientside!');
+        return;
+    }
+    const text = stringify(x);
+    const a = document.createElement('textarea');
+    a.innerHTML = text;
+    document.body.appendChild(a);
+    a.select();
+    document.execCommand('copy');
+    document.body.removeChild(a);
 };
 /**Returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export const isGuest = (username) => /Guest[0-9]{13}/i.test(`${username}`);
@@ -250,6 +242,8 @@ export function clientOrServer_is() {
 }
 /**For obligatory callbacks */
 export function doNothing() { }
+/**Syntactic sugar for "null as unknown as T" */
+export const nullAs = (x) => null; //TODO: see how to use in methods
 /**Map a collection of passable-arguments-of-a-function against said function //TODO: find use cases for this jewel maybe */
 const mapArgsOfFnAgainstFn = (fn, ...argsArr) => {
     //TODO: make this await promises.all in case fn is async
@@ -426,22 +420,17 @@ export const zPipe = (zSchema, initialValue, ...fns) => {
         return pipeState;
     }, initialPipeState);
 };
-_;
-// * UNCOMMENTTHISFORTHECLIENT const colorLog = (color, message) => console.log(`%c${message}`, `color: ${color};`)
-_;
 // ! DELETEEVERYTHINGBELOW, as it is only meant for server-side use
 _;
 /**FOR NODE-DEBUGGING ONLY. Log a message surrounded by a lot of asterisks for visibility, all in RED */
 export const colorLog_big = (variant, message) => {
-    clientOrServer_screener('server', () => {
-        const log = (message) => colorLog(variant, message);
-        const logAsterisks = (lines) => { for (let i = 0; i < lines; i++) {
-            log('*'.repeat(150));
-        } };
-        logAsterisks(3);
-        log(message);
-        logAsterisks(3);
-    });
+    const log = (message) => colorLog(variant, message);
+    const logAsterisks = (lines) => { for (let i = 0; i < lines; i++) {
+        log('*'.repeat(150));
+    } };
+    logAsterisks(3);
+    log(message);
+    logAsterisks(3);
 };
 /**console.log WITH COLORS :D */
 export const colorLog = (variant, message) => {
@@ -461,21 +450,19 @@ export const colorLog = (variant, message) => {
 };
 /**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
 export const downloadFile_node = async (filename, fileFormat, data, killProcessAfterwards) => {
-    clientOrServer_screener('server', async () => {
-        const formatted = stringify(data);
-        const dateForFilename = timeStampToDate(Date.now(), true).replace(/\/| |\:/g, '_');
-        const completeFilename = filename + '_' + dateForFilename + fileFormat;
-        colorLog('info', `Downloading ${completeFilename}..`);
-        await fs.promises.writeFile(completeFilename, formatted);
-        colorLog('success', 'Done!');
-        if (!killProcessAfterwards) {
-            return;
-        }
-        if (process.env.quokka) {
-            return;
-        }
-        killProcess('dark', 'Killing process now :D');
-    });
+    const formatted = stringify(data);
+    const dateForFilename = timeStampToDate(Date.now(), true).replace(/\/| |\:/g, '_');
+    const completeFilename = filename + '_' + dateForFilename + fileFormat;
+    colorLog('info', `Downloading ${completeFilename}..`);
+    await fs.promises.writeFile(completeFilename, formatted);
+    colorLog('success', 'Done!');
+    if (!killProcessAfterwards) {
+        return;
+    }
+    if (process.env.quokka) {
+        return;
+    }
+    killProcess('dark', 'Killing process now :D');
 };
 /**fetch the latest package.json of my-utils */
 export const getLatestPackageJsonFromGithub = async () => {
@@ -634,25 +621,20 @@ export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, 
         return io;
     }
     /**tryCatch wrapper for functions with DivineError as the error handler */
-    function tryF() {
-        const x = (fn, args) => {
-            try {
-                return fn(...args);
-            }
-            catch (err) {
-                divineError(err);
-            }
-        };
-        return x;
+    function tryF(fn, args) {
+        try {
+            return fn(...args);
+        }
+        catch (err) {
+            divineError(err);
+        }
     }
 };
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
-export const killProcess = (variant, message) => {
-    clientOrServer_screener('server', async () => {
-        colorLog_big(variant, message);
-        await delay(1000);
-        process.kill(process.pid);
-    });
+export const killProcess = async (variant, message) => {
+    colorLog_big(variant, message);
+    await delay(1000);
+    process.kill(process.pid);
 };
 /**Easily run the scripts of this package.json */
 export const npmRun = async (npmCommand) => {
@@ -760,23 +742,26 @@ export const npmRun = async (npmCommand) => {
         prompCommitMessage(versionIncrement);
     }
     function transpileFiles(followUp) {
-        exec('tsc --declaration --target esnext index.ts', async () => {
+        exec('tsc --declaration --target esnext  index.ts deps.ts', async () => {
             successLog('files transpiled ✔️');
-            await createdTrimmedVersionForBrowser('.js');
-            await createdTrimmedVersionForBrowser('.ts');
+            await createdTrimmedVersionForBrowser('index.ts');
+            await createdTrimmedVersionForBrowser('deps.ts');
+            await createdTrimmedVersionForBrowser('index.js');
+            await createdTrimmedVersionForBrowser('deps.js');
             successLog('browser versions emitted ✔️');
             await delay(500);
             followUp();
-            async function createdTrimmedVersionForBrowser(extension) {
-                const indexTs = await fs.promises.readFile(`./index${extension}`, 'utf8');
-                const lines = indexTs.replace('/\/ * UNCOMMENTTHISFORTHECLIENT ', '').replace("'./deps", "'../deps").split('\n');
-                const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x));
-                if (cutPoint === -1) {
-                    colorLog_big('danger', 'CUT POINT FOR REATING THE CLIENT-SIDE VERSION NOT FOUND');
-                    return;
+            async function createdTrimmedVersionForBrowser(filename) {
+                const indexTs = await fs.promises.readFile(filename, 'utf8');
+                const lines = indexTs.replaceAll('colorLog_big', 'colorLog').split('\n');
+                selfFilter(lines, (line) => !/DELETETHISFORCLIENT/.test(line));
+                if (/index/.test(filename)) {
+                    const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x));
+                    lines.splice(cutPoint, lines.length);
+                    const parameters = filename.includes('ts') ? 'color: string, message: string' : 'color, message';
+                    lines.push('const colorLog = (' + parameters + ') => console.log(`%c${message}`, `color: ${color};`)');
                 }
-                const newChangelog = lines.splice(0, cutPoint).join('\n');
-                await fs.promises.writeFile(`./client/forBrowser${extension}`, newChangelog);
+                await fs.promises.writeFile(`./client/${filename}`, lines.join('\n'));
             }
         });
     }
