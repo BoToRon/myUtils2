@@ -291,7 +291,7 @@ export const newToast_client_get = ($bvToast) => {
     return newToast;
 };
 /**Put the current function on-hold until the given condition is meet */
-export async function until(condition) { while (!condition) {
+export async function until(condition) { while (!Boolean(condition.x)) {
     await delay(500);
 } }
 /**This is a SAMPLE, use newToast_client_get to set newToast_client and use it without having to pass $bvToast everytime*/
@@ -543,7 +543,7 @@ export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, 
     async function getDivineBotAndError() {
         const bot = eris(ERIS_TOKEN);
         connectToDiscord();
-        await until(bot.ready);
+        await until({ x: bot.ready });
         return { divineBot: bot, divineError };
         function connectToDiscord() {
             const divinePrepend = '***DivineBot:***';
@@ -591,7 +591,7 @@ export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, 
         mongo.connect((err, client) => { if (err) {
             throw err;
         } mongoClient = client; });
-        await until(Boolean(mongoClient));
+        await until({ x: mongoClient });
         return mongoClient;
     }
     /**
@@ -744,6 +744,7 @@ export const npmRun = async (npmCommand) => {
             execSync(`npm version ${versionIncrement}`);
             await delay(3000);
             execSync('npm publish');
+            await delay(3000);
             successLog('package.json up-version\'d and published to npm');
             await replaceTagsInChangelogWithNewVersion();
             //await delay(1000 * 10)

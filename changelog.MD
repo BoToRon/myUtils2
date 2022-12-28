@@ -1,3 +1,4 @@
+##########refactor: merged deps.ts into index.ts
 ##########test: making all packages normal dependencies
 ##########fix: vite breaking, hopefully v2.0
 ##########fix: removed all things that break vite hopefully
