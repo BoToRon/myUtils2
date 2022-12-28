@@ -248,9 +248,17 @@ export function clientOrServer_is() {
 	return isServer ? 'server' : 'client'
 }
 /**For obligatory callbacks */
-export function doNothing() { }
-/**Syntactic sugar for "null as unknown as T" */
-export const nullAs = <T>(x: null) => null as unknown as T //TODO: see how to use in methods
+export function doNothing(...args: unknown[]) { }
+/**Syntactic sugar for "null as unknown as T", supports enums up to 5 items */
+export const nullAs = {
+	string: () => null as unknown as string,
+	number: () => null as unknown as number,
+	t1<T1>(x: T1) { doNothing(x); return null as T1 },
+	t2<T1, T2>(x: T1, y: T2) { doNothing(x, y); return null as T1 | T2 },
+	t3<T1, T2, T3>(x: T1, y: T2, z: T3) { doNothing(x, y, z); return null as T1 | T2 | T3 },
+	t4<T1, T2, T3, T4>(x: T1, y: T2, z: T3, _: T4) { doNothing(x, y, z, _); return null as T1 | T2 | T3 | T4 },
+	t5<T1, T2, T3, T4, T5>(x: T1, y: T2, z: T3, _: T4, $: T5) { doNothing(x, y, z, _, $); return null as T1 | T2 | T3 | T4 | T5 },
+}
 /**Map a collection of passable-arguments-of-a-function against said function //TODO: find use cases for this jewel maybe */
 const mapArgsOfFnAgainstFn = <F extends (...args: any) => any>(fn: F, ...argsArr: Parameters<F>[]) => {
 	//TODO: make this await promises.all in case fn is async

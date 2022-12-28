@@ -257,9 +257,17 @@ export function clientOrServer_is() {
     return isServer ? 'server' : 'client';
 }
 /**For obligatory callbacks */
-export function doNothing() { }
-/**Syntactic sugar for "null as unknown as T" */
-export const nullAs = (x) => null; //TODO: see how to use in methods
+export function doNothing(...args) { }
+/**Syntactic sugar for "null as unknown as T", supports enums up to 5 items */
+export const nullAs = {
+    string: () => null,
+    number: () => null,
+    t1(x) { doNothing(x); return null; },
+    t2(x, y) { doNothing(x, y); return null; },
+    t3(x, y, z) { doNothing(x, y, z); return null; },
+    t4(x, y, z, _) { doNothing(x, y, z, _); return null; },
+    t5(x, y, z, _, $) { doNothing(x, y, z, _, $); return null; },
+};
 /**Map a collection of passable-arguments-of-a-function against said function //TODO: find use cases for this jewel maybe */
 const mapArgsOfFnAgainstFn = (fn, ...argsArr) => {
     //TODO: make this await promises.all in case fn is async

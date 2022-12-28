@@ -111,9 +111,17 @@ export declare const toSingleLine: (sentence: string) => string;
 /**Check if the code is running in the client or in the server */
 export declare function clientOrServer_is(): "server" | "client";
 /**For obligatory callbacks */
-export declare function doNothing(): void;
-/**Syntactic sugar for "null as unknown as T" */
-export declare const nullAs: <T>(x: null) => T;
+export declare function doNothing(...args: unknown[]): void;
+/**Syntactic sugar for "null as unknown as T", supports enums up to 5 items */
+export declare const nullAs: {
+    string: () => string;
+    number: () => number;
+    t1<T1>(x: T1): T1;
+    t2<T1_1, T2>(x: T1_1, y: T2): T1_1 | T2;
+    t3<T1_2, T2_1, T3>(x: T1_2, y: T2_1, z: T3): T1_2 | T2_1 | T3;
+    t4<T1_3, T2_2, T3_1, T4>(x: T1_3, y: T2_2, z: T3_1, _: T4): T1_3 | T2_2 | T3_1 | T4;
+    t5<T1_4, T2_3, T3_2, T4_1, T5>(x: T1_4, y: T2_3, z: T3_2, _: T4_1, $: T5): T1_4 | T2_3 | T3_2 | T4_1 | T5;
+};
 /**function to generate newToast_client with a predertemined $bvToast so it doesnt have to be passed everytime :D */
 export declare const newToast_client_get: (bvToast: bvToast) => newToastFn;
 /**This is a SAMPLE, use newToast_client_get to set newToast_client and use it without having to pass $bvToast everytime*/
