@@ -491,7 +491,7 @@ export const getLatestPackageJsonFromGithub = async () => {
  */
 export const getMainDependencies = async (
 	appName: string,
-	createRequire: NodeRequire,
+	createRequire: (path: string | URL) => NodeRequire,
 	packageJson: { version: string, scripts: { [key: string]: string } },
 	pingMeOnErrors: boolean,
 	ERIS_TOKEN: string | undefined,

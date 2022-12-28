@@ -186,7 +186,7 @@ export declare const getLatestPackageJsonFromGithub: () => Promise<string>;
  * @param PORT The dev port, should reside in .env
  * @returns divineBot, divineError, io, mongoClient, tryF
  */
-export declare const getMainDependencies: (appName: string, createRequire: NodeRequire, packageJson: {
+export declare const getMainDependencies: (appName: string, createRequire: (path: string | URL) => NodeRequire, packageJson: {
     version: string;
     scripts: {
         [key: string]: string;
