@@ -491,6 +491,7 @@ export const getLatestPackageJsonFromGithub = async () => {
  */
 export const getMainDependencies = async (
 	appName: string,
+	createRequire: NodeRequire,
 	packageJson: { version: string, scripts: { [key: string]: string } },
 	pingMeOnErrors: boolean,
 	ERIS_TOKEN: string | undefined,
@@ -639,7 +640,7 @@ export const getMainDependencies = async (
 		app.use(express.static(path.resolve() + '/public'))
 		app.get('/', (_request, response) => response.sendFile(path.resolve() + 'public/index.html'))
 		server.listen(PORT, () => delay(1500).then(() => console.log(`server up at: http://localhost:${PORT}/`)))
-		const io = require('socket.io')(server, { cors: { origin: '*', } })
+		const io = createRequire(import.meta.url)('socket.io')(server, { cors: { origin: '*', } })
 		return io
 	}
 

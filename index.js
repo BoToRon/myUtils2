@@ -507,7 +507,7 @@ export const getLatestPackageJsonFromGithub = async () => {
  * @param PORT The dev port, should reside in .env
  * @returns divineBot, divineError, io, mongoClient, tryF
  */
-export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
+export const getMainDependencies = async (appName, createRequire, packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
     checkEnviromentVariable(); // ! this must go first, as all other functions need the .env vars
     const io = startServerAndGetIO();
     const mongoClient = await getMongoClient();
@@ -643,7 +643,7 @@ export const getMainDependencies = async (appName, packageJson, pingMeOnErrors, 
         app.use(express.static(path.resolve() + '/public'));
         app.get('/', (_request, response) => response.sendFile(path.resolve() + 'public/index.html'));
         server.listen(PORT, () => delay(1500).then(() => console.log(`server up at: http://localhost:${PORT}/`)));
-        const io = require('socket.io')(server, { cors: { origin: '*', } });
+        const io = createRequire(import.meta.url)('socket.io')(server, { cors: { origin: '*', } });
         return io;
     }
     /**tryCatch wrapper for functions with DivineError as the error handler */
