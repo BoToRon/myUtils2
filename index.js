@@ -290,10 +290,6 @@ export const newToast_client_get = ($bvToast) => {
     };
     return newToast;
 };
-/**Put the current function on-hold until the given condition is meet */
-export async function until(condition) { while (!Boolean(condition.x)) {
-    await delay(500);
-} }
 /**This is a SAMPLE, use newToast_client_get to set newToast_client and use it without having to pass $bvToast everytime*/
 export const newToast_client_sample = ($bvToast, title, msg, variant) => {
     $bvToast.toast(msg, {
@@ -543,7 +539,9 @@ export const getMainDependencies = async (appName, createRequire, packageJson, p
     async function getDivineBotAndError() {
         const bot = eris(ERIS_TOKEN);
         connectToDiscord();
-        await until({ x: bot.ready });
+        while (!bot.ready) {
+            await delay(500);
+        }
         return { divineBot: bot, divineError };
         function connectToDiscord() {
             const divinePrepend = '***DivineBot:***';
@@ -591,7 +589,9 @@ export const getMainDependencies = async (appName, createRequire, packageJson, p
         mongo.connect((err, client) => { if (err) {
             throw err;
         } mongoClient = client; });
-        await until({ x: mongoClient });
+        while (!mongoClient) {
+            await delay(500);
+        }
         return mongoClient;
     }
     /**

@@ -117,10 +117,6 @@ export declare function doNothing(): void;
 export declare const nullAs: <T>(x: null) => T;
 /**function to generate newToast_client with a predertemined $bvToast so it doesnt have to be passed everytime :D */
 export declare const newToast_client_get: (bvToast: bvToast) => newToastFn;
-/**Put the current function on-hold until the given condition is meet */
-export declare function until(condition: {
-    x: unknown;
-}): Promise<void>;
 /**This is a SAMPLE, use newToast_client_get to set newToast_client and use it without having to pass $bvToast everytime*/
 export declare const newToast_client_sample: ($bvToast: bvToast, title: string, msg: string, variant: z.infer<any>) => void;
 /**Simple and standard functional programming pipe. Deprecated, use either zPipe (persistenType with zod errors) or pipe_mutableType! */

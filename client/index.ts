@@ -258,8 +258,6 @@ export const newToast_client_get: (bvToast: bvToast) => newToastFn = ($bvToast: 
 	}
 	return newToast
 }
-/**Put the current function on-hold until the given condition is meet */
-export async function until(condition: { x: unknown }) { while (!Boolean(condition.x)) { await delay(500) } }
 /**This is a SAMPLE, use newToast_client_get to set newToast_client and use it without having to pass $bvToast everytime*/
 export const newToast_client_sample = ($bvToast: bvToast, title: string, msg: string, variant: validVariant) => {
 	$bvToast.toast(msg, {

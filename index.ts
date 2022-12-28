@@ -271,8 +271,6 @@ export const newToast_client_get: (bvToast: bvToast) => newToastFn = ($bvToast: 
 	}
 	return newToast
 }
-/**Put the current function on-hold until the given condition is meet */
-export async function until(condition: { x: unknown }) { while (!Boolean(condition.x)) { await delay(500) } }
 /**This is a SAMPLE, use newToast_client_get to set newToast_client and use it without having to pass $bvToast everytime*/
 export const newToast_client_sample = ($bvToast: bvToast, title: string, msg: string, variant: validVariant) => {
 	$bvToast.toast(msg, {
@@ -537,12 +535,10 @@ export const getMainDependencies = async (
 	async function getDivineBotAndError() {
 		const bot = eris(ERIS_TOKEN as string)
 		connectToDiscord()
-		await until({ x: bot.ready })
-
+		while (!bot.ready) { await delay(500) }
 		return { divineBot: bot, divineError }
 
 		function connectToDiscord() {
-
 			const divinePrepend = '***DivineBot:***'
 
 			bot.on('messageReactionAdd', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('add', a, b, c))
@@ -585,7 +581,7 @@ export const getMainDependencies = async (
 		const mongo = new mongodb.MongoClient(MONGO_URI as string)
 		let mongoClient: MongoClient = null as unknown as MongoClient
 		mongo.connect((err, client) => { if (err) { throw err } mongoClient = client as MongoClient })
-		await until({ x: mongoClient })
+		while (!mongoClient) { await delay(500) }
 		return mongoClient
 	}
 

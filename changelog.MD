@@ -1,3 +1,4 @@
+##########fix: the type of createRequire in getMainDeps
 ##########fix: getMain deps needed require, now is passed
 ##########fix: "until" was being passed absolute booleans
 ##########refactor: merged deps.ts into index.ts
