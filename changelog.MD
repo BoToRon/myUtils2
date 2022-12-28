@@ -1,3 +1,4 @@
+##########feat: made "validVariant" an export
 ##########test: testing socket.io's typescript support
 ##########fix: deleted "until", not easy to work with
 ##########fix: the type of createRequire in getMainDeps

@@ -483,6 +483,18 @@ export const downloadFile_node = async (filename, fileFormat, data, killProcessA
     }
     killProcess('dark', 'Killing process now :D');
 };
+/**Wrapper for fs.promise.readFile that announces the start of the file-reading */
+export async function fsReadFileAsync(filePath) {
+    console.log(`reading '${filePath}'..`);
+    const file = await fs.promises.readFile(filePath, 'utf8');
+    return file;
+}
+/**Wrapper for fsWriteFileAsync that announces the start of the file-writing */
+export async function fsWriteFileAsync(filePath, content) {
+    console.log(`writing to '${filePath}'..`);
+    const file = await fs.promises.writeFile(filePath, content);
+    return file;
+}
 /**fetch the latest package.json of my-utils */
 export const getLatestPackageJsonFromGithub = async () => {
     const response = await new Promise((resolve) => {
@@ -664,7 +676,6 @@ export const killProcess = async (variant, message) => {
 };
 /**Easily run the scripts of this package.json */
 export const npmRun = async (npmCommand) => {
-    const questionAsPromise = (question) => new Promise(resolve => readline.question(question + '\n', resolve));
     const killCommandLine = () => delay(3000).then(() => killProcess('dark', 'Process over'));
     const successLog = (message) => colorLog('success', message);
     const readline = getReadLine.createInterface({ input: process.stdin, output: process.stdout });
@@ -700,7 +711,7 @@ export const npmRun = async (npmCommand) => {
         }
         return;
         async function addLineToFutureVersion() {
-            let changelog = await fs.promises.readFile('./changelog.MD', 'utf8');
+            let changelog = await fsReadFileAsync('./changelog.MD');
             while (['\n', ' '].includes(changelog[0])) {
                 changelog = changelog.slice(1);
             }
@@ -708,11 +719,11 @@ export const npmRun = async (npmCommand) => {
             lines.splice(0, 0, ' '.repeat(10) + commitMessage);
             const newChangelog = lines.join('\n');
             console.log({ newChangelog });
-            await fs.promises.writeFile('./changelog.MD', newChangelog);
+            await fsWriteFileAsync('./changelog.MD', newChangelog);
             colorLog('info', 'commit added to the changelog for a yet-to-be-released version');
         }
         async function addLineAsNewVersion(versionIncrement) {
-            const changelog = await fs.promises.readFile('./changelog.MD', 'utf8');
+            const changelog = await fsReadFileAsync('./changelog.MD');
             const lines = changelog.split('\n');
             if (versionIncrement === 'major') {
                 lines.splice(0, 0, `${'#'.repeat(125)}`);
@@ -723,7 +734,7 @@ export const npmRun = async (npmCommand) => {
             const newLine = '#'.repeat(10) + commitMessage;
             lines.splice(0, 0, newLine);
             const newChangelog = lines.join('\n');
-            await fs.promises.writeFile('./changelog.MD', newChangelog);
+            await fsWriteFileAsync('./changelog.MD', newChangelog);
         }
         function get_zValidCommitMessage() {
             const commitRegex = new RegExp(`(?<!.)${commitTypes}:`);
@@ -754,9 +765,9 @@ export const npmRun = async (npmCommand) => {
                 const newVersion = updatedPackageJson.default.version;
                 const spacesAfterVersion = ' '.repeat(9 - newVersion.length);
                 const stringToReplaceTheTags = `${newVersion}.${spacesAfterVersion}`;
-                const changelog = await fs.promises.readFile('./changelog.MD', 'utf8');
+                const changelog = await fsReadFileAsync('./changelog.MD');
                 const newChangelog = changelog.replace('#'.repeat(10), stringToReplaceTheTags);
-                await fs.promises.writeFile('./changelog.MD', newChangelog);
+                await fsWriteFileAsync('./changelog.MD', newChangelog);
             }
         }
     }
@@ -768,17 +779,22 @@ export const npmRun = async (npmCommand) => {
         }
         prompCommitMessage(versionIncrement);
     }
+    function questionAsPromise(question) {
+        return new Promise(resolve => {
+            readline.question(chalk.magenta(question) + '\n', resolve);
+        });
+    }
     function transpileFiles(followUp) {
         const filename = 'index.ts';
         exec('tsc --declaration --target esnext ' + filename, async () => {
             successLog(filename + ' transpiled ✔️');
-            const indexTs = await fs.promises.readFile(filename, 'utf8');
+            const indexTs = await fsReadFileAsync(filename);
             const lines = indexTs.replaceAll('colorLog_big', 'colorLog').split('\n');
             selfFilter(lines, (line) => !/DELETETHISFORCLIENT/.test(line));
             const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x));
             lines.splice(cutPoint, lines.length);
             lines.push('const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)');
-            await fs.promises.writeFile(`./client/${filename}`, lines.join('\n'));
+            await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'));
             exec('tsc --declaration --target esnext client/index.ts ', async () => {
                 successLog('browser versions emitted ✔️');
                 await delay(500);

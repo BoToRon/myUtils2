@@ -168,6 +168,10 @@ export declare const colorLog_big: (variant: z.infer<any>, message: string) => v
 export declare const colorLog: (variant: z.infer<any>, message: string) => void;
 /**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
 export declare const downloadFile_node: (filename: string, fileFormat: '.txt' | '.json', data: unknown, killProcessAfterwards: boolean) => Promise<void>;
+/**Wrapper for fs.promise.readFile that announces the start of the file-reading */
+export declare function fsReadFileAsync(filePath: string): Promise<any>;
+/**Wrapper for fsWriteFileAsync that announces the start of the file-writing */
+export declare function fsWriteFileAsync(filePath: string, content: string): Promise<any>;
 /**fetch the latest package.json of my-utils */
 export declare const getLatestPackageJsonFromGithub: () => Promise<string>;
 /**
