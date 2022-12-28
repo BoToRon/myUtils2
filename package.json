@@ -1,7 +1,7 @@
 {
 	"name": "@botoron/utils",
 	"type": "module",
-	"version": "1.0.13",
+	"version": "1.0.14",
 	"description": "Utilities of me for me",
 	"main": "index.js",
 	"scripts": {
