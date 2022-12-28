@@ -2,7 +2,7 @@
 const _ = 'prevent imports and comments from collapsing'
 _
 _
-import { Server } from "socket.io";
+_
 _
 _
 _
@@ -16,8 +16,8 @@ _
 import { fromZodError } from 'zod-validation-error'
 _
 import { z, type SafeParseReturnType } from 'zod'
-import { EventsMap } from 'socket.io/dist/typed-events';
 
+export type validVariant = z.infer<typeof zValidVariants>
 const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'])
 type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: validVariant, title: string }
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
@@ -27,8 +27,6 @@ type newToastFn = (title: string, message: string, variant: validVariant) => voi
 type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
 type zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T> }
 const zValidNpmCommand = z.enum(['gitPush', 'publish', 'transpile'])
-type pck = { objects: [{ package: { version: string } }] }
-type validVariant = z.infer<typeof zValidVariants>
 type pipe_persistent_type<T> = (arg: T) => T
 
 type pipe_mutable_type = {
@@ -373,16 +371,11 @@ export const zodCheck_sample = <T>(errorHandler: (err: string) => void, schema: 
  */
 // ? TODO: maybe make it a placeholder and create an initialized that pre-determines the errorHandler like with zodCheck and zodCheck_get 
 export const zodCheckAndHandle = <D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(
-	/**wanted schema */
-	zSchema: zSchema<D>,
-	/**data to test against the schema */
-	data: D,
-	/**function that executes if the data does fit the schema */
-	successHandler: SH,
-	/**arguments to apply to the success function shall it be executed */
-	args: Parameters<SH>,
-	/**function that executes if the data doesn't fit the schema, does something with the error message */
-	errorHandler: (errorMessage: string) => void,
+	/**wanted schema */	zSchema: zSchema<D>,
+	/**data to test against the schema */	data: D,
+	/**sucess handler*/	successHandler: SH,
+	/**arguments to apply to the success handler */	args: Parameters<SH>,
+	/**error handler */ errorHandler: (errorMessage: string) => void,
 ) => {
 	/**whether the data fits the schema or not */
 	const zResult = zSchema.safeParse(data)

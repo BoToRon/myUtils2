@@ -1,4 +1,5 @@
 import { z, type SafeParseReturnType } from 'zod';
+export type validVariant = z.infer<typeof zValidVariants>;
 declare const zValidVariants: any;
 type toastOptions = {
     toaster: string;
@@ -25,7 +26,6 @@ type bvToast = {
 type zSchema<T> = {
     safeParse: (x: T) => SafeParseReturnType<T, T>;
 };
-type validVariant = z.infer<typeof zValidVariants>;
 type pipe_persistent_type<T> = (arg: T) => T;
 type pipe_mutable_type = {
     <T, A>(source: T, a: (value: T) => A): A;

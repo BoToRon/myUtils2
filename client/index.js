@@ -12,6 +12,7 @@ _;
 _;
 _;
 _;
+_;
 import { fromZodError } from 'zod-validation-error';
 _;
 import { z } from 'zod';
@@ -393,16 +394,11 @@ export const zodCheck_sample = (errorHandler, schema, data) => {
  */
 // ? TODO: maybe make it a placeholder and create an initialized that pre-determines the errorHandler like with zodCheck and zodCheck_get 
 export const zodCheckAndHandle = (
-/**wanted schema */
-zSchema, 
-/**data to test against the schema */
-data, 
-/**function that executes if the data does fit the schema */
-successHandler, 
-/**arguments to apply to the success function shall it be executed */
-args, 
-/**function that executes if the data doesn't fit the schema, does something with the error message */
-errorHandler) => {
+/**wanted schema */ zSchema, 
+/**data to test against the schema */ data, 
+/**sucess handler*/ successHandler, 
+/**arguments to apply to the success handler */ args, 
+/**error handler */ errorHandler) => {
     /**whether the data fits the schema or not */
     const zResult = zSchema.safeParse(data);
     /**data doesn't fit, execute errorHandler with the error message x_X */
