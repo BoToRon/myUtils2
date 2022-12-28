@@ -1,3 +1,4 @@
+##########fix: deleted "until", not easy to work with
 ##########fix: the type of createRequire in getMainDeps
 ##########fix: getMain deps needed require, now is passed
 ##########fix: "until" was being passed absolute booleans

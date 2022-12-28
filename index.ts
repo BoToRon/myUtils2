@@ -3,6 +3,8 @@ const _ = 'prevent imports and comments from collapsing'
 _
 import fs from 'fs'	//DELETETHISFORCLIENT
 _
+import { Server } from "socket.io";
+_
 import eris from 'eris'	//DELETETHISFORCLIENT
 _
 import path from 'path'	//DELETETHISFORCLIENT
@@ -23,9 +25,8 @@ import mongodb, { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
 _
 import { fromZodError } from 'zod-validation-error'
 _
-import type { SafeParseReturnType } from 'zod'
-_
-import { z } from 'zod'
+import { z, type SafeParseReturnType } from 'zod'
+import { EventsMap } from 'socket.io/dist/typed-events';
 
 const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'])
 type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: validVariant, title: string }
@@ -487,9 +488,9 @@ export const getLatestPackageJsonFromGithub = async () => {
  * @param PORT The dev port, should reside in .env
  * @returns divineBot, divineError, io, mongoClient, tryF
  */
-export const getMainDependencies = async (
+export const getMainDependencies = async <ClientToServerEvents extends EventsMap, ServerToClientEvents extends EventsMap>(
 	appName: string,
-	createRequire: (path: string | URL) => NodeRequire,
+	//createRequire: (path: string | URL) => NodeRequire,
 	packageJson: { version: string, scripts: { [key: string]: string } },
 	pingMeOnErrors: boolean,
 	ERIS_TOKEN: string | undefined,
@@ -632,11 +633,12 @@ export const getMainDependencies = async (
 
 	function startServerAndGetIO() {
 		const app = express()
-		const server = http.createServer(app)
+		const httpServer = http.createServer(app)
 		app.use(express.static(path.resolve() + '/public'))
 		app.get('/', (_request, response) => response.sendFile(path.resolve() + 'public/index.html'))
-		server.listen(PORT, () => delay(1500).then(() => console.log(`server up at: http://localhost:${PORT}/`)))
-		const io = createRequire(import.meta.url)('socket.io')(server, { cors: { origin: '*', } })
+		httpServer.listen(PORT, () => delay(1500).then(() => console.log(`server up at: http://localhost:${PORT}/`)))
+		//const io = createRequire(import.meta.url)('socket.io')(server, { cors: { origin: '*', } })
+		const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, { cors: { origin: '*' } })
 		return io
 	}
 
@@ -787,8 +789,6 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 */
 
 /*
-	npm run transpile_upversion_commit_and_publish
- *
  * Regarding passing a function with its arguments to another function
  * 
  * looks like														is called as								must apply as										explanation
@@ -812,7 +812,7 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
  */
 
 const command = process.env.npm_config_command as validNpmCommand
-zodCheckAndHandle(zValidNpmCommand, command, npmRun, [command], console.log)
+if (command) { zodCheckAndHandle(zValidNpmCommand, command, npmRun, [command], console.log) }
 
 
 

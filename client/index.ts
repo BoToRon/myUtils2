@@ -2,6 +2,8 @@
 const _ = 'prevent imports and comments from collapsing'
 _
 _
+import { Server } from "socket.io";
+_
 _
 _
 _
@@ -13,9 +15,8 @@ _
 _
 import { fromZodError } from 'zod-validation-error'
 _
-import type { SafeParseReturnType } from 'zod'
-_
-import { z } from 'zod'
+import { z, type SafeParseReturnType } from 'zod'
+import { EventsMap } from 'socket.io/dist/typed-events';
 
 const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'])
 type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: validVariant, title: string }

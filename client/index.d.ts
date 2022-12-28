@@ -1,5 +1,4 @@
-import type { SafeParseReturnType } from 'zod';
-import { z } from 'zod';
+import { z, type SafeParseReturnType } from 'zod';
 declare const zValidVariants: any;
 type toastOptions = {
     toaster: string;
