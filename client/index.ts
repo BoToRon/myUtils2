@@ -11,8 +11,6 @@ _
 _
 _
 _
-_
-_
 import { fromZodError } from 'zod-validation-error'
 _
 import { z, type SafeParseReturnType } from 'zod'
@@ -26,7 +24,7 @@ declare global { interface Window { vueComponents: trackedVueComponent[], newToa
 type newToastFn = (title: string, message: string, variant: validVariant) => void
 type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
 type zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T> }
-const zValidNpmCommand = z.enum(['gitPush', 'publish', 'transpile'])
+const zValidNpmCommand = z.enum(['git', 'publish', 'transpile'])
 type pipe_persistent_type<T> = (arg: T) => T
 
 type pipe_mutable_type = {

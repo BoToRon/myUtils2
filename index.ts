@@ -510,7 +510,7 @@ export const getMainDependencies = async (
 ) => {
 
 	checkEnviromentVariable() // ! this must go first, as all other functions need the .env vars
-	const httServer = startAndGetHttpServer()
+	const httpServer = startAndGetHttpServer()
 	const mongoClient = await getMongoClient()
 	const { divineBot } = await getDivineBotAndError()
 

@@ -17,19 +17,16 @@ import fetch from 'node-fetch'; //DELETETHISFORCLIENT
 _;
 import getReadLine from 'readline'; //DELETETHISFORCLIENT
 _;
-import { Server } from "socket.io"; //DELETETHISFORCLIENT
-_;
 import { exec, execSync } from 'child_process'; //DELETETHISFORCLIENT
 _;
 import mongodb from 'mongodb'; //DELETETHISFORCLIENT
-_;
 _;
 import { fromZodError } from 'zod-validation-error';
 _;
 import { z } from 'zod';
 const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark']);
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
-const zValidNpmCommand = z.enum(['gitPush', 'publish', 'transpile']);
+const zValidNpmCommand = z.enum(['git', 'publish', 'transpile']);
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch']); //DELETETHISFORCLIENT
 export const BTR = {
     /**Tr-Catch wrapper for functions. Starts as a placeholder, initialize it with typeF_get */
@@ -524,12 +521,12 @@ export const getMainDependencies = async (appName,
 //createRequire: (path: string | URL) => NodeRequire,
 packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
     checkEnviromentVariable(); // ! this must go first, as all other functions need the .env vars
-    const io = startServerAndGetIO();
+    const httpServer = startAndGetHttpServer();
     const mongoClient = await getMongoClient();
     const { divineBot } = await getDivineBotAndError();
     myUtils_checkIfUpToDate(divineError);
     showPackageJsonScripts_project();
-    return { divineBot, divineError, io, mongoClient, tryF };
+    return { divineBot, divineError, httpServer, mongoClient, tryF };
     function checkEnviromentVariable() {
         let x = true;
         check('ERIS_TOKEN', ERIS_TOKEN);
@@ -656,15 +653,13 @@ packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
         const data = Object.entries(packageJson.scripts).map(x => ({ script: `${margin}npm run ${x[0]}${margin}`, command: x[1] }));
         console.table(data);
     }
-    function startServerAndGetIO() {
+    function startAndGetHttpServer() {
         const app = express();
         const httpServer = http.createServer(app);
         app.use(express.static(path.resolve() + '/public'));
         app.get('/', (_request, response) => response.sendFile(path.resolve() + 'public/index.html'));
         httpServer.listen(PORT, () => delay(1500).then(() => console.log(`server up at: http://localhost:${PORT}/`)));
-        //const io = createRequire(import.meta.url)('socket.io')(server, { cors: { origin: '*', } })
-        const io = new Server(httpServer, { cors: { origin: '*' } });
-        return io;
+        return httpServer;
     }
     /**tryCatch wrapper for functions with DivineError as the error handler */
     function tryF(fn, args) {
@@ -688,7 +683,7 @@ export const npmRun = async (npmCommand) => {
     const successLog = (message) => colorLog('success', message);
     const readline = getReadLine.createInterface({ input: process.stdin, output: process.stdout });
     const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test)';
-    if (npmCommand === 'gitPush') {
+    if (npmCommand === 'git') {
         prompCommitMessage(null);
     }
     if (npmCommand === 'transpile') {
@@ -704,14 +699,14 @@ export const npmRun = async (npmCommand) => {
         if (!zodCheck_sample(tryAgain, get_zValidCommitMessage(), commitMessage)) {
             return;
         }
-        if (npmCommand === 'gitPush') {
+        if (npmCommand === 'git') {
             await addLineToFutureVersion();
         }
         if (npmCommand === 'publish') {
             addLineAsNewVersion(versionIncrement);
         }
         gitAddCommitPush();
-        if (npmCommand === 'gitPush') {
+        if (npmCommand === 'git') {
             killCommandLine();
         }
         if (npmCommand === 'publish') {

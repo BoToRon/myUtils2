@@ -11,14 +11,12 @@ _;
 _;
 _;
 _;
-_;
-_;
 import { fromZodError } from 'zod-validation-error';
 _;
 import { z } from 'zod';
 const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark']);
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
-const zValidNpmCommand = z.enum(['gitPush', 'publish', 'transpile']);
+const zValidNpmCommand = z.enum(['git', 'publish', 'transpile']);
 export const BTR = {
     /**Tr-Catch wrapper for functions. Starts as a placeholder, initialize it with typeF_get */
     tryF: (fn, args) => {

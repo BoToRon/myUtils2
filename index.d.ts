@@ -192,7 +192,7 @@ export declare const getLatestPackageJsonFromGithub: () => Promise<string>;
  * @param PORT The dev port, should reside in .env
  * @returns divineBot, divineError, io, mongoClient, tryF
  */
-export declare const getMainDependencies: <ClientToServerEvents extends EventsMap, ServerToClientEvents extends EventsMap>(appName: string, packageJson: {
+export declare const getMainDependencies: (appName: string, packageJson: {
     version: string;
     scripts: {
         [key: string]: string;
@@ -200,7 +200,7 @@ export declare const getMainDependencies: <ClientToServerEvents extends EventsMa
 }, pingMeOnErrors: boolean, ERIS_TOKEN: string | undefined, MONGO_URI: string | undefined, PORT: string | undefined) => Promise<{
     divineBot: any;
     divineError: (arg: string | Error) => void;
-    io: any;
+    httpServer: any;
     mongoClient: MongoClient;
     tryF: <T extends (...args: any) => any>(fn: T, args: Parameters<T>) => void;
 }>;
