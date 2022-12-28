@@ -1,3 +1,5 @@
+##########feat: addTimer and killTimer for ref.timers
+
           chore: type + renamed npm run's gitPush to git
 ##########feat: "nullAs", features enums up to 5 items
 ##########feat: wrappers for fs.promises.readFile/writeFile
