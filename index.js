@@ -51,6 +51,20 @@ export const BTR = {
     /**for when registering them for tracking at window.vueComponents */
     zValidVueComponentName: null,
 };
+/**start a setInterval and add it to an array */
+export const timer_add = (timers, id, callBack, interval) => {
+    const theTimer = setInterval(() => { callBack; }, interval);
+    timers.push([id, theTimer]);
+};
+/**Kill a setInterval and remove it from its belonging array */
+export function timer_kill(timers, id) {
+    const theTimer = timers.find(x => x[0] === id);
+    if (!theTimer) {
+        return;
+    }
+    clearInterval(theTimer[1]);
+    removeItem(timers, theTimer);
+}
 /**Adds an item to an array, or removes it if it already was added. Returns the action applied and the array */
 export const addOrRemoveItem = (arr, item) => {
     let x;
@@ -95,7 +109,7 @@ export const transferItems = (origin, destination, predicate) => {
     destination.push(...x.removedItems);
     return { transferedCount: x.removedCount };
 };
-/**Remove items from an array that don't fulfill the given condition, returns the removed items and their amount */
+/**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
 export const selfFilter = (arr, predicate) => {
     let removedCount = 0;
     let removedItems = [];
@@ -109,6 +123,8 @@ export const selfFilter = (arr, predicate) => {
     }
     return { removedItems, removedCount };
 };
+/**Remove a single item from an array, or all copies of that item if its a primitive value */
+export const removeItem = (arr, item) => selfFilter(arr, (x) => x !== item).removedCount;
 /**Randomizes the order of the items in the array */
 export const shuffle = (arr) => {
     for (let i = arr.length - 1; i > 0; i--) {

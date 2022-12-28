@@ -25,7 +25,10 @@ import { fromZodError } from 'zod-validation-error'
 _
 import { z, type SafeParseReturnType } from 'zod'
 
+export type intervalWithid = [id: string, interval: NodeJS.Timer]
+export type globalAlert = { message: string, show: boolean }
 export type validVariant = z.infer<typeof zValidVariants>
+
 const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'])
 type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: validVariant, title: string }
 type validChalkColor = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'white' | 'grey' | 'magentaBright'	//DELETETHISFORCLIENT
@@ -39,7 +42,6 @@ const zValidNpmCommand = z.enum(['git', 'publish', 'transpile'])
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch'])	//DELETETHISFORCLIENT
 type validNpmCommand = z.infer<typeof zValidNpmCommand>	//DELETETHISFORCLIENT
 type pipe_persistent_type<T> = (arg: T) => T
-
 type pipe_mutable_type = {
 	<T, A>(source: T, a: (value: T) => A): A
 	<T, A, B>(source: T, a: (value: T) => A, b: (value: A) => B): B
@@ -48,8 +50,6 @@ type pipe_mutable_type = {
 	<T, A, B, C, D, E>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D, e: (value: D) => E): E
 	//can always make it longer 😉
 }
-
-
 export const BTR = {
 	/**Tr-Catch wrapper for functions. Starts as a placeholder, initialize it with typeF_get */
 	tryF: <T extends (...args: any) => any>(fn: T, args: Parameters<T>): any => {
@@ -72,6 +72,18 @@ export const BTR = {
 	},
 	/**for when registering them for tracking at window.vueComponents */
 	zValidVueComponentName: null as unknown as zSchema<unknown>,
+}
+/**start a setInterval and add it to an array */
+export const timer_add = (timers: intervalWithid[], id: string, callBack: Function, interval: number) => {
+	const theTimer: ReturnType<typeof setInterval> = setInterval(() => { callBack }, interval)
+	timers.push([id, theTimer])
+}
+/**Kill a setInterval and remove it from its belonging array */
+export function timer_kill(timers: intervalWithid[], id: string) {
+	const theTimer = timers.find(x => x[0] === id)
+	if (!theTimer) { return }
+	clearInterval(theTimer[1])
+	removeItem(timers, theTimer)
 }
 /**Adds an item to an array, or removes it if it already was added. Returns the action applied and the array */
 export const addOrRemoveItem = <T>(arr: T[], item: T) => {
@@ -106,7 +118,7 @@ export const transferItems = <T>(origin: T[], destination: T[], predicate: (arg1
 	destination.push(...x.removedItems)
 	return { transferedCount: x.removedCount }
 }
-/**Remove items from an array that don't fulfill the given condition, returns the removed items and their amount */
+/**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
 export const selfFilter = <T>(arr: T[], predicate: (arg1: T) => boolean) => {
 	let removedCount = 0
 	let removedItems: T[] = []
@@ -118,6 +130,8 @@ export const selfFilter = <T>(arr: T[], predicate: (arg1: T) => boolean) => {
 	}
 	return { removedItems, removedCount }
 }
+/**Remove a single item from an array, or all copies of that item if its a primitive value */
+export const removeItem = <T>(arr: T[], item: T) => selfFilter(arr, (x: T) => x !== item).removedCount
 /**Randomizes the order of the items in the array */
 export const shuffle = <T>(arr: T[]) => {
 	for (let i = arr.length - 1; i > 0; i--) {

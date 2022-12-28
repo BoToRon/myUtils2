@@ -1,4 +1,10 @@
+/// <reference types="node" />
 import { z, type SafeParseReturnType } from 'zod';
+export type intervalWithid = [id: string, interval: NodeJS.Timer];
+export type globalAlert = {
+    message: string;
+    show: boolean;
+};
 export type validVariant = z.infer<typeof zValidVariants>;
 declare const zValidVariants: any;
 type toastOptions = {
@@ -47,6 +53,10 @@ export declare const BTR: {
     /**for when registering them for tracking at window.vueComponents */
     zValidVueComponentName: zSchema<unknown>;
 };
+/**start a setInterval and add it to an array */
+export declare const timer_add: (timers: intervalWithid[], id: string, callBack: Function, interval: number) => void;
+/**Kill a setInterval and remove it from its belonging array */
+export declare function timer_kill(timers: intervalWithid[], id: string): void;
 /**Adds an item to an array, or removes it if it already was added. Returns the action applied and the array */
 export declare const addOrRemoveItem: <T>(arr: T[], item: T) => {
     action: "removed" | "added";
@@ -67,11 +77,13 @@ export declare const getUniqueValues: <T>(arr: T[]) => T[];
 export declare const transferItems: <T>(origin: T[], destination: T[], predicate: (arg1: T) => boolean) => {
     transferedCount: number;
 };
-/**Remove items from an array that don't fulfill the given condition, returns the removed items and their amount */
+/**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
 export declare const selfFilter: <T>(arr: T[], predicate: (arg1: T) => boolean) => {
     removedItems: T[];
     removedCount: number;
 };
+/**Remove a single item from an array, or all copies of that item if its a primitive value */
+export declare const removeItem: <T>(arr: T[], item: T) => number;
 /**Randomizes the order of the items in the array */
 export declare const shuffle: <T>(arr: T[]) => T[];
 /**Sort an array of objects based on the value a property. A: Ascending, D: Descesding  */
