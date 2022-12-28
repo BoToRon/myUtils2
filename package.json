@@ -8,7 +8,7 @@
 		"publish": "npm run npmRun --command=publish",
 		"test": "ts-node-esm test.ts",
 		"npmRun": "ts-node-esm --transpileOnly index.ts",
-		"gitPush": "npm run npmRun --command=gitPush",
+		"git": "npm run npmRun --command=git",
 		"transpile": "npm run npmRun --command=transpile",
 		"_tsIndex": "tsc --declaration --listEmittedFiles --target esnext index.ts",
 		"testGit": "git commit -a & git push"

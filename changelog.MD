@@ -1,3 +1,5 @@
+          chore: type + renamed npm run's gitPush to git
+##########feat: "nullAs", features enums up to 5 items
 ##########feat: wrappers for fs.promises.readFile/writeFile
 ##########feat: made "validVariant" an export
 ##########test: testing socket.io's typescript support

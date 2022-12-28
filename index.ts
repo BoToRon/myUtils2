@@ -17,13 +17,9 @@ import fetch from 'node-fetch'	//DELETETHISFORCLIENT
 _
 import getReadLine from 'readline'	//DELETETHISFORCLIENT
 _
-import { Server } from "socket.io"	//DELETETHISFORCLIENT
-_
 import { exec, execSync } from 'child_process'	//DELETETHISFORCLIENT
 _
 import mongodb, { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
-_
-import { EventsMap } from 'socket.io/dist/typed-events'	//DELETETHISFORCLIENT
 _
 import { fromZodError } from 'zod-validation-error'
 _
@@ -39,7 +35,7 @@ declare global { interface Window { vueComponents: trackedVueComponent[], newToa
 type newToastFn = (title: string, message: string, variant: validVariant) => void
 type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
 type zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T> }
-const zValidNpmCommand = z.enum(['gitPush', 'publish', 'transpile'])
+const zValidNpmCommand = z.enum(['git', 'publish', 'transpile'])
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch'])	//DELETETHISFORCLIENT
 type validNpmCommand = z.infer<typeof zValidNpmCommand>	//DELETETHISFORCLIENT
 type pipe_persistent_type<T> = (arg: T) => T
@@ -503,7 +499,7 @@ export const getLatestPackageJsonFromGithub = async () => {
  * @param PORT The dev port, should reside in .env
  * @returns divineBot, divineError, io, mongoClient, tryF
  */
-export const getMainDependencies = async <ClientToServerEvents extends EventsMap, ServerToClientEvents extends EventsMap>(
+export const getMainDependencies = async (
 	appName: string,
 	//createRequire: (path: string | URL) => NodeRequire,
 	packageJson: { version: string, scripts: { [key: string]: string } },
@@ -514,14 +510,14 @@ export const getMainDependencies = async <ClientToServerEvents extends EventsMap
 ) => {
 
 	checkEnviromentVariable() // ! this must go first, as all other functions need the .env vars
-	const io = startServerAndGetIO()
+	const httServer = startAndGetHttpServer()
 	const mongoClient = await getMongoClient()
 	const { divineBot } = await getDivineBotAndError()
 
 	myUtils_checkIfUpToDate(divineError)
 	showPackageJsonScripts_project()
 
-	return { divineBot, divineError, io, mongoClient, tryF }
+	return { divineBot, divineError, httpServer, mongoClient, tryF }
 
 	function checkEnviromentVariable() {
 
@@ -646,15 +642,13 @@ export const getMainDependencies = async <ClientToServerEvents extends EventsMap
 		console.table(data)
 	}
 
-	function startServerAndGetIO() {
+	function startAndGetHttpServer() {
 		const app = express()
 		const httpServer = http.createServer(app)
 		app.use(express.static(path.resolve() + '/public'))
 		app.get('/', (_request, response) => response.sendFile(path.resolve() + 'public/index.html'))
 		httpServer.listen(PORT, () => delay(1500).then(() => console.log(`server up at: http://localhost:${PORT}/`)))
-		//const io = createRequire(import.meta.url)('socket.io')(server, { cors: { origin: '*', } })
-		const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, { cors: { origin: '*' } })
-		return io
+		return httpServer
 	}
 
 	/**tryCatch wrapper for functions with DivineError as the error handler */
@@ -678,7 +672,7 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 	const readline = getReadLine.createInterface({ input: process.stdin, output: process.stdout })
 	const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test)'
 
-	if (npmCommand === 'gitPush') { prompCommitMessage(null as unknown as string) }
+	if (npmCommand === 'git') { prompCommitMessage(null as unknown as string) }
 	if (npmCommand === 'transpile') { transpileFiles(killCommandLine) }
 	if (npmCommand === 'publish') { transpileFiles(promptVersioning) }
 
@@ -689,10 +683,10 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 		function tryAgain(error: string) { colorLog('warning', error); prompCommitMessage(versionIncrement); return }
 		if (!zodCheck_sample(tryAgain, get_zValidCommitMessage(), commitMessage)) { return }
 
-		if (npmCommand === 'gitPush') { await addLineToFutureVersion() }
+		if (npmCommand === 'git') { await addLineToFutureVersion() }
 		if (npmCommand === 'publish') { addLineAsNewVersion(versionIncrement) }
 		gitAddCommitPush()
-		if (npmCommand === 'gitPush') { killCommandLine() }
+		if (npmCommand === 'git') { killCommandLine() }
 		if (npmCommand === 'publish') { upVersion_publish_updateChangelog_andKillCommandLine() }
 
 		return
