@@ -1,3 +1,4 @@
+##########test: still with DivineBot issues
 ##########test: attempt 2 vs railway
 ##########test: if it was DivineError breaking railway
 ##########test: railway not using updated version i think

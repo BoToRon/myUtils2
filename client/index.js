@@ -142,7 +142,13 @@ export const sortBy = (arr, key, direction) => {
 export const spliceIf = (arr, predicate) => selfFilter(arr, predicate).removedItems;
 /**Remove X amount of items from the end of an array */
 export const spliceLast = (arr, count) => arr.splice(-count);
-/**This is a SAMPLE, use tryF_get to set tryF_get and use it without having to pass errorHandler everytime*/
+/**
+ *This is a SAMPLE, use tryF_get to set tryF_get and use it without having to pass errorHandler everytime
+ * @param errorHandler The error handler
+ * @param fn The function to try
+ * @param args The arguments to apply to the function
+ * @returns void
+ */
 export const tryF_sample = (errorHandler, fn, args) => {
     try {
         return fn(...args);

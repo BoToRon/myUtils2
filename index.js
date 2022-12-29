@@ -153,7 +153,13 @@ export const sortBy = (arr, key, direction) => {
 export const spliceIf = (arr, predicate) => selfFilter(arr, predicate).removedItems;
 /**Remove X amount of items from the end of an array */
 export const spliceLast = (arr, count) => arr.splice(-count);
-/**This is a SAMPLE, use tryF_get to set tryF_get and use it without having to pass errorHandler everytime*/
+/**
+ *This is a SAMPLE, use tryF_get to set tryF_get and use it without having to pass errorHandler everytime
+ * @param errorHandler The error handler
+ * @param fn The function to try
+ * @param args The arguments to apply to the function
+ * @returns void
+ */
 export const tryF_sample = (errorHandler, fn, args) => {
     try {
         return fn(...args);
@@ -781,14 +787,16 @@ export const npmRun = async (npmCommand) => {
             successLog('git push ✔️');
         }
         async function upVersion_publish_updateChangelog_andKillCommandLine() {
-            execSync(`npm version ${versionIncrement}`);
-            await delay(3000);
-            execSync('npm publish');
-            await delay(3000);
-            successLog('package.json up-version\'d and published to npm');
-            await replaceTagsInChangelogWithNewVersion();
-            //await delay(1000 * 10)
-            //killCommandLine()
+            tryF_sample(doNothing, () => {
+                exec(`npm version ${versionIncrement}`, () => {
+                    successLog('package.json up-version\'d');
+                    exec('npm publish', async () => {
+                        successLog('package.json published to npm');
+                        await replaceTagsInChangelogWithNewVersion();
+                        successLog('Done :D');
+                    });
+                });
+            }, []);
             async function replaceTagsInChangelogWithNewVersion() {
                 const updatedPackageJson = await import('./package.json', { assert: { type: "json" } });
                 const newVersion = updatedPackageJson.default.version;

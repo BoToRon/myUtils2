@@ -92,7 +92,13 @@ export declare const sortBy: <T extends object>(arr: T[], key: keyof T, directio
 export declare const spliceIf: <T>(arr: T[], predicate: (arg1: T) => boolean) => T[];
 /**Remove X amount of items from the end of an array */
 export declare const spliceLast: <T>(arr: T[], count: number) => T[];
-/**This is a SAMPLE, use tryF_get to set tryF_get and use it without having to pass errorHandler everytime*/
+/**
+ *This is a SAMPLE, use tryF_get to set tryF_get and use it without having to pass errorHandler everytime
+ * @param errorHandler The error handler
+ * @param fn The function to try
+ * @param args The arguments to apply to the function
+ * @returns void
+ */
 export declare const tryF_sample: <T extends (...args: any) => any>(errorHandler: T, fn: T, args: Parameters<T>) => void;
 /**Promise-based delay that BREAKS THE LIMIT OF setTimeOut*/
 export declare const delay: (x: number) => Promise<unknown>;
