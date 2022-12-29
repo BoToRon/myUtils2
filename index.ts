@@ -521,6 +521,7 @@ export const getLatestPackageJsonFromGithub = async () => {
  */
 export const getMainDependencies = async (
 	appName: string,
+	devOrProd: 'DEV' | 'PROD',
 	//createRequire: (path: string | URL) => NodeRequire,
 	packageJson: { version: string, scripts: { [key: string]: string } },
 	pingMeOnErrors: boolean,
@@ -534,15 +535,10 @@ export const getMainDependencies = async (
 	const mongoClient = await getMongoClient()
 	const divineBot = await getDivineBot()
 
-	//TODO: uncomment these
-	//myUtils_checkIfUpToDate(divineError)
-	//showPackageJsonScripts_project()
+	showPackageJsonScripts_project()
+	myUtils_checkIfUpToDate()
 
-	return {
-		divineBot, httpServer, mongoClient, tryF,
-		//TODO: uncomment this
-		//divineError,
-	}
+	return { divineBot, divineError, httpServer, mongoClient, tryF }
 
 	function checkEnviromentVariable() {
 
@@ -630,15 +626,15 @@ export const getMainDependencies = async (
 		 * @param failureHandler divineError, to notify/warm me to update the project to work with the newest version of "myUtils" if not already using it
 		 * @returns a boolean, although I'm not sure what I should it for (if for anything) yet
 		 */
-	async function myUtils_checkIfUpToDate(failureHandler: (message: string) => void) {
+	async function myUtils_checkIfUpToDate() {
 
 		const latestVersion = await getLatestVersion()
 		const installedVersion = (await import('./package.json', { assert: { type: "json" } })).default.version
 		if (installedVersion === latestVersion) { colorLog('info', '@botoron/my-utils is up to date 👍'); return }
 
 		const failureMessage = getFailureMessage()
-		colorLog_big('warning', failureMessage)
-		failureHandler(failureMessage)
+		if (devOrProd === 'PROD') { divineError(failureMessage) }
+		if (devOrProd === 'DEV') { killProcess('danger', failureMessage) }
 
 		function getFailureMessage() {
 			return toSingleLine(`

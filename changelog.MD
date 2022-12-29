@@ -1,3 +1,5 @@
+##########feat: diff handling for outdated utils (dev|prod)
+
           fix: promisify'd gitAddCommitPush
 1.1.4.    test: still divine and railway
 1.1.4.    test: if npm run publish is fixed

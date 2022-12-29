@@ -539,21 +539,16 @@ export const getLatestPackageJsonFromGithub = async () => {
  * @param PORT The dev port, should reside in .env
  * @returns divineBot, divineError, io, mongoClient, tryF
  */
-export const getMainDependencies = async (appName, 
+export const getMainDependencies = async (appName, devOrProd, 
 //createRequire: (path: string | URL) => NodeRequire,
 packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
     checkEnviromentVariable(); // ! this must go first, as all other functions need the .env vars
     const httpServer = startAndGetHttpServer();
     const mongoClient = await getMongoClient();
     const divineBot = await getDivineBot();
-    //TODO: uncomment these
-    //myUtils_checkIfUpToDate(divineError)
-    //showPackageJsonScripts_project()
-    return {
-        divineBot, httpServer, mongoClient, tryF,
-        //TODO: uncomment this
-        //divineError,
-    };
+    showPackageJsonScripts_project();
+    myUtils_checkIfUpToDate();
+    return { divineBot, divineError, httpServer, mongoClient, tryF };
     function checkEnviromentVariable() {
         let x = true;
         check('ERIS_TOKEN', ERIS_TOKEN);
@@ -644,7 +639,7 @@ packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
          * @param failureHandler divineError, to notify/warm me to update the project to work with the newest version of "myUtils" if not already using it
          * @returns a boolean, although I'm not sure what I should it for (if for anything) yet
          */
-    async function myUtils_checkIfUpToDate(failureHandler) {
+    async function myUtils_checkIfUpToDate() {
         const latestVersion = await getLatestVersion();
         const installedVersion = (await import('./package.json', { assert: { type: "json" } })).default.version;
         if (installedVersion === latestVersion) {
@@ -652,8 +647,12 @@ packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
             return;
         }
         const failureMessage = getFailureMessage();
-        colorLog_big('warning', failureMessage);
-        failureHandler(failureMessage);
+        if (devOrProd === 'PROD') {
+            divineError(failureMessage);
+        }
+        if (devOrProd === 'DEV') {
+            killProcess('danger', failureMessage);
+        }
         function getFailureMessage() {
             return toSingleLine(`
 				Project is using an outdated version of myUtils, 
@@ -739,7 +738,7 @@ export const npmRun = async (npmCommand) => {
         if (npmCommand === 'publish') {
             addLineAsNewVersion(versionIncrement);
         }
-        gitAddCommitPush();
+        await gitAddCommitPush();
         if (npmCommand === 'git') {
             killCommandLine();
         }
@@ -778,14 +777,19 @@ export const npmRun = async (npmCommand) => {
             return z.string().min(15).max(50).regex(commitRegex, `String must start with ${commitTypes}:`);
         }
         function gitAddCommitPush() {
-            exec('git add .', () => {
-                successLog('git add . ✔️');
-                colorLog('info', 'Copypaste the commit message in the git commit editor, then save and CLOSE it:');
-                colorLog('secondary', commitMessage);
-                console.log('');
-                exec("git commit", () => {
-                    successLog('git commit ✔️');
-                    exec('git push', () => { successLog('git push ✔️'); });
+            return new Promise(resolve => {
+                exec('git add .', () => {
+                    successLog('git add . ✔️');
+                    colorLog('info', 'Copypaste the commit message in the git commit editor, then save and CLOSE it:');
+                    colorLog('secondary', commitMessage);
+                    console.log('');
+                    exec("git commit", () => {
+                        successLog('git commit ✔️');
+                        exec('git push', () => {
+                            successLog('git push ✔️');
+                            resolve(true);
+                        });
+                    });
                 });
             });
         }
