@@ -1,4 +1,5 @@
-##########test: still divine and railway
+          fix: promisify'd gitAddCommitPush
+1.1.4.    test: still divine and railway
 1.1.4.    test: if npm run publish is fixed
 ##########test: still with DivineBot issues
 ##########test: attempt 2 vs railway

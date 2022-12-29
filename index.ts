@@ -719,7 +719,7 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 
 		if (npmCommand === 'git') { await addLineToFutureVersion() }
 		if (npmCommand === 'publish') { addLineAsNewVersion(versionIncrement) }
-		gitAddCommitPush()
+		await gitAddCommitPush()
 		if (npmCommand === 'git') { killCommandLine() }
 		if (npmCommand === 'publish') { upVersion_publish_updateChangelog_andKillCommandLine() }
 
@@ -755,15 +755,20 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 		}
 
 		function gitAddCommitPush() {
-			exec('git add .', () => {
-				successLog('git add . ✔️')
-				colorLog('info', 'Copypaste the commit message in the git commit editor, then save and CLOSE it:')
-				colorLog('secondary', commitMessage)
-				console.log('')
+			return new Promise(resolve => {
+				exec('git add .', () => {
+					successLog('git add . ✔️')
+					colorLog('info', 'Copypaste the commit message in the git commit editor, then save and CLOSE it:')
+					colorLog('secondary', commitMessage)
+					console.log('')
 
-				exec("git commit", () => {
-					successLog('git commit ✔️')
-					exec('git push', () => { successLog('git push ✔️') })
+					exec("git commit", () => {
+						successLog('git commit ✔️')
+						exec('git push', () => {
+							successLog('git push ✔️')
+							resolve(true)
+						})
+					})
 				})
 			})
 		}
