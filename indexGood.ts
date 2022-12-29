@@ -526,15 +526,12 @@ export const getMainDependencies = async (
 	checkEnviromentVariable() // ! this must go first, as all other functions need the .env vars
 	const httpServer = startAndGetHttpServer()
 	const mongoClient = await getMongoClient()
-	const divineBot = await getDivineBot()
+	const { divineBot } = await getDivineBot()
 
-	//myUtils_checkIfUpToDate(divineError)
-	//showPackageJsonScripts_project()
+	myUtils_checkIfUpToDate(divineError)
+	showPackageJsonScripts_project()
 
-	return {
-		divineBot, httpServer, mongoClient, tryF,
-		//divineError,
-	}
+	return { divineBot, divineError, httpServer, mongoClient, tryF }
 
 	function checkEnviromentVariable() {
 
@@ -565,7 +562,7 @@ export const getMainDependencies = async (
 		const bot = eris(ERIS_TOKEN as string)
 		connectToDiscord()
 		while (!bot.ready) { await delay(500) }
-		return bot
+		return { divineBot: bot }
 
 		function connectToDiscord() {
 			const divinePrepend = '***DivineBot:***'

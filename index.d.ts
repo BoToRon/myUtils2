@@ -211,7 +211,6 @@ export declare const getMainDependencies: (appName: string, packageJson: {
     };
 }, pingMeOnErrors: boolean, ERIS_TOKEN: string | undefined, MONGO_URI: string | undefined, PORT: string | undefined) => Promise<{
     divineBot: any;
-    divineError: (arg: string | Error) => void;
     httpServer: any;
     mongoClient: MongoClient;
     tryF: <T extends (...args: any) => any>(fn: T, args: Parameters<T>) => void;

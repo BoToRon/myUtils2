@@ -539,10 +539,13 @@ packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
     checkEnviromentVariable(); // ! this must go first, as all other functions need the .env vars
     const httpServer = startAndGetHttpServer();
     const mongoClient = await getMongoClient();
-    const { divineBot } = await getDivineBotAndError();
-    myUtils_checkIfUpToDate(divineError);
-    showPackageJsonScripts_project();
-    return { divineBot, divineError, httpServer, mongoClient, tryF };
+    const divineBot = await getDivineBot();
+    //myUtils_checkIfUpToDate(divineError)
+    //showPackageJsonScripts_project()
+    return {
+        divineBot, httpServer, mongoClient, tryF,
+        //divineError,
+    };
     function checkEnviromentVariable() {
         let x = true;
         check('ERIS_TOKEN', ERIS_TOKEN);
@@ -568,13 +571,13 @@ packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
         const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } };
         divineBot.createMessage('1055939528776495206', divineOptions);
     }
-    async function getDivineBotAndError() {
+    async function getDivineBot() {
         const bot = eris(ERIS_TOKEN);
         connectToDiscord();
         while (!bot.ready) {
             await delay(500);
         }
-        return { divineBot: bot, divineError };
+        return bot;
         function connectToDiscord() {
             const divinePrepend = '***DivineBot:***';
             bot.on('messageReactionAdd', (a, b, c) => role('add', a, b, c));

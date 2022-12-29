@@ -27,7 +27,6 @@
 	},
 	"homepage": "https://github.com/BoToRon/utils#readme",
 	"dependencies": {
-		"@types/socket.io": "^3.0.2",
 		"chalk": "^5.2.0",
 		"eris": "^0.17.1",
 		"expres": "^0.0.5",
