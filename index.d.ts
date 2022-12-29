@@ -53,6 +53,8 @@ export declare const BTR: {
     /**for when registering them for tracking at window.vueComponents */
     zValidVueComponentName: zSchema<unknown>;
 };
+/**colorLog.succes with a ✔️ at the end :D */
+export declare const successLog: (message: string) => void;
 /**start a setInterval and add it to an array */
 export declare const timer_add: (timers: intervalWithid[], id: string, callBack: Function, interval: number) => void;
 /**Kill a setInterval and remove it from its belonging array */
@@ -119,7 +121,7 @@ export declare const deepClone: <T>(x: T) => T;
 /**FOR CLIENT-SIDE CODE ONLY. Stringifies and downloads the provided data*/
 export declare const downloadFile_client: (filename: string, fileFormat: '.txt' | '.json', data: unknown) => void;
 /**Stringy an array/object so its readable, except for methods, eg: obj.sampleMethod becomes "[λ: sampleMethod]" */
-export declare const stringify: (x: unknown) => string | string[];
+export declare const stringify: (x: unknown) => string;
 /**FOR CLIENT-SIDE CODE ONLY. Copy anything to the clipboard, objects/arrays get parsed to be readable*/
 export declare const copyToClipboard: (x: any) => void;
 /**Returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
@@ -188,8 +190,8 @@ export declare const zPipe: <T>(zSchema: zSchema<T>, initialValue: T, ...fns: pi
     error: string;
     failedAt: string;
 };
-/**FOR NODE-DEBUGGING ONLY. Log a message surrounded by a lot of asterisks for visibility, all in RED */
-export declare const colorLog_big: (variant: z.infer<any>, message: string) => void;
+/**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
+export declare const bigConsoleError: (message: string) => void;
 /**console.log WITH COLORS :D */
 export declare const colorLog: (variant: z.infer<any>, message: string) => void;
 /**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
@@ -223,7 +225,17 @@ export declare const getMainDependencies: (appName: string, devOrProd: 'DEV' | '
     tryF: <T extends (...args: any) => any>(fn: T, args: Parameters<T>) => void;
 }>;
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
-export declare const killProcess: (variant: z.infer<any>, message: string) => Promise<void>;
-/**Easily run the scripts of this package.json */
+export declare const killProcess: (message: string) => Promise<never>;
+/**
+ * @description Checks if the project is using the latest version of "myUtils"
+ * @param failureHandler divineError, to notify/warm me to update the project to work with the latest version of "utils"
+ * @returns a boolean, although I'm not sure what I should it for (if for anything) yet
+ */
+export declare function myUtils_checkIfUpToDate(errorHandler: (message: string) => void, devOrProd: 'DEV' | 'PROD'): Promise<boolean>;
+/**Easily run the scripts of this (utils) repo's package.json */
 export declare const npmRun: (npmCommand: z.infer<any>) => Promise<void>;
+/**Prompt to submit a git commit message and then push */
+export declare function prompCommitMessageAndPush(repoName: string): Promise<void>;
+/**Prompts a question in the terminal, awaits for the input and returns it */
+export declare function questionAsPromise(question: string): Promise<string>;
 export {};

@@ -53,6 +53,8 @@ export declare const BTR: {
     /**for when registering them for tracking at window.vueComponents */
     zValidVueComponentName: zSchema<unknown>;
 };
+/**colorLog.succes with a ✔️ at the end :D */
+export declare const successLog: (message: string) => void;
 /**start a setInterval and add it to an array */
 export declare const timer_add: (timers: intervalWithid[], id: string, callBack: Function, interval: number) => void;
 /**Kill a setInterval and remove it from its belonging array */
@@ -119,7 +121,7 @@ export declare const deepClone: <T>(x: T) => T;
 /**FOR CLIENT-SIDE CODE ONLY. Stringifies and downloads the provided data*/
 export declare const downloadFile_client: (filename: string, fileFormat: '.txt' | '.json', data: unknown) => void;
 /**Stringy an array/object so its readable, except for methods, eg: obj.sampleMethod becomes "[λ: sampleMethod]" */
-export declare const stringify: (x: unknown) => string | string[];
+export declare const stringify: (x: unknown) => string;
 /**FOR CLIENT-SIDE CODE ONLY. Copy anything to the clipboard, objects/arrays get parsed to be readable*/
 export declare const copyToClipboard: (x: any) => void;
 /**Returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */

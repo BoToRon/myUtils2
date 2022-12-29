@@ -40,6 +40,8 @@ export const BTR = {
     /**for when registering them for tracking at window.vueComponents */
     zValidVueComponentName: null,
 };
+/**colorLog.succes with a ✔️ at the end :D */
+export const successLog = (message) => colorLog('success', message + ' ✔️');
 /**start a setInterval and add it to an array */
 export const timer_add = (timers, id, callBack, interval) => {
     const theTimer = setInterval(() => { callBack; }, interval);
@@ -211,7 +213,7 @@ export const deepClone = (x) => JSON.parse(JSON.stringify(x)); //TODO; submit
 /**FOR CLIENT-SIDE CODE ONLY. Stringifies and downloads the provided data*/
 export const downloadFile_client = (filename, fileFormat, data) => {
     if (isNode) {
-        colorLog('danger', 'downloadFile_client can only be run clientside!');
+        colorLog('downloadFile_client can only be run clientside!');
         return;
     }
     const a = document.createElement('a');
@@ -234,29 +236,12 @@ export const stringify = (x) => {
     if (typeof x !== 'object') {
         return `${x}`;
     }
-    if (Array.isArray(x)) {
-        return x.map(x => JSON.stringify(x));
-    } //TODO: it was => stringify but reaches stack overflow in browser
-    const stringified = {};
-    Object.entries(x).forEach(entry => {
-        const [key, value] = entry;
-        stringified[key] = (function () {
-            if (typeof value !== 'function') {
-                return value;
-            }
-            const asFunction = value;
-            return {
-                'client': asFunction.toLocaleString(),
-                'server': `[λ: ${key}]`
-            }[clientOrServer_is()];
-        }());
-    });
-    return JSON.stringify(stringified);
+    return JSON.stringify(x);
 };
 /**FOR CLIENT-SIDE CODE ONLY. Copy anything to the clipboard, objects/arrays get parsed to be readable*/
 export const copyToClipboard = (x) => {
     if (isNode) {
-        colorLog('danger', 'copyToClipboard can only be run clientside!');
+        colorLog('copyToClipboard can only be run clientside!');
         return;
     }
     const text = stringify(x);
@@ -369,7 +354,7 @@ export const trackVueComponent = (name, componentConstructor) => {
     componentConstructor._name = name;
     componentConstructor.beforeCreate = () => {
         window.vueComponents.push(componentConstructor);
-        colorLog('success', `Component '${name}' created and added to window.vueComponents`);
+        successLog(`Component '${name}' created and added to window.vueComponents`);
         logAllComponents();
     };
     componentConstructor.beforeDestroy = () => {
@@ -390,7 +375,7 @@ export function warnAboutUnproperlyInitializedFunction(fn) {
         alert(error);
     }
     if (isClientOrServer === 'server') {
-        colorLog('warning', error);
+        colorLog(error);
     }
 }
 /**function to generate zodCheck with a predertemined errorHandler so it doesnt have to be passed everytime :D */
@@ -440,8 +425,7 @@ export const zodCheckAndHandle = (
 };
 /**Pipe with schema validation and error logging */
 export const zPipe = (zSchema, initialValue, ...fns) => {
-    const nullString = null;
-    const initialPipeState = { value: initialValue, error: nullString, failedAt: nullString };
+    const initialPipeState = { value: initialValue, error: nullAs.string(), failedAt: nullAs.string() };
     return fns.reduce((pipeState, fn, index) => {
         if (pipeState.error) {
             return pipeState;

@@ -677,17 +677,26 @@ export async function myUtils_checkIfUpToDate(errorHandler: (message: string) =>
 		return response.objects[0].package.version
 	}
 }
-/**Easily run the scripts of this package.json */
+/**Easily run the scripts of this (utils) repo's package.json */
 export const npmRun = async (npmCommand: validNpmCommand) => {
-	if (npmCommand === 'git') { prompCommitMessage(nullAs.string()) }
+
+	const utilsRepoName = 'Utils 🛠️'
+
 	if (npmCommand === 'transpile') { transpileFiles(() => colorLog('dark', 'Process over')) }
+	if (npmCommand === 'git') { prompCommitMessageAndPush(utilsRepoName) }
 	if (npmCommand === 'publish') { transpileFiles(promptVersioning) }
 
 	async function promptVersioning() {
-		const versionIncrement = await questionAsPromise('Type of package version increment (major, minor, patch)?')
 		function tryAgain(error: string) { colorLog('warning', error); promptVersioning() }
+		const versionIncrement = await questionAsPromise('Type of package version increment (major, minor, patch)?')
+
 		if (!zodCheck_sample(tryAgain, zValidVersionIncrement, versionIncrement)) { return }
-		prompCommitMessage(versionIncrement)
+		await prompCommitMessageAndPush(utilsRepoName)
+
+		exec(`npm version ${versionIncrement}`, () => {
+			successLog('package.json up-version\'d')
+			exec('npm publish', async () => successLog('package.json published to npm'))
+		})
 	}
 
 	function transpileFiles(followUp: Function) {
@@ -715,46 +724,16 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 }
 
 /**Prompt to submit a git commit message and then push */
-export async function prompCommitMessage(versionIncrement: string) {
+export async function prompCommitMessageAndPush(repoName: string) {
 
 	//order matters with these 3
 	const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test)'
 	delay(500).then(() => { colorLog('warning', '50-character limits ends at that line: * * * * * |'); console.log(); })
-	const commitMessage = await questionAsPromise(`Enter commit type ${commitTypes} plus a message:`)
+	const commitMessage = await questionAsPromise(`(${repoName}) Enter commit type ${commitTypes} plus a message:`)
 
-	function tryAgain(error: string) { colorLog('warning', error); prompCommitMessage(versionIncrement); return }
+	function tryAgain(error: string) { colorLog('warning', error); prompCommitMessageAndPush(repoName); return }
 	if (!zodCheck_sample(tryAgain, get_zValidCommitMessage(), commitMessage)) { return }
-
-	if (npmCommand === 'publish') { await addLineAsNewVersion(versionIncrement) }
-	if (npmCommand === 'git') { await addLineToFutureVersion() }
 	await gitAddCommitPush()
-
-	if (npmCommand === 'publish') { upVersion_publish_and_updateChangelog() }
-	return
-
-	async function addLineToFutureVersion() {
-		let changelog = await fsReadFileAsync('./changelog.MD')
-		while (['\n', ' '].includes(changelog[0])) { changelog = changelog.slice(1) }
-		const lines = changelog.split('\n')
-		lines.splice(0, 0, ' '.repeat(10) + commitMessage)
-		const newChangelog = lines.join('\n')
-		console.log({ newChangelog })
-		await fsWriteFileAsync('./changelog.MD', newChangelog)
-		colorLog('info', 'commit added to the changelog for a yet-to-be-released version')
-	}
-
-	async function addLineAsNewVersion(versionIncrement: string) {
-		const changelog = await fsReadFileAsync('./changelog.MD')
-		const lines = changelog.split('\n')
-
-		if (versionIncrement === 'major') { lines.splice(0, 0, `${'#'.repeat(125)}`) }
-		if (versionIncrement === 'minor') { lines.splice(0, 0, '') }
-
-		const newLine = '#'.repeat(10) + commitMessage
-		lines.splice(0, 0, newLine)
-		const newChangelog = lines.join('\n')
-		await fsWriteFileAsync('./changelog.MD', newChangelog)
-	}
 
 	function get_zValidCommitMessage() {
 		const commitRegex = new RegExp(`(?<!.)${commitTypes}:`)
@@ -779,42 +758,14 @@ export async function prompCommitMessage(versionIncrement: string) {
 			})
 		})
 	}
-
-	async function upVersion_publish_and_updateChangelog() {
-
-		tryF_sample(doNothing, () => {
-			exec(`npm version ${versionIncrement}`, () => {
-				successLog('package.json up-version\'d')
-				exec('npm publish', async () => {
-					successLog('package.json published to npm')
-					successLog('Done :D')
-					await replaceTagsInChangelogWithNewVersion()
-					successLog('Tags replaced^^')
-				})
-			})
-		}, [])
-
-		async function replaceTagsInChangelogWithNewVersion() {
-			const updatedPackageJson = await import('./package.json', { assert: { type: "json" } })
-			const newVersion = updatedPackageJson.default.version
-
-			const spacesAfterVersion = ' '.repeat(9 - newVersion.length)
-			const stringToReplaceTheTags = `${newVersion}.${spacesAfterVersion}`
-
-			const changelog = await fsReadFileAsync('./changelog.MD')
-			const newChangelog = changelog.replace('#'.repeat(10), stringToReplaceTheTags)
-			await fsWriteFileAsync('./changelog.MD', newChangelog)
-		}
-	}
 }
 
-/** */
+/**Prompts a question in the terminal, awaits for the input and returns it */
 export async function questionAsPromise(question: string) {
-	return new Promise(resolve => {
-		getReadLine.
-			createInterface({ input: process.stdin, output: process.stdout }).
-			question(chalk.magenta(question) + '\n', resolve)
-	}) as Promise<string>
+	const readline = getReadLine.createInterface({ input: process.stdin, output: process.stdout })
+	const input = await new Promise(res => { readline.question(chalk.magenta(question) + '\n', res) }) as string
+	readline.close()
+	return input
 }
 
 /**

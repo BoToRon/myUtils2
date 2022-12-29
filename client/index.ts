@@ -60,6 +60,8 @@ export const BTR = {
 	/**for when registering them for tracking at window.vueComponents */
 	zValidVueComponentName: null as unknown as zSchema<unknown>,
 }
+/**colorLog.succes with a ✔️ at the end :D */
+export const successLog = (message: string) => colorLog('success', message + ' ✔️')
 /**start a setInterval and add it to an array */
 export const timer_add = (timers: intervalWithid[], id: string, callBack: Function, interval: number) => {
 	const theTimer: ReturnType<typeof setInterval> = setInterval(() => { callBack }, interval)
@@ -197,7 +199,7 @@ export const toOrdinal = (number: number) => {
 export const deepClone = <T>(x: T) => JSON.parse(JSON.stringify(x)) as T //TODO; submit
 /**FOR CLIENT-SIDE CODE ONLY. Stringifies and downloads the provided data*/
 export const downloadFile_client = (filename: string, fileFormat: '.txt' | '.json', data: unknown) => {
-	if (isNode) { colorLog('danger', 'downloadFile_client can only be run clientside!'); return }
+	if (isNode) { colorLog('downloadFile_client can only be run clientside!'); return }
 	const a = document.createElement('a')
 	a.href = window.URL.createObjectURL(new Blob([data as BlobPart], { type: 'text/plain' }))
 	a.download = `${filename}${fileFormat}`
@@ -205,34 +207,16 @@ export const downloadFile_client = (filename: string, fileFormat: '.txt' | '.jso
 }
 /**Stringy an array/object so its readable, except for methods, eg: obj.sampleMethod becomes "[λ: sampleMethod]" */
 export const stringify = (x: unknown) => {
-
 	// ! order matters, do NOT change it
 	if (x === null) { return 'null' }
 	if (typeof x === 'number' && isNaN(x)) { return 'NaN' }
 	if (!x) { return typeof x }
 	if (typeof x !== 'object') { return `${x}` }
-	if (Array.isArray(x)) { return x.map(x => JSON.stringify(x)) } //TODO: it was => stringify but reaches stack overflow in browser
-
-	const stringified: { [key: string]: string } = {}
-
-	Object.entries(x).forEach(entry => {
-		const [key, value] = entry
-		stringified[key] = (function () {
-			if (typeof value !== 'function') { return value }
-			const asFunction: Function = value;
-
-			return {
-				'client': asFunction.toLocaleString(),
-				'server': `[λ: ${key}]`
-			}[clientOrServer_is()]
-		}())
-	})
-
-	return JSON.stringify(stringified)
+	return JSON.stringify(x)
 }
 /**FOR CLIENT-SIDE CODE ONLY. Copy anything to the clipboard, objects/arrays get parsed to be readable*/
 export const copyToClipboard = (x: any) => {
-	if (isNode) { colorLog('danger', 'copyToClipboard can only be run clientside!'); return }
+	if (isNode) { colorLog('copyToClipboard can only be run clientside!'); return }
 	const text = stringify(x) as string
 	const a = document.createElement('textarea')
 	a.innerHTML = text
@@ -347,7 +331,7 @@ export const trackVueComponent = (name: string, componentConstructor: trackedVue
 
 	componentConstructor.beforeCreate = () => {
 		window.vueComponents.push(componentConstructor)
-		colorLog('success', `Component '${name}' created and added to window.vueComponents`)
+		successLog(`Component '${name}' created and added to window.vueComponents`)
 		logAllComponents()
 	}
 
@@ -370,7 +354,7 @@ export function warnAboutUnproperlyInitializedFunction(fn: 'tryF' | 'newToast_cl
 
 	const isClientOrServer = clientOrServer_is()
 	if (isClientOrServer === 'client') { alert(error) }
-	if (isClientOrServer === 'server') { colorLog('warning', error) }
+	if (isClientOrServer === 'server') { colorLog(error) }
 }
 /**function to generate zodCheck with a predertemined errorHandler so it doesnt have to be passed everytime :D */
 export const zodCheck_get = (errorHandler: (err: string) => void) => {
@@ -412,8 +396,7 @@ export const zodCheckAndHandle = <D, SH extends (...args: Parameters<SH>) => Ret
 }
 /**Pipe with schema validation and error logging */
 export const zPipe = <T>(zSchema: zSchema<T>, initialValue: T, ...fns: pipe_persistent_type<T>[]) => {
-	const nullString = null as unknown as string
-	const initialPipeState = { value: initialValue, error: nullString, failedAt: nullString }
+	const initialPipeState = { value: initialValue, error: nullAs.string(), failedAt: nullAs.string() }
 
 	return fns.reduce((pipeState, fn, index) => {
 		if (pipeState.error) { return pipeState }
