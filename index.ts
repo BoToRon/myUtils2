@@ -692,9 +692,13 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 		if (!zodCheck_sample(tryAgain, zValidVersionIncrement, versionIncrement)) { return }
 		await prompCommitMessageAndPush(utilsRepoName)
 
-		exec(`npm version ${versionIncrement}`, () => {
+		exec(`npm version ${versionIncrement}`, (err, stdout, stderr) => {
+			console.log({ stdout })
 			successLog('package.json up-version\'d')
-			exec('npm publish', () => successLog('package.json published to npm'))
+			exec('npm publish', (err, stdout, stderr) => {
+				console.log({ stdout })
+				successLog('package.json published to npm')
+			})
 		})
 	}
 
