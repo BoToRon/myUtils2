@@ -540,10 +540,12 @@ packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
     const httpServer = startAndGetHttpServer();
     const mongoClient = await getMongoClient();
     const divineBot = await getDivineBot();
+    //TODO: uncomment these
     //myUtils_checkIfUpToDate(divineError)
     //showPackageJsonScripts_project()
     return {
         divineBot, httpServer, mongoClient, tryF,
+        //TODO: uncomment this
         //divineError,
     };
     function checkEnviromentVariable() {
@@ -562,21 +564,25 @@ packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
     /**notify me about things breaking via discord, if pingMeOnErrors is passed as true */
     function divineError(arg) {
         const x = (typeof arg === 'string' ? arg : arg.stack);
-        const error = `${x}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '');
-        if (pingMeOnErrors) {
-            colorLog('danger', error);
-            return;
-        }
-        const theMessage = `<@470322452040515584> - (${appName}) \n ${error}`;
-        const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } };
-        divineBot.createMessage('1055939528776495206', divineOptions);
+        console.log(x);
+        //TODO: uncomment this
+        /* const error = `${x}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '')
+        if (pingMeOnErrors) { colorLog('danger', error); return }
+
+        const theMessage = `<@470322452040515584> - (${appName}) \n ${error}`
+
+        const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } }
+        divineBot.createMessage('1055939528776495206', divineOptions) */
     }
     async function getDivineBot() {
+        console.log('divineBot attempt: 2');
         const bot = eris(ERIS_TOKEN);
         connectToDiscord();
+        colorLog('info', "'waiting for DivineBot's readiness");
         while (!bot.ready) {
             await delay(500);
         }
+        colorLog('success', "It's time >:D");
         return bot;
         function connectToDiscord() {
             const divinePrepend = '***DivineBot:***';
@@ -602,8 +608,8 @@ packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
                         ({ add: reactor.addRole, remove: reactor.removeRole })[action](role.id);
                     }
                 }
-                catch {
-                    doNothing();
+                catch (e) {
+                    console.log('divineBot.role.tryCatch.error = ', e);
                 }
             }
             async function connectToDiscord() {
