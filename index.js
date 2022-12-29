@@ -713,8 +713,9 @@ export const npmRun = async (npmCommand) => {
         exec(`npm version ${versionIncrement}`, (err, stdout, stderr) => {
             console.log({ stdout });
             successLog('package.json up-version\'d');
+            return;
             exec('npm publish', (err, stdout, stderr) => {
-                console.log({ stdout });
+                console.log({ err, stdout, stderr });
                 successLog('package.json published to npm');
             });
         });
