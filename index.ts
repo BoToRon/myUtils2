@@ -73,6 +73,8 @@ export const BTR = {
 	/**for when registering them for tracking at window.vueComponents */
 	zValidVueComponentName: null as unknown as zSchema<unknown>,
 }
+/**colorLog.succes with a ✔️ at the end :D */
+export const successLog = (message: string) => colorLog('success', message + ' ✔️')
 /**start a setInterval and add it to an array */
 export const timer_add = (timers: intervalWithid[], id: string, callBack: Function, interval: number) => {
 	const theTimer: ReturnType<typeof setInterval> = setInterval(() => { callBack }, interval)
@@ -210,7 +212,7 @@ export const toOrdinal = (number: number) => {
 export const deepClone = <T>(x: T) => JSON.parse(JSON.stringify(x)) as T //TODO; submit
 /**FOR CLIENT-SIDE CODE ONLY. Stringifies and downloads the provided data*/
 export const downloadFile_client = (filename: string, fileFormat: '.txt' | '.json', data: unknown) => {
-	if (isNode) { colorLog_big('danger', 'downloadFile_client can only be run clientside!'); return }
+	if (isNode) { bigConsoleError('downloadFile_client can only be run clientside!'); return }
 	const a = document.createElement('a')
 	a.href = window.URL.createObjectURL(new Blob([data as BlobPart], { type: 'text/plain' }))
 	a.download = `${filename}${fileFormat}`
@@ -218,34 +220,16 @@ export const downloadFile_client = (filename: string, fileFormat: '.txt' | '.jso
 }
 /**Stringy an array/object so its readable, except for methods, eg: obj.sampleMethod becomes "[λ: sampleMethod]" */
 export const stringify = (x: unknown) => {
-
 	// ! order matters, do NOT change it
 	if (x === null) { return 'null' }
 	if (typeof x === 'number' && isNaN(x)) { return 'NaN' }
 	if (!x) { return typeof x }
 	if (typeof x !== 'object') { return `${x}` }
-	if (Array.isArray(x)) { return x.map(x => JSON.stringify(x)) } //TODO: it was => stringify but reaches stack overflow in browser
-
-	const stringified: { [key: string]: string } = {}
-
-	Object.entries(x).forEach(entry => {
-		const [key, value] = entry
-		stringified[key] = (function () {
-			if (typeof value !== 'function') { return value }
-			const asFunction: Function = value;
-
-			return {
-				'client': asFunction.toLocaleString(),
-				'server': `[λ: ${key}]`
-			}[clientOrServer_is()]
-		}())
-	})
-
-	return JSON.stringify(stringified)
+	return JSON.stringify(x)
 }
 /**FOR CLIENT-SIDE CODE ONLY. Copy anything to the clipboard, objects/arrays get parsed to be readable*/
 export const copyToClipboard = (x: any) => {
-	if (isNode) { colorLog_big('danger', 'copyToClipboard can only be run clientside!'); return }
+	if (isNode) { bigConsoleError('copyToClipboard can only be run clientside!'); return }
 	const text = stringify(x) as string
 	const a = document.createElement('textarea')
 	a.innerHTML = text
@@ -360,7 +344,7 @@ export const trackVueComponent = (name: string, componentConstructor: trackedVue
 
 	componentConstructor.beforeCreate = () => {
 		window.vueComponents.push(componentConstructor)
-		colorLog('success', `Component '${name}' created and added to window.vueComponents`)
+		successLog(`Component '${name}' created and added to window.vueComponents`)
 		logAllComponents()
 	}
 
@@ -383,7 +367,7 @@ export function warnAboutUnproperlyInitializedFunction(fn: 'tryF' | 'newToast_cl
 
 	const isClientOrServer = clientOrServer_is()
 	if (isClientOrServer === 'client') { alert(error) }
-	if (isClientOrServer === 'server') { colorLog_big('warning', error) }
+	if (isClientOrServer === 'server') { bigConsoleError(error) }
 }
 /**function to generate zodCheck with a predertemined errorHandler so it doesnt have to be passed everytime :D */
 export const zodCheck_get = (errorHandler: (err: string) => void) => {
@@ -425,8 +409,7 @@ export const zodCheckAndHandle = <D, SH extends (...args: Parameters<SH>) => Ret
 }
 /**Pipe with schema validation and error logging */
 export const zPipe = <T>(zSchema: zSchema<T>, initialValue: T, ...fns: pipe_persistent_type<T>[]) => {
-	const nullString = null as unknown as string
-	const initialPipeState = { value: initialValue, error: nullString, failedAt: nullString }
+	const initialPipeState = { value: initialValue, error: nullAs.string(), failedAt: nullAs.string() }
 
 	return fns.reduce((pipeState, fn, index) => {
 		if (pipeState.error) { return pipeState }
@@ -443,9 +426,9 @@ export const zPipe = <T>(zSchema: zSchema<T>, initialValue: T, ...fns: pipe_pers
 // ! DELETEEVERYTHINGBELOW, as it is only meant for server-side use
 _
 
-/**FOR NODE-DEBUGGING ONLY. Log a message surrounded by a lot of asterisks for visibility, all in RED */
-export const colorLog_big = (variant: validVariant, message: string) => {
-	const log = (message: string) => colorLog(variant, message)
+/**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
+export const bigConsoleError = (message: string) => {
+	const log = (message: string) => colorLog('danger', message)
 	const logAsterisks = (lines: number) => { for (let i = 0; i < lines; i++) { log('*'.repeat(150)) } }
 
 	logAsterisks(3)
@@ -478,13 +461,12 @@ export const downloadFile_node = async (filename: string, fileFormat: '.txt' | '
 	const completeFilename = filename + '_' + dateForFilename + fileFormat
 
 	colorLog('info', `Downloading ${completeFilename}..`)
-	await fs.promises.writeFile(completeFilename, formatted)
-	colorLog('success', 'Done!')
+	await fsWriteFileAsync(completeFilename, formatted)
+	successLog('Done!')
 
 	if (!killProcessAfterwards) { return }
 	if (process.env.quokka) { return }
-
-	killProcess('dark', 'Killing process now :D')
+	process.exit()
 }
 /**Wrapper for fs.promise.readFile that announces the start of the file-reading */
 export async function fsReadFileAsync(filePath: string) {
@@ -530,13 +512,12 @@ export const getMainDependencies = async (
 	PORT: string | undefined
 ) => {
 
-	checkEnviromentVariable() // ! this must go first, as all other functions need the .env vars
 	const httpServer = startAndGetHttpServer()
 	const mongoClient = await getMongoClient()
 	const divineBot = await getDivineBot()
 
+	myUtils_checkIfUpToDate(divineError, devOrProd)
 	showPackageJsonScripts_project()
-	myUtils_checkIfUpToDate()
 
 	return { divineBot, divineError, httpServer, mongoClient, tryF }
 
@@ -549,7 +530,7 @@ export const getMainDependencies = async (
 		return x
 
 		function check(name: 'ERIS_TOKEN' | 'MONGO_URI' | 'PORT', variable: string | undefined) {
-			if (!variable) { colorLog_big('danger', `Missing enviroment variable: ${name}`); x = false }
+			if (!variable) { bigConsoleError(`Missing enviroment variable: ${name}`); x = false }
 		}
 	}
 
@@ -602,7 +583,7 @@ export const getMainDependencies = async (
 					divineBot.connect()
 					colorLog('info', 'waiting for DivineBot')
 					while (!divineBot.ready) { await delay(1000) }
-					colorLog('success', "The divine egg has hatched")
+					successLog("The divine egg has hatched")
 					pingMe('im alive bitch')
 				}
 				catch {
@@ -620,43 +601,8 @@ export const getMainDependencies = async (
 		mongo.connect((err, client) => { if (err) { throw err } mongoClient = client as MongoClient })
 		colorLog('info', 'waiting for Mongo')
 		while (!mongoClient) { await delay(500) }
-		colorLog('success', "It's Monging time >:D")
+		successLog("It's Monging time >:D")
 		return mongoClient
-	}
-
-	/**
-		 * @description Checks if the project is using the latest version of "myUtils"
-		 * @param failureHandler divineError, to notify/warm me to update the project to work with the newest version of "myUtils" if not already using it
-		 * @returns a boolean, although I'm not sure what I should it for (if for anything) yet
-		 */
-	async function myUtils_checkIfUpToDate() {
-
-		const latestVersion = await getLatestVersion()
-		const installedVersion = (await import('./package.json', { assert: { type: "json" } })).default.version
-		if (installedVersion === latestVersion) { colorLog('info', '@botoron/my-utils is up to date 👍'); return }
-
-		const failureMessage = getFailureMessage()
-		if (devOrProd === 'PROD') { divineError(failureMessage) }
-		if (devOrProd === 'DEV') { killProcess('danger', failureMessage) }
-
-		function getFailureMessage() {
-			return toSingleLine(`
-				Project is using an outdated version of myUtils, 
-				- (${installedVersion} vs ${latestVersion}) -
-				PLEASE UPDATE:          npm i @botoron/my-utils`)
-		}
-
-		async function getLatestVersion() {
-			type pck = { objects: [{ package: { version: string } }] }
-			const response: pck = (await new Promise((resolve) => {
-				try {
-					fetch(`http://registry.npmjs.com/-/v1/search?text=@botoron/utils&size=1`).
-						then(res => res.json().then((x) => resolve(x as pck)))
-				}
-				catch { return { objects: [{ package: { version: '0' } }] } }
-			}))
-			return response.objects[0].package.version
-		}
 	}
 
 	function pingMe(message: string) {
@@ -690,115 +636,52 @@ export const getMainDependencies = async (
 		catch (err) { divineError(err as Error) }
 	}
 }
+
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
-export const killProcess = async (variant: validVariant, message: string) => {
-	colorLog_big(variant, message)
+export const killProcess = async (message: string) => {
+	bigConsoleError(message)
 	await delay(1000)
-	process.kill(process.pid)
+	process.exit()
+}
+/**
+ * @description Checks if the project is using the latest version of "myUtils"
+ * @param failureHandler divineError, to notify/warm me to update the project to work with the latest version of "utils"
+ * @returns a boolean, although I'm not sure what I should it for (if for anything) yet
+ */
+export async function myUtils_checkIfUpToDate(errorHandler: (message: string) => void, devOrProd: 'DEV' | 'PROD') {
+
+	const latestVersion = await getLatestVersion()
+	const installedVersion = (await import('./package.json', { assert: { type: "json" } })).default.version
+	const isUpToDate = installedVersion === latestVersion
+
+	if (!isUpToDate) { errorHandler(getFailureMessage()) }
+	else { colorLog('info', '@botoron/my-utils is up to date 👍') }
+	return isUpToDate
+
+	function getFailureMessage() {
+		return toSingleLine(`
+			Project is using an outdated version of myUtils, 
+			- (${installedVersion} vs ${latestVersion}) -
+			PLEASE UPDATE:          npm i @botoron/my-utils`)
+	}
+
+	async function getLatestVersion() {
+		type pck = { objects: [{ package: { version: string } }] }
+		const response: pck = (await new Promise((resolve) => {
+			try {
+				fetch(`http://registry.npmjs.com/-/v1/search?text=@botoron/utils&size=1`).
+					then(res => res.json().then((x) => resolve(x as pck)))
+			}
+			catch { return { objects: [{ package: { version: '0' } }] } }
+		}))
+		return response.objects[0].package.version
+	}
 }
 /**Easily run the scripts of this package.json */
 export const npmRun = async (npmCommand: validNpmCommand) => {
-
-	const killCommandLine = () => delay(3000).then(() => killProcess('dark', 'Process over'))
-	const successLog = (message: string) => colorLog('success', message)
-
-	const readline = getReadLine.createInterface({ input: process.stdin, output: process.stdout })
-	const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test)'
-
-	if (npmCommand === 'git') { prompCommitMessage(null as unknown as string) }
-	if (npmCommand === 'transpile') { transpileFiles(killCommandLine) }
+	if (npmCommand === 'git') { prompCommitMessage(nullAs.string()) }
+	if (npmCommand === 'transpile') { transpileFiles(() => colorLog('dark', 'Process over')) }
 	if (npmCommand === 'publish') { transpileFiles(promptVersioning) }
-
-	async function prompCommitMessage(versionIncrement: string) {
-
-		delay(500).then(() => { colorLog('warning', '50-character limits ends at that line: * * * * * |'); console.log(); })
-		const commitMessage = await questionAsPromise(`Enter commit type ${commitTypes} plus a message:`)
-		function tryAgain(error: string) { colorLog('warning', error); prompCommitMessage(versionIncrement); return }
-		if (!zodCheck_sample(tryAgain, get_zValidCommitMessage(), commitMessage)) { return }
-
-		if (npmCommand === 'git') { await addLineToFutureVersion() }
-		if (npmCommand === 'publish') { addLineAsNewVersion(versionIncrement) }
-		await gitAddCommitPush()
-		if (npmCommand === 'git') { killCommandLine() }
-		if (npmCommand === 'publish') { upVersion_publish_updateChangelog_andKillCommandLine() }
-
-		return
-
-		async function addLineToFutureVersion() {
-			let changelog = await fsReadFileAsync('./changelog.MD')
-			while (['\n', ' '].includes(changelog[0])) { changelog = changelog.slice(1) }
-			const lines = changelog.split('\n')
-			lines.splice(0, 0, ' '.repeat(10) + commitMessage)
-			const newChangelog = lines.join('\n')
-			console.log({ newChangelog })
-			await fsWriteFileAsync('./changelog.MD', newChangelog)
-			colorLog('info', 'commit added to the changelog for a yet-to-be-released version')
-		}
-
-		async function addLineAsNewVersion(versionIncrement: string) {
-			const changelog = await fsReadFileAsync('./changelog.MD')
-			const lines = changelog.split('\n')
-
-			if (versionIncrement === 'major') { lines.splice(0, 0, `${'#'.repeat(125)}`) }
-			if (versionIncrement === 'minor') { lines.splice(0, 0, '') }
-
-			const newLine = '#'.repeat(10) + commitMessage
-			lines.splice(0, 0, newLine)
-			const newChangelog = lines.join('\n')
-			await fsWriteFileAsync('./changelog.MD', newChangelog)
-		}
-
-		function get_zValidCommitMessage() {
-			const commitRegex = new RegExp(`(?<!.)${commitTypes}:`)
-			return z.string().min(15).max(50).regex(commitRegex, `String must start with ${commitTypes}:`)
-		}
-
-		function gitAddCommitPush() {
-			return new Promise(resolve => {
-				exec('git add .', () => {
-					successLog('git add . ✔️')
-					colorLog('info', 'Copypaste the commit message in the git commit editor, then save and CLOSE it:')
-					colorLog('secondary', commitMessage)
-					console.log('')
-
-					exec("git commit", () => {
-						successLog('git commit ✔️')
-						exec('git push', () => {
-							successLog('git push ✔️')
-							resolve(true)
-						})
-					})
-				})
-			})
-		}
-
-		async function upVersion_publish_updateChangelog_andKillCommandLine() {
-
-			tryF_sample(doNothing, () => {
-				exec(`npm version ${versionIncrement}`, () => {
-					successLog('package.json up-version\'d  ✔️')
-					exec('npm publish', async () => {
-						successLog('package.json published to npm  ✔️')
-						successLog('Done  ✔️ :D')
-						await replaceTagsInChangelogWithNewVersion()
-						successLog('Tags replaced^^')
-					})
-				})
-			}, [])
-
-			async function replaceTagsInChangelogWithNewVersion() {
-				const updatedPackageJson = await import('./package.json', { assert: { type: "json" } })
-				const newVersion = updatedPackageJson.default.version
-
-				const spacesAfterVersion = ' '.repeat(9 - newVersion.length)
-				const stringToReplaceTheTags = `${newVersion}.${spacesAfterVersion}`
-
-				const changelog = await fsReadFileAsync('./changelog.MD')
-				const newChangelog = changelog.replace('#'.repeat(10), stringToReplaceTheTags)
-				await fsWriteFileAsync('./changelog.MD', newChangelog)
-			}
-		}
-	}
 
 	async function promptVersioning() {
 		const versionIncrement = await questionAsPromise('Type of package version increment (major, minor, patch)?')
@@ -807,22 +690,13 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 		prompCommitMessage(versionIncrement)
 	}
 
-	function questionAsPromise(question: string) {
-		return new Promise(resolve => {
-			readline.question(
-				chalk.magenta(question) + '\n',
-				resolve
-			)
-		}) as Promise<string>
-	}
-
 	function transpileFiles(followUp: Function) {
 		const filename = 'index.ts'
 		exec('tsc --declaration --target esnext ' + filename, async () => {
-			successLog(filename + ' transpiled ✔️')
+			successLog(filename + ' transpiled')
 
 			const indexTs = await fsReadFileAsync(filename)
-			const lines = indexTs.replaceAll('colorLog_big', 'colorLog').split('\n')
+			const lines = indexTs.replaceAll('bigConsoleError', 'colorLog').split('\n')
 			selfFilter(lines, (line) => !/DELETETHISFORCLIENT/.test(line))
 
 			const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x))
@@ -832,12 +706,115 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 			await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'))
 
 			exec('tsc --declaration --target esnext client/index.ts ', async () => {
-				successLog('browser versions emitted ✔️')
+				successLog('browser versions emitted')
 				await delay(500)
 				followUp()
 			})
 		})
 	}
+}
+
+/**Prompt to submit a git commit message and then push */
+export async function prompCommitMessage(versionIncrement: string) {
+
+	//order matters with these 3
+	const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test)'
+	delay(500).then(() => { colorLog('warning', '50-character limits ends at that line: * * * * * |'); console.log(); })
+	const commitMessage = await questionAsPromise(`Enter commit type ${commitTypes} plus a message:`)
+
+	function tryAgain(error: string) { colorLog('warning', error); prompCommitMessage(versionIncrement); return }
+	if (!zodCheck_sample(tryAgain, get_zValidCommitMessage(), commitMessage)) { return }
+
+	if (npmCommand === 'publish') { await addLineAsNewVersion(versionIncrement) }
+	if (npmCommand === 'git') { await addLineToFutureVersion() }
+	await gitAddCommitPush()
+
+	if (npmCommand === 'publish') { upVersion_publish_and_updateChangelog() }
+	return
+
+	async function addLineToFutureVersion() {
+		let changelog = await fsReadFileAsync('./changelog.MD')
+		while (['\n', ' '].includes(changelog[0])) { changelog = changelog.slice(1) }
+		const lines = changelog.split('\n')
+		lines.splice(0, 0, ' '.repeat(10) + commitMessage)
+		const newChangelog = lines.join('\n')
+		console.log({ newChangelog })
+		await fsWriteFileAsync('./changelog.MD', newChangelog)
+		colorLog('info', 'commit added to the changelog for a yet-to-be-released version')
+	}
+
+	async function addLineAsNewVersion(versionIncrement: string) {
+		const changelog = await fsReadFileAsync('./changelog.MD')
+		const lines = changelog.split('\n')
+
+		if (versionIncrement === 'major') { lines.splice(0, 0, `${'#'.repeat(125)}`) }
+		if (versionIncrement === 'minor') { lines.splice(0, 0, '') }
+
+		const newLine = '#'.repeat(10) + commitMessage
+		lines.splice(0, 0, newLine)
+		const newChangelog = lines.join('\n')
+		await fsWriteFileAsync('./changelog.MD', newChangelog)
+	}
+
+	function get_zValidCommitMessage() {
+		const commitRegex = new RegExp(`(?<!.)${commitTypes}:`)
+		return z.string().min(15).max(50).regex(commitRegex, `String must start with ${commitTypes}:`)
+	}
+
+	function gitAddCommitPush() {
+		return new Promise(resolve => {
+			exec('git add .', () => {
+				successLog('git add .')
+				colorLog('info', 'Copypaste the commit message in the git commit editor, then save and CLOSE it:')
+				colorLog('secondary', commitMessage)
+				console.log('')
+
+				exec("git commit", () => {
+					successLog('git commit')
+					exec('git push', () => {
+						successLog('git push')
+						resolve(true)
+					})
+				})
+			})
+		})
+	}
+
+	async function upVersion_publish_and_updateChangelog() {
+
+		tryF_sample(doNothing, () => {
+			exec(`npm version ${versionIncrement}`, () => {
+				successLog('package.json up-version\'d')
+				exec('npm publish', async () => {
+					successLog('package.json published to npm')
+					successLog('Done :D')
+					await replaceTagsInChangelogWithNewVersion()
+					successLog('Tags replaced^^')
+				})
+			})
+		}, [])
+
+		async function replaceTagsInChangelogWithNewVersion() {
+			const updatedPackageJson = await import('./package.json', { assert: { type: "json" } })
+			const newVersion = updatedPackageJson.default.version
+
+			const spacesAfterVersion = ' '.repeat(9 - newVersion.length)
+			const stringToReplaceTheTags = `${newVersion}.${spacesAfterVersion}`
+
+			const changelog = await fsReadFileAsync('./changelog.MD')
+			const newChangelog = changelog.replace('#'.repeat(10), stringToReplaceTheTags)
+			await fsWriteFileAsync('./changelog.MD', newChangelog)
+		}
+	}
+}
+
+/** */
+export async function questionAsPromise(question: string) {
+	return new Promise(resolve => {
+		getReadLine.
+			createInterface({ input: process.stdin, output: process.stdout }).
+			question(chalk.magenta(question) + '\n', resolve)
+	}) as Promise<string>
 }
 
 /**
@@ -869,5 +846,5 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
  * (see mapArgsOfFnAgainstFn as an existing example)
  */
 
-const command = process.env.npm_config_command as validNpmCommand
-if (command) { zodCheckAndHandle(zValidNpmCommand, command, npmRun, [command], console.log) }
+const btrCommand = process.env.npm_config_btrCommand as validNpmCommand
+if (btrCommand) { zodCheckAndHandle(zValidNpmCommand, btrCommand, npmRun, [btrCommand], console.log) }

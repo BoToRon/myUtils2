@@ -5,14 +5,15 @@
 	"description": "Utilities of me for me",
 	"main": "index.js",
 	"scripts": {
-		"publish": "npm run npmRun --command=publish",
-		"test": "ts-node-esm test.ts",
 		"npmRun": "ts-node-esm --transpileOnly index.ts",
-		"git": "npm run npmRun --command=git",
-		"transpile": "npm run npmRun --command=transpile",
+		"_________________________________________________a": "__________________________________________________",
+		"transpile": "npm run npmRun --btrCommand=transpile",
+		"publish": "npm run npmRun --btrCommand=publish",
+		"git": "npm run npmRun --btrCommand=git",
+		"all": "npm run publish",
+		"_________________________________________________b": "__________________________________________________",
 		"_tsIndex": "tsc --declaration --listEmittedFiles --target esnext index.ts",
-		"testGit": "git commit -a & git push",
-		"all": "npm run publish"
+		"test": "ts-node-esm test.ts"
 	},
 	"repository": {
 		"type": "git",
