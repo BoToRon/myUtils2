@@ -567,12 +567,10 @@ export const getMainDependencies = async (
 	}
 
 	async function getDivineBot() {
-		console.log('divineBot attempt: 2')
+		console.log('divineBot attempt: 3')
+		console.log({ ERIS_TOKEN }, '<-- for DivineBot')
 		const bot = eris(ERIS_TOKEN as string)
 		connectToDiscord()
-		colorLog('info', "'waiting for DivineBot's readiness")
-		while (!bot.ready) { await delay(500) }
-		colorLog('success', "It's time >:D")
 		return bot
 
 		function connectToDiscord() {
@@ -604,7 +602,11 @@ export const getMainDependencies = async (
 			}
 
 			async function connectToDiscord() {
-				try { bot.connect().then(() => colorLog('success', `${divinePrepend} Connected successfully^^`)) }
+				try {
+					bot.connect()
+					while (!bot.ready) { colorLog('info', "'waiting for DivineBot's readiness, token: " + ERIS_TOKEN); await delay(100) }
+					colorLog('success', "It's DivineBot time >:D")
+				}
 				catch {
 					colorLog('warning', `${divinePrepend} Failed to connect.. retrying >:D`)
 					await delay(1000 * 10)
