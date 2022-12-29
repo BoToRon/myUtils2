@@ -1,3 +1,4 @@
+##########chore: changed divine bot's delay interval
 ##########fix: was using divBot.ready instead of mongoClient
 ##########chore: mongo and divine telling when waiting/done
 ##########feat: diff handling for outdated utils (dev|prod)

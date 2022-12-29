@@ -610,7 +610,7 @@ packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
                     divineBot.connect();
                     colorLog('info', 'waiting for DivineBot');
                     while (!divineBot.ready) {
-                        await delay(500);
+                        await delay(1000);
                     }
                     colorLog('success', "The divine egg has hatched");
                     pingMe('im alive bitch');
@@ -801,8 +801,9 @@ export const npmRun = async (npmCommand) => {
                     successLog('package.json up-version\'d  ✔️');
                     exec('npm publish', async () => {
                         successLog('package.json published to npm  ✔️');
-                        await replaceTagsInChangelogWithNewVersion();
                         successLog('Done  ✔️ :D');
+                        await replaceTagsInChangelogWithNewVersion();
+                        successLog('Tags replaced^^');
                     });
                 });
             }, []);
