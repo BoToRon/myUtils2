@@ -619,9 +619,8 @@ export const getMainDependencies = async (
 		let mongoClient: MongoClient = null as unknown as MongoClient
 		mongo.connect((err, client) => { if (err) { throw err } mongoClient = client as MongoClient })
 		colorLog('info', 'waiting for Mongo')
-		while (!divineBot.ready) { await delay(500) }
-		colorLog('success', "It's Monging time >:D")
 		while (!mongoClient) { await delay(500) }
+		colorLog('success', "It's Monging time >:D")
 		return mongoClient
 	}
 

@@ -630,13 +630,10 @@ packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
             throw err;
         } mongoClient = client; });
         colorLog('info', 'waiting for Mongo');
-        while (!divineBot.ready) {
-            await delay(500);
-        }
-        colorLog('success', "It's Monging time >:D");
         while (!mongoClient) {
             await delay(500);
         }
+        colorLog('success', "It's Monging time >:D");
         return mongoClient;
     }
     /**

@@ -11,7 +11,8 @@
 		"git": "npm run npmRun --command=git",
 		"transpile": "npm run npmRun --command=transpile",
 		"_tsIndex": "tsc --declaration --listEmittedFiles --target esnext index.ts",
-		"testGit": "git commit -a & git push"
+		"testGit": "git commit -a & git push",
+		"all": "npm run publish"
 	},
 	"repository": {
 		"type": "git",
