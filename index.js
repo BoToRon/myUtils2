@@ -608,11 +608,11 @@ packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
             async function attemptConnection() {
                 try {
                     divineBot.connect();
+                    colorLog('info', 'waiting for DivineBot');
                     while (!divineBot.ready) {
-                        colorLog('info', "'waiting for DivineBot's readiness, token: " + ERIS_TOKEN);
-                        await delay(100);
+                        await delay(500);
                     }
-                    colorLog('success', "It's DivineBot time >:D");
+                    colorLog('success', "The divine egg has hatched");
                     pingMe('im alive bitch');
                 }
                 catch {
@@ -629,6 +629,11 @@ packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
         mongo.connect((err, client) => { if (err) {
             throw err;
         } mongoClient = client; });
+        colorLog('info', 'waiting for Mongo');
+        while (!divineBot.ready) {
+            await delay(500);
+        }
+        colorLog('success', "It's Monging time >:D");
         while (!mongoClient) {
             await delay(500);
         }
@@ -796,11 +801,11 @@ export const npmRun = async (npmCommand) => {
         async function upVersion_publish_updateChangelog_andKillCommandLine() {
             tryF_sample(doNothing, () => {
                 exec(`npm version ${versionIncrement}`, () => {
-                    successLog('package.json up-version\'d');
+                    successLog('package.json up-version\'d  ✔️');
                     exec('npm publish', async () => {
-                        successLog('package.json published to npm');
+                        successLog('package.json published to npm  ✔️');
                         await replaceTagsInChangelogWithNewVersion();
-                        successLog('Done :D');
+                        successLog('Done  ✔️ :D');
                     });
                 });
             }, []);

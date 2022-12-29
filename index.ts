@@ -600,8 +600,9 @@ export const getMainDependencies = async (
 			async function attemptConnection() {
 				try {
 					divineBot.connect()
-					while (!divineBot.ready) { colorLog('info', "'waiting for DivineBot's readiness, token: " + ERIS_TOKEN); await delay(100) }
-					colorLog('success', "It's DivineBot time >:D")
+					colorLog('info', 'waiting for DivineBot')
+					while (!divineBot.ready) { await delay(500) }
+					colorLog('success', "The divine egg has hatched")
 					pingMe('im alive bitch')
 				}
 				catch {
@@ -617,6 +618,9 @@ export const getMainDependencies = async (
 		const mongo = new mongodb.MongoClient(MONGO_URI as string)
 		let mongoClient: MongoClient = null as unknown as MongoClient
 		mongo.connect((err, client) => { if (err) { throw err } mongoClient = client as MongoClient })
+		colorLog('info', 'waiting for Mongo')
+		while (!divineBot.ready) { await delay(500) }
+		colorLog('success', "It's Monging time >:D")
 		while (!mongoClient) { await delay(500) }
 		return mongoClient
 	}
@@ -773,11 +777,11 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 
 			tryF_sample(doNothing, () => {
 				exec(`npm version ${versionIncrement}`, () => {
-					successLog('package.json up-version\'d')
+					successLog('package.json up-version\'d  ✔️')
 					exec('npm publish', async () => {
-						successLog('package.json published to npm')
+						successLog('package.json published to npm  ✔️')
 						await replaceTagsInChangelogWithNewVersion()
-						successLog('Done :D')
+						successLog('Done  ✔️ :D')
 					})
 				})
 			}, [])
