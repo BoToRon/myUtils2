@@ -625,7 +625,7 @@ export const getMainDependencies = async (
 		const app = express()
 		const httpServer = http.createServer(app)
 		app.use(express.static(path.resolve() + '/public'))
-		app.get('/', (_request, response) => response.sendFile(path.resolve() + 'public/index.html'))
+		app.get('/', (_request, response) => response.sendFile(path.resolve() + '/public/index.html'))
 		httpServer.listen(PORT, () => delay(1500).then(() => console.log(`server up at: http://localhost:${PORT}/`)))
 		return httpServer
 	}
@@ -640,7 +640,6 @@ export const getMainDependencies = async (
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export const killProcess = async (message: string) => {
 	bigConsoleError(message)
-	await delay(1000)
 	process.exit()
 }
 /**
@@ -660,9 +659,9 @@ export async function myUtils_checkIfUpToDate(errorHandler: (message: string) =>
 
 	function getFailureMessage() {
 		return toSingleLine(`
-			Project is using an outdated version of myUtils, 
-			- (${installedVersion} vs ${latestVersion}) -
-			PLEASE UPDATE:          npm i @botoron/my-utils`)
+	Project is using an outdated version of myUtils, 
+	- (${installedVersion} vs ${latestVersion}) -
+	PLEASE UPDATE:          npm i @botoron/my-utils`)
 	}
 
 	async function getLatestVersion() {
@@ -695,7 +694,7 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 
 		exec(`npm version ${versionIncrement}`, () => {
 			successLog('package.json up-version\'d')
-			exec('npm publish', async () => successLog('package.json published to npm'))
+			exec('npm publish', () => successLog('package.json published to npm'))
 		})
 	}
 
@@ -728,8 +727,9 @@ export async function prompCommitMessageAndPush(repoName: string) {
 
 	//order matters with these 3
 	const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test)'
-	delay(500).then(() => { colorLog('warning', '50-character limits ends at that line: * * * * * |'); console.log(); })
-	const commitMessage = await questionAsPromise(`(${repoName}) Enter commit type ${commitTypes} plus a message:`)
+
+	logDetailsForPrompt()
+	const commitMessage = await questionAsPromise(`Enter commit type ${commitTypes} plus a message:`)
 
 	function tryAgain(error: string) { colorLog('warning', error); prompCommitMessageAndPush(repoName); return }
 	if (!zodCheck_sample(tryAgain, get_zValidCommitMessage(), commitMessage)) { return }
@@ -756,6 +756,14 @@ export async function prompCommitMessageAndPush(repoName: string) {
 					})
 				})
 			})
+		})
+	}
+
+	function logDetailsForPrompt() {
+		delay(500).then(() => {
+			colorLog('warning', '50-character limits ends at that line: * * * * * |')
+			colorLog('success', repoName)
+			console.log();
 		})
 	}
 }
