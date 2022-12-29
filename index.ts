@@ -560,34 +560,28 @@ export const getMainDependencies = async (
 	/**notify me about things breaking via discord, if pingMeOnErrors is passed as true */
 	function divineError(arg: string | Error) {
 		const x = (typeof arg === 'string' ? arg : arg.stack) as string
-		console.log(x)
 
-		//TODO: uncomment this
-		/* const error = `${x}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '')
+		const error = `${x}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '')
 		if (pingMeOnErrors) { colorLog('danger', error); return }
-
-		const theMessage = `<@470322452040515584> - (${appName}) \n ${error}`
-
-		const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } }
-		divineBot.createMessage('1055939528776495206', divineOptions) */
+		pingMe(error)
 	}
 
 	async function getDivineBot() {
-		console.log('divineBot attempt: 3')
-		console.log({ ERIS_TOKEN }, '<-- for DivineBot')
-		const bot = eris(ERIS_TOKEN as string)
-		connectToDiscord()
-		return bot
 
-		function connectToDiscord() {
+		console.log({ ERIS_TOKEN })
+		const divineBot = eris(ERIS_TOKEN as string)
+		connectToDiscord()
+		return divineBot
+
+		async function connectToDiscord() {
 			const divinePrepend = '***DivineBot:***'
 
-			bot.on('messageReactionAdd', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('add', a, b, c))
-			bot.on('messageReactionRemove', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('remove', a, b, c))
-			bot.on('disconnect', () => { colorLog('danger', `${divinePrepend}: Disconnected D: ... retrying!`); connectToDiscord() })
+			divineBot.on('messageReactionAdd', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('add', a, b, c))
+			divineBot.on('messageReactionRemove', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('remove', a, b, c))
+			divineBot.on('disconnect', () => { colorLog('danger', `${divinePrepend}: Disconnected D: ... retrying!`); connectToDiscord() })
 
 			const idOfRoleAssigningMessage = '822523162724925473'
-			connectToDiscord()
+			await attemptConnection()
 
 			function role(action: 'add' | 'remove', message: eris.PossiblyUncachedMessage, emoji: eris.PartialEmoji, reactor: eris.Member) {
 				try {
@@ -607,16 +601,17 @@ export const getMainDependencies = async (
 				catch (e) { console.log('divineBot.role.tryCatch.error = ', e) }
 			}
 
-			async function connectToDiscord() {
+			async function attemptConnection() {
 				try {
-					bot.connect()
-					while (!bot.ready) { colorLog('info', "'waiting for DivineBot's readiness, token: " + ERIS_TOKEN); await delay(100) }
+					divineBot.connect()
+					while (!divineBot.ready) { colorLog('info', "'waiting for DivineBot's readiness, token: " + ERIS_TOKEN); await delay(100) }
 					colorLog('success', "It's DivineBot time >:D")
+					pingMe('im alive bitch')
 				}
 				catch {
 					colorLog('warning', `${divinePrepend} Failed to connect.. retrying >:D`)
 					await delay(1000 * 10)
-					connectToDiscord()
+					attemptConnection()
 				}
 			}
 		}
@@ -663,6 +658,12 @@ export const getMainDependencies = async (
 			}))
 			return response.objects[0].package.version
 		}
+	}
+
+	function pingMe(message: string) {
+		const theMessage = `<@470322452040515584> - (${appName}) \n ${message}`
+		const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } }
+		divineBot.createMessage('1055939528776495206', divineOptions)
 	}
 
 	/**console table the scripts of the project's package json 
@@ -754,17 +755,17 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 		}
 
 		function gitAddCommitPush() {
-			execSync('git add .')
-			successLog('git add . ✔️')
+			exec('git add .', () => {
+				successLog('git add . ✔️')
+				colorLog('info', 'Copypaste the commit message in the git commit editor, then save and CLOSE it:')
+				colorLog('secondary', commitMessage)
+				console.log('')
 
-			colorLog('info', 'Copypaste the commit message in the git commit editor, then save and CLOSE it:')
-			colorLog('secondary', commitMessage)
-			console.log('')
-			execSync("git commit")
-			successLog('git commit ✔️')
-
-			execSync('git push')
-			successLog('git push ✔️')
+				exec("git commit", () => {
+					successLog('git commit ✔️')
+					exec('git push', () => { successLog('git push ✔️') })
+				})
+			})
 		}
 
 		async function upVersion_publish_updateChangelog_andKillCommandLine() {

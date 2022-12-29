@@ -1,3 +1,5 @@
+##########test: still divine and railway
+1.1.4.    test: if npm run publish is fixed
 ##########test: still with DivineBot issues
 ##########test: attempt 2 vs railway
 ##########test: if it was DivineError breaking railway

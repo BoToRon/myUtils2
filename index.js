@@ -17,7 +17,7 @@ import fetch from 'node-fetch'; //DELETETHISFORCLIENT
 _;
 import getReadLine from 'readline'; //DELETETHISFORCLIENT
 _;
-import { exec, execSync } from 'child_process'; //DELETETHISFORCLIENT
+import { exec } from 'child_process'; //DELETETHISFORCLIENT
 _;
 import mongodb from 'mongodb'; //DELETETHISFORCLIENT
 _;
@@ -570,29 +570,25 @@ packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
     /**notify me about things breaking via discord, if pingMeOnErrors is passed as true */
     function divineError(arg) {
         const x = (typeof arg === 'string' ? arg : arg.stack);
-        console.log(x);
-        //TODO: uncomment this
-        /* const error = `${x}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '')
-        if (pingMeOnErrors) { colorLog('danger', error); return }
-
-        const theMessage = `<@470322452040515584> - (${appName}) \n ${error}`
-
-        const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } }
-        divineBot.createMessage('1055939528776495206', divineOptions) */
+        const error = `${x}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '');
+        if (pingMeOnErrors) {
+            colorLog('danger', error);
+            return;
+        }
+        pingMe(error);
     }
     async function getDivineBot() {
-        console.log('divineBot attempt: 3');
-        console.log({ ERIS_TOKEN }, '<-- for DivineBot');
-        const bot = eris(ERIS_TOKEN);
+        console.log({ ERIS_TOKEN });
+        const divineBot = eris(ERIS_TOKEN);
         connectToDiscord();
-        return bot;
-        function connectToDiscord() {
+        return divineBot;
+        async function connectToDiscord() {
             const divinePrepend = '***DivineBot:***';
-            bot.on('messageReactionAdd', (a, b, c) => role('add', a, b, c));
-            bot.on('messageReactionRemove', (a, b, c) => role('remove', a, b, c));
-            bot.on('disconnect', () => { colorLog('danger', `${divinePrepend}: Disconnected D: ... retrying!`); connectToDiscord(); });
+            divineBot.on('messageReactionAdd', (a, b, c) => role('add', a, b, c));
+            divineBot.on('messageReactionRemove', (a, b, c) => role('remove', a, b, c));
+            divineBot.on('disconnect', () => { colorLog('danger', `${divinePrepend}: Disconnected D: ... retrying!`); connectToDiscord(); });
             const idOfRoleAssigningMessage = '822523162724925473';
-            connectToDiscord();
+            await attemptConnection();
             function role(action, message, emoji, reactor) {
                 try {
                     if (message.id !== idOfRoleAssigningMessage) {
@@ -614,19 +610,20 @@ packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
                     console.log('divineBot.role.tryCatch.error = ', e);
                 }
             }
-            async function connectToDiscord() {
+            async function attemptConnection() {
                 try {
-                    bot.connect();
-                    while (!bot.ready) {
+                    divineBot.connect();
+                    while (!divineBot.ready) {
                         colorLog('info', "'waiting for DivineBot's readiness, token: " + ERIS_TOKEN);
                         await delay(100);
                     }
                     colorLog('success', "It's DivineBot time >:D");
+                    pingMe('im alive bitch');
                 }
                 catch {
                     colorLog('warning', `${divinePrepend} Failed to connect.. retrying >:D`);
                     await delay(1000 * 10);
-                    connectToDiscord();
+                    attemptConnection();
                 }
             }
         }
@@ -675,6 +672,11 @@ packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
             }));
             return response.objects[0].package.version;
         }
+    }
+    function pingMe(message) {
+        const theMessage = `<@470322452040515584> - (${appName}) \n ${message}`;
+        const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } };
+        divineBot.createMessage('1055939528776495206', divineOptions);
     }
     /**console table the scripts of the project's package json
      //TODO: maybe validate them too? (as in, should be npm run start/dev/transpile/installUtils ?
@@ -776,15 +778,16 @@ export const npmRun = async (npmCommand) => {
             return z.string().min(15).max(50).regex(commitRegex, `String must start with ${commitTypes}:`);
         }
         function gitAddCommitPush() {
-            execSync('git add .');
-            successLog('git add . ✔️');
-            colorLog('info', 'Copypaste the commit message in the git commit editor, then save and CLOSE it:');
-            colorLog('secondary', commitMessage);
-            console.log('');
-            execSync("git commit");
-            successLog('git commit ✔️');
-            execSync('git push');
-            successLog('git push ✔️');
+            exec('git add .', () => {
+                successLog('git add . ✔️');
+                colorLog('info', 'Copypaste the commit message in the git commit editor, then save and CLOSE it:');
+                colorLog('secondary', commitMessage);
+                console.log('');
+                exec("git commit", () => {
+                    successLog('git commit ✔️');
+                    exec('git push', () => { successLog('git push ✔️'); });
+                });
+            });
         }
         async function upVersion_publish_updateChangelog_andKillCommandLine() {
             tryF_sample(doNothing, () => {
