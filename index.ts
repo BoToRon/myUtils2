@@ -545,7 +545,6 @@ export const getMainDependencies = async (
 
 	async function getDivineBot() {
 
-		console.log({ ERIS_TOKEN })
 		const divineBot = eris(ERIS_TOKEN as string)
 		connectToDiscord()
 		return divineBot
@@ -695,11 +694,6 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 		exec(`npm version ${versionIncrement}`, (err, stdout, stderr) => {
 			console.log({ stdout })
 			successLog('package.json up-version\'d')
-			return
-			exec('npm publish', (err, stdout, stderr) => {
-				console.log({ err, stdout, stderr })
-				successLog('package.json published to npm')
-			})
 		})
 	}
 

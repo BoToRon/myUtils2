@@ -556,7 +556,6 @@ packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
         pingMe(error);
     }
     async function getDivineBot() {
-        console.log({ ERIS_TOKEN });
         const divineBot = eris(ERIS_TOKEN);
         connectToDiscord();
         return divineBot;
@@ -713,11 +712,6 @@ export const npmRun = async (npmCommand) => {
         exec(`npm version ${versionIncrement}`, (err, stdout, stderr) => {
             console.log({ stdout });
             successLog('package.json up-version\'d');
-            return;
-            exec('npm publish', (err, stdout, stderr) => {
-                console.log({ err, stdout, stderr });
-                successLog('package.json published to npm');
-            });
         });
     }
     function transpileFiles(followUp) {
