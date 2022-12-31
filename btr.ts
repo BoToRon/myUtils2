@@ -1,6 +1,3 @@
-//TODO: use this regex:
-/= \([a-zA-Z_]{1,}: string\) =>/
-
 //TODO: create a way to make sure every project has the same package.json scripts and also create a way to automatize their compilation
 const _ = 'prevent imports and comments from collapsing'
 _
@@ -40,14 +37,12 @@ type validChalkColor = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' 
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
 type trackedVueComponent = { _name: string, beforeCreate?: () => void, beforeDestroy?: () => void }
 declare global { interface Window { vueComponents: trackedVueComponent[], newToast: newToastFn } }
-type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 type newToastFn = (title: string, message: string, variant: validVariant) => void
 type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
 type zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T> }
 const zValidNpmCommand = z.enum(['git', 'publish', 'transpile'])
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch'])	//DELETETHISFORCLIENT
 type validNpmCommand = z.infer<typeof zValidNpmCommand>	//DELETETHISFORCLIENT
-type errorMessageHandler = (message: string) => void
 type pipe_persistent_type<T> = (arg: T) => T
 type pipe_mutable_type = {
 	<T, A>(source: T, a: (value: T) => A): A
@@ -57,7 +52,6 @@ type pipe_mutable_type = {
 	<T, A, B, C, D, E>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D, e: (value: D) => E): E
 	//can always make it longer 😉
 }
-
 export const BTR = {
 	/**Tr-Catch wrapper for functions. Starts as a placeholder, initialize it with typeF_get */
 	tryF: <T extends (...args: any) => any>(fn: T, args: Parameters<T>): any => {
@@ -81,9 +75,6 @@ export const BTR = {
 	/**for when registering them for tracking at window.vueComponents */
 	zValidVueComponentName: null as unknown as zSchema<unknown>,
 }
-
-
-
 /**colorLog.succes with a ✔️ at the end :D */
 export const successLog = (message: string) => colorLog('success', message + ' ✔️')
 /**start a setInterval and add it to an array */
@@ -142,18 +133,6 @@ export const selfFilter = <T>(arr: T[], predicate: (arg1: T) => boolean) => {
 		i--
 	}
 	return { removedItems, removedCount }
-}
-/**Compare if array B is equal to array A, and return the answer along the missing/nondesired items (if any) */
-export function compareArrays<T>(errorHandler: errorMessageHandler, desiredArray: T[], myArray: T[]) {
-	const areEqualLength = myArray.length === desiredArray.length
-	const missingItems = desiredArray.filter(x => !myArray.includes(x))
-	const nonDesiredItems = myArray.filter(x => !desiredArray.includes(x))
-	const areEqual = !nonDesiredItems.length && !missingItems.length && areEqualLength
-
-	const errorMessage = JSON.stringify({ nonDesiredItems, missingItems, desiredArray })
-	if (!areEqual) { errorHandler(errorMessage) }
-
-	return { areEqual, missingItems, nonDesiredItems, errorMessage }
 }
 /**Remove a single item from an array, or all copies of that item if its a primitive value */
 export const removeItem = <T>(arr: T[], item: T) => selfFilter(arr, (x: T) => x !== item).removedCount
@@ -240,8 +219,15 @@ export const downloadFile_client = (filename: string, fileFormat: '.txt' | '.jso
 	a.download = `${filename}${fileFormat}`
 	a.click()
 }
-/**Stringy an array/object so its readable, except for methods, eg: obj.sampleMethod becomes "[λ: sampleMethod]", FIXME: */
-export const stringify = (x: unknown) => { return JSON.stringify(x) }
+/**Stringy an array/object so its readable, except for methods, eg: obj.sampleMethod becomes "[λ: sampleMethod]" */
+export const stringify = (x: unknown) => {
+	// ! order matters, do NOT change it
+	if (x === null) { return 'null' }
+	if (typeof x === 'number' && isNaN(x)) { return 'NaN' }
+	if (!x) { return typeof x }
+	if (typeof x !== 'object') { return `${x}` }
+	return JSON.stringify(x)
+}
 /**FOR CLIENT-SIDE CODE ONLY. Copy anything to the clipboard, objects/arrays get parsed to be readable*/
 export const copyToClipboard = (x: any) => {
 	if (isNode) { bigConsoleError('copyToClipboard can only be run clientside!'); return }
@@ -385,7 +371,7 @@ export function warnAboutUnproperlyInitializedFunction(fn: 'tryF' | 'newToast_cl
 	if (isClientOrServer === 'server') { bigConsoleError(error) }
 }
 /**function to generate zodCheck with a predertemined errorHandler so it doesnt have to be passed everytime :D */
-export const zodCheck_get = (errorHandler: errorMessageHandler) => {
+export const zodCheck_get = (errorHandler: (err: string) => void) => {
 	function zodCheck<T>(schema: zSchema<T>, data: T) {
 		const result = schema.safeParse(data) as SafeParseReturnType<T, null>
 		if (result.success === false) { errorHandler(fromZodError(result.error).message) }
@@ -394,7 +380,7 @@ export const zodCheck_get = (errorHandler: errorMessageHandler) => {
 	return zodCheck
 }
 /**This is a SAMPLE, use zodCheck_get to set zodCheck and use it without having to pass errorHandler everytime*/
-export const zodCheck_sample = <T>(errorHandler: errorMessageHandler, schema: zSchema<T>, data: T) => {
+export const zodCheck_sample = <T>(errorHandler: (err: string) => void, schema: zSchema<T>, data: T) => {
 	const result = schema.safeParse(data) as SafeParseReturnType<T, null>
 	if (result.success === false) { errorHandler(fromZodError(result.error).message) }
 	return result.success
@@ -413,7 +399,7 @@ export const zodCheckAndHandle = <D, SH extends (...args: Parameters<SH>) => Ret
 	/**data to test against the schema */	data: D,
 	/**sucess handler*/	successHandler: SH,
 	/**arguments to apply to the success handler */	args: Parameters<SH>,
-	/**error handler */ errorHandler: errorMessageHandler,
+	/**error handler */ errorHandler: (errorMessage: string) => void,
 ) => {
 	/**whether the data fits the schema or not */
 	const zResult = zSchema.safeParse(data)
@@ -441,60 +427,6 @@ export const zPipe = <T>(zSchema: zSchema<T>, initialValue: T, ...fns: pipe_pers
 // ! DELETEEVERYTHINGBELOW, as it is only meant for server-side use
 _
 
-/**
-	 * Check the version of @botoron/utils, the enviroment variables and the package.json scripts
-	 * @param errorHander PROD: DivineError, DEV: killProcess
-	 */
-export function basicProjectChecks(errorHandler: errorMessageHandler, packageJson: packageJson, env: NodeJS.ProcessEnv) {
-
-	const utilsCheck = myUtils_areUpToDate()
-	const scriptsCheck = checkJsonPackageScripts()
-	const envCheck = getAndCheckEnviromentVariables()
-	return envCheck && scriptsCheck && utilsCheck
-
-	/**Check the scripts in a project's package json all fit the established schema */
-	function checkJsonPackageScripts() {
-		return compareArrays(errorHandler, [
-			//for convenience
-			"btr", "git", "npmScript",
-			//for debugging
-			"dev", "localtunnel", "nodemon", "transpile", "vue",
-			//for deployement
-			"build-all", "build-client", "build-server", "start",
-		], Object.keys(packageJson.scripts)).areEqual
-	}
-
-	/**Check if all the desired enviroment keys are defined */
-	function getAndCheckEnviromentVariables() {
-		const desiredEnvKeys = ['ADMIN_PASSWORD', 'APP_NAME', 'DEV_OR_PROD', 'ERIS_TOKEN', 'MONGO_URI', 'PORT']
-		return compareArrays(killProcess, desiredEnvKeys, Object.keys(env)).areEqual
-	}
-
-	/**Check if the project is using the latest version of "myUtils" */
-	async function myUtils_areUpToDate() {
-		const latestVersion = await getLatestVersion()
-		const installedVersion = (await import('./package.json', { assert: { type: "json" } })).default.version
-		const isUpToDate = installedVersion === latestVersion
-
-		if (isUpToDate) { colorLog('info', '@botoron/my-utils is up to date 👍') }
-		else { errorHandler(`Outdated "btr/utils" package. (${installedVersion} vs ${latestVersion}) PLEASE UPDATE: npm run btr`) }
-
-		return isUpToDate
-
-		//Check if the project is using the latest version of "@botoron/utils"
-		async function getLatestVersion() {
-			type pck = { objects: [{ package: { version: string } }] }
-			const response: pck = (await new Promise((resolve) => {
-				try {
-					fetch(`http://registry.npmjs.com/-/v1/search?text=@botoron/utils&size=1`).
-						then(res => res.json().then((x) => resolve(x as pck)))
-				}
-				catch { return { objects: [{ package: { version: '0' } }] } }
-			}))
-			return response.objects[0].package.version
-		}
-	}
-}
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
 export const bigConsoleError = (message: string) => {
 	const log = (message: string) => colorLog('danger', message)
@@ -576,25 +508,56 @@ export const getLatestPackageJsonFromGithub = async () => {
  * @param PORT The dev port, should reside in .env
  * @returns divineBot, divineError, io, mongoClient, tryF
  */
-export const getMainDependencies = async (packageJson: packageJson) => {
-
-	const env = await getEnviromentVariables()
-	const { ADMIN_PASSWORD, APP_NAME, DEV_OR_PROD, ERIS_TOKEN, MONGO_URI, PORT } = env
-
-	const divineBot = await getDivineBot()
-	basicProjectChecks(divineError, packageJson, { ADMIN_PASSWORD, APP_NAME, DEV_OR_PROD, ERIS_TOKEN, MONGO_URI, PORT })
+export const getMainDependencies = async (
+	appName: string,
+	packageJson: { version: string, scripts: { [key: string]: string } },
+	pingMeOnErrors: boolean,
+	ERIS_TOKEN: string | undefined,
+	MONGO_URI: string | undefined,
+	PORT: string | undefined
+) => {
 
 	const httpServer = startAndGetHttpServer()
 	const mongoClient = await getMongoClient()
+	const divineBot = await getDivineBot()
 
-	return { divineBot, divineError, doAndRepeat, env, httpServer, mongoClient, tryF }
+	myUtils_checkIfUpToDate(divineError)
+	checkJsonPackageScripts()
+
+	//showPackageJsonScripts_project()
+
+	return { divineBot, divineError, doAndRepeat, httpServer, mongoClient, tryF }
+
+	/**Check the scripts in a project's package json all fit the established schema */
+	async function checkJsonPackageScripts() {
+
+		const desiredScripts = [
+			//for convenience
+			"btr", "git", "npmScript",
+			//for debugging
+			"dev", "localtunnel", "nodemon", "transpile", "vue",
+			//for deployement
+			"build-all", "build-client", "build-server", "start",
+		]
+
+		const projectScripts = Object.keys(packageJson.scripts)
+		const missingScripts = desiredScripts.filter(script => !projectScripts.includes(script))
+		const questionableScripts = projectScripts.filter(script => !desiredScripts.includes(script))
+
+		if (!missingScripts.length && !questionableScripts.length) { return true }
+
+		if (questionableScripts.length) { colorLog('dark', `questionableScripts: ${questionableScripts}`) }
+		if (missingScripts.length) { colorLog('dark', `missingScripts: ${missingScripts}`) }
+		colorLog('info', `desiredScripts: ${desiredScripts}`)
+	}
 
 	/**notify me about things breaking via discord, if pingMeOnErrors is passed as true */
 	function divineError(arg: string | Error) {
 		const x = (typeof arg === 'string' ? arg : arg.stack) as string
 
 		const error = `${x}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '')
-		DEV_OR_PROD === 'prod' ? pingMe(error) : colorLog('danger', error)
+		if (pingMeOnErrors) { colorLog('danger', error); return }
+		pingMe(error)
 	}
 
 	/**Set interval with try-catch and called immediately*/
@@ -666,8 +629,7 @@ export const getMainDependencies = async (packageJson: packageJson) => {
 	}
 
 	function pingMe(message: string) {
-		if (!divineBot || !divineBot.ready) { return }
-		const theMessage = `<@470322452040515584> - (${APP_NAME}) \n ${message}`
+		const theMessage = `<@470322452040515584> - (${appName}) \n ${message}`
 		const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } }
 		divineBot.createMessage('1055939528776495206', divineOptions)
 	}
@@ -689,11 +651,44 @@ export const getMainDependencies = async (packageJson: packageJson) => {
 }
 
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
-export const killProcess = (message: string) => {
-	if (message) { bigConsoleError(message) }
+export const killProcess = async (message: string) => {
+	bigConsoleError(message)
 	process.exit()
 }
+/**
+ * @description Checks if the project is using the latest version of "myUtils"
+ * @param failureHandler to notify/warm me to update "utils" in that project, divineError if prod, bigConsoleError otherwise
+ * @returns a boolean, although I'm not sure what I should it for (if for anything) yet
+ */
+export async function myUtils_checkIfUpToDate(errorHandler: (message: string) => void) {
 
+	const latestVersion = await getLatestVersion()
+	const installedVersion = (await import('./package.json', { assert: { type: "json" } })).default.version
+	const isUpToDate = installedVersion === latestVersion
+
+	if (!isUpToDate) { errorHandler(getFailureMessage()) }
+	else { colorLog('info', '@botoron/my-utils is up to date 👍') }
+	return isUpToDate
+
+	function getFailureMessage() {
+		return toSingleLine(`
+	Project is using an outdated version of myUtils, 
+	- (${installedVersion} vs ${latestVersion}) -
+	PLEASE UPDATE:          npm i @botoron/utils`)
+	}
+
+	async function getLatestVersion() {
+		type pck = { objects: [{ package: { version: string } }] }
+		const response: pck = (await new Promise((resolve) => {
+			try {
+				fetch(`http://registry.npmjs.com/-/v1/search?text=@botoron/utils&size=1`).
+					then(res => res.json().then((x) => resolve(x as pck)))
+			}
+			catch { return { objects: [{ package: { version: '0' } }] } }
+		}))
+		return response.objects[0].package.version
+	}
+}
 /**Easily run the scripts of this (utils) repo's package.json */
 export const npmRun = async (npmCommand: validNpmCommand) => {
 
