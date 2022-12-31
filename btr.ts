@@ -510,8 +510,6 @@ export const getLatestPackageJsonFromGithub = async () => {
  */
 export const getMainDependencies = async (
 	appName: string,
-	devOrProd: 'DEV' | 'PROD',
-	//createRequire: (path: string | URL) => NodeRequire,
 	packageJson: { version: string, scripts: { [key: string]: string } },
 	pingMeOnErrors: boolean,
 	ERIS_TOKEN: string | undefined,
@@ -524,9 +522,34 @@ export const getMainDependencies = async (
 	const divineBot = await getDivineBot()
 
 	myUtils_checkIfUpToDate(divineError)
-	showPackageJsonScripts_project()
+	checkJsonPackageScripts()
+
+	//showPackageJsonScripts_project()
 
 	return { divineBot, divineError, doAndRepeat, httpServer, mongoClient, tryF }
+
+	/**Check the scripts in a project's package json all fit the established schema */
+	async function checkJsonPackageScripts() {
+
+		const desiredScripts = [
+			//for convenience
+			"btr", "git", "npmScript",
+			//for debugging
+			"dev", "localtunnel", "nodemon", "transpile", "vue",
+			//for deployement
+			"build-all", "build-client", "build-server", "start",
+		]
+
+		const projectScripts = Object.keys(packageJson.scripts)
+		const missingScripts = desiredScripts.filter(script => !projectScripts.includes(script))
+		const questionableScripts = projectScripts.filter(script => !desiredScripts.includes(script))
+
+		if (!missingScripts.length && !questionableScripts.length) { return true }
+
+		if (questionableScripts.length) { colorLog('dark', `questionableScripts: ${questionableScripts}`) }
+		if (missingScripts.length) { colorLog('dark', `missingScripts: ${missingScripts}`) }
+		colorLog('info', `desiredScripts: ${desiredScripts}`)
+	}
 
 	/**notify me about things breaking via discord, if pingMeOnErrors is passed as true */
 	function divineError(arg: string | Error) {
@@ -609,16 +632,6 @@ export const getMainDependencies = async (
 		const theMessage = `<@470322452040515584> - (${appName}) \n ${message}`
 		const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } }
 		divineBot.createMessage('1055939528776495206', divineOptions)
-	}
-
-	/**console table the scripts of the project's package json 
-	 //TODO: maybe validate them too? (as in, should be npm run start/dev/transpile/installUtils ? 
-	 //TODO: maybe make a version for my utils? (how hard is it to just open package.json lol)
-	 */
-	async function showPackageJsonScripts_project() {
-		const margin = ' '.repeat(10)
-		const data = Object.entries(packageJson.scripts).map(x => ({ script: `${margin}npm run ${x[0]}${margin}`, command: x[1] }))
-		console.table(data)
 	}
 
 	function startAndGetHttpServer() {
