@@ -1,3 +1,5 @@
+//TODO: use this regex:
+/= \([a-zA-Z_]{1,}: string\) =>/;
 //TODO: create a way to make sure every project has the same package.json scripts and also create a way to automatize their compilation
 const _ = 'prevent imports and comments from collapsing';
 _;
@@ -115,6 +117,18 @@ export const selfFilter = (arr, predicate) => {
     }
     return { removedItems, removedCount };
 };
+/**Compare if array B is equal to array A, and return the answer along the missing/nondesired items (if any) */
+export function compareArrays(errorHandler, desiredArray, myArray) {
+    const areEqualLength = myArray.length === desiredArray.length;
+    const missingItems = desiredArray.filter(x => !myArray.includes(x));
+    const nonDesiredItems = myArray.filter(x => !desiredArray.includes(x));
+    const areEqual = !nonDesiredItems.length && !missingItems.length && areEqualLength;
+    const errorMessage = `${nonDesiredItems} | ${missingItems} | (${desiredArray})`;
+    if (!areEqual) {
+        errorHandler(errorMessage);
+    }
+    return { areEqual, missingItems, nonDesiredItems, errorMessage };
+}
 /**Remove a single item from an array, or all copies of that item if its a primitive value */
 export const removeItem = (arr, item) => selfFilter(arr, (x) => x !== item).removedCount;
 /**Randomizes the order of the items in the array */
@@ -222,23 +236,8 @@ export const downloadFile_client = (filename, fileFormat, data) => {
     a.download = `${filename}${fileFormat}`;
     a.click();
 };
-/**Stringy an array/object so its readable, except for methods, eg: obj.sampleMethod becomes "[λ: sampleMethod]" */
-export const stringify = (x) => {
-    // ! order matters, do NOT change it
-    if (x === null) {
-        return 'null';
-    }
-    if (typeof x === 'number' && isNaN(x)) {
-        return 'NaN';
-    }
-    if (!x) {
-        return typeof x;
-    }
-    if (typeof x !== 'object') {
-        return `${x}`;
-    }
-    return JSON.stringify(x);
-};
+/**Stringy an array/object so its readable, except for methods, eg: obj.sampleMethod becomes "[λ: sampleMethod]", FIXME: */
+export const stringify = (x) => { return JSON.stringify(x); };
 /**FOR CLIENT-SIDE CODE ONLY. Copy anything to the clipboard, objects/arrays get parsed to be readable*/
 export const copyToClipboard = (x) => {
     if (isNode) {
