@@ -206,6 +206,11 @@ export declare const zPipe: <T>(zSchema: zSchema<T>, initialValue: T, ...fns: pi
     error: string;
     failedAt: string;
 };
+/**
+     * Check the version of @botoron/utils, the enviroment variables and the package.json scripts
+     * @param errorHander PROD: DivineError, DEV: killProcess
+     */
+export declare function basicProjectChecks(errorHandler: errorMessageHandler, packageJson: packageJson, env: NodeJS.ProcessEnv): Promise<boolean>;
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
 export declare const bigConsoleError: (message: string) => void;
 /**console.log WITH COLORS :D */

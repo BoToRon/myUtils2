@@ -445,7 +445,7 @@ _
 	 * Check the version of @botoron/utils, the enviroment variables and the package.json scripts
 	 * @param errorHander PROD: DivineError, DEV: killProcess
 	 */
-function basicProjectChecks(errorHandler: errorMessageHandler, packageJson: packageJson, env: NodeJS.ProcessEnv) {
+export function basicProjectChecks(errorHandler: errorMessageHandler, packageJson: packageJson, env: NodeJS.ProcessEnv) {
 
 	const utilsCheck = myUtils_areUpToDate()
 	const scriptsCheck = checkJsonPackageScripts()

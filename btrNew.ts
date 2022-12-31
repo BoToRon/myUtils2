@@ -420,11 +420,12 @@ const forServerOnly = {
 	 */
 	async getMainDependencies(packageJson: packageJson) {
 
-		const divineBot = await getDivineBot()
 		const env = await getEnviromentVariables()
-		basicProjectChecks(divineError, packageJson, env)
-
 		const { ADMIN_PASSWORD, APP_NAME, DEV_OR_PROD, ERIS_TOKEN, MONGO_URI, PORT } = env
+
+		const divineBot = await getDivineBot()
+		basicProjectChecks(divineError, packageJson, { ADMIN_PASSWORD, APP_NAME, DEV_OR_PROD, ERIS_TOKEN, MONGO_URI, PORT })
+
 		const httpServer = startAndGetHttpServer()
 		const mongoClient = await getMongoClient()
 
