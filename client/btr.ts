@@ -136,7 +136,7 @@ export function compareArrays<T>(errorHandler: errorMessageHandler, desiredArray
 	const nonDesiredItems = myArray.filter(x => !desiredArray.includes(x))
 	const areEqual = !nonDesiredItems.length && !missingItems.length && areEqualLength
 
-	const errorMessage = `${nonDesiredItems} | ${missingItems} | (${desiredArray})`
+	const errorMessage = JSON.stringify({ nonDesiredItems, missingItems, desiredArray })
 	if (!areEqual) { errorHandler(errorMessage) }
 
 	return { areEqual, missingItems, nonDesiredItems, errorMessage }
@@ -220,7 +220,7 @@ export const toOrdinal = (number: number) => {
 export const deepClone = <T>(x: T) => JSON.parse(JSON.stringify(x)) as T //TODO; submit
 /**FOR CLIENT-SIDE CODE ONLY. Stringifies and downloads the provided data*/
 export const downloadFile_client = (filename: string, fileFormat: '.txt' | '.json', data: unknown) => {
-	if (isNode) { colorLog('downloadFile_client can only be run clientside!'); return }
+	if (isNode) { colorLog('red', 'downloadFile_client can only be run clientside!'); return }
 	const a = document.createElement('a')
 	a.href = window.URL.createObjectURL(new Blob([data as BlobPart], { type: 'text/plain' }))
 	a.download = `${filename}${fileFormat}`
@@ -230,7 +230,6 @@ export const downloadFile_client = (filename: string, fileFormat: '.txt' | '.jso
 export const stringify = (x: unknown) => { return JSON.stringify(x) }
 /**FOR CLIENT-SIDE CODE ONLY. Copy anything to the clipboard, objects/arrays get parsed to be readable*/
 export const copyToClipboard = (x: any) => {
-	if (isNode) { colorLog('copyToClipboard can only be run clientside!'); return }
 	const text = stringify(x) as string
 	const a = document.createElement('textarea')
 	a.innerHTML = text
@@ -368,7 +367,7 @@ export function warnAboutUnproperlyInitializedFunction(fn: 'tryF' | 'newToast_cl
 
 	const isClientOrServer = clientOrServer_is()
 	if (isClientOrServer === 'client') { alert(error) }
-	if (isClientOrServer === 'server') { colorLog(error) }
+	if (isClientOrServer === 'server') { colorLog('red', error) }
 }
 /**function to generate zodCheck with a predertemined errorHandler so it doesnt have to be passed everytime :D */
 export const zodCheck_get = (errorHandler: errorMessageHandler) => {

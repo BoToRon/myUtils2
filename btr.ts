@@ -150,7 +150,7 @@ export function compareArrays<T>(errorHandler: errorMessageHandler, desiredArray
 	const nonDesiredItems = myArray.filter(x => !desiredArray.includes(x))
 	const areEqual = !nonDesiredItems.length && !missingItems.length && areEqualLength
 
-	const errorMessage = `${nonDesiredItems} | ${missingItems} | (${desiredArray})`
+	const errorMessage = JSON.stringify({ nonDesiredItems, missingItems, desiredArray })
 	if (!areEqual) { errorHandler(errorMessage) }
 
 	return { areEqual, missingItems, nonDesiredItems, errorMessage }
