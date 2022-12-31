@@ -1,4 +1,5 @@
 /// <reference types="node" />
+/// <reference types="node" />
 import { z, type SafeParseReturnType } from 'zod';
 export type intervalWithid = [id: string, interval: NodeJS.Timer];
 export type globalAlert = {
@@ -200,6 +201,8 @@ export declare const downloadFile_node: (filename: string, fileFormat: '.txt' | 
 export declare function fsReadFileAsync(filePath: string): Promise<any>;
 /**Wrapper for fsWriteFileAsync that announces the start of the file-writing */
 export declare function fsWriteFileAsync(filePath: string, content: string): Promise<any>;
+/** */
+export declare function getEnviromentVariables(): Promise<NodeJS.ProcessEnv>;
 /**fetch the latest package.json of my-utils */
 export declare const getLatestPackageJsonFromGithub: () => Promise<string>;
 /**
