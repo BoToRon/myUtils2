@@ -716,7 +716,7 @@ export const npmRun = async (npmCommand) => {
         });
     }
     function transpileFiles(followUp) {
-        const filename = 'index.ts';
+        const filename = 'btr.ts';
         exec('tsc --declaration --target esnext ' + filename, async () => {
             successLog(filename + ' transpiled');
             const indexTs = await fsReadFileAsync(filename);
@@ -726,7 +726,7 @@ export const npmRun = async (npmCommand) => {
             lines.splice(cutPoint, lines.length);
             lines.push('const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)');
             await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'));
-            exec('tsc --declaration --target esnext client/index.ts ', async () => {
+            exec('tsc --declaration --target esnext client/btr.ts ', async () => {
                 successLog('browser versions emitted');
                 await delay(500);
                 followUp();

@@ -3,16 +3,16 @@
 	"type": "module",
 	"version": "1.4.0",
 	"description": "Utilities of me for me",
-	"main": "index.js",
+	"main": "btr.js",
 	"scripts": {
-		"npmRun": "ts-node-esm --transpileOnly index.ts",
+		"npmRun": "ts-node-esm --transpileOnly btr.ts",
 		"_________________________________________________a": "__________________________________________________",
 		"publish": "npm run npmRun --btrCommand=publish & npm publish",
 		"transpile": "npm run npmRun --btrCommand=transpile",
 		"git": "npm run npmRun --btrCommand=git",
-		"all": "npm run publish ",
+		"all": "npm run publish",
 		"_________________________________________________b": "__________________________________________________",
-		"_tsIndex": "tsc --declaration --listEmittedFiles --target esnext index.ts",
+		"_tsIndex": "tsc --declaration --listEmittedFiles --target esnext btr.ts",
 		"test": "ts-node-esm test.ts"
 	},
 	"repository": {

@@ -699,7 +699,7 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 	}
 
 	function transpileFiles(followUp: Function) {
-		const filename = 'index.ts'
+		const filename = 'btr.ts'
 		exec('tsc --declaration --target esnext ' + filename, async () => {
 			successLog(filename + ' transpiled')
 
@@ -713,7 +713,7 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 
 			await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'))
 
-			exec('tsc --declaration --target esnext client/index.ts ', async () => {
+			exec('tsc --declaration --target esnext client/btr.ts ', async () => {
 				successLog('browser versions emitted')
 				await delay(500)
 				followUp()
