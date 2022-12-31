@@ -156,7 +156,6 @@ export const sortBy = <T extends object>(arr: T[], key: keyof T, direction: 'A' 
 export const spliceIf = <T>(arr: T[], predicate: (arg1: T) => boolean) => selfFilter(arr, predicate).removedItems
 /**Remove X amount of items from the end of an array */
 export const spliceLast = <T>(arr: T[], count: number) => arr.splice(-count)
-
 /**
  *This is a SAMPLE, use tryF_get to set tryF_get and use it without having to pass errorHandler everytime
  * @param errorHandler The error handler
@@ -524,23 +523,10 @@ export const getMainDependencies = async (
 	const mongoClient = await getMongoClient()
 	const divineBot = await getDivineBot()
 
-	myUtils_checkIfUpToDate(divineError, devOrProd)
+	myUtils_checkIfUpToDate(divineError)
 	showPackageJsonScripts_project()
 
-	return { divineBot, divineError, httpServer, mongoClient, tryF }
-
-	function checkEnviromentVariable() {
-
-		let x = true
-		check('ERIS_TOKEN', ERIS_TOKEN)
-		check('MONGO_URI', MONGO_URI)
-		check('PORT', PORT)
-		return x
-
-		function check(name: 'ERIS_TOKEN' | 'MONGO_URI' | 'PORT', variable: string | undefined) {
-			if (!variable) { bigConsoleError(`Missing enviroment variable: ${name}`); x = false }
-		}
-	}
+	return { divineBot, divineError, doAndRepeat, httpServer, mongoClient, tryF }
 
 	/**notify me about things breaking via discord, if pingMeOnErrors is passed as true */
 	function divineError(arg: string | Error) {
@@ -549,6 +535,13 @@ export const getMainDependencies = async (
 		const error = `${x}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '')
 		if (pingMeOnErrors) { colorLog('danger', error); return }
 		pingMe(error)
+	}
+
+	/**Set interval with try-catch and called immediately*/
+	function doAndRepeat(fn: () => void, interval: number) {
+		const tryIt = () => tryF(fn, [])
+		setInterval(tryIt, interval)
+		tryIt()
 	}
 
 	async function getDivineBot() {
@@ -651,10 +644,10 @@ export const killProcess = async (message: string) => {
 }
 /**
  * @description Checks if the project is using the latest version of "myUtils"
- * @param failureHandler divineError, to notify/warm me to update the project to work with the latest version of "utils"
+ * @param failureHandler to notify/warm me to update "utils" in that project, divineError if prod, bigConsoleError otherwise
  * @returns a boolean, although I'm not sure what I should it for (if for anything) yet
  */
-export async function myUtils_checkIfUpToDate(errorHandler: (message: string) => void, devOrProd: 'DEV' | 'PROD') {
+export async function myUtils_checkIfUpToDate(errorHandler: (message: string) => void) {
 
 	const latestVersion = await getLatestVersion()
 	const installedVersion = (await import('./package.json', { assert: { type: "json" } })).default.version
@@ -668,7 +661,7 @@ export async function myUtils_checkIfUpToDate(errorHandler: (message: string) =>
 		return toSingleLine(`
 	Project is using an outdated version of myUtils, 
 	- (${installedVersion} vs ${latestVersion}) -
-	PLEASE UPDATE:          npm i @botoron/my-utils`)
+	PLEASE UPDATE:          npm i @botoron/utils`)
 	}
 
 	async function getLatestVersion() {

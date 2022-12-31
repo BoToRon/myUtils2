@@ -537,22 +537,9 @@ packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
     const httpServer = startAndGetHttpServer();
     const mongoClient = await getMongoClient();
     const divineBot = await getDivineBot();
-    myUtils_checkIfUpToDate(divineError, devOrProd);
+    myUtils_checkIfUpToDate(divineError);
     showPackageJsonScripts_project();
-    return { divineBot, divineError, httpServer, mongoClient, tryF };
-    function checkEnviromentVariable() {
-        let x = true;
-        check('ERIS_TOKEN', ERIS_TOKEN);
-        check('MONGO_URI', MONGO_URI);
-        check('PORT', PORT);
-        return x;
-        function check(name, variable) {
-            if (!variable) {
-                bigConsoleError(`Missing enviroment variable: ${name}`);
-                x = false;
-            }
-        }
-    }
+    return { divineBot, divineError, doAndRepeat, httpServer, mongoClient, tryF };
     /**notify me about things breaking via discord, if pingMeOnErrors is passed as true */
     function divineError(arg) {
         const x = (typeof arg === 'string' ? arg : arg.stack);
@@ -562,6 +549,12 @@ packageJson, pingMeOnErrors, ERIS_TOKEN, MONGO_URI, PORT) => {
             return;
         }
         pingMe(error);
+    }
+    /**Set interval with try-catch and called immediately*/
+    function doAndRepeat(fn, interval) {
+        const tryIt = () => tryF(fn, []);
+        setInterval(tryIt, interval);
+        tryIt();
     }
     async function getDivineBot() {
         const divineBot = eris(ERIS_TOKEN);
@@ -665,10 +658,10 @@ export const killProcess = async (message) => {
 };
 /**
  * @description Checks if the project is using the latest version of "myUtils"
- * @param failureHandler divineError, to notify/warm me to update the project to work with the latest version of "utils"
+ * @param failureHandler to notify/warm me to update "utils" in that project, divineError if prod, bigConsoleError otherwise
  * @returns a boolean, although I'm not sure what I should it for (if for anything) yet
  */
-export async function myUtils_checkIfUpToDate(errorHandler, devOrProd) {
+export async function myUtils_checkIfUpToDate(errorHandler) {
     const latestVersion = await getLatestVersion();
     const installedVersion = (await import('./package.json', { assert: { type: "json" } })).default.version;
     const isUpToDate = installedVersion === latestVersion;
@@ -683,7 +676,7 @@ export async function myUtils_checkIfUpToDate(errorHandler, devOrProd) {
         return toSingleLine(`
 	Project is using an outdated version of myUtils, 
 	- (${installedVersion} vs ${latestVersion}) -
-	PLEASE UPDATE:          npm i @botoron/my-utils`);
+	PLEASE UPDATE:          npm i @botoron/utils`);
     }
     async function getLatestVersion() {
         const response = (await new Promise((resolve) => {

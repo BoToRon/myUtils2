@@ -223,6 +223,7 @@ export declare const getMainDependencies: (appName: string, devOrProd: 'DEV' | '
 }, pingMeOnErrors: boolean, ERIS_TOKEN: string | undefined, MONGO_URI: string | undefined, PORT: string | undefined) => Promise<{
     divineBot: any;
     divineError: (arg: string | Error) => void;
+    doAndRepeat: (fn: () => void, interval: number) => void;
     httpServer: any;
     mongoClient: MongoClient;
     tryF: <T extends (...args: any) => any>(fn: T, args: Parameters<T>) => void;
@@ -231,10 +232,10 @@ export declare const getMainDependencies: (appName: string, devOrProd: 'DEV' | '
 export declare const killProcess: (message: string) => Promise<never>;
 /**
  * @description Checks if the project is using the latest version of "myUtils"
- * @param failureHandler divineError, to notify/warm me to update the project to work with the latest version of "utils"
+ * @param failureHandler to notify/warm me to update "utils" in that project, divineError if prod, bigConsoleError otherwise
  * @returns a boolean, although I'm not sure what I should it for (if for anything) yet
  */
-export declare function myUtils_checkIfUpToDate(errorHandler: (message: string) => void, devOrProd: 'DEV' | 'PROD'): Promise<boolean>;
+export declare function myUtils_checkIfUpToDate(errorHandler: (message: string) => void): Promise<boolean>;
 /**Easily run the scripts of this (utils) repo's package.json */
 export declare const npmRun: (npmCommand: z.infer<any>) => Promise<void>;
 /**Prompt to submit a git commit message and then push */

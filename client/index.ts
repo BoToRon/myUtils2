@@ -142,7 +142,6 @@ export const sortBy = <T extends object>(arr: T[], key: keyof T, direction: 'A' 
 export const spliceIf = <T>(arr: T[], predicate: (arg1: T) => boolean) => selfFilter(arr, predicate).removedItems
 /**Remove X amount of items from the end of an array */
 export const spliceLast = <T>(arr: T[], count: number) => arr.splice(-count)
-
 /**
  *This is a SAMPLE, use tryF_get to set tryF_get and use it without having to pass errorHandler everytime
  * @param errorHandler The error handler
