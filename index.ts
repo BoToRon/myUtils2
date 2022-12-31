@@ -17,6 +17,8 @@ import fetch from 'node-fetch'	//DELETETHISFORCLIENT
 _
 import getReadLine from 'readline'	//DELETETHISFORCLIENT
 _
+import { createRequire } from 'module'	//DELETETHISFORCLIENT
+_
 import { exec, execSync } from 'child_process'	//DELETETHISFORCLIENT
 _
 import mongodb, { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
@@ -479,6 +481,12 @@ export async function fsWriteFileAsync(filePath: string, content: string) {
 	console.log(`writing to '${filePath}'..`)
 	const file = await fs.promises.writeFile(filePath, content)
 	return file
+}
+/** */
+export async function getEnviromentVariables() {
+	const require = createRequire(import.meta.url);
+	require('dotenv').config({ path: './.env' });
+	return process.env;
 }
 /**fetch the latest package.json of my-utils */
 export const getLatestPackageJsonFromGithub = async () => {
