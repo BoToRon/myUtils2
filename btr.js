@@ -583,10 +583,10 @@ export const getLatestPackageJsonFromGithub = async () => {
  * @returns divineBot, divineError, io, mongoClient, tryF
  */
 export const getMainDependencies = async (packageJson) => {
-    const divineBot = await getDivineBot();
     const env = await getEnviromentVariables();
-    basicProjectChecks(divineError, packageJson, env);
     const { ADMIN_PASSWORD, APP_NAME, DEV_OR_PROD, ERIS_TOKEN, MONGO_URI, PORT } = env;
+    const divineBot = await getDivineBot();
+    basicProjectChecks(divineError, packageJson, { ADMIN_PASSWORD, APP_NAME, DEV_OR_PROD, ERIS_TOKEN, MONGO_URI, PORT });
     const httpServer = startAndGetHttpServer();
     const mongoClient = await getMongoClient();
     return { divineBot, divineError, doAndRepeat, env, httpServer, mongoClient, tryF };
