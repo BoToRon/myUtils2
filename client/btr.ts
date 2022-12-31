@@ -1,30 +1,16 @@
-//TODO: use this regex:
-/= \([a-zA-Z_]{1,}: string\) =>/
-
 //TODO: create a way to make sure every project has the same package.json scripts and also create a way to automatize their compilation
 const _ = 'prevent imports and comments from collapsing'
 _
-import fs from 'fs'	//DELETETHISFORCLIENT
 _
-import eris from 'eris'	//DELETETHISFORCLIENT
 _
-import path from 'path'	//DELETETHISFORCLIENT
 _
-import http from 'http'	//DELETETHISFORCLIENT
 _
-import chalk from 'chalk'	//DELETETHISFORCLIENT
 _
-import express from 'express'	//DELETETHISFORCLIENT
 _
-import fetch from 'node-fetch'	//DELETETHISFORCLIENT
 _
-import getReadLine from 'readline'	//DELETETHISFORCLIENT
 _
-import { createRequire } from 'module'	//DELETETHISFORCLIENT
 _
-import { exec, execSync } from 'child_process'	//DELETETHISFORCLIENT
 _
-import mongodb, { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
 _
 import { fromZodError } from 'zod-validation-error'
 _
@@ -36,18 +22,13 @@ export type validVariant = z.infer<typeof zValidVariants>
 
 const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'])
 type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: validVariant, title: string }
-type validChalkColor = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'white' | 'grey' | 'magentaBright'	//DELETETHISFORCLIENT
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
 type trackedVueComponent = { _name: string, beforeCreate?: () => void, beforeDestroy?: () => void }
 declare global { interface Window { vueComponents: trackedVueComponent[], newToast: newToastFn } }
-type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 type newToastFn = (title: string, message: string, variant: validVariant) => void
 type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
 type zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T> }
 const zValidNpmCommand = z.enum(['git', 'publish', 'transpile'])
-const zValidVersionIncrement = z.enum(['major', 'minor', 'patch'])	//DELETETHISFORCLIENT
-type validNpmCommand = z.infer<typeof zValidNpmCommand>	//DELETETHISFORCLIENT
-type errorMessageHandler = (message: string) => void
 type pipe_persistent_type<T> = (arg: T) => T
 type pipe_mutable_type = {
 	<T, A>(source: T, a: (value: T) => A): A
@@ -57,7 +38,6 @@ type pipe_mutable_type = {
 	<T, A, B, C, D, E>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D, e: (value: D) => E): E
 	//can always make it longer 😉
 }
-
 export const BTR = {
 	/**Tr-Catch wrapper for functions. Starts as a placeholder, initialize it with typeF_get */
 	tryF: <T extends (...args: any) => any>(fn: T, args: Parameters<T>): any => {
@@ -81,9 +61,6 @@ export const BTR = {
 	/**for when registering them for tracking at window.vueComponents */
 	zValidVueComponentName: null as unknown as zSchema<unknown>,
 }
-
-
-
 /**colorLog.succes with a ✔️ at the end :D */
 export const successLog = (message: string) => colorLog('success', message + ' ✔️')
 /**start a setInterval and add it to an array */
@@ -142,18 +119,6 @@ export const selfFilter = <T>(arr: T[], predicate: (arg1: T) => boolean) => {
 		i--
 	}
 	return { removedItems, removedCount }
-}
-/**Compare if array B is equal to array A, and return the answer along the missing/nondesired items (if any) */
-export function compareArrays<T>(errorHandler: errorMessageHandler, desiredArray: T[], myArray: T[]) {
-	const areEqualLength = myArray.length === desiredArray.length
-	const missingItems = desiredArray.filter(x => !myArray.includes(x))
-	const nonDesiredItems = myArray.filter(x => !desiredArray.includes(x))
-	const areEqual = !nonDesiredItems.length && !missingItems.length && areEqualLength
-
-	const errorMessage = JSON.stringify({ nonDesiredItems, missingItems, desiredArray })
-	if (!areEqual) { errorHandler(errorMessage) }
-
-	return { areEqual, missingItems, nonDesiredItems, errorMessage }
 }
 /**Remove a single item from an array, or all copies of that item if its a primitive value */
 export const removeItem = <T>(arr: T[], item: T) => selfFilter(arr, (x: T) => x !== item).removedCount
@@ -234,17 +199,24 @@ export const toOrdinal = (number: number) => {
 export const deepClone = <T>(x: T) => JSON.parse(JSON.stringify(x)) as T //TODO; submit
 /**FOR CLIENT-SIDE CODE ONLY. Stringifies and downloads the provided data*/
 export const downloadFile_client = (filename: string, fileFormat: '.txt' | '.json', data: unknown) => {
-	if (isNode) { bigConsoleError('downloadFile_client can only be run clientside!'); return }
+	if (isNode) { colorLog('downloadFile_client can only be run clientside!'); return }
 	const a = document.createElement('a')
 	a.href = window.URL.createObjectURL(new Blob([data as BlobPart], { type: 'text/plain' }))
 	a.download = `${filename}${fileFormat}`
 	a.click()
 }
-/**Stringy an array/object so its readable, except for methods, eg: obj.sampleMethod becomes "[λ: sampleMethod]", FIXME: */
-export const stringify = (x: unknown) => { return JSON.stringify(x) }
+/**Stringy an array/object so its readable, except for methods, eg: obj.sampleMethod becomes "[λ: sampleMethod]" */
+export const stringify = (x: unknown) => {
+	// ! order matters, do NOT change it
+	if (x === null) { return 'null' }
+	if (typeof x === 'number' && isNaN(x)) { return 'NaN' }
+	if (!x) { return typeof x }
+	if (typeof x !== 'object') { return `${x}` }
+	return JSON.stringify(x)
+}
 /**FOR CLIENT-SIDE CODE ONLY. Copy anything to the clipboard, objects/arrays get parsed to be readable*/
 export const copyToClipboard = (x: any) => {
-	if (isNode) { bigConsoleError('copyToClipboard can only be run clientside!'); return }
+	if (isNode) { colorLog('copyToClipboard can only be run clientside!'); return }
 	const text = stringify(x) as string
 	const a = document.createElement('textarea')
 	a.innerHTML = text
@@ -382,10 +354,10 @@ export function warnAboutUnproperlyInitializedFunction(fn: 'tryF' | 'newToast_cl
 
 	const isClientOrServer = clientOrServer_is()
 	if (isClientOrServer === 'client') { alert(error) }
-	if (isClientOrServer === 'server') { bigConsoleError(error) }
+	if (isClientOrServer === 'server') { colorLog(error) }
 }
 /**function to generate zodCheck with a predertemined errorHandler so it doesnt have to be passed everytime :D */
-export const zodCheck_get = (errorHandler: errorMessageHandler) => {
+export const zodCheck_get = (errorHandler: (err: string) => void) => {
 	function zodCheck<T>(schema: zSchema<T>, data: T) {
 		const result = schema.safeParse(data) as SafeParseReturnType<T, null>
 		if (result.success === false) { errorHandler(fromZodError(result.error).message) }
@@ -394,7 +366,7 @@ export const zodCheck_get = (errorHandler: errorMessageHandler) => {
 	return zodCheck
 }
 /**This is a SAMPLE, use zodCheck_get to set zodCheck and use it without having to pass errorHandler everytime*/
-export const zodCheck_sample = <T>(errorHandler: errorMessageHandler, schema: zSchema<T>, data: T) => {
+export const zodCheck_sample = <T>(errorHandler: (err: string) => void, schema: zSchema<T>, data: T) => {
 	const result = schema.safeParse(data) as SafeParseReturnType<T, null>
 	if (result.success === false) { errorHandler(fromZodError(result.error).message) }
 	return result.success
@@ -413,7 +385,7 @@ export const zodCheckAndHandle = <D, SH extends (...args: Parameters<SH>) => Ret
 	/**data to test against the schema */	data: D,
 	/**sucess handler*/	successHandler: SH,
 	/**arguments to apply to the success handler */	args: Parameters<SH>,
-	/**error handler */ errorHandler: errorMessageHandler,
+	/**error handler */ errorHandler: (errorMessage: string) => void,
 ) => {
 	/**whether the data fits the schema or not */
 	const zResult = zSchema.safeParse(data)
@@ -438,390 +410,4 @@ export const zPipe = <T>(zSchema: zSchema<T>, initialValue: T, ...fns: pipe_pers
 	}, initialPipeState)
 }
 
-// ! DELETEEVERYTHINGBELOW, as it is only meant for server-side use
-_
-
-/**
-	 * Check the version of @botoron/utils, the enviroment variables and the package.json scripts
-	 * @param errorHander PROD: DivineError, DEV: killProcess
-	 */
-export function basicProjectChecks(errorHandler: errorMessageHandler, packageJson: packageJson, env: NodeJS.ProcessEnv) {
-
-	const utilsCheck = myUtils_areUpToDate()
-	const scriptsCheck = checkJsonPackageScripts()
-	const envCheck = getAndCheckEnviromentVariables()
-	return envCheck && scriptsCheck && utilsCheck
-
-	/**Check the scripts in a project's package json all fit the established schema */
-	function checkJsonPackageScripts() {
-		return compareArrays(errorHandler, [
-			//for convenience
-			"btr", "git", "npmScript",
-			//for debugging
-			"dev", "localtunnel", "nodemon", "transpile", "vue",
-			//for deployement
-			"build-all", "build-client", "build-server", "start",
-		], Object.keys(packageJson.scripts)).areEqual
-	}
-
-	/**Check if all the desired enviroment keys are defined */
-	function getAndCheckEnviromentVariables() {
-		const desiredEnvKeys = ['ADMIN_PASSWORD', 'APP_NAME', 'DEV_OR_PROD', 'ERIS_TOKEN', 'MONGO_URI', 'PORT']
-		return compareArrays(killProcess, desiredEnvKeys, Object.keys(env)).areEqual
-	}
-
-	/**Check if the project is using the latest version of "myUtils" */
-	async function myUtils_areUpToDate() {
-		const latestVersion = await getLatestVersion()
-		const installedVersion = (await import('./package.json', { assert: { type: "json" } })).default.version
-		const isUpToDate = installedVersion === latestVersion
-
-		if (isUpToDate) { colorLog('info', '@botoron/my-utils is up to date 👍') }
-		else { errorHandler(`Outdated "btr/utils" package. (${installedVersion} vs ${latestVersion}) PLEASE UPDATE: npm run btr`) }
-
-		return isUpToDate
-
-		//Check if the project is using the latest version of "@botoron/utils"
-		async function getLatestVersion() {
-			type pck = { objects: [{ package: { version: string } }] }
-			const response: pck = (await new Promise((resolve) => {
-				try {
-					fetch(`http://registry.npmjs.com/-/v1/search?text=@botoron/utils&size=1`).
-						then(res => res.json().then((x) => resolve(x as pck)))
-				}
-				catch { return { objects: [{ package: { version: '0' } }] } }
-			}))
-			return response.objects[0].package.version
-		}
-	}
-}
-/**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
-export const bigConsoleError = (message: string) => {
-	const log = (message: string) => colorLog('danger', message)
-	const logAsterisks = (lines: number) => { for (let i = 0; i < lines; i++) { log('*'.repeat(150)) } }
-
-	logAsterisks(3)
-	log(message)
-	logAsterisks(3)
-}
-/**console.log WITH COLORS :D */
-export const colorLog = (variant: validVariant, message: string) => {
-
-	const colors: { [key in validVariant]: validChalkColor } = {
-		primary: 'blue',
-		secondary: 'grey',
-		success: 'green',
-		warning: 'yellow',
-		danger: 'red',
-		info: 'cyan',
-		light: 'white',
-		dark: 'magenta',
-		"outline-dark": 'magentaBright'
-	}
-
-	const color = chalk[colors[variant]]
-	console.log(color.bold(message))
-}
-
-/**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
-export const downloadFile_node = async (filename: string, fileFormat: '.txt' | '.json', data: unknown, killProcessAfterwards: boolean) => {
-	const formatted = stringify(data as object)
-	const dateForFilename = timeStampToDate(Date.now(), true).replace(/\/| |\:/g, '_')
-	const completeFilename = filename + '_' + dateForFilename + fileFormat
-
-	colorLog('info', `Downloading ${completeFilename}..`)
-	await fsWriteFileAsync(completeFilename, formatted)
-	successLog('Done!')
-
-	if (!killProcessAfterwards) { return }
-	if (process.env.quokka) { return }
-	process.exit()
-}
-/**Wrapper for fs.promise.readFile that announces the start of the file-reading */
-export async function fsReadFileAsync(filePath: string) {
-	console.log(`reading '${filePath}'..`)
-	const file = await fs.promises.readFile(filePath, 'utf8')
-	return file
-}
-/**Wrapper for fsWriteFileAsync that announces the start of the file-writing */
-export async function fsWriteFileAsync(filePath: string, content: string) {
-	console.log(`writing to '${filePath}'..`)
-	const file = await fs.promises.writeFile(filePath, content)
-	return file
-}
-/** */
-export async function getEnviromentVariables() {
-	const require = createRequire(import.meta.url);
-	require('dotenv').config({ path: './.env' });
-	return process.env;
-}
-/**fetch the latest package.json of my-utils */
-export const getLatestPackageJsonFromGithub = async () => {
-	type response_github_file = { content: string }
-
-	const response: response_github_file = await new Promise((resolve) => {
-		fetch('https://api.github.com/repos/botoron/utils/contents/package.json', { method: 'GET' }
-		).then((res: any) => res.json().then((packageJson: any) => resolve(packageJson)))
-	})
-
-	return Buffer.from(response.content, 'base64').toString('utf8')
-}
-/**
- * Return the main perma-dependencies, check myUtil's version and print package.json's script
- * @param appName The name of the app, for the divine error ping
- * @param pingMeOnErrors Whether to ping me in Discord with the console.trace of errors or just colorLogBig  
- * @param packageJson The package.json of the app, to compare the installed vs latest version of this myUtils package
- * @param ERIS_TOKEN The token for DivineBot, should reside in .env
- * @param MONGO_URI The uri for Mongo, should reside in .env
- * @param PORT The dev port, should reside in .env
- * @returns divineBot, divineError, io, mongoClient, tryF
- */
-export const getMainDependencies = async (packageJson: packageJson) => {
-
-	const env = await getEnviromentVariables()
-	const { ADMIN_PASSWORD, APP_NAME, DEV_OR_PROD, ERIS_TOKEN, MONGO_URI, PORT } = env
-
-	const divineBot = await getDivineBot()
-	basicProjectChecks(divineError, packageJson, { ADMIN_PASSWORD, APP_NAME, DEV_OR_PROD, ERIS_TOKEN, MONGO_URI, PORT })
-
-	const httpServer = startAndGetHttpServer()
-	const mongoClient = await getMongoClient()
-
-	return { divineBot, divineError, doAndRepeat, env, httpServer, mongoClient, tryF }
-
-	/**notify me about things breaking via discord, if pingMeOnErrors is passed as true */
-	function divineError(arg: string | Error) {
-		const x = (typeof arg === 'string' ? arg : arg.stack) as string
-
-		const error = `${x}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '')
-		DEV_OR_PROD === 'prod' ? pingMe(error) : colorLog('danger', error)
-	}
-
-	/**Set interval with try-catch and called immediately*/
-	function doAndRepeat(fn: () => void, interval: number) {
-		const tryIt = () => tryF(fn, [])
-		setInterval(tryIt, interval)
-		tryIt()
-	}
-
-	async function getDivineBot() {
-
-		const divineBot = eris(ERIS_TOKEN as string)
-		connectToDiscord()
-		return divineBot
-
-		async function connectToDiscord() {
-			const divinePrepend = '***DivineBot:***'
-
-			divineBot.on('messageReactionAdd', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('add', a, b, c))
-			divineBot.on('messageReactionRemove', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('remove', a, b, c))
-			divineBot.on('disconnect', () => { colorLog('danger', `${divinePrepend}: Disconnected D: ... retrying!`); connectToDiscord() })
-
-			const idOfRoleAssigningMessage = '822523162724925473'
-			await attemptConnection()
-
-			function role(action: 'add' | 'remove', message: eris.PossiblyUncachedMessage, emoji: eris.PartialEmoji, reactor: eris.Member) {
-				try {
-					if (message.id !== idOfRoleAssigningMessage) { return }
-
-					const role = [
-						{ app: 'UntCG', emoji: 'cards', id: 'SAMPLEROLEID' },
-						{ app: 'CwCA', emoji: 'chess', id: 'SAMPLEROLEID' },
-						{ app: 'Cool', emoji: 'cool', id: 'SAMPLEROLEID' },
-						{ app: 'Divine', emoji: 'divine', id: 'SAMPLEROLEID' },
-						{ app: 'Bluejay', emoji: 'bluejay', id: 'SAMPLEROLEID' },
-						{ app: 'Cute', emoji: 'cute', id: 'SAMPLEROLEID' },
-					].find(x => x.emoji === emoji.name)
-
-					if (role) { ({ add: reactor.addRole, remove: reactor.removeRole })[action](role.id) }
-				}
-				catch (e) { console.log('divineBot.role.tryCatch.error = ', e) }
-			}
-
-			async function attemptConnection() {
-				try {
-					divineBot.connect()
-					colorLog('info', 'waiting for DivineBot')
-					while (!divineBot.ready) { await delay(1000) }
-					successLog("The divine egg has hatched")
-					pingMe('im alive bitch')
-				}
-				catch {
-					colorLog('warning', `${divinePrepend} Failed to connect.. retrying >:D`)
-					await delay(1000 * 10)
-					attemptConnection()
-				}
-			}
-		}
-	}
-
-	async function getMongoClient() {
-		const mongo = new mongodb.MongoClient(MONGO_URI as string)
-		let mongoClient: MongoClient = null as unknown as MongoClient
-		mongo.connect((err, client) => { if (err) { throw err } mongoClient = client as MongoClient })
-		colorLog('info', 'waiting for Mongo')
-		while (!mongoClient) { await delay(500) }
-		successLog("It's Monging time >:D")
-		return mongoClient
-	}
-
-	function pingMe(message: string) {
-		if (!divineBot || !divineBot.ready) { return }
-		const theMessage = `<@470322452040515584> - (${APP_NAME}) \n ${message}`
-		const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } }
-		divineBot.createMessage('1055939528776495206', divineOptions)
-	}
-
-	function startAndGetHttpServer() {
-		const app = express()
-		const httpServer = http.createServer(app)
-		app.use(express.static(path.resolve() + '/public'))
-		app.get('/', (_request, response) => response.sendFile(path.resolve() + '/public/index.html'))
-		httpServer.listen(PORT, () => delay(1500).then(() => console.log(`server up at: http://localhost:${PORT}/`)))
-		return httpServer
-	}
-
-	/**tryCatch wrapper for functions with DivineError as the error handler */
-	function tryF<T extends (...args: any) => any>(fn: T, args: Parameters<T>): void {
-		try { return fn(...args as Parameters<T>[]) }
-		catch (err) { divineError(err as Error) }
-	}
-}
-
-/**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
-export const killProcess = (message: string) => {
-	if (message) { bigConsoleError(message) }
-	process.exit()
-}
-
-/**Easily run the scripts of this (utils) repo's package.json */
-export const npmRun = async (npmCommand: validNpmCommand) => {
-
-	const utilsRepoName = 'Utils 🛠️'
-
-	if (npmCommand === 'transpile') { transpileFiles(() => colorLog('dark', 'Process over')) }
-	if (npmCommand === 'git') { prompCommitMessageAndPush(utilsRepoName) }
-	if (npmCommand === 'publish') { transpileFiles(promptVersioning) }
-
-	async function promptVersioning() {
-		function tryAgain(error: string) { colorLog('warning', error); promptVersioning() }
-		const versionIncrement = await questionAsPromise('Type of package version increment (major, minor, patch)?')
-
-		if (!zodCheck_sample(tryAgain, zValidVersionIncrement, versionIncrement)) { return }
-		await prompCommitMessageAndPush(utilsRepoName)
-
-		exec(`npm version ${versionIncrement}`, (err, stdout, stderr) => {
-			console.log({ stdout })
-			successLog('package.json up-version\'d')
-		})
-	}
-
-	function transpileFiles(followUp: Function) {
-		const filename = 'btr.ts'
-		exec('tsc --declaration --target esnext ' + filename, async () => {
-			successLog(filename + ' transpiled')
-
-			const indexTs = await fsReadFileAsync(filename)
-			const lines = indexTs.replaceAll('bigConsoleError', 'colorLog').split('\n')
-			selfFilter(lines, (line) => !/DELETETHISFORCLIENT/.test(line))
-
-			const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x))
-			lines.splice(cutPoint, lines.length)
-			lines.push('const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)')
-
-			await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'))
-
-			exec('tsc --declaration --target esnext client/btr.ts ', async () => {
-				successLog('browser versions emitted')
-				await delay(500)
-				followUp()
-			})
-		})
-	}
-}
-
-/**Prompt to submit a git commit message and then push */
-export async function prompCommitMessageAndPush(repoName: string) {
-
-	//order matters with these 3
-	const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test)'
-
-	logDetailsForPrompt()
-	const commitMessage = await questionAsPromise(`Enter commit type ${commitTypes} plus a message:`)
-
-	function tryAgain(error: string) { colorLog('warning', error); prompCommitMessageAndPush(repoName); return }
-	if (!zodCheck_sample(tryAgain, get_zValidCommitMessage(), commitMessage)) { return }
-	await gitAddCommitPush()
-
-	function get_zValidCommitMessage() {
-		const commitRegex = new RegExp(`(?<!.)${commitTypes}:`)
-		return z.string().min(15).max(50).regex(commitRegex, `String must start with ${commitTypes}:`)
-	}
-
-	function gitAddCommitPush() {
-		return new Promise(resolve => {
-			exec('git add .', () => {
-				successLog('git add .')
-				colorLog('info', 'Copypaste the commit message in the git commit editor, then save and CLOSE it:')
-				colorLog('secondary', commitMessage)
-				console.log('')
-
-				exec("git commit", () => {
-					successLog('git commit')
-					exec('git push', () => {
-						successLog('git push')
-						resolve(true)
-					})
-				})
-			})
-		})
-	}
-
-	function logDetailsForPrompt() {
-		delay(500).then(() => {
-			colorLog('warning', '50-character limits ends at that line: * * * * * |')
-			colorLog('success', repoName)
-			console.log();
-		})
-	}
-}
-
-/**Prompts a question in the terminal, awaits for the input and returns it */
-export async function questionAsPromise(question: string) {
-	const readline = getReadLine.createInterface({ input: process.stdin, output: process.stdout })
-	const input = await new Promise(res => { readline.question(chalk.magenta(question) + '\n', res) }) as string
-	readline.close()
-	return input
-}
-
-/**
- * How to access process arguments passed by the command line:
-	pass:	--[NoA_1]=[VoA_1] --[NoA_2]=[VoA_2]
-	read: process.env.[npm_config_[nameOfArgument]]
-*/
-
-/*
- * Regarding passing a function with its arguments to another function
- * 
- * looks like														is called as								must apply as										explanation
- * wrppr(fn: F, args: Parameters<F>)		xyz(fn, [...fn.args])				fn(...args as Parameters<F>[])	"args" is passed as an array
- * wrppr(fn: F, ...args: Parameters<F>)	xyz(fn, arg1, arg2, etc..)	fn(...args as Parameters<F>[])  "..args" is spread into an array
- * 
- * EITHER WAY the arguments must be applied to fn as "fn(...args)" where "args = Parameters<F>[]"
- * 
- ? WHICH TO USE 
- * Both are effectively the same, it's a question of taste
- * Option A is clear in that it makes you pass all of fn.args encapsulated into a single array argument
- * Option B is cooler in that it adjusts the length of the arguments needed as they will be spread by the wrapping function	 
- ! in B "args" must be spread parameters, meaning the MUST be the last arguments passed to "wrppr", A doesn't have this problem :)
- * // Answer: Use A, so make sure to stay consistent when doing this, but either way use this comment block as reference
- * 
- ! Extra
- * wrppr(fn: F, ...args: Parameters<F>[])
- * "...args" is actually a collection of args, where each item is valid conjunt of arguments for fn
- * so you can all on each item of "args", eg: args.forEach(x => fn(x))
- * (see mapArgsOfFnAgainstFn as an existing example)
- */
-
-const btrCommand = process.env.npm_config_btrCommand as validNpmCommand
-if (btrCommand) { zodCheckAndHandle(zValidNpmCommand, btrCommand, npmRun, [btrCommand], console.log) }
+const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)
