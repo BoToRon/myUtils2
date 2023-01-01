@@ -512,7 +512,7 @@ export const basicProjectChecks = (
         const zPackageJsonScriptsSchema = z.record(z.enum([
             "btr", "git", "npmScript",
             //for debugging
-            "dev", "localtunnel", "nodemon", "transpile", "vue",
+            "localtunnel", "nodemon", "transpile", "vue",
             //for deployement
             "build-all", "build-client", "build-server", "start"
         ]), z.string());
@@ -628,7 +628,7 @@ export const getMainDependencies = async (packageJson) => {
     const mongoClient = await getMongoClient();
     return { divineBot, divineError, doAndRepeat, env, httpServer, mongoClient, tryF };
     /**notify me about things breaking via discord, if if production mode */
-    function divineError(err) { (DEV_OR_PROD === 'prod' ? pingMe : bigConsoleError)(getTraceableStack(err)); }
+    function divineError(err) { (DEV_OR_PROD === 'prod' ? pingMe : killProcess)(getTraceableStack(err)); }
     /**Set interval with try-catch and called immediately*/
     function doAndRepeat(fn, interval) {
         const tryIt = () => tryF(fn, []);

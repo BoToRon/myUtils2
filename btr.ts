@@ -644,7 +644,7 @@ export const getMainDependencies = async (packageJson: packageJson) => {
 	return { divineBot, divineError, doAndRepeat, env, httpServer, mongoClient, tryF }
 
 	/**notify me about things breaking via discord, if if production mode */
-	function divineError(err: string | Error) { (DEV_OR_PROD === 'prod' ? pingMe : bigConsoleError)(getTraceableStack(err)) }
+	function divineError(err: string | Error) { (DEV_OR_PROD === 'prod' ? pingMe : killProcess)(getTraceableStack(err)) }
 
 	/**Set interval with try-catch and called immediately*/
 	function doAndRepeat(fn: () => void, interval: number) {
