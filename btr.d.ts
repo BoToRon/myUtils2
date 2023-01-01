@@ -132,6 +132,8 @@ export declare const timeStampToDate: (timeStamp: number, includeHours: boolean)
 export declare const toOrdinal: (number: number) => string;
 /**Return a copy that can be altered without having to worry about modifying the original */
 export declare const deepClone: <T>(x: T) => T;
+/**Replace the values of an object with those of another that shares the schema*/
+export declare const replaceObject: <T extends {}>(originalObject: T, newObject: T) => void;
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods) */
 export declare const stringify: {
     (value: any, replacer?: (this: any, key: string, value: any) => any, space?: string | number): string;

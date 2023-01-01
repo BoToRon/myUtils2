@@ -371,6 +371,11 @@ _; /********** FOR OBJECTS ******************** FOR OBJECTS ********************
 _; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 /**Return a copy that can be altered without having to worry about modifying the original */
 export const deepClone = (x) => JSON.parse(JSON.stringify(x));
+/**Replace the values of an object with those of another that shares the schema*/
+export const replaceObject = (originalObject, newObject) => {
+    Object.keys(originalObject).forEach(key => { delete originalObject[key]; });
+    Object.keys(newObject).forEach(key => originalObject[key] = newObject[key]);
+};
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods) */
 export const { stringify } = JSON;
 _; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/

@@ -370,6 +370,11 @@ _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** 
 
 /**Return a copy that can be altered without having to worry about modifying the original */
 export const deepClone = <T>(x: T) => JSON.parse(JSON.stringify(x)) as T
+/**Replace the values of an object with those of another that shares the schema*/
+export const replaceObject = <T extends {}>(originalObject: T, newObject: T) => {
+	Object.keys(originalObject).forEach(key => { delete originalObject[key as keyof T] })
+	Object.keys(newObject).forEach(key => originalObject[key as keyof T] = newObject[key as keyof T])
+}
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods) */
 export const { stringify } = JSON
 
