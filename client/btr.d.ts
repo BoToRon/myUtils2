@@ -130,7 +130,6 @@ export declare const timer_add: (timers: btr_intervalWithid[], id: string, callB
 /**Kill a setInterval and remove it from its belonging array */
 export declare const timer_kill: (timers: btr_intervalWithid[], id: string) => void;
 /**console.log... WITH COLORS :D */
-export declare const colorLog: (color: validChalkColor, message: string) => void;
 /** Copy to clipboard using the corresponding function for the running enviroment (node/client)*/
 export declare const copyToClipboard: (x: any) => void;
 /**(Message) 💀 */

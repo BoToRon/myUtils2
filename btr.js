@@ -421,7 +421,7 @@ _; /********** FOR STRINGS ******************** FOR STRINGS ********************
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 /**console.log... WITH COLORS :D */
-export const colorLog = (color, message) => console.log(chalk[color].bold(message));
+export const colorLog = (color, message) => console.log(chalk[color].bold(message)); //DELETETHISFORCLIENT
 /** Copy to clipboard using the corresponding function for the running enviroment (node/client)*/
 export const copyToClipboard = (x) => { isNode ? copyToClipboard_server(x) : copyToClipboard_client(x); };
 /**(Message) 💀 */

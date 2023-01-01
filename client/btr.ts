@@ -409,7 +409,6 @@ _ /********** FOR STRINGS ******************** FOR STRINGS ******************** 
 _ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 
 /**console.log... WITH COLORS :D */
-export const colorLog = (color: validChalkColor, message: string) => console.log(chalk[color].bold(message))
 /** Copy to clipboard using the corresponding function for the running enviroment (node/client)*/
 export const copyToClipboard = (x: any) => { isNode ? copyToClipboard_server(x) : copyToClipboard_client(x) }
 /**(Message) 💀 */
