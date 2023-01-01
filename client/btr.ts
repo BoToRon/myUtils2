@@ -25,10 +25,12 @@ type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, va
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
 type trackedVueComponent = { _name: string, beforeCreate?: () => void, beforeDestroy?: () => void }
 declare global { interface Window { vueComponents: trackedVueComponent[], newToast: newToastFn } }
+type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 type newToastFn = (title: string, message: string, variant: validVariant) => void
 type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
 type zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T> }
 const zValidNpmCommand = z.enum(['git', 'publish', 'transpile'])
+type errorMessageHandler = (message: string) => void
 type pipe_persistent_type<T> = (arg: T) => T
 type pipe_mutable_type = {
 	<T, A>(source: T, a: (value: T) => A): A
@@ -120,6 +122,18 @@ export const selfFilter = <T>(arr: T[], predicate: (arg1: T) => boolean) => {
 	}
 	return { removedItems, removedCount }
 }
+/**Compare if array B is equal to array A, and return the answer along the missing/nondesired items (if any) */
+export function compareArrays<T>(errorHandler: errorMessageHandler, desiredArray: T[], myArray: T[]) {
+	const areEqualLength = myArray.length === desiredArray.length
+	const missingItems = desiredArray.filter(x => !myArray.includes(x))
+	const nonDesiredItems = myArray.filter(x => !desiredArray.includes(x))
+	const areEqual = !nonDesiredItems.length && !missingItems.length && areEqualLength
+
+	const errorMessage = JSON.stringify({ nonDesiredItems, missingItems, desiredArray })
+	if (!areEqual) { errorHandler(errorMessage) }
+
+	return { areEqual, missingItems, nonDesiredItems, errorMessage }
+}
 /**Remove a single item from an array, or all copies of that item if its a primitive value */
 export const removeItem = <T>(arr: T[], item: T) => selfFilter(arr, (x: T) => x !== item).removedCount
 /**Randomizes the order of the items in the array */
@@ -205,15 +219,8 @@ export const downloadFile_client = (filename: string, fileFormat: '.txt' | '.jso
 	a.download = `${filename}${fileFormat}`
 	a.click()
 }
-/**Stringy an array/object so its readable, except for methods, eg: obj.sampleMethod becomes "[λ: sampleMethod]" */
-export const stringify = (x: unknown) => {
-	// ! order matters, do NOT change it
-	if (x === null) { return 'null' }
-	if (typeof x === 'number' && isNaN(x)) { return 'NaN' }
-	if (!x) { return typeof x }
-	if (typeof x !== 'object') { return `${x}` }
-	return JSON.stringify(x)
-}
+/**Stringy an array/object so its readable, except for methods, eg: obj.sampleMethod becomes "[λ: sampleMethod]", FIXME: */
+export const stringify = (x: unknown) => { return JSON.stringify(x) }
 /**FOR CLIENT-SIDE CODE ONLY. Copy anything to the clipboard, objects/arrays get parsed to be readable*/
 export const copyToClipboard = (x: any) => {
 	if (isNode) { colorLog('copyToClipboard can only be run clientside!'); return }
@@ -357,7 +364,7 @@ export function warnAboutUnproperlyInitializedFunction(fn: 'tryF' | 'newToast_cl
 	if (isClientOrServer === 'server') { colorLog(error) }
 }
 /**function to generate zodCheck with a predertemined errorHandler so it doesnt have to be passed everytime :D */
-export const zodCheck_get = (errorHandler: (err: string) => void) => {
+export const zodCheck_get = (errorHandler: errorMessageHandler) => {
 	function zodCheck<T>(schema: zSchema<T>, data: T) {
 		const result = schema.safeParse(data) as SafeParseReturnType<T, null>
 		if (result.success === false) { errorHandler(fromZodError(result.error).message) }
@@ -366,7 +373,7 @@ export const zodCheck_get = (errorHandler: (err: string) => void) => {
 	return zodCheck
 }
 /**This is a SAMPLE, use zodCheck_get to set zodCheck and use it without having to pass errorHandler everytime*/
-export const zodCheck_sample = <T>(errorHandler: (err: string) => void, schema: zSchema<T>, data: T) => {
+export const zodCheck_sample = <T>(errorHandler: errorMessageHandler, schema: zSchema<T>, data: T) => {
 	const result = schema.safeParse(data) as SafeParseReturnType<T, null>
 	if (result.success === false) { errorHandler(fromZodError(result.error).message) }
 	return result.success
@@ -385,7 +392,7 @@ export const zodCheckAndHandle = <D, SH extends (...args: Parameters<SH>) => Ret
 	/**data to test against the schema */	data: D,
 	/**sucess handler*/	successHandler: SH,
 	/**arguments to apply to the success handler */	args: Parameters<SH>,
-	/**error handler */ errorHandler: (errorMessage: string) => void,
+	/**error handler */ errorHandler: errorMessageHandler,
 ) => {
 	/**whether the data fits the schema or not */
 	const zResult = zSchema.safeParse(data)

@@ -32,6 +32,7 @@ type bvToast = {
 type zSchema<T> = {
     safeParse: (x: T) => SafeParseReturnType<T, T>;
 };
+type errorMessageHandler = (message: string) => void;
 type pipe_persistent_type<T> = (arg: T) => T;
 type pipe_mutable_type = {
     <T, A>(source: T, a: (value: T) => A): A;
@@ -84,6 +85,13 @@ export declare const selfFilter: <T>(arr: T[], predicate: (arg1: T) => boolean) 
     removedItems: T[];
     removedCount: number;
 };
+/**Compare if array B is equal to array A, and return the answer along the missing/nondesired items (if any) */
+export declare function compareArrays<T>(errorHandler: errorMessageHandler, desiredArray: T[], myArray: T[]): {
+    areEqual: boolean;
+    missingItems: T[];
+    nonDesiredItems: T[];
+    errorMessage: string;
+};
 /**Remove a single item from an array, or all copies of that item if its a primitive value */
 export declare const removeItem: <T>(arr: T[], item: T) => number;
 /**Randomizes the order of the items in the array */
@@ -120,7 +128,7 @@ export declare const toOrdinal: (number: number) => string;
 export declare const deepClone: <T>(x: T) => T;
 /**FOR CLIENT-SIDE CODE ONLY. Stringifies and downloads the provided data*/
 export declare const downloadFile_client: (filename: string, fileFormat: '.txt' | '.json', data: unknown) => void;
-/**Stringy an array/object so its readable, except for methods, eg: obj.sampleMethod becomes "[λ: sampleMethod]" */
+/**Stringy an array/object so its readable, except for methods, eg: obj.sampleMethod becomes "[λ: sampleMethod]", FIXME: */
 export declare const stringify: (x: unknown) => string;
 /**FOR CLIENT-SIDE CODE ONLY. Copy anything to the clipboard, objects/arrays get parsed to be readable*/
 export declare const copyToClipboard: (x: any) => void;
@@ -172,9 +180,9 @@ export declare const trackVueComponent: (name: string, componentConstructor: tra
 /**For Functions that require initialization (tryF and zodCheck for their errorHandlers, newToast_client for $bvToast) */
 export declare function warnAboutUnproperlyInitializedFunction(fn: 'tryF' | 'newToast_client' | 'zodCheck'): void;
 /**function to generate zodCheck with a predertemined errorHandler so it doesnt have to be passed everytime :D */
-export declare const zodCheck_get: (errorHandler: (err: string) => void) => <T>(schema: zSchema<T>, data: T) => any;
+export declare const zodCheck_get: (errorHandler: errorMessageHandler) => <T>(schema: zSchema<T>, data: T) => any;
 /**This is a SAMPLE, use zodCheck_get to set zodCheck and use it without having to pass errorHandler everytime*/
-export declare const zodCheck_sample: <T>(errorHandler: (err: string) => void, schema: zSchema<T>, data: T) => any;
+export declare const zodCheck_sample: <T>(errorHandler: errorMessageHandler, schema: zSchema<T>, data: T) => any;
 /**
  * Check data against a provided schema, and execute either the success or error handler
  * @param zSchema The zSchema to test data against
@@ -183,7 +191,7 @@ export declare const zodCheck_sample: <T>(errorHandler: (err: string) => void, s
  * @param args The arguments to be applied to successHandler
  * @param errorHandler The function that will execute if data does NOT fits zSchema
  */
-export declare const zodCheckAndHandle: <D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(zSchema: zSchema<D>, data: D, successHandler: SH, args: Parameters<SH>, errorHandler: (errorMessage: string) => void) => void;
+export declare const zodCheckAndHandle: <D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(zSchema: zSchema<D>, data: D, successHandler: SH, args: Parameters<SH>, errorHandler: errorMessageHandler) => void;
 /**Pipe with schema validation and error logging */
 export declare const zPipe: <T>(zSchema: zSchema<T>, initialValue: T, ...fns: pipe_persistent_type<T>[]) => {
     value: T;
