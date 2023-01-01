@@ -1,23 +1,23 @@
 /// <reference types="node" />
 import { z, type SafeParseReturnType } from 'zod';
 export declare const zValidVariants: any;
-export type trackedVueComponent = {
+export type btr_trackedVueComponent = {
     _name: string;
     beforeCreate?: () => void;
     beforeDestroy?: () => void;
 };
-export type newToastFn = (title: string, message: string, variant: validVariant) => void;
-export type intervalWithid = [id: string, interval: NodeJS.Timer];
-export type globalAlert = {
+export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void;
+export type btr_intervalWithid = [id: string, interval: NodeJS.Timer];
+export type btr_globalAlert = {
     message: string;
     show: boolean;
 };
-export type validVariant = z.infer<typeof zValidVariants>;
+export type btr_validVariant = z.infer<typeof zValidVariants>;
 type toastOptions = {
     toaster: string;
     autoHideDelay: number;
     solid: boolean;
-    variant: validVariant;
+    variant: btr_validVariant;
     title: string;
 };
 type bvToast = {
@@ -36,11 +36,11 @@ type pipe_mutable_type = {
     <T, A, B, C, D, E>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D, e: (value: D) => E): E;
 };
 /**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
-export declare const newToast_client_curry: ($bvToast: bvToast) => newToastFn;
+export declare const newToast_client_curry: ($bvToast: bvToast) => btr_newToastFn;
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
 export declare const zodCheck_curry: (errorHandler: errorMessageHandler) => <T>(schema: zSchema<T>, data: T) => boolean;
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
-export declare const trackVueComponent_curry: <T>(zValidVueComponentName: zSchema<T>) => (name: T, componentConstructor: trackedVueComponent) => trackedVueComponent;
+export declare const trackVueComponent_curry: <T>(zValidVueComponentName: zSchema<T>) => (name: T, componentConstructor: btr_trackedVueComponent) => btr_trackedVueComponent;
 /**Adds an item to an array, or removes it if it already was added. Returns the action applied and the array */
 export declare const addOrRemoveItem: <T>(arr: T[], item: T) => {
     action: "removed" | "added";
@@ -126,9 +126,9 @@ export declare const stringify: {
     (value: any, replacer?: (string | number)[], space?: string | number): string;
 };
 /**start a setInterval and add it to an array */
-export declare const timer_add: (timers: intervalWithid[], id: string, callBack: Function, interval: number) => void;
+export declare const timer_add: (timers: btr_intervalWithid[], id: string, callBack: Function, interval: number) => void;
 /**Kill a setInterval and remove it from its belonging array */
-export declare const timer_kill: (timers: intervalWithid[], id: string) => void;
+export declare const timer_kill: (timers: btr_intervalWithid[], id: string) => void;
 /**console.log... WITH COLORS :D */
 export declare const colorLog: (color: validChalkColor, message: string) => void;
 /** Copy to clipboard using the corresponding function for the running enviroment (node/client)*/

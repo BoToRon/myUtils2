@@ -54,13 +54,13 @@ _ /********** TYPES ******************** TYPES ******************** TYPES ******
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 
-export type trackedVueComponent = { _name: string, beforeCreate?: () => void, beforeDestroy?: () => void }
-export type newToastFn = (title: string, message: string, variant: validVariant) => void
-export type intervalWithid = [id: string, interval: NodeJS.Timer]
-export type globalAlert = { message: string, show: boolean }
-export type validVariant = z.infer<typeof zValidVariants>
+export type btr_trackedVueComponent = { _name: string, beforeCreate?: () => void, beforeDestroy?: () => void }
+export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void
+export type btr_intervalWithid = [id: string, interval: NodeJS.Timer]
+export type btr_globalAlert = { message: string, show: boolean }
+export type btr_validVariant = z.infer<typeof zValidVariants>
 
-type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: validVariant, title: string }
+type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: btr_validVariant, title: string }
 type validChalkColor = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'white' | 'grey' | 'magentaBright'	//DELETETHISFORCLIENT
 type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
@@ -90,7 +90,7 @@ _ /********** CURRIES ******************** CURRIES ******************** CURRIES 
 
 /**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
 export const newToast_client_curry = ($bvToast: bvToast) => {
-	const body: newToastFn = (title: string, message: string, variant: validVariant) => {
+	const body: btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => {
 		if (!zodCheck_curry(alert)(zValidVariants, variant)) { return }
 		$bvToast.toast(message, {
 			toaster: 'b-toaster-bottom-right',
@@ -117,7 +117,7 @@ export const zodCheck_curry = (errorHandler: errorMessageHandler) => {
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
 export const trackVueComponent_curry = <T>(zValidVueComponentName: zSchema<T>) => {
 
-	return function trackVueComponent(name: T, componentConstructor: trackedVueComponent) {
+	return function trackVueComponent(name: T, componentConstructor: btr_trackedVueComponent) {
 
 		if (!zodCheck_curry(alert)(zValidVueComponentName, name)) { return componentConstructor }
 		colorLog('blue', `Component '${name}' registered to Vue`)
@@ -131,7 +131,7 @@ export const trackVueComponent_curry = <T>(zValidVueComponentName: zSchema<T>) =
 			logAllComponents()
 		}
 
-		function getComponent(name: T, componentConstructor: trackedVueComponent) {
+		function getComponent(name: T, componentConstructor: btr_trackedVueComponent) {
 			componentConstructor.beforeCreate = () => toggleComponent(successLog)
 			componentConstructor.beforeDestroy = () => toggleComponent(errorLog)
 			componentConstructor._name = name as string
@@ -400,12 +400,12 @@ _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS *********
 _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
 
 /**start a setInterval and add it to an array */
-export const timer_add = (timers: intervalWithid[], id: string, callBack: Function, interval: number) => {
+export const timer_add = (timers: btr_intervalWithid[], id: string, callBack: Function, interval: number) => {
 	const theTimer: ReturnType<typeof setInterval> = setInterval(() => { callBack }, interval)
 	timers.push([id, theTimer])
 }
 /**Kill a setInterval and remove it from its belonging array */
-export const timer_kill = (timers: intervalWithid[], id: string) => {
+export const timer_kill = (timers: btr_intervalWithid[], id: string) => {
 	const theTimer = timers.find(x => x[0] === id)
 	if (!theTimer) { return }
 	clearInterval(theTimer[1])
