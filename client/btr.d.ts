@@ -41,6 +41,12 @@ type pipe_mutable_type = {
     <T, A, B, C, D>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D): D;
     <T, A, B, C, D, E>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D, e: (value: D) => E): E;
 };
+/**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
+export declare const newToast_client_curry: ($bvToast: bvToast) => newToastFn;
+/**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
+export declare const zodCheck_curry: (errorHandler: errorMessageHandler) => <T>(schema: zSchema<T>, data: T) => boolean;
+/**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
+export declare const trackVueComponent_curry: (zValidVueComponentName: zSchema<string>) => (name: string, componentConstructor: trackedVueComponent) => trackedVueComponent;
 /**Adds an item to an array, or removes it if it already was added. Returns the action applied and the array */
 export declare const addOrRemoveItem: <T>(arr: T[], item: T) => {
     action: "removed" | "added";
@@ -49,10 +55,9 @@ export declare const addOrRemoveItem: <T>(arr: T[], item: T) => {
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
 export declare const asFormattedList: (arr: (string | number | boolean)[], useAndForTheLastItem: boolean) => string;
 /**Compare array A to array B, returns the answer along ab error message, if any */
-export declare function compareArrays<T>(myArray: T[], comparisonType: 'isEqualTo' | 'hasAllItemsOf' | 'isPartialOf', desiredArray: T[]): {
+export declare const compareArrays: <T>(myArray: T[], comparisonType: 'isEqualTo' | 'hasAllItemsOf' | 'isPartialOf', desiredArray: T[]) => {
     answer: boolean;
     errorMessage: string;
-    trace: void;
 };
 /**syntax sugar for arr[arr.length - 1] */
 export declare const getLastItem: <T>(arr: T[]) => T;
@@ -92,34 +97,12 @@ export declare const pipe_persistentType: <T>(initialValue: T, ...fns: pipe_pers
 * If only one argument is provided (`pipe(x)`), this will produce a type error but JS will run fine (and return `x`).
 */
 export declare const pipe_mutableType: pipe_mutable_type;
-/**
- * Retry a function up to X amount of times or until it is executed successfully, mainly for fetching/requesting stuff
- * @param fn The function to be retried hoping it returns successfully
- * @param args Arguments to pass to fn
- * @param retriesLeft number, is reduced by 1 every attempt, retryF stops when it reaches 0
- * @param defaultReturn data to be returned as returnType of fn if retryF fails
- * @param delayBetweenRetries delay between each retry in milliseconds
- * @returns 'data: returned by fn if ran sucessfully. | wasError: if the retries ran out without sucess '
- */
+/** Retry a function up to X amount of times or until it is executed successfully, mainly for fetching/requesting stuff */
 export declare const retryF: <F extends (...args: any) => any>(fn: F, args: Parameters<F>, retriesLeft: number, defaultReturn: ReturnType<F>, delayBetweenRetries: number) => Promise<{
     data: ReturnType<F>;
     was: 'success' | 'failure';
 }>;
-/**For Functions that require initialization (tryF and zodCheck for their errorHandlers, newToast_client for $bvToast) */
-export declare function warnAboutUnproperlyInitializedFunction(fn: 'tryF' | 'newToast_client' | 'zodCheck'): void;
-/**function to generate zodCheck with a predertemined errorHandler so it doesnt have to be passed everytime :D */
-export declare const zodCheck_get: (errorHandler: errorMessageHandler) => <T>(schema: zSchema<T>, data: T) => any;
-/**This is a SAMPLE, use zodCheck_get to set zodCheck and use it without having to pass errorHandler everytime*/
-export declare const zodCheck_sample: <T>(errorHandler: errorMessageHandler, schema: zSchema<T>, data: T) => any;
-/**
- * ? TODO: maybe make it a placeholder and create an initialized that pre-determines the errorHandler like with zodCheck and zodCheck_get
- * Check data against a provided schema, and execute either the success or error handler
- * @param zSchema The zSchema to test data against
- * @param data The data to be tested against zSchema
- * @param successHandler The function that will execute if data fits zSchema
- * @param args The arguments to be applied to successHandler
- * @param errorHandler The function that will execute if data does NOT fits zSchema
- */
+/** Check data against a provided schema, and execute either the success or error handler */
 export declare const zodCheckAndHandle: <D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(zSchema: zSchema<D>, data: D, successHandler: SH, args: Parameters<SH>, errorHandler: errorMessageHandler) => void;
 /**Pipe with schema validation and error logging */
 export declare const zPipe: <T>(zSchema: zSchema<T>, initialValue: T, ...fns: pipe_persistent_type<T>[]) => {
@@ -143,7 +126,7 @@ export declare const timeStampToDate: (timeStamp: number, includeHours: boolean)
 export declare const toOrdinal: (number: number) => string;
 /**Return a copy that can be altered without having to worry about modifying the original */
 export declare const deepClone: <T>(x: T) => T;
-/**Stringy an array/object so its readable. TODO: (edit so that it doesn't excluse object methods) */
+/**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods) */
 export declare const stringify: {
     (value: any, replacer?: (this: any, key: string, value: any) => any, space?: string | number): string;
     (value: any, replacer?: (string | number)[], space?: string | number): string;
@@ -151,17 +134,22 @@ export declare const stringify: {
 /**start a setInterval and add it to an array */
 export declare const timer_add: (timers: intervalWithid[], id: string, callBack: Function, interval: number) => void;
 /**Kill a setInterval and remove it from its belonging array */
-export declare function timer_kill(timers: intervalWithid[], id: string): void;
+export declare const timer_kill: (timers: intervalWithid[], id: string) => void;
+/**console.log... WITH COLORS :D */
+export declare const colorLog: (color: validChalkColor, message: string) => void;
 /** Copy to clipboard using the corresponding function for the running enviroment (node/client)*/
 export declare const copyToClipboard: (x: any) => void;
+/**(Message) 💀 */
+export declare const errorLog: (message: string) => void;
+export declare const getTraceableStack: (error: string | Error) => string;
 /**Returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export declare const isGuest: (username: string) => boolean;
-/**colorLog.succes with a ✔️ at the end :D */
+/**(Message) ✔️ */
 export declare const successLog: (message: string) => void;
 /**Returns an string with its linebreaks converted into simple one-char spaces */
 export declare const toSingleLine: (sentence: string) => string;
 /**For obligatory callbacks */
-export declare function doNothing(...args: unknown[]): void;
+export declare const doNothing: (...args: unknown[]) => void;
 /**Syntactic sugar for "null as unknown as T", supports enums up to 5 items */
 export declare const nullAs: {
     string: () => string;
@@ -173,36 +161,7 @@ export declare const nullAs: {
     t5<T1_4, T2_3, T3_2, T4_1, T5>(x: T1_4, y: T2_3, z: T3_2, _: T4_1, $: T5): T1_4 | T2_3 | T3_2 | T4_1 | T5;
 };
 /**Copy to clipboard, objects arrays get stringify'd */
-export declare function copyToClipboard_client(x: any): void;
+export declare const copyToClipboard_client: (x: any) => void;
 /**Stringifies and downloads the provided data*/
 export declare const downloadFile_client: (filename: string, fileFormat: '.txt' | '.json', data: unknown) => void;
-/**function to generate newToast_client with a predertemined $bvToast so it doesnt have to be passed everytime :D */
-export declare const newToast_client_get: (bvToast: bvToast) => newToastFn;
-/**This is a SAMPLE, use newToast_client_get to set newToast_client and use it without having to pass $bvToast everytime*/
-export declare const newToast_client_sample: ($bvToast: bvToast, title: string, msg: string, variant: z.infer<any>) => void;
-/**
- *This is a SAMPLE, use tryF_get to set tryF_get and use it without having to pass errorHandler everytime
- * @param errorHandler The error handler
- * @param fn The function to try
- * @param args The arguments to apply to the function
- * @returns void
- */
-export declare const tryF_sample: <T extends (...args: any) => any>(errorHandler: T, fn: T, args: Parameters<T>) => void;
-/**Check if the code is running in the client or in the server */
-export declare function clientOrServer_is(): "server" | "client";
-/**Track vue components in a global window array to easily find them and use them with socket.io events*/
-export declare const trackVueComponent: (name: string, componentConstructor: trackedVueComponent) => trackedVueComponent;
-export declare const BTR: {
-    /**Tr-Catch wrapper for functions. Starts as a placeholder, initialize it with typeF_get */
-    tryF: <T extends (...args: any) => any>(fn: T, args: Parameters<T>) => any;
-    /**Createst a new 5-seconds toast in the lower right corner. Must be initialized by passing $bvToast to newToast_client_get  */
-    newToast_client(title: string, message: string, variant: z.infer<any>): void;
-    /**Test data against an scheme, and if it fails execute a predefined errorHandler.
-    * WARNING: Deprecated? zodCheckAndHandle feels better.
-    * Starts as a placeholder, initialize it with zodCheck_get
-    * */
-    zodCheck<T_1>(schema: zSchema<T_1>, data: T_1): boolean;
-    /**for when registering them for tracking at window.vueComponents */
-    zValidVueComponentName: zSchema<unknown>;
-};
 export {};

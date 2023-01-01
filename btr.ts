@@ -32,12 +32,22 @@ _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ***********
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
+_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
+_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
+_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
+_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
+_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
 export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'])
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch'])	//DELETETHISFORCLIENT
 const zValidNpmCommand = z.enum(['git', 'publish', 'transpile'])
 
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
@@ -68,6 +78,78 @@ type pipe_mutable_type = {
 	//can always make it longer 😉
 }
 
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+
+/**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
+export const newToast_client_curry = ($bvToast: bvToast) => {
+	const body: newToastFn = (title: string, message: string, variant: validVariant) => {
+		if (!zodCheck_curry(alert)(zValidVariants, variant)) { return }
+		$bvToast.toast(message, {
+			toaster: 'b-toaster-bottom-right',
+			autoHideDelay: 5000,
+			solid: true,
+			variant,
+			title
+		})
+	}
+	return body
+}
+/**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
+export const zodCheck_curry = (errorHandler: errorMessageHandler) => {
+	function zodCheck<T>(schema: zSchema<T>, data: T) {
+		function body<T>(errorHandler: errorMessageHandler, schema: zSchema<T>, data: T) {
+			const result = schema.safeParse(data) as SafeParseReturnType<T, null>
+			if (result.success === false) { errorHandler(fromZodError(result.error).message) }
+			return result.success as boolean
+		}
+		return body(errorHandler, schema, data)
+	}
+	return zodCheck
+}
+/**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
+export const trackVueComponent_curry = (zValidVueComponentName: zSchema<string>) => {
+
+	return function trackVueComponent(name: string, componentConstructor: trackedVueComponent) {
+
+		if (!zodCheck_curry(alert)(zValidVueComponentName, name)) { return componentConstructor }
+		colorLog('blue', `Component '${name}' registered to Vue`)
+		if (!window.vueComponents) { window.vueComponents = [] }
+
+		return getComponent(name, componentConstructor)
+
+		function toggleComponent(logger: errorMessageHandler) {
+			const { action } = addOrRemoveItem(window.vueComponents, componentConstructor)
+			logger(`Component '${name}' ${action} to/from window.vueComponents`)
+			logAllComponents()
+		}
+
+		function getComponent(name: string, componentConstructor: trackedVueComponent) {
+			componentConstructor.beforeCreate = () => toggleComponent(successLog)
+			componentConstructor.beforeDestroy = () => toggleComponent(errorLog)
+			componentConstructor._name = name as string
+			return componentConstructor
+		}
+
+		function logAllComponents() {
+			colorLog('magenta', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`)
+		}
+	}
+}
+
+_ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
+_ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
+_ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
+_ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
+_ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -79,7 +161,7 @@ export const addOrRemoveItem = <T>(arr: T[], item: T) => {
 	let x: 'added' | 'removed'
 	const isInArray = arr.includes(item)
 	if (!isInArray) { arr.push(item); x = 'added' }
-	else { selfFilter(arr, (x) => x !== item); x = 'removed' }
+	else { removeItem(arr, item); x = 'removed' }
 	return { action: x, arr }
 }
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
@@ -96,24 +178,25 @@ export const asFormattedList = (arr: (string | number | boolean)[], useAndForThe
 	return string
 }
 /**Compare array A to array B, returns the answer along ab error message, if any */
-export function compareArrays<T>(
+export const compareArrays = <T>(
 	myArray: T[],
 	comparisonType: 'isEqualTo' | 'hasAllItemsOf' | 'isPartialOf',
 	desiredArray: T[]
-) {
+) => {
+
 	const missingItems = desiredArray.filter(x => !myArray.includes(x))
 	const nonDesiredItems = myArray.filter(x => !desiredArray.includes(x))
 	const arraysAreEqual = !nonDesiredItems.length && !missingItems.length && myArray.length === desiredArray.length
-	const x = (answer: boolean) => {
-		const trace = new Error('compareArrays').stack
-		const errorMessage = answer ? nullAs.string() : `"array_A ${comparisonType} array_B" = ${answer}`
-		return { answer, errorMessage: `"array_A ${comparisonType} array_B" = ${answer}`, trace: console.trace('') }
-	}
 
-	if (comparisonType === 'isPartialOf') { return x(!nonDesiredItems.length) }
-	if (comparisonType === 'hasAllItemsOf') { return x(!missingItems.length) }
-	if (comparisonType === 'isEqualTo') { return x(arraysAreEqual) }
-	return x(false)
+	if (comparisonType === 'isPartialOf') { return answerWithMaybeError(!nonDesiredItems.length) }
+	if (comparisonType === 'hasAllItemsOf') { return answerWithMaybeError(!missingItems.length) }
+	if (comparisonType === 'isEqualTo') { return answerWithMaybeError(arraysAreEqual) }
+	return answerWithMaybeError(false)
+
+	function answerWithMaybeError(answer: boolean) {
+		const errorMessage = answer ? nullAs.string() : getTraceableStack(`"array_A ${comparisonType} array_B" = ${answer}`)
+		return { answer, errorMessage }
+	}
 }
 /**syntax sugar for arr[arr.length - 1] */
 export const getLastItem = <T>(arr: T[]) => arr[arr.length - 1]
@@ -172,6 +255,11 @@ _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS *****************
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 
 /**Simple and standard functional programming pipe. Deprecated, use either zPipe (persistenType with zod errors) or pipe_mutableType! */
 export const pipe_persistentType = <T>(initialValue: T, ...fns: pipe_persistent_type<T>[]) => {
@@ -195,41 +283,12 @@ export const retryF = async <F extends (...args: any) => any>(
 ): Promise<{ data: ReturnType<F>, was: 'success' | 'failure' }> => {
 	try { return { data: await fn([args]), was: 'success' } }
 	catch (error) {
-		const message = `retryF > ${fn.name} > ${retriesLeft} retriesLeft. {${error}}`
-		colorLog('warning', `${message}`)
-
+		colorLog('yellow', `retryF > ${fn.name} > ${retriesLeft} retriesLeft. {${error}}`)
 		if (!retriesLeft) { return { data: defaultReturn, was: 'failure' } }
+
 		await delay(delayBetweenRetries)
 		return await retryF(fn, args, retriesLeft - 1, defaultReturn, delayBetweenRetries)
 	}
-}
-/**For Functions that require initialization (tryF and zodCheck for their errorHandlers, newToast_client for $bvToast) */
-export function warnAboutUnproperlyInitializedFunction(fn: 'tryF' | 'newToast_client' | 'zodCheck') {
-
-	const firstArgument = fn === 'newToast_client' ? '$bvToast' : 'errorHandler'
-	const firstArgumentCaps = fn === 'newToast_client' ? "BOOTSTRAP'S_$BVTOAST_HERE" : 'YOUR_ERROR_HANDLER_HERE'
-
-	const error = toSingleLine(`THIS FUNCTION (${fn}) HAS NOT BEEN PROPERLY INITIALIZED YET. 
-			Call ${fn} = ${fn}_get(${firstArgumentCaps}) with a proper ${firstArgument} to do so😉`)
-
-	const isClientOrServer = clientOrServer_is()
-	if (isClientOrServer === 'client') { alert(error) }
-	if (isClientOrServer === 'server') { bigConsoleError(error) }
-}
-/**function to generate zodCheck with a predertemined errorHandler so it doesnt have to be passed everytime :D */
-export const zodCheck_get = (errorHandler: errorMessageHandler) => {
-	function zodCheck<T>(schema: zSchema<T>, data: T) {
-		const result = schema.safeParse(data) as SafeParseReturnType<T, null>
-		if (result.success === false) { errorHandler(fromZodError(result.error).message) }
-		return result.success
-	}
-	return zodCheck
-}
-/**This is a SAMPLE, use zodCheck_get to set zodCheck and use it without having to pass errorHandler everytime*/
-export const zodCheck_sample = <T>(errorHandler: errorMessageHandler, schema: zSchema<T>, data: T) => {
-	const result = schema.safeParse(data) as SafeParseReturnType<T, null>
-	if (result.success === false) { errorHandler(fromZodError(result.error).message) }
-	return result.success
 }
 /** Check data against a provided schema, and execute either the success or error handler */
 // ? TODO: maybe make it a placeholder and create an initialized that pre-determines the errorHandler like with zodCheck and zodCheck_get 
@@ -240,11 +299,8 @@ export const zodCheckAndHandle = <D, SH extends (...args: Parameters<SH>) => Ret
 	/** The arguments to be applied to successHandler */	args: Parameters<SH>,
 	/** The function that will execute if data does NOT fits zSchema */ errorHandler: errorMessageHandler,
 ) => {
-	/**whether the data fits the schema or not */
 	const zResult = zSchema.safeParse(data)
-	/**data doesn't fit, execute errorHandler with the error message x_X */
 	if (zResult.success === false) { errorHandler(fromZodError(zResult.error).message) }
-	/**data fits, execute success handler with the passed arguments :D */
 	if (zResult.success === true && successHandler) { successHandler(...args as Parameters<SH>) }
 }
 /**Pipe with schema validation and error logging */
@@ -268,18 +324,23 @@ _ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** 
 _ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 _ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 _ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
+_ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
+_ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
+_ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
+_ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
+_ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 
 /**Promise-based delay that BREAKS THE LIMIT OF setTimeOut*/
 export const delay = (x: number) => {
 	return new Promise(resolve => {
-		const interval = (i: number, miliseconds: number) => {
-			setTimeout(() => { if (i) { interval(i - 1, maxTimeOut) } else { resolve(true) } }, miliseconds)
-		}
-
 		const maxTimeOut = 1000 * 60 * 60 * 24
 		const loopsNeeded = Math.floor(x / maxTimeOut)
 		const leftOverTime = x % maxTimeOut
 		interval(loopsNeeded, leftOverTime)
+
+		function interval(i: number, miliseconds: number) {
+			setTimeout(() => { if (i) { interval(i - 1, maxTimeOut) } else { resolve(true) } }, miliseconds)
+		}
 	})
 }
 /**Self-explanatory */
@@ -317,12 +378,22 @@ _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** 
 _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
+_ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
+_ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
+_ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
+_ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
+_ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 
 /**Return a copy that can be altered without having to worry about modifying the original */
-export const deepClone = <T>(x: T) => JSON.parse(JSON.stringify(x)) as T //TODO; submit
-/**Stringy an array/object so its readable. TODO: (edit so that it doesn't excluse object methods) */
+export const deepClone = <T>(x: T) => JSON.parse(JSON.stringify(x)) as T
+/**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods) */
 export const { stringify } = JSON
 
+_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
+_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
+_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
+_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
+_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
 _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
 _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
 _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
@@ -335,7 +406,7 @@ export const timer_add = (timers: intervalWithid[], id: string, callBack: Functi
 	timers.push([id, theTimer])
 }
 /**Kill a setInterval and remove it from its belonging array */
-export function timer_kill(timers: intervalWithid[], id: string) {
+export const timer_kill = (timers: intervalWithid[], id: string) => {
 	const theTimer = timers.find(x => x[0] === id)
 	if (!theTimer) { return }
 	clearInterval(theTimer[1])
@@ -347,13 +418,26 @@ _ /********** FOR STRINGS ******************** FOR STRINGS ******************** 
 _ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 _ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 _ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
+_ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
+_ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
+_ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
+_ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
+_ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 
+/**console.log... WITH COLORS :D */
+export const colorLog = (color: validChalkColor, message: string) => console.log(chalk[color].bold(message))
 /** Copy to clipboard using the corresponding function for the running enviroment (node/client)*/
 export const copyToClipboard = (x: any) => { isNode ? copyToClipboard_server(x) : copyToClipboard_client(x) }
+/**(Message) 💀 */
+export const errorLog = (message: string) => colorLog('red', message + ' 💀')
+export const getTraceableStack = (error: string | Error) => {
+	const { stack } = (typeof error === 'string' ? new Error(error) : error)
+	return `${stack}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '')
+}
 /**Returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export const isGuest = (username: string) => /Guest[0-9]{13}/i.test(`${username}`)
-/**colorLog.succes with a ✔️ at the end :D */
-export const successLog = (message: string) => colorLog('success', message + ' ✔️')
+/**(Message) ✔️ */
+export const successLog = (message: string) => colorLog('green', message + ' ✔️')
 /**Returns an string with its linebreaks converted into simple one-char spaces */
 export const toSingleLine = (sentence: string) => `${sentence}`.replace(/ {0,}\n {0,}/g, ' ')
 
@@ -362,9 +446,14 @@ _ /********** MISC ******************** MISC ******************** MISC *********
 _ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 
 /**For obligatory callbacks */
-export function doNothing(...args: unknown[]) { }
+export const doNothing = (...args: unknown[]) => { }
 /**Syntactic sugar for "null as unknown as T", supports enums up to 5 items */
 export const nullAs = {
 	string: () => null as unknown as string,
@@ -381,9 +470,14 @@ _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY *************
 _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 
 /**Copy to clipboard, objects arrays get stringify'd */
-export function copyToClipboard_client(x: any) {
+export const copyToClipboard_client = (x: any) => {
 	const text = stringify(x) as string
 	const a = document.createElement('textarea')
 	a.innerHTML = text
@@ -401,110 +495,6 @@ export const downloadFile_client = (filename: string, fileFormat: '.txt' | '.jso
 	a.click()
 }
 
-_ /********** //TODO: DELETE THESE (SEE BTRNEW.TXT) ******************** //TODO: DELETE THESE (SEE BTRNEW.TXT) **********/
-_ /********** //TODO: DELETE THESE (SEE BTRNEW.TXT) ******************** //TODO: DELETE THESE (SEE BTRNEW.TXT) **********/
-_ /********** //TODO: DELETE THESE (SEE BTRNEW.TXT) ******************** //TODO: DELETE THESE (SEE BTRNEW.TXT) **********/
-_ /********** //TODO: DELETE THESE (SEE BTRNEW.TXT) ******************** //TODO: DELETE THESE (SEE BTRNEW.TXT) **********/
-_ /********** //TODO: DELETE THESE (SEE BTRNEW.TXT) ******************** //TODO: DELETE THESE (SEE BTRNEW.TXT) **********/
-
-/**function to generate newToast_client with a predertemined $bvToast so it doesnt have to be passed everytime :D */
-export const newToast_client_get: (bvToast: bvToast) => newToastFn = ($bvToast: bvToast) => {
-	const newToast: newToastFn = (title: string, message: string, variant: validVariant) => {
-		const colorLog_red = (message: string) => function () { colorLog('danger', message) }
-		zodCheck_sample(colorLog_red, zValidVariants, variant)
-
-		$bvToast.toast(message, {
-			toaster: 'b-toaster-bottom-right',
-			autoHideDelay: 5000,
-			solid: true,
-			variant,
-			title
-		})
-	}
-	return newToast
-}
-/**This is a SAMPLE, use newToast_client_get to set newToast_client and use it without having to pass $bvToast everytime*/
-export const newToast_client_sample = ($bvToast: bvToast, title: string, msg: string, variant: validVariant) => {
-	$bvToast.toast(msg, {
-		toaster: 'b-toaster-bottom-right',
-		autoHideDelay: 5000,
-		solid: true,
-		variant,
-		title
-	})
-}
-/**
- *This is a SAMPLE, use tryF_get to set tryF_get and use it without having to pass errorHandler everytime
- * @param errorHandler The error handler
- * @param fn The function to try
- * @param args The arguments to apply to the function
- * @returns void
- */
-export const tryF_sample = <T extends (...args: any) => any>(errorHandler: T, fn: T, args: Parameters<T>): void => {
-	try { return fn(...args as Parameters<T>[]) }
-	catch (err) { errorHandler(err as Error) }
-}
-/**Check if the code is running in the client or in the server */
-export function clientOrServer_is() {
-	const isServer = [typeof window, typeof document].includes('undefined')
-	return isServer ? 'server' : 'client'
-}
-/**Track vue components in a global window array to easily find them and use them with socket.io events*/
-export const trackVueComponent = (name: string, componentConstructor: trackedVueComponent) => {
-
-	if (!BTR.zValidVueComponentName) { alert(`Error tracking Vue component, BTR.zValidVueComponentName hasn't been set yet`); return }
-	zodCheck_sample(alert, BTR.zValidVueComponentName, name)
-
-	const logAllComponents = () => colorLog('dark', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`)
-	colorLog('primary', `Component '${name}' registered to Vue`)
-	if (!window.vueComponents) { window.vueComponents = [] }
-	componentConstructor._name = name as string
-
-	componentConstructor.beforeCreate = () => {
-		window.vueComponents.push(componentConstructor)
-		successLog(`Component '${name}' created and added to window.vueComponents`)
-		logAllComponents()
-	}
-
-	componentConstructor.beforeDestroy = () => {
-		selfFilter(window.vueComponents, (x) => x !== componentConstructor)
-		colorLog('danger', `Component '${name}' destroyed and removed from window.vueComponents`)
-		logAllComponents()
-	}
-
-	return componentConstructor
-}
-
-_ /********** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW **********/
-_ /********** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW **********/
-_ /********** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW **********/
-_ /********** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW **********/
-_ /********** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW **********/
-
-export const BTR = {
-	/**Tr-Catch wrapper for functions. Starts as a placeholder, initialize it with typeF_get */
-	tryF: <T extends (...args: any) => any>(fn: T, args: Parameters<T>): any => {
-		warnAboutUnproperlyInitializedFunction('tryF')
-		console.log(fn, args)
-	},
-	/**Createst a new 5-seconds toast in the lower right corner. Must be initialized by passing $bvToast to newToast_client_get  */
-	newToast_client(title: string, message: string, variant: validVariant) {
-		warnAboutUnproperlyInitializedFunction('newToast_client')
-		console.log(title, message, variant)
-	},
-	/**Test data against an scheme, and if it fails execute a predefined errorHandler. 
-	* WARNING: Deprecated? zodCheckAndHandle feels better. 
-	* Starts as a placeholder, initialize it with zodCheck_get 
-	* */
-	zodCheck<T>(schema: zSchema<T>, data: T) {
-		warnAboutUnproperlyInitializedFunction('zodCheck')
-		console.log(schema, data)
-		return false
-	},
-	/**for when registering them for tracking at window.vueComponents */
-	zValidVueComponentName: null as unknown as zSchema<unknown>,
-}
-
 // ! DELETEEVERYTHINGBELOW, as it is only meant for server-side use
 
 _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
@@ -512,13 +502,18 @@ _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY *************
 _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
+_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
+_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
+_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
+_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
+_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 
 /** Check the version of @botoron/utils, the enviroment variables and the package.json scripts */
-export function basicProjectChecks(
+export const basicProjectChecks = (
 	/**PROD: DivineError, DEV: killProcess */ errorHandler: errorMessageHandler,
 	packageJson: packageJson,
 	env: NodeJS.ProcessEnv
-) {
+) => {
 
 	const utilsCheck = myUtils_areUpToDate()
 	const scriptsCheck = checkJsonPackageScripts()
@@ -536,13 +531,15 @@ export function basicProjectChecks(
 				"build-all", "build-client", "build-server", "start"
 			]), z.string())
 
-		return zodCheck_sample(errorHandler, zPackageJsonScriptsSchema, packageJson.scripts,)
+		return zodCheck_curry(errorHandler)(zPackageJsonScriptsSchema, packageJson.scripts,)
 	}
 
 	/**Check if all the desired enviroment keys are defined */
 	function getAndCheckEnviromentVariables() {
 		const desiredEnvKeys = ['ADMIN_PASSWORD', 'APP_NAME', 'DEV_OR_PROD', 'ERIS_TOKEN', 'MONGO_URI', 'PORT']
-		return compareArrays(Object.keys(env), 'hasAllItemsOf', desiredEnvKeys)
+		const { answer, errorMessage } = compareArrays(Object.keys(env), 'hasAllItemsOf', desiredEnvKeys)
+		if (errorMessage) { errorHandler(errorMessage) }
+		return answer
 	}
 
 	/**Check if the project is using the latest version of "myUtils" */
@@ -551,7 +548,7 @@ export function basicProjectChecks(
 		const installedVersion = (await import('./package.json', { assert: { type: "json" } })).default.version
 		const isUpToDate = installedVersion === latestVersion
 
-		if (isUpToDate) { colorLog('info', '@botoron/my-utils is up to date 👍') }
+		if (isUpToDate) { colorLog('cyan', '@botoron/my-utils is up to date 👍') }
 		else { errorHandler(`Outdated "btr/utils" package. (${installedVersion} vs ${latestVersion}) PLEASE UPDATE: npm run btr`) }
 
 		return isUpToDate
@@ -572,40 +569,22 @@ export function basicProjectChecks(
 }
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
 export const bigConsoleError = (message: string) => {
-	const log = (message: string) => colorLog('danger', message)
+	const log = (message: string) => colorLog('red', message)
 	const logAsterisks = (lines: number) => { for (let i = 0; i < lines; i++) { log('*'.repeat(150)) } }
 
 	logAsterisks(3)
 	log(message)
 	logAsterisks(3)
 }
-/**console.log WITH COLORS :D */
-export const colorLog = (variant: validVariant, message: string) => {
-
-	const colors: { [key in validVariant]: validChalkColor } = {
-		primary: 'blue',
-		secondary: 'grey',
-		success: 'green',
-		warning: 'yellow',
-		danger: 'red',
-		info: 'cyan',
-		light: 'white',
-		dark: 'magenta',
-		"outline-dark": 'magentaBright'
-	}
-
-	const color = chalk[colors[variant]]
-	console.log(color.bold(message))
-}
 /**Copy to clipboard while running node */
-export function copyToClipboard_server(x: any) { spawn('clip').stdin.end(util.inspect(x)) }
+export const copyToClipboard_server = (x: any) => spawn('clip').stdin.end(util.inspect(x))
 /**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
 export const downloadFile_node = async (filename: string, fileFormat: '.txt' | '.json', data: unknown, killProcessAfterwards: boolean) => {
 	const formatted = stringify(data as object)
 	const dateForFilename = timeStampToDate(Date.now(), true).replace(/\/| |\:/g, '_')
 	const completeFilename = filename + '_' + dateForFilename + fileFormat
 
-	colorLog('info', `Downloading ${completeFilename}..`)
+	colorLog('cyan', `Downloading ${completeFilename}..`)
 	await fsWriteFileAsync(completeFilename, formatted)
 	successLog('Done!')
 
@@ -666,11 +645,7 @@ export const getMainDependencies = async (packageJson: packageJson) => {
 	return { divineBot, divineError, doAndRepeat, env, httpServer, mongoClient, tryF }
 
 	/**notify me about things breaking via discord, if pingMeOnErrors is passed as true */
-	function divineError(arg: string | Error) {
-		const trace = (typeof arg === 'string' ? new Error(arg) : arg).stack
-		const error = `${trace}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '')
-		DEV_OR_PROD === 'prod' ? pingMe(error) : colorLog('danger', error)
-	}
+	function divineError(err: string | Error) { (DEV_OR_PROD === 'prod' ? pingMe : bigConsoleError)(getTraceableStack(err)) }
 
 	/**Set interval with try-catch and called immediately*/
 	function doAndRepeat(fn: () => void, interval: number) {
@@ -690,7 +665,7 @@ export const getMainDependencies = async (packageJson: packageJson) => {
 
 			divineBot.on('messageReactionAdd', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('add', a, b, c))
 			divineBot.on('messageReactionRemove', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('remove', a, b, c))
-			divineBot.on('disconnect', () => { colorLog('danger', `${divinePrepend}: Disconnected D: ... retrying!`); connectToDiscord() })
+			divineBot.on('disconnect', () => { colorLog('red', `${divinePrepend}: Disconnected D: ... retrying!`); connectToDiscord() })
 
 			const idOfRoleAssigningMessage = '822523162724925473'
 			await attemptConnection()
@@ -716,13 +691,13 @@ export const getMainDependencies = async (packageJson: packageJson) => {
 			async function attemptConnection() {
 				try {
 					divineBot.connect()
-					colorLog('info', 'waiting for DivineBot')
+					colorLog('cyan', 'waiting for DivineBot')
 					while (!divineBot.ready) { await delay(1000) }
 					successLog("The divine egg has hatched")
 					pingMe('im alive bitch')
 				}
 				catch {
-					colorLog('warning', `${divinePrepend} Failed to connect.. retrying >:D`)
+					colorLog('yellow', `${divinePrepend} Failed to connect.. retrying >:D`)
 					await delay(1000 * 10)
 					attemptConnection()
 				}
@@ -734,7 +709,7 @@ export const getMainDependencies = async (packageJson: packageJson) => {
 		const mongo = new mongodb.MongoClient(MONGO_URI as string)
 		let mongoClient: MongoClient = null as unknown as MongoClient
 		mongo.connect((err, client) => { if (err) { throw err } mongoClient = client as MongoClient })
-		colorLog('info', 'waiting for Mongo')
+		colorLog('cyan', 'waiting for Mongo')
 		while (!mongoClient) { await delay(500) }
 		successLog("It's Monging time >:D")
 		return mongoClient
@@ -763,24 +738,21 @@ export const getMainDependencies = async (packageJson: packageJson) => {
 	}
 }
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
-export const killProcess = (message: string) => {
-	if (message) { bigConsoleError(message) }
-	process.exit()
-}
+export const killProcess = (message: string) => { bigConsoleError(message); process.exit() }
 /**Easily run the scripts of this (utils) repo's package.json */
 export const npmRun = async (npmCommand: validNpmCommand) => {
 
 	const utilsRepoName = 'Utils 🛠️'
 
-	if (npmCommand === 'transpile') { transpileFiles(() => colorLog('dark', 'Process over')) }
+	if (npmCommand === 'transpile') { transpileFiles(() => colorLog('magenta', 'Process over')) }
 	if (npmCommand === 'git') { prompCommitMessageAndPush(utilsRepoName) }
 	if (npmCommand === 'publish') { transpileFiles(promptVersioning) }
 
 	async function promptVersioning() {
-		function tryAgain(error: string) { colorLog('warning', error); promptVersioning() }
+		function tryAgain(error: string) { colorLog('yellow', error); promptVersioning() }
 		const versionIncrement = await questionAsPromise('Type of package version increment (major, minor, patch)?')
 
-		if (!zodCheck_sample(tryAgain, zValidVersionIncrement, versionIncrement)) { return }
+		if (!zodCheck_curry(tryAgain)(zValidVersionIncrement, versionIncrement)) { return }
 		await prompCommitMessageAndPush(utilsRepoName)
 
 		exec(`npm version ${versionIncrement}`, (err, stdout, stderr) => {
@@ -821,8 +793,8 @@ export async function prompCommitMessageAndPush(repoName: string) {
 	logDetailsForPrompt()
 	const commitMessage = await questionAsPromise(`Enter commit type ${commitTypes} plus a message:`)
 
-	function tryAgain(error: string) { colorLog('warning', error); prompCommitMessageAndPush(repoName); return }
-	if (!zodCheck_sample(tryAgain, get_zValidCommitMessage(), commitMessage)) { return }
+	function tryAgain(error: string) { colorLog('yellow', error); prompCommitMessageAndPush(repoName); return }
+	if (!zodCheck_curry(tryAgain)(get_zValidCommitMessage(), commitMessage)) { return }
 	await gitAddCommitPush()
 
 	function get_zValidCommitMessage() {
@@ -834,10 +806,7 @@ export async function prompCommitMessageAndPush(repoName: string) {
 		return new Promise(resolve => {
 			exec('git add .', () => {
 				successLog('git add .')
-				colorLog('info', 'Copypaste the commit message in the git commit editor, then save and CLOSE it:')
-				colorLog('secondary', commitMessage)
-				console.log('')
-
+				colorLog('cyan', `Commit message copied to clipboard, paste it in the editor, save and close.`)
 				exec("git commit", () => {
 					successLog('git commit')
 					exec('git push', () => {
@@ -851,9 +820,9 @@ export async function prompCommitMessageAndPush(repoName: string) {
 
 	function logDetailsForPrompt() {
 		delay(500).then(() => {
-			colorLog('warning', '50-character limits ends at that line: * * * * * |')
-			colorLog('success', repoName)
-			console.log();
+			colorLog('yellow', '50-character limits ends at that line: * * * * * |')
+			colorLog('green', repoName)
+			console.log()
 		})
 	}
 }
@@ -864,6 +833,9 @@ export async function questionAsPromise(question: string) {
 	readline.close()
 	return input
 }
+
+const btrCommand = process.env.npm_config_btrCommand as validNpmCommand
+if (btrCommand) { zodCheckAndHandle(zValidNpmCommand, btrCommand, npmRun, [btrCommand], console.log) }
 
 /*
  * -------------------------------------------------------------------
@@ -889,6 +861,3 @@ export async function questionAsPromise(question: string) {
  * so you can all on each item of "args", eg: args.forEach(x => fn(x))
  * (see mapArgsOfFnAgainstFn as an existing example)
  */
-
-const btrCommand = process.env.npm_config_btrCommand as validNpmCommand
-if (btrCommand) { zodCheckAndHandle(zValidNpmCommand, btrCommand, npmRun, [btrCommand], console.log) }

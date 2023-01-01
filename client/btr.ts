@@ -20,11 +20,21 @@ _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ***********
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
+_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
+_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
+_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
+_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
+_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
 export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'])
 const zValidNpmCommand = z.enum(['git', 'publish', 'transpile'])
 
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
@@ -53,6 +63,78 @@ type pipe_mutable_type = {
 	//can always make it longer 😉
 }
 
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+
+/**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
+export const newToast_client_curry = ($bvToast: bvToast) => {
+	const body: newToastFn = (title: string, message: string, variant: validVariant) => {
+		if (!zodCheck_curry(alert)(zValidVariants, variant)) { return }
+		$bvToast.toast(message, {
+			toaster: 'b-toaster-bottom-right',
+			autoHideDelay: 5000,
+			solid: true,
+			variant,
+			title
+		})
+	}
+	return body
+}
+/**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
+export const zodCheck_curry = (errorHandler: errorMessageHandler) => {
+	function zodCheck<T>(schema: zSchema<T>, data: T) {
+		function body<T>(errorHandler: errorMessageHandler, schema: zSchema<T>, data: T) {
+			const result = schema.safeParse(data) as SafeParseReturnType<T, null>
+			if (result.success === false) { errorHandler(fromZodError(result.error).message) }
+			return result.success as boolean
+		}
+		return body(errorHandler, schema, data)
+	}
+	return zodCheck
+}
+/**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
+export const trackVueComponent_curry = (zValidVueComponentName: zSchema<string>) => {
+
+	return function trackVueComponent(name: string, componentConstructor: trackedVueComponent) {
+
+		if (!zodCheck_curry(alert)(zValidVueComponentName, name)) { return componentConstructor }
+		colorLog('blue', `Component '${name}' registered to Vue`)
+		if (!window.vueComponents) { window.vueComponents = [] }
+
+		return getComponent(name, componentConstructor)
+
+		function toggleComponent(logger: errorMessageHandler) {
+			const { action } = addOrRemoveItem(window.vueComponents, componentConstructor)
+			logger(`Component '${name}' ${action} to/from window.vueComponents`)
+			logAllComponents()
+		}
+
+		function getComponent(name: string, componentConstructor: trackedVueComponent) {
+			componentConstructor.beforeCreate = () => toggleComponent(successLog)
+			componentConstructor.beforeDestroy = () => toggleComponent(errorLog)
+			componentConstructor._name = name as string
+			return componentConstructor
+		}
+
+		function logAllComponents() {
+			colorLog('magenta', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`)
+		}
+	}
+}
+
+_ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
+_ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
+_ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
+_ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
+_ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -64,7 +146,7 @@ export const addOrRemoveItem = <T>(arr: T[], item: T) => {
 	let x: 'added' | 'removed'
 	const isInArray = arr.includes(item)
 	if (!isInArray) { arr.push(item); x = 'added' }
-	else { selfFilter(arr, (x) => x !== item); x = 'removed' }
+	else { removeItem(arr, item); x = 'removed' }
 	return { action: x, arr }
 }
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
@@ -81,24 +163,25 @@ export const asFormattedList = (arr: (string | number | boolean)[], useAndForThe
 	return string
 }
 /**Compare array A to array B, returns the answer along ab error message, if any */
-export function compareArrays<T>(
+export const compareArrays = <T>(
 	myArray: T[],
 	comparisonType: 'isEqualTo' | 'hasAllItemsOf' | 'isPartialOf',
 	desiredArray: T[]
-) {
+) => {
+
 	const missingItems = desiredArray.filter(x => !myArray.includes(x))
 	const nonDesiredItems = myArray.filter(x => !desiredArray.includes(x))
 	const arraysAreEqual = !nonDesiredItems.length && !missingItems.length && myArray.length === desiredArray.length
-	const x = (answer: boolean) => {
-		const trace = new Error('compareArrays').stack
-		const errorMessage = answer ? nullAs.string() : `"array_A ${comparisonType} array_B" = ${answer}`
-		return { answer, errorMessage: `"array_A ${comparisonType} array_B" = ${answer}`, trace: console.trace('') }
-	}
 
-	if (comparisonType === 'isPartialOf') { return x(!nonDesiredItems.length) }
-	if (comparisonType === 'hasAllItemsOf') { return x(!missingItems.length) }
-	if (comparisonType === 'isEqualTo') { return x(arraysAreEqual) }
-	return x(false)
+	if (comparisonType === 'isPartialOf') { return answerWithMaybeError(!nonDesiredItems.length) }
+	if (comparisonType === 'hasAllItemsOf') { return answerWithMaybeError(!missingItems.length) }
+	if (comparisonType === 'isEqualTo') { return answerWithMaybeError(arraysAreEqual) }
+	return answerWithMaybeError(false)
+
+	function answerWithMaybeError(answer: boolean) {
+		const errorMessage = answer ? nullAs.string() : getTraceableStack(`"array_A ${comparisonType} array_B" = ${answer}`)
+		return { answer, errorMessage }
+	}
 }
 /**syntax sugar for arr[arr.length - 1] */
 export const getLastItem = <T>(arr: T[]) => arr[arr.length - 1]
@@ -157,6 +240,11 @@ _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS *****************
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 
 /**Simple and standard functional programming pipe. Deprecated, use either zPipe (persistenType with zod errors) or pipe_mutableType! */
 export const pipe_persistentType = <T>(initialValue: T, ...fns: pipe_persistent_type<T>[]) => {
@@ -170,81 +258,34 @@ export const pipe_persistentType = <T>(initialValue: T, ...fns: pipe_persistent_
 export const pipe_mutableType: pipe_mutable_type = (source: unknown, ...project: ((value: unknown) => unknown)[]): unknown => {
 	return project.reduce((accumulator, element) => element(accumulator), source)
 }
-/**
- * Retry a function up to X amount of times or until it is executed successfully, mainly for fetching/requesting stuff
- * @param fn The function to be retried hoping it returns successfully
- * @param args Arguments to pass to fn
- * @param retriesLeft number, is reduced by 1 every attempt, retryF stops when it reaches 0
- * @param defaultReturn data to be returned as returnType of fn if retryF fails
- * @param delayBetweenRetries delay between each retry in milliseconds
- * @returns 'data: returned by fn if ran sucessfully. | wasError: if the retries ran out without sucess '
- */
+/** Retry a function up to X amount of times or until it is executed successfully, mainly for fetching/requesting stuff */
 export const retryF = async <F extends (...args: any) => any>(
-	fn: F,
-	args: Parameters<F>,
-	retriesLeft: number,
-	defaultReturn: ReturnType<F>,
-	delayBetweenRetries: number,
+ /**The function to be retried hoping it returns successfully */	fn: F,
+	/**Arguments to pass to fn */ args: Parameters<F>,
+	/**Number, is reduced by 1 every attempt, retryF stops when it reaches 0 */ retriesLeft: number,
+	/**Data to be returned as returnType of fn if retryF fails */ defaultReturn: ReturnType<F>,
+	/**Delay between each retry in milliseconds */ delayBetweenRetries: number,
 ): Promise<{ data: ReturnType<F>, was: 'success' | 'failure' }> => {
 	try { return { data: await fn([args]), was: 'success' } }
 	catch (error) {
-		const message = `retryF > ${fn.name} > ${retriesLeft} retriesLeft. {${error}}`
-		colorLog('warning', `${message}`)
-
+		colorLog('yellow', `retryF > ${fn.name} > ${retriesLeft} retriesLeft. {${error}}`)
 		if (!retriesLeft) { return { data: defaultReturn, was: 'failure' } }
+
 		await delay(delayBetweenRetries)
 		return await retryF(fn, args, retriesLeft - 1, defaultReturn, delayBetweenRetries)
 	}
 }
-/**For Functions that require initialization (tryF and zodCheck for their errorHandlers, newToast_client for $bvToast) */
-export function warnAboutUnproperlyInitializedFunction(fn: 'tryF' | 'newToast_client' | 'zodCheck') {
-
-	const firstArgument = fn === 'newToast_client' ? '$bvToast' : 'errorHandler'
-	const firstArgumentCaps = fn === 'newToast_client' ? "BOOTSTRAP'S_$BVTOAST_HERE" : 'YOUR_ERROR_HANDLER_HERE'
-
-	const error = toSingleLine(`THIS FUNCTION (${fn}) HAS NOT BEEN PROPERLY INITIALIZED YET. 
-			Call ${fn} = ${fn}_get(${firstArgumentCaps}) with a proper ${firstArgument} to do so😉`)
-
-	const isClientOrServer = clientOrServer_is()
-	if (isClientOrServer === 'client') { alert(error) }
-	if (isClientOrServer === 'server') { colorLog(error) }
-}
-/**function to generate zodCheck with a predertemined errorHandler so it doesnt have to be passed everytime :D */
-export const zodCheck_get = (errorHandler: errorMessageHandler) => {
-	function zodCheck<T>(schema: zSchema<T>, data: T) {
-		const result = schema.safeParse(data) as SafeParseReturnType<T, null>
-		if (result.success === false) { errorHandler(fromZodError(result.error).message) }
-		return result.success
-	}
-	return zodCheck
-}
-/**This is a SAMPLE, use zodCheck_get to set zodCheck and use it without having to pass errorHandler everytime*/
-export const zodCheck_sample = <T>(errorHandler: errorMessageHandler, schema: zSchema<T>, data: T) => {
-	const result = schema.safeParse(data) as SafeParseReturnType<T, null>
-	if (result.success === false) { errorHandler(fromZodError(result.error).message) }
-	return result.success
-}
-/**
- * ? TODO: maybe make it a placeholder and create an initialized that pre-determines the errorHandler like with zodCheck and zodCheck_get 
- * Check data against a provided schema, and execute either the success or error handler
- * @param zSchema The zSchema to test data against
- * @param data The data to be tested against zSchema
- * @param successHandler The function that will execute if data fits zSchema
- * @param args The arguments to be applied to successHandler
- * @param errorHandler The function that will execute if data does NOT fits zSchema
- */
+/** Check data against a provided schema, and execute either the success or error handler */
+// ? TODO: maybe make it a placeholder and create an initialized that pre-determines the errorHandler like with zodCheck and zodCheck_get 
 export const zodCheckAndHandle = <D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(
-	/**wanted schema */	zSchema: zSchema<D>,
-	/**data to test against the schema */	data: D,
-	/**sucess handler*/	successHandler: SH,
-	/**arguments to apply to the success handler */	args: Parameters<SH>,
-	/**error handler */ errorHandler: errorMessageHandler,
+	/** The zSchema to test data against */	zSchema: zSchema<D>,
+	/** The data to be tested against zSchema */	data: D,
+	/** The function that will execute if data fits zSchema */	successHandler: SH,
+	/** The arguments to be applied to successHandler */	args: Parameters<SH>,
+	/** The function that will execute if data does NOT fits zSchema */ errorHandler: errorMessageHandler,
 ) => {
-	/**whether the data fits the schema or not */
 	const zResult = zSchema.safeParse(data)
-	/**data doesn't fit, execute errorHandler with the error message x_X */
 	if (zResult.success === false) { errorHandler(fromZodError(zResult.error).message) }
-	/**data fits, execute success handler with the passed arguments :D */
 	if (zResult.success === true && successHandler) { successHandler(...args as Parameters<SH>) }
 }
 /**Pipe with schema validation and error logging */
@@ -268,18 +309,23 @@ _ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** 
 _ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 _ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 _ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
+_ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
+_ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
+_ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
+_ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
+_ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 
 /**Promise-based delay that BREAKS THE LIMIT OF setTimeOut*/
 export const delay = (x: number) => {
 	return new Promise(resolve => {
-		const interval = (i: number, miliseconds: number) => {
-			setTimeout(() => { if (i) { interval(i - 1, maxTimeOut) } else { resolve(true) } }, miliseconds)
-		}
-
 		const maxTimeOut = 1000 * 60 * 60 * 24
 		const loopsNeeded = Math.floor(x / maxTimeOut)
 		const leftOverTime = x % maxTimeOut
 		interval(loopsNeeded, leftOverTime)
+
+		function interval(i: number, miliseconds: number) {
+			setTimeout(() => { if (i) { interval(i - 1, maxTimeOut) } else { resolve(true) } }, miliseconds)
+		}
 	})
 }
 /**Self-explanatory */
@@ -317,12 +363,22 @@ _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** 
 _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
+_ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
+_ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
+_ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
+_ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
+_ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 
 /**Return a copy that can be altered without having to worry about modifying the original */
-export const deepClone = <T>(x: T) => JSON.parse(JSON.stringify(x)) as T //TODO; submit
-/**Stringy an array/object so its readable. TODO: (edit so that it doesn't excluse object methods) */
+export const deepClone = <T>(x: T) => JSON.parse(JSON.stringify(x)) as T
+/**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods) */
 export const { stringify } = JSON
 
+_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
+_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
+_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
+_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
+_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
 _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
 _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
 _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
@@ -335,7 +391,7 @@ export const timer_add = (timers: intervalWithid[], id: string, callBack: Functi
 	timers.push([id, theTimer])
 }
 /**Kill a setInterval and remove it from its belonging array */
-export function timer_kill(timers: intervalWithid[], id: string) {
+export const timer_kill = (timers: intervalWithid[], id: string) => {
 	const theTimer = timers.find(x => x[0] === id)
 	if (!theTimer) { return }
 	clearInterval(theTimer[1])
@@ -347,13 +403,26 @@ _ /********** FOR STRINGS ******************** FOR STRINGS ******************** 
 _ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 _ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 _ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
+_ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
+_ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
+_ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
+_ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
+_ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 
+/**console.log... WITH COLORS :D */
+export const colorLog = (color: validChalkColor, message: string) => console.log(chalk[color].bold(message))
 /** Copy to clipboard using the corresponding function for the running enviroment (node/client)*/
 export const copyToClipboard = (x: any) => { isNode ? copyToClipboard_server(x) : copyToClipboard_client(x) }
+/**(Message) 💀 */
+export const errorLog = (message: string) => colorLog('red', message + ' 💀')
+export const getTraceableStack = (error: string | Error) => {
+	const { stack } = (typeof error === 'string' ? new Error(error) : error)
+	return `${stack}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '')
+}
 /**Returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export const isGuest = (username: string) => /Guest[0-9]{13}/i.test(`${username}`)
-/**colorLog.succes with a ✔️ at the end :D */
-export const successLog = (message: string) => colorLog('success', message + ' ✔️')
+/**(Message) ✔️ */
+export const successLog = (message: string) => colorLog('green', message + ' ✔️')
 /**Returns an string with its linebreaks converted into simple one-char spaces */
 export const toSingleLine = (sentence: string) => `${sentence}`.replace(/ {0,}\n {0,}/g, ' ')
 
@@ -362,9 +431,14 @@ _ /********** MISC ******************** MISC ******************** MISC *********
 _ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 
 /**For obligatory callbacks */
-export function doNothing(...args: unknown[]) { }
+export const doNothing = (...args: unknown[]) => { }
 /**Syntactic sugar for "null as unknown as T", supports enums up to 5 items */
 export const nullAs = {
 	string: () => null as unknown as string,
@@ -381,9 +455,14 @@ _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY *************
 _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 
 /**Copy to clipboard, objects arrays get stringify'd */
-export function copyToClipboard_client(x: any) {
+export const copyToClipboard_client = (x: any) => {
 	const text = stringify(x) as string
 	const a = document.createElement('textarea')
 	a.innerHTML = text
@@ -399,111 +478,6 @@ export const downloadFile_client = (filename: string, fileFormat: '.txt' | '.jso
 	a.href = window.URL.createObjectURL(new Blob([data as BlobPart], { type: 'text/plain' }))
 	a.download = `${filename}${fileFormat}`
 	a.click()
-}
-
-_ /********** //TODO: DELETE THESE (SEE BTRNEW.TXT) ******************** //TODO: DELETE THESE (SEE BTRNEW.TXT) **********/
-_ /********** //TODO: DELETE THESE (SEE BTRNEW.TXT) ******************** //TODO: DELETE THESE (SEE BTRNEW.TXT) **********/
-_ /********** //TODO: DELETE THESE (SEE BTRNEW.TXT) ******************** //TODO: DELETE THESE (SEE BTRNEW.TXT) **********/
-_ /********** //TODO: DELETE THESE (SEE BTRNEW.TXT) ******************** //TODO: DELETE THESE (SEE BTRNEW.TXT) **********/
-_ /********** //TODO: DELETE THESE (SEE BTRNEW.TXT) ******************** //TODO: DELETE THESE (SEE BTRNEW.TXT) **********/
-
-/**function to generate newToast_client with a predertemined $bvToast so it doesnt have to be passed everytime :D */
-export const newToast_client_get: (bvToast: bvToast) => newToastFn = ($bvToast: bvToast) => {
-	const newToast: newToastFn = (title: string, message: string, variant: validVariant) => {
-		const colorLog_red = (message: string) => function () { colorLog('danger', message) }
-		zodCheck_sample(colorLog_red, zValidVariants, variant)
-
-		$bvToast.toast(message, {
-			toaster: 'b-toaster-bottom-right',
-			autoHideDelay: 5000,
-			solid: true,
-			variant,
-			title
-		})
-	}
-	return newToast
-}
-/**This is a SAMPLE, use newToast_client_get to set newToast_client and use it without having to pass $bvToast everytime*/
-export const newToast_client_sample = ($bvToast: bvToast, title: string, msg: string, variant: validVariant) => {
-	$bvToast.toast(msg, {
-		toaster: 'b-toaster-bottom-right',
-		autoHideDelay: 5000,
-		solid: true,
-		variant,
-		title
-	})
-}
-/**
- *This is a SAMPLE, use tryF_get to set tryF_get and use it without having to pass errorHandler everytime
- * @param errorHandler The error handler
- * @param fn The function to try
- * @param args The arguments to apply to the function
- * @returns void
- */
-export const tryF_sample = <T extends (...args: any) => any>(errorHandler: T, fn: T, args: Parameters<T>): void => {
-	try { return fn(...args as Parameters<T>[]) }
-	catch (err) { errorHandler(err as Error) }
-}
-/**Check if the code is running in the client or in the server */
-export function clientOrServer_is() {
-	const isServer = [typeof window, typeof document].includes('undefined')
-	return isServer ? 'server' : 'client'
-}
-/**Track vue components in a global window array to easily find them and use them with socket.io events*/
-export const trackVueComponent = (name: string, componentConstructor: trackedVueComponent) => {
-
-	if (!BTR.zValidVueComponentName) { alert(`Error tracking Vue component, BTR.zValidVueComponentName hasn't been set yet`); return }
-	zodCheck_sample(alert, BTR.zValidVueComponentName, name)
-
-	const logAllComponents = () => colorLog('dark', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`)
-	colorLog('primary', `Component '${name}' registered to Vue`)
-	if (!window.vueComponents) { window.vueComponents = [] }
-	componentConstructor._name = name as string
-
-	componentConstructor.beforeCreate = () => {
-		window.vueComponents.push(componentConstructor)
-		successLog(`Component '${name}' created and added to window.vueComponents`)
-		logAllComponents()
-	}
-
-	componentConstructor.beforeDestroy = () => {
-		selfFilter(window.vueComponents, (x) => x !== componentConstructor)
-		colorLog('danger', `Component '${name}' destroyed and removed from window.vueComponents`)
-		logAllComponents()
-	}
-
-	return componentConstructor
-}
-
-
-_ /********** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW **********/
-_ /********** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW **********/
-_ /********** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW **********/
-_ /********** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW **********/
-_ /********** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW **********/
-
-export const BTR = {
-	/**Tr-Catch wrapper for functions. Starts as a placeholder, initialize it with typeF_get */
-	tryF: <T extends (...args: any) => any>(fn: T, args: Parameters<T>): any => {
-		warnAboutUnproperlyInitializedFunction('tryF')
-		console.log(fn, args)
-	},
-	/**Createst a new 5-seconds toast in the lower right corner. Must be initialized by passing $bvToast to newToast_client_get  */
-	newToast_client(title: string, message: string, variant: validVariant) {
-		warnAboutUnproperlyInitializedFunction('newToast_client')
-		console.log(title, message, variant)
-	},
-	/**Test data against an scheme, and if it fails execute a predefined errorHandler. 
-	* WARNING: Deprecated? zodCheckAndHandle feels better. 
-	* Starts as a placeholder, initialize it with zodCheck_get 
-	* */
-	zodCheck<T>(schema: zSchema<T>, data: T) {
-		warnAboutUnproperlyInitializedFunction('zodCheck')
-		console.log(schema, data)
-		return false
-	},
-	/**for when registering them for tracking at window.vueComponents */
-	zValidVueComponentName: null as unknown as zSchema<unknown>,
 }
 
 const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)
