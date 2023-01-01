@@ -1,5 +1,4 @@
-//TODO: create a way to make sure every project has the same package.json scripts and also create a way to automatize their compilation
-const _ = 'prevent imports and comments from collapsing';
+let _;
 _;
 _;
 _;
@@ -15,48 +14,24 @@ _;
 import { fromZodError } from 'zod-validation-error';
 _;
 import { z } from 'zod';
-const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark']);
+_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
+_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
+_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
+_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
+_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
+export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark']);
 const zValidNpmCommand = z.enum(['git', 'publish', 'transpile']);
-export const BTR = {
-    /**Tr-Catch wrapper for functions. Starts as a placeholder, initialize it with typeF_get */
-    tryF: (fn, args) => {
-        warnAboutUnproperlyInitializedFunction('tryF');
-        console.log(fn, args);
-    },
-    /**Createst a new 5-seconds toast in the lower right corner. Must be initialized by passing $bvToast to newToast_client_get  */
-    newToast_client(title, message, variant) {
-        warnAboutUnproperlyInitializedFunction('newToast_client');
-        console.log(title, message, variant);
-    },
-    /**Test data against an scheme, and if it fails execute a predefined errorHandler.
-    * WARNING: Deprecated? zodCheckAndHandle feels better.
-    * Starts as a placeholder, initialize it with zodCheck_get
-    * */
-    zodCheck(schema, data) {
-        warnAboutUnproperlyInitializedFunction('zodCheck');
-        console.log(schema, data);
-        return false;
-    },
-    /**for when registering them for tracking at window.vueComponents */
-    zValidVueComponentName: null,
-};
-/**colorLog.succes with a ✔️ at the end :D */
-export const successLog = (message) => colorLog('success', message + ' ✔️');
-/**start a setInterval and add it to an array */
-export const timer_add = (timers, id, callBack, interval) => {
-    const theTimer = setInterval(() => { callBack; }, interval);
-    timers.push([id, theTimer]);
-};
-/**Kill a setInterval and remove it from its belonging array */
-export function timer_kill(timers, id) {
-    const theTimer = timers.find(x => x[0] === id);
-    if (!theTimer) {
-        return;
-    }
-    clearInterval(theTimer[1]);
-    removeItem(timers, theTimer);
-}
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
+_; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
+_; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
+_; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
+_; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 /**Adds an item to an array, or removes it if it already was added. Returns the action applied and the array */
 export const addOrRemoveItem = (arr, item) => {
     let x;
@@ -89,18 +64,40 @@ export const asFormattedList = (arr, useAndForTheLastItem) => {
     });
     return string;
 };
+/**Compare array A to array B, returns the answer along ab error message, if any */
+export function compareArrays(myArray, comparisonType, desiredArray) {
+    const missingItems = desiredArray.filter(x => !myArray.includes(x));
+    const nonDesiredItems = myArray.filter(x => !desiredArray.includes(x));
+    const arraysAreEqual = !nonDesiredItems.length && !missingItems.length && myArray.length === desiredArray.length;
+    const x = (answer) => {
+        const trace = new Error('compareArrays').stack;
+        const errorMessage = answer ? nullAs.string() : `"array_A ${comparisonType} array_B" = ${answer}`;
+        return { answer, errorMessage: `"array_A ${comparisonType} array_B" = ${answer}`, trace: console.trace('') };
+    };
+    if (comparisonType === 'isPartialOf') {
+        return x(!nonDesiredItems.length);
+    }
+    if (comparisonType === 'hasAllItemsOf') {
+        return x(!missingItems.length);
+    }
+    if (comparisonType === 'isEqualTo') {
+        return x(arraysAreEqual);
+    }
+    return x(false);
+}
 /**syntax sugar for arr[arr.length - 1] */
 export const getLastItem = (arr) => arr[arr.length - 1];
 /**returns a random item along its index */
 export const getRandomItem = (arr) => { const r = roll(arr.length); return { item: arr[r], index: r }; };
 /**Returns a version of the provided array without repeating items */
 export const getUniqueValues = (arr) => [...new Set(arr)];
-/**Transfer items that meet a given condition from one array to another */
-export const transferItems = (origin, destination, predicate) => {
-    const x = selfFilter(origin, predicate);
-    destination.push(...x.removedItems);
-    return { transferedCount: x.removedCount };
+/**Map a collection of passable-arguments-of-a-function against said function //TODO: find use cases for this jewel maybe */
+export const mapArgsOfFnAgainstFn = (fn, ...argsArr) => {
+    //TODO: make this await promises.all in case fn is async
+    return argsArr.map(args => fn(args));
 };
+/**Remove a single item from an array, or all copies of that item if its a primitive value */
+export const removeItem = (arr, item) => selfFilter(arr, (x) => x !== item).removedCount;
 /**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
 export const selfFilter = (arr, predicate) => {
     let removedCount = 0;
@@ -115,20 +112,6 @@ export const selfFilter = (arr, predicate) => {
     }
     return { removedItems, removedCount };
 };
-/**Compare if array B is equal to array A, and return the answer along the missing/nondesired items (if any) */
-export function compareArrays(errorHandler, desiredArray, myArray) {
-    const areEqualLength = myArray.length === desiredArray.length;
-    const missingItems = desiredArray.filter(x => !myArray.includes(x));
-    const nonDesiredItems = myArray.filter(x => !desiredArray.includes(x));
-    const areEqual = !nonDesiredItems.length && !missingItems.length && areEqualLength;
-    const errorMessage = JSON.stringify({ nonDesiredItems, missingItems, desiredArray });
-    if (!areEqual) {
-        errorHandler(errorMessage);
-    }
-    return { areEqual, missingItems, nonDesiredItems, errorMessage };
-}
-/**Remove a single item from an array, or all copies of that item if its a primitive value */
-export const removeItem = (arr, item) => selfFilter(arr, (x) => x !== item).removedCount;
 /**Randomizes the order of the items in the array */
 export const shuffle = (arr) => {
     for (let i = arr.length - 1; i > 0; i--) {
@@ -157,21 +140,132 @@ export const sortBy = (arr, key, direction) => {
 export const spliceIf = (arr, predicate) => selfFilter(arr, predicate).removedItems;
 /**Remove X amount of items from the end of an array */
 export const spliceLast = (arr, count) => arr.splice(-count);
+/**Transfer items that meet a given condition from one array to another */
+export const transferItems = (origin, destination, predicate) => {
+    const x = selfFilter(origin, predicate);
+    destination.push(...x.removedItems);
+    return { transferedCount: x.removedCount };
+};
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+/**Simple and standard functional programming pipe. Deprecated, use either zPipe (persistenType with zod errors) or pipe_mutableType! */
+export const pipe_persistentType = (initialValue, ...fns) => {
+    return fns.reduce((result, fn) => fn(result), initialValue);
+};
 /**
- *This is a SAMPLE, use tryF_get to set tryF_get and use it without having to pass errorHandler everytime
- * @param errorHandler The error handler
- * @param fn The function to try
- * @param args The arguments to apply to the function
- * @returns void
+* Pipes a value through a number of functions in the order that they appear.
+* Takes between 1 and 12 arguments. `pipe(x, a, b)` is equivalent to `b(a(x))`.
+* If only one argument is provided (`pipe(x)`), this will produce a type error but JS will run fine (and return `x`).
+*/
+export const pipe_mutableType = (source, ...project) => {
+    return project.reduce((accumulator, element) => element(accumulator), source);
+};
+/**
+ * Retry a function up to X amount of times or until it is executed successfully, mainly for fetching/requesting stuff
+ * @param fn The function to be retried hoping it returns successfully
+ * @param args Arguments to pass to fn
+ * @param retriesLeft number, is reduced by 1 every attempt, retryF stops when it reaches 0
+ * @param defaultReturn data to be returned as returnType of fn if retryF fails
+ * @param delayBetweenRetries delay between each retry in milliseconds
+ * @returns 'data: returned by fn if ran sucessfully. | wasError: if the retries ran out without sucess '
  */
-export const tryF_sample = (errorHandler, fn, args) => {
+export const retryF = async (fn, args, retriesLeft, defaultReturn, delayBetweenRetries) => {
     try {
-        return fn(...args);
+        return { data: await fn([args]), was: 'success' };
     }
-    catch (err) {
-        errorHandler(err);
+    catch (error) {
+        const message = `retryF > ${fn.name} > ${retriesLeft} retriesLeft. {${error}}`;
+        colorLog('warning', `${message}`);
+        if (!retriesLeft) {
+            return { data: defaultReturn, was: 'failure' };
+        }
+        await delay(delayBetweenRetries);
+        return await retryF(fn, args, retriesLeft - 1, defaultReturn, delayBetweenRetries);
     }
 };
+/**For Functions that require initialization (tryF and zodCheck for their errorHandlers, newToast_client for $bvToast) */
+export function warnAboutUnproperlyInitializedFunction(fn) {
+    const firstArgument = fn === 'newToast_client' ? '$bvToast' : 'errorHandler';
+    const firstArgumentCaps = fn === 'newToast_client' ? "BOOTSTRAP'S_$BVTOAST_HERE" : 'YOUR_ERROR_HANDLER_HERE';
+    const error = toSingleLine(`THIS FUNCTION (${fn}) HAS NOT BEEN PROPERLY INITIALIZED YET. 
+			Call ${fn} = ${fn}_get(${firstArgumentCaps}) with a proper ${firstArgument} to do so😉`);
+    const isClientOrServer = clientOrServer_is();
+    if (isClientOrServer === 'client') {
+        alert(error);
+    }
+    if (isClientOrServer === 'server') {
+        colorLog(error);
+    }
+}
+/**function to generate zodCheck with a predertemined errorHandler so it doesnt have to be passed everytime :D */
+export const zodCheck_get = (errorHandler) => {
+    function zodCheck(schema, data) {
+        const result = schema.safeParse(data);
+        if (result.success === false) {
+            errorHandler(fromZodError(result.error).message);
+        }
+        return result.success;
+    }
+    return zodCheck;
+};
+/**This is a SAMPLE, use zodCheck_get to set zodCheck and use it without having to pass errorHandler everytime*/
+export const zodCheck_sample = (errorHandler, schema, data) => {
+    const result = schema.safeParse(data);
+    if (result.success === false) {
+        errorHandler(fromZodError(result.error).message);
+    }
+    return result.success;
+};
+/**
+ * ? TODO: maybe make it a placeholder and create an initialized that pre-determines the errorHandler like with zodCheck and zodCheck_get
+ * Check data against a provided schema, and execute either the success or error handler
+ * @param zSchema The zSchema to test data against
+ * @param data The data to be tested against zSchema
+ * @param successHandler The function that will execute if data fits zSchema
+ * @param args The arguments to be applied to successHandler
+ * @param errorHandler The function that will execute if data does NOT fits zSchema
+ */
+export const zodCheckAndHandle = (
+/**wanted schema */ zSchema, 
+/**data to test against the schema */ data, 
+/**sucess handler*/ successHandler, 
+/**arguments to apply to the success handler */ args, 
+/**error handler */ errorHandler) => {
+    /**whether the data fits the schema or not */
+    const zResult = zSchema.safeParse(data);
+    /**data doesn't fit, execute errorHandler with the error message x_X */
+    if (zResult.success === false) {
+        errorHandler(fromZodError(zResult.error).message);
+    }
+    /**data fits, execute success handler with the passed arguments :D */
+    if (zResult.success === true && successHandler) {
+        successHandler(...args);
+    }
+};
+/**Pipe with schema validation and error logging */
+export const zPipe = (zSchema, initialValue, ...fns) => {
+    const initialPipeState = { value: initialValue, error: nullAs.string(), failedAt: nullAs.string() };
+    return fns.reduce((pipeState, fn, index) => {
+        if (pipeState.error) {
+            return pipeState;
+        }
+        pipeState.value = fn(pipeState.value);
+        const zResult = zSchema.safeParse(pipeState.value);
+        if (zResult.success === false) {
+            pipeState.failedAt = `Step ${index + 1}: ${fn.name}`;
+            pipeState.error = fromZodError(zResult.error).message;
+        }
+        return pipeState;
+    }, initialPipeState);
+};
+_; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
+_; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
+_; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
+_; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
+_; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 /**Promise-based delay that BREAKS THE LIMIT OF setTimeOut*/
 export const delay = (x) => {
     return new Promise(resolve => {
@@ -221,44 +315,52 @@ export const toOrdinal = (number) => {
         default: return `${number}th`;
     }
 };
+_; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
+_; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
+_; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
+_; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
+_; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 /**Return a copy that can be altered without having to worry about modifying the original */
 export const deepClone = (x) => JSON.parse(JSON.stringify(x)); //TODO; submit
-/**FOR CLIENT-SIDE CODE ONLY. Stringifies and downloads the provided data*/
-export const downloadFile_client = (filename, fileFormat, data) => {
-    if (isNode) {
-        colorLog('downloadFile_client can only be run clientside!');
+/**Stringy an array/object so its readable. TODO: (edit so that it doesn't excluse object methods) */
+export const { stringify } = JSON;
+_; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
+_; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
+_; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
+_; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
+_; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
+/**start a setInterval and add it to an array */
+export const timer_add = (timers, id, callBack, interval) => {
+    const theTimer = setInterval(() => { callBack; }, interval);
+    timers.push([id, theTimer]);
+};
+/**Kill a setInterval and remove it from its belonging array */
+export function timer_kill(timers, id) {
+    const theTimer = timers.find(x => x[0] === id);
+    if (!theTimer) {
         return;
     }
-    const a = document.createElement('a');
-    a.href = window.URL.createObjectURL(new Blob([data], { type: 'text/plain' }));
-    a.download = `${filename}${fileFormat}`;
-    a.click();
-};
-/**Stringy an array/object so its readable, except for methods, eg: obj.sampleMethod becomes "[λ: sampleMethod]", FIXME: */
-export const stringify = (x) => { return JSON.stringify(x); };
-/**FOR CLIENT-SIDE CODE ONLY. Copy anything to the clipboard, objects/arrays get parsed to be readable*/
-export const copyToClipboard = (x) => {
-    if (isNode) {
-        colorLog('copyToClipboard can only be run clientside!');
-        return;
-    }
-    const text = stringify(x);
-    const a = document.createElement('textarea');
-    a.innerHTML = text;
-    document.body.appendChild(a);
-    a.select();
-    document.execCommand('copy');
-    document.body.removeChild(a);
-};
+    clearInterval(theTimer[1]);
+    removeItem(timers, theTimer);
+}
+_; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
+_; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
+_; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
+_; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
+_; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
+/** Copy to clipboard using the corresponding function for the running enviroment (node/client)*/
+export const copyToClipboard = (x) => { isNode ? copyToClipboard_server(x) : copyToClipboard_client(x); };
 /**Returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export const isGuest = (username) => /Guest[0-9]{13}/i.test(`${username}`);
+/**colorLog.succes with a ✔️ at the end :D */
+export const successLog = (message) => colorLog('success', message + ' ✔️');
 /**Returns an string with its linebreaks converted into simple one-char spaces */
 export const toSingleLine = (sentence) => `${sentence}`.replace(/ {0,}\n {0,}/g, ' ');
-/**Check if the code is running in the client or in the server */
-export function clientOrServer_is() {
-    const isServer = [typeof window, typeof document].includes('undefined');
-    return isServer ? 'server' : 'client';
-}
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 /**For obligatory callbacks */
 export function doNothing(...args) { }
 /**Syntactic sugar for "null as unknown as T", supports enums up to 5 items */
@@ -271,11 +373,37 @@ export const nullAs = {
     t4(x, y, z, _) { doNothing(x, y, z, _); return null; },
     t5(x, y, z, _, $) { doNothing(x, y, z, _, $); return null; },
 };
-/**Map a collection of passable-arguments-of-a-function against said function //TODO: find use cases for this jewel maybe */
-const mapArgsOfFnAgainstFn = (fn, ...argsArr) => {
-    //TODO: make this await promises.all in case fn is async
-    return argsArr.map(args => fn(args));
+_; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+/**Copy to clipboard, objects arrays get stringify'd */
+export function copyToClipboard_client(x) {
+    const text = stringify(x);
+    const a = document.createElement('textarea');
+    a.innerHTML = text;
+    document.body.appendChild(a);
+    a.select();
+    document.execCommand('copy');
+    document.body.removeChild(a);
+}
+/**Stringifies and downloads the provided data*/
+export const downloadFile_client = (filename, fileFormat, data) => {
+    if (isNode) {
+        colorLog('downloadFile_client can only be run clientside!');
+        return;
+    }
+    const a = document.createElement('a');
+    a.href = window.URL.createObjectURL(new Blob([data], { type: 'text/plain' }));
+    a.download = `${filename}${fileFormat}`;
+    a.click();
 };
+_; /********** //TODO: DELETE THESE (SEE BTRNEW.TXT) ******************** //TODO: DELETE THESE (SEE BTRNEW.TXT) **********/
+_; /********** //TODO: DELETE THESE (SEE BTRNEW.TXT) ******************** //TODO: DELETE THESE (SEE BTRNEW.TXT) **********/
+_; /********** //TODO: DELETE THESE (SEE BTRNEW.TXT) ******************** //TODO: DELETE THESE (SEE BTRNEW.TXT) **********/
+_; /********** //TODO: DELETE THESE (SEE BTRNEW.TXT) ******************** //TODO: DELETE THESE (SEE BTRNEW.TXT) **********/
+_; /********** //TODO: DELETE THESE (SEE BTRNEW.TXT) ******************** //TODO: DELETE THESE (SEE BTRNEW.TXT) **********/
 /**function to generate newToast_client with a predertemined $bvToast so it doesnt have to be passed everytime :D */
 export const newToast_client_get = ($bvToast) => {
     const newToast = (title, message, variant) => {
@@ -301,42 +429,26 @@ export const newToast_client_sample = ($bvToast, title, msg, variant) => {
         title
     });
 };
-/**Simple and standard functional programming pipe. Deprecated, use either zPipe (persistenType with zod errors) or pipe_mutableType! */
-export const pipe_persistentType = (initialValue, ...fns) => {
-    return fns.reduce((result, fn) => fn(result), initialValue);
-};
 /**
-* Pipes a value through a number of functions in the order that they appear.
-* Takes between 1 and 12 arguments. `pipe(x, a, b)` is equivalent to `b(a(x))`.
-* If only one argument is provided (`pipe(x)`), this will produce a type error but JS will run fine (and return `x`).
-*/
-export const pipe_mutableType = (source, ...project) => {
-    return project.reduce((accumulator, element) => element(accumulator), source);
-};
-/**
- * Retry a function up to X amount of times or until it is executed successfully, mainly for fetching/requesting stuff
- * @param fn The function to be retried hoping it returns successfully
- * @param args Arguments to pass to fn
- * @param retriesLeft number, is reduced by 1 every attempt, retryF stops when it reaches 0
- * @param defaultReturn data to be returned as returnType of fn if retryF fails
- * @param delayBetweenRetries delay between each retry in milliseconds
- * @returns 'data: returned by fn if ran sucessfully. | wasError: if the retries ran out without sucess '
+ *This is a SAMPLE, use tryF_get to set tryF_get and use it without having to pass errorHandler everytime
+ * @param errorHandler The error handler
+ * @param fn The function to try
+ * @param args The arguments to apply to the function
+ * @returns void
  */
-export const retryF = async (fn, args, retriesLeft, defaultReturn, delayBetweenRetries) => {
+export const tryF_sample = (errorHandler, fn, args) => {
     try {
-        const data = await fn([args]);
-        return { data, was: 'success' };
+        return fn(...args);
     }
-    catch (error) {
-        const message = `retryF > ${fn.name} > ${retriesLeft} retriesLeft. {${error}}`;
-        colorLog('warning', `${message}`);
-        if (!retriesLeft) {
-            return { data: defaultReturn, was: 'failure' };
-        }
-        await delay(delayBetweenRetries);
-        return await retryF(fn, args, retriesLeft - 1, defaultReturn, delayBetweenRetries);
+    catch (err) {
+        errorHandler(err);
     }
 };
+/**Check if the code is running in the client or in the server */
+export function clientOrServer_is() {
+    const isServer = [typeof window, typeof document].includes('undefined');
+    return isServer ? 'server' : 'client';
+}
 /**Track vue components in a global window array to easily find them and use them with socket.io events*/
 export const trackVueComponent = (name, componentConstructor) => {
     if (!BTR.zValidVueComponentName) {
@@ -362,79 +474,32 @@ export const trackVueComponent = (name, componentConstructor) => {
     };
     return componentConstructor;
 };
-/**For Functions that require initialization (tryF and zodCheck for their errorHandlers, newToast_client for $bvToast) */
-export function warnAboutUnproperlyInitializedFunction(fn) {
-    const firstArgument = fn === 'newToast_client' ? '$bvToast' : 'errorHandler';
-    const firstArgumentCaps = fn === 'newToast_client' ? "BOOTSTRAP'S_$BVTOAST_HERE" : 'YOUR_ERROR_HANDLER_HERE';
-    const error = toSingleLine(`THIS FUNCTION (${fn}) HAS NOT BEEN PROPERLY INITIALIZED YET. 
-			Call ${fn} = ${fn}_get(${firstArgumentCaps}) with a proper ${firstArgument} to do so😉`);
-    const isClientOrServer = clientOrServer_is();
-    if (isClientOrServer === 'client') {
-        alert(error);
-    }
-    if (isClientOrServer === 'server') {
-        colorLog(error);
-    }
-}
-/**function to generate zodCheck with a predertemined errorHandler so it doesnt have to be passed everytime :D */
-export const zodCheck_get = (errorHandler) => {
-    function zodCheck(schema, data) {
-        const result = schema.safeParse(data);
-        if (result.success === false) {
-            errorHandler(fromZodError(result.error).message);
-        }
-        return result.success;
-    }
-    return zodCheck;
-};
-/**This is a SAMPLE, use zodCheck_get to set zodCheck and use it without having to pass errorHandler everytime*/
-export const zodCheck_sample = (errorHandler, schema, data) => {
-    const result = schema.safeParse(data);
-    if (result.success === false) {
-        errorHandler(fromZodError(result.error).message);
-    }
-    return result.success;
-};
-/**
- * Check data against a provided schema, and execute either the success or error handler
- * @param zSchema The zSchema to test data against
- * @param data The data to be tested against zSchema
- * @param successHandler The function that will execute if data fits zSchema
- * @param args The arguments to be applied to successHandler
- * @param errorHandler The function that will execute if data does NOT fits zSchema
- */
-// ? TODO: maybe make it a placeholder and create an initialized that pre-determines the errorHandler like with zodCheck and zodCheck_get 
-export const zodCheckAndHandle = (
-/**wanted schema */ zSchema, 
-/**data to test against the schema */ data, 
-/**sucess handler*/ successHandler, 
-/**arguments to apply to the success handler */ args, 
-/**error handler */ errorHandler) => {
-    /**whether the data fits the schema or not */
-    const zResult = zSchema.safeParse(data);
-    /**data doesn't fit, execute errorHandler with the error message x_X */
-    if (zResult.success === false) {
-        errorHandler(fromZodError(zResult.error).message);
-    }
-    /**data fits, execute success handler with the passed arguments :D */
-    if (zResult.success === true && successHandler) {
-        successHandler(...args);
-    }
-};
-/**Pipe with schema validation and error logging */
-export const zPipe = (zSchema, initialValue, ...fns) => {
-    const initialPipeState = { value: initialValue, error: nullAs.string(), failedAt: nullAs.string() };
-    return fns.reduce((pipeState, fn, index) => {
-        if (pipeState.error) {
-            return pipeState;
-        }
-        pipeState.value = fn(pipeState.value);
-        const zResult = zSchema.safeParse(pipeState.value);
-        if (zResult.success === false) {
-            pipeState.failedAt = `Step ${index + 1}: ${fn.name}`;
-            pipeState.error = fromZodError(zResult.error).message;
-        }
-        return pipeState;
-    }, initialPipeState);
+_; /********** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW **********/
+_; /********** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW **********/
+_; /********** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW **********/
+_; /********** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW **********/
+_; /********** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW **********/
+export const BTR = {
+    /**Tr-Catch wrapper for functions. Starts as a placeholder, initialize it with typeF_get */
+    tryF: (fn, args) => {
+        warnAboutUnproperlyInitializedFunction('tryF');
+        console.log(fn, args);
+    },
+    /**Createst a new 5-seconds toast in the lower right corner. Must be initialized by passing $bvToast to newToast_client_get  */
+    newToast_client(title, message, variant) {
+        warnAboutUnproperlyInitializedFunction('newToast_client');
+        console.log(title, message, variant);
+    },
+    /**Test data against an scheme, and if it fails execute a predefined errorHandler.
+    * WARNING: Deprecated? zodCheckAndHandle feels better.
+    * Starts as a placeholder, initialize it with zodCheck_get
+    * */
+    zodCheck(schema, data) {
+        warnAboutUnproperlyInitializedFunction('zodCheck');
+        console.log(schema, data);
+        return false;
+    },
+    /**for when registering them for tracking at window.vueComponents */
+    zValidVueComponentName: null,
 };
 const colorLog = (color, message) => console.log(`%c${message}`, `color: ${color};`);

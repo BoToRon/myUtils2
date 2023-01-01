@@ -185,21 +185,13 @@ export const pipe_persistentType = <T>(initialValue: T, ...fns: pipe_persistent_
 export const pipe_mutableType: pipe_mutable_type = (source: unknown, ...project: ((value: unknown) => unknown)[]): unknown => {
 	return project.reduce((accumulator, element) => element(accumulator), source)
 }
-/**
- * Retry a function up to X amount of times or until it is executed successfully, mainly for fetching/requesting stuff
- * @param fn The function to be retried hoping it returns successfully
- * @param args Arguments to pass to fn
- * @param retriesLeft number, is reduced by 1 every attempt, retryF stops when it reaches 0
- * @param defaultReturn data to be returned as returnType of fn if retryF fails
- * @param delayBetweenRetries delay between each retry in milliseconds
- * @returns 'data: returned by fn if ran sucessfully. | wasError: if the retries ran out without sucess '
- */
+/** Retry a function up to X amount of times or until it is executed successfully, mainly for fetching/requesting stuff */
 export const retryF = async <F extends (...args: any) => any>(
-	fn: F,
-	args: Parameters<F>,
-	retriesLeft: number,
-	defaultReturn: ReturnType<F>,
-	delayBetweenRetries: number,
+ /**The function to be retried hoping it returns successfully */	fn: F,
+	/**Arguments to pass to fn */ args: Parameters<F>,
+	/**Number, is reduced by 1 every attempt, retryF stops when it reaches 0 */ retriesLeft: number,
+	/**Data to be returned as returnType of fn if retryF fails */ defaultReturn: ReturnType<F>,
+	/**Delay between each retry in milliseconds */ delayBetweenRetries: number,
 ): Promise<{ data: ReturnType<F>, was: 'success' | 'failure' }> => {
 	try { return { data: await fn([args]), was: 'success' } }
 	catch (error) {
@@ -239,21 +231,14 @@ export const zodCheck_sample = <T>(errorHandler: errorMessageHandler, schema: zS
 	if (result.success === false) { errorHandler(fromZodError(result.error).message) }
 	return result.success
 }
-/**
- * ? TODO: maybe make it a placeholder and create an initialized that pre-determines the errorHandler like with zodCheck and zodCheck_get 
- * Check data against a provided schema, and execute either the success or error handler
- * @param zSchema The zSchema to test data against
- * @param data The data to be tested against zSchema
- * @param successHandler The function that will execute if data fits zSchema
- * @param args The arguments to be applied to successHandler
- * @param errorHandler The function that will execute if data does NOT fits zSchema
- */
+/** Check data against a provided schema, and execute either the success or error handler */
+// ? TODO: maybe make it a placeholder and create an initialized that pre-determines the errorHandler like with zodCheck and zodCheck_get 
 export const zodCheckAndHandle = <D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(
-	/**wanted schema */	zSchema: zSchema<D>,
-	/**data to test against the schema */	data: D,
-	/**sucess handler*/	successHandler: SH,
-	/**arguments to apply to the success handler */	args: Parameters<SH>,
-	/**error handler */ errorHandler: errorMessageHandler,
+	/** The zSchema to test data against */	zSchema: zSchema<D>,
+	/** The data to be tested against zSchema */	data: D,
+	/** The function that will execute if data fits zSchema */	successHandler: SH,
+	/** The arguments to be applied to successHandler */	args: Parameters<SH>,
+	/** The function that will execute if data does NOT fits zSchema */ errorHandler: errorMessageHandler,
 ) => {
 	/**whether the data fits the schema or not */
 	const zResult = zSchema.safeParse(data)
@@ -490,7 +475,6 @@ export const trackVueComponent = (name: string, componentConstructor: trackedVue
 	return componentConstructor
 }
 
-
 _ /********** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW **********/
 _ /********** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW **********/
 _ /********** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW ******************** //TODO: EVERYTHING BELOW **********/
@@ -529,11 +513,12 @@ _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY *************
 _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 
-/**
-	 * Check the version of @botoron/utils, the enviroment variables and the package.json scripts
-	 * @param errorHander PROD: DivineError, DEV: killProcess
-	 */
-export function basicProjectChecks(errorHandler: errorMessageHandler, packageJson: packageJson, env: NodeJS.ProcessEnv) {
+/** Check the version of @botoron/utils, the enviroment variables and the package.json scripts */
+export function basicProjectChecks(
+	/**PROD: DivineError, DEV: killProcess */ errorHandler: errorMessageHandler,
+	packageJson: packageJson,
+	env: NodeJS.ProcessEnv
+) {
 
 	const utilsCheck = myUtils_areUpToDate()
 	const scriptsCheck = checkJsonPackageScripts()
@@ -666,16 +651,7 @@ export const getLatestPackageJsonFromGithub = async () => {
 
 	return Buffer.from(response.content, 'base64').toString('utf8')
 }
-/**
- * Return the main perma-dependencies, check myUtil's version and print package.json's script
- * @param appName The name of the app, for the divine error ping
- * @param pingMeOnErrors Whether to ping me in Discord with the console.trace of errors or just colorLogBig  
- * @param packageJson The package.json of the app, to compare the installed vs latest version of this myUtils package
- * @param ERIS_TOKEN The token for DivineBot, should reside in .env
- * @param MONGO_URI The uri for Mongo, should reside in .env
- * @param PORT The dev port, should reside in .env
- * @returns divineBot, divineError, io, mongoClient, tryF
- */
+/** Return the main perma-dependencies, check myUtil's version and print package.json's script */
 export const getMainDependencies = async (packageJson: packageJson) => {
 
 	const env = await getEnviromentVariables()
