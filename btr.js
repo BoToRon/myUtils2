@@ -627,7 +627,7 @@ export const getMainDependencies = async (packageJson) => {
     const httpServer = startAndGetHttpServer();
     const mongoClient = await getMongoClient();
     return { divineBot, divineError, doAndRepeat, env, httpServer, mongoClient, tryF };
-    /**notify me about things breaking via discord, if pingMeOnErrors is passed as true */
+    /**notify me about things breaking via discord, if if production mode */
     function divineError(err) { (DEV_OR_PROD === 'prod' ? pingMe : bigConsoleError)(getTraceableStack(err)); }
     /**Set interval with try-catch and called immediately*/
     function doAndRepeat(fn, interval) {
@@ -644,6 +644,9 @@ export const getMainDependencies = async (packageJson) => {
             divineBot.on('messageReactionAdd', (a, b, c) => role('add', a, b, c));
             divineBot.on('messageReactionRemove', (a, b, c) => role('remove', a, b, c));
             divineBot.on('disconnect', () => { colorLog('red', `${divinePrepend}: Disconnected D: ... retrying!`); connectToDiscord(); });
+            divineBot.on('connect', () => { if (DEV_OR_PROD === 'prod') {
+                pingMe(`(${APP_NAME}) - I'm alive bitch >:D`);
+            } });
             const idOfRoleAssigningMessage = '822523162724925473';
             await attemptConnection();
             function role(action, message, emoji, reactor) {
@@ -671,15 +674,14 @@ export const getMainDependencies = async (packageJson) => {
                 try {
                     divineBot.connect();
                     colorLog('cyan', 'waiting for DivineBot');
-                    while (!divineBot.ready) {
+                    while (!divineBot.uptime) {
                         await delay(1000);
                     }
                     successLog("The divine egg has hatched");
-                    pingMe('im alive bitch');
                 }
                 catch {
                     colorLog('yellow', `${divinePrepend} Failed to connect.. retrying >:D`);
-                    await delay(1000 * 10);
+                    await delay(1000);
                     attemptConnection();
                 }
             }
@@ -693,7 +695,7 @@ export const getMainDependencies = async (packageJson) => {
         } mongoClient = client; });
         colorLog('cyan', 'waiting for Mongo');
         while (!mongoClient) {
-            await delay(500);
+            await delay(1000);
         }
         successLog("It's Monging time >:D");
         return mongoClient;
