@@ -7,10 +7,9 @@
 	"scripts": {
 		"npmRun": "ts-node-esm --transpileOnly btr.ts",
 		"_________________________________________________a": "__________________________________________________",
-		"publish": "npm run npmRun --btrCommand=publish",
+		"all": "npm run npmRun --btrCommand=publish & npm publish",
 		"transpile": "npm run npmRun --btrCommand=transpile",
 		"git": "npm run npmRun --btrCommand=git",
-		"all": "npm run publish",
 		"_________________________________________________b": "__________________________________________________",
 		"_tsIndex": "tsc --declaration --listEmittedFiles --target esnext btr.ts",
 		"test": "ts-node-esm test.ts"
