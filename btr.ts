@@ -795,6 +795,7 @@ export async function prompCommitMessageAndPush(repoName: string) {
 
 	function tryAgain(error: string) { colorLog('yellow', error); prompCommitMessageAndPush(repoName); return }
 	if (!zodCheck_curry(tryAgain)(get_zValidCommitMessage(), commitMessage)) { return }
+	copyToClipboard_server(commitMessage)
 	await gitAddCommitPush()
 
 	function get_zValidCommitMessage() {
