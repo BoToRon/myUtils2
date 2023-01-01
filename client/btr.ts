@@ -26,8 +26,8 @@ _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ***********
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 
-const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
 export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'])
+const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
 const zValidNpmCommand = z.enum(['git', 'publish', 'transpile'])
 
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
@@ -41,15 +41,14 @@ _ /********** TYPES ******************** TYPES ******************** TYPES ******
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 
+export type trackedVueComponent = { _name: string, beforeCreate?: () => void, beforeDestroy?: () => void }
+export type newToastFn = (title: string, message: string, variant: validVariant) => void
 export type intervalWithid = [id: string, interval: NodeJS.Timer]
 export type globalAlert = { message: string, show: boolean }
 export type validVariant = z.infer<typeof zValidVariants>
 
 type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: validVariant, title: string }
-type trackedVueComponent = { _name: string, beforeCreate?: () => void, beforeDestroy?: () => void }
-declare global { interface Window { vueComponents: trackedVueComponent[], newToast: newToastFn } }
 type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
-type newToastFn = (title: string, message: string, variant: validVariant) => void
 type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
 type zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T> }
 type errorMessageHandler = (message: string) => void
@@ -101,9 +100,9 @@ export const zodCheck_curry = (errorHandler: errorMessageHandler) => {
 	return zodCheck
 }
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
-export const trackVueComponent_curry = (zValidVueComponentName: zSchema<string>) => {
+export const trackVueComponent_curry = <T>(zValidVueComponentName: zSchema<T>) => {
 
-	return function trackVueComponent(name: string, componentConstructor: trackedVueComponent) {
+	return function trackVueComponent(name: T, componentConstructor: trackedVueComponent) {
 
 		if (!zodCheck_curry(alert)(zValidVueComponentName, name)) { return componentConstructor }
 		colorLog('blue', `Component '${name}' registered to Vue`)
@@ -117,7 +116,7 @@ export const trackVueComponent_curry = (zValidVueComponentName: zSchema<string>)
 			logAllComponents()
 		}
 
-		function getComponent(name: string, componentConstructor: trackedVueComponent) {
+		function getComponent(name: T, componentConstructor: trackedVueComponent) {
 			componentConstructor.beforeCreate = () => toggleComponent(successLog)
 			componentConstructor.beforeDestroy = () => toggleComponent(errorLog)
 			componentConstructor._name = name as string

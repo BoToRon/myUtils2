@@ -5,6 +5,12 @@
 /// <reference types="node" />
 import { z, type SafeParseReturnType } from 'zod';
 export declare const zValidVariants: any;
+export type trackedVueComponent = {
+    _name: string;
+    beforeCreate?: () => void;
+    beforeDestroy?: () => void;
+};
+export type newToastFn = (title: string, message: string, variant: validVariant) => void;
 export type intervalWithid = [id: string, interval: NodeJS.Timer];
 export type globalAlert = {
     message: string;
@@ -19,17 +25,6 @@ type toastOptions = {
     title: string;
 };
 type validChalkColor = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'white' | 'grey' | 'magentaBright';
-type trackedVueComponent = {
-    _name: string;
-    beforeCreate?: () => void;
-    beforeDestroy?: () => void;
-};
-declare global {
-    interface Window {
-        vueComponents: trackedVueComponent[];
-        newToast: newToastFn;
-    }
-}
 type packageJson = {
     name: string;
     version: string;
@@ -37,7 +32,6 @@ type packageJson = {
         [key: string]: string;
     };
 };
-type newToastFn = (title: string, message: string, variant: validVariant) => void;
 type bvToast = {
     toast: (message: string, toastOptions: toastOptions) => void;
 };
@@ -58,7 +52,7 @@ export declare const newToast_client_curry: ($bvToast: bvToast) => newToastFn;
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
 export declare const zodCheck_curry: (errorHandler: errorMessageHandler) => <T>(schema: zSchema<T>, data: T) => boolean;
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
-export declare const trackVueComponent_curry: (zValidVueComponentName: zSchema<string>) => (name: string, componentConstructor: trackedVueComponent) => trackedVueComponent;
+export declare const trackVueComponent_curry: <T>(zValidVueComponentName: zSchema<T>) => (name: T, componentConstructor: trackedVueComponent) => trackedVueComponent;
 /**Adds an item to an array, or removes it if it already was added. Returns the action applied and the array */
 export declare const addOrRemoveItem: <T>(arr: T[], item: T) => {
     action: "removed" | "added";
@@ -188,7 +182,7 @@ export declare const downloadFile_node: (filename: string, fileFormat: '.txt' | 
 export declare function fsReadFileAsync(filePath: string): Promise<any>;
 /**Wrapper for fsWriteFileAsync that announces the start of the file-writing */
 export declare function fsWriteFileAsync(filePath: string, content: string): Promise<any>;
-/** //TODO: describe me */
+/** Get the contents of the .env */
 export declare function getEnviromentVariables(): Promise<NodeJS.ProcessEnv>;
 /**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
 export declare const getSeparatingCommentBlock: (message: string) => string;

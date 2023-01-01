@@ -1,5 +1,5 @@
 let _;
-import fs from 'fs'; //DELETETHISFORCLIENT
+import fs from 'fs'; //DELETETHISFORCLIENT 
 _;
 import eris from 'eris'; //DELETETHISFORCLIENT
 _;
@@ -36,8 +36,8 @@ _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark']);
+const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch']); //DELETETHISFORCLIENT
 const zValidNpmCommand = z.enum(['git', 'publish', 'transpile']);
 _; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
@@ -594,7 +594,7 @@ export async function fsWriteFileAsync(filePath, content) {
     const file = await fs.promises.writeFile(filePath, content);
     return file;
 }
-/** //TODO: describe me */
+/** Get the contents of the .env */
 export async function getEnviromentVariables() {
     const require = createRequire(import.meta.url);
     require('dotenv').config({ path: './.env' });

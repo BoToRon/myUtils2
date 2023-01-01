@@ -24,8 +24,8 @@ _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark']);
+const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 const zValidNpmCommand = z.enum(['git', 'publish', 'transpile']);
 _; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/

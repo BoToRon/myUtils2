@@ -1,6 +1,12 @@
 /// <reference types="node" />
 import { z, type SafeParseReturnType } from 'zod';
 export declare const zValidVariants: any;
+export type trackedVueComponent = {
+    _name: string;
+    beforeCreate?: () => void;
+    beforeDestroy?: () => void;
+};
+export type newToastFn = (title: string, message: string, variant: validVariant) => void;
 export type intervalWithid = [id: string, interval: NodeJS.Timer];
 export type globalAlert = {
     message: string;
@@ -14,18 +20,6 @@ type toastOptions = {
     variant: validVariant;
     title: string;
 };
-type trackedVueComponent = {
-    _name: string;
-    beforeCreate?: () => void;
-    beforeDestroy?: () => void;
-};
-declare global {
-    interface Window {
-        vueComponents: trackedVueComponent[];
-        newToast: newToastFn;
-    }
-}
-type newToastFn = (title: string, message: string, variant: validVariant) => void;
 type bvToast = {
     toast: (message: string, toastOptions: toastOptions) => void;
 };
@@ -46,7 +40,7 @@ export declare const newToast_client_curry: ($bvToast: bvToast) => newToastFn;
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
 export declare const zodCheck_curry: (errorHandler: errorMessageHandler) => <T>(schema: zSchema<T>, data: T) => boolean;
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
-export declare const trackVueComponent_curry: (zValidVueComponentName: zSchema<string>) => (name: string, componentConstructor: trackedVueComponent) => trackedVueComponent;
+export declare const trackVueComponent_curry: <T>(zValidVueComponentName: zSchema<T>) => (name: T, componentConstructor: trackedVueComponent) => trackedVueComponent;
 /**Adds an item to an array, or removes it if it already was added. Returns the action applied and the array */
 export declare const addOrRemoveItem: <T>(arr: T[], item: T) => {
     action: "removed" | "added";
