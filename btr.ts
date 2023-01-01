@@ -569,56 +569,25 @@ export const getLatestPackageJsonFromGithub = async () => {
  * @param PORT The dev port, should reside in .env
  * @returns divineBot, divineError, io, mongoClient, tryF
  */
-export const getMainDependencies = async (
-	appName: string,
-	packageJson: { version: string, scripts: { [key: string]: string } },
-	pingMeOnErrors: boolean,
-	ERIS_TOKEN: string | undefined,
-	MONGO_URI: string | undefined,
-	PORT: string | undefined
-) => {
+export const getMainDependencies = async (packageJson: packageJson) => {
+
+	const env = await getEnviromentVariables()
+	const { ADMIN_PASSWORD, APP_NAME, DEV_OR_PROD, ERIS_TOKEN, MONGO_URI, PORT } = env
+
+	const divineBot = await getDivineBot()
+	basicProjectChecks(divineError, packageJson, { ADMIN_PASSWORD, APP_NAME, DEV_OR_PROD, ERIS_TOKEN, MONGO_URI, PORT })
 
 	const httpServer = startAndGetHttpServer()
 	const mongoClient = await getMongoClient()
-	const divineBot = await getDivineBot()
 
-	myUtils_checkIfUpToDate(divineError)
-	checkJsonPackageScripts()
-
-	//showPackageJsonScripts_project()
-
-	return { divineBot, divineError, doAndRepeat, httpServer, mongoClient, tryF }
-
-	/**Check the scripts in a project's package json all fit the established schema */
-	async function checkJsonPackageScripts() {
-
-		const desiredScripts = [
-			//for convenience
-			"btr", "git", "npmScript",
-			//for debugging
-			"dev", "localtunnel", "nodemon", "transpile", "vue",
-			//for deployement
-			"build-all", "build-client", "build-server", "start",
-		]
-
-		const projectScripts = Object.keys(packageJson.scripts)
-		const missingScripts = desiredScripts.filter(script => !projectScripts.includes(script))
-		const questionableScripts = projectScripts.filter(script => !desiredScripts.includes(script))
-
-		if (!missingScripts.length && !questionableScripts.length) { return true }
-
-		if (questionableScripts.length) { colorLog('dark', `questionableScripts: ${questionableScripts}`) }
-		if (missingScripts.length) { colorLog('dark', `missingScripts: ${missingScripts}`) }
-		colorLog('info', `desiredScripts: ${desiredScripts}`)
-	}
+	return { divineBot, divineError, doAndRepeat, env, httpServer, mongoClient, tryF }
 
 	/**notify me about things breaking via discord, if pingMeOnErrors is passed as true */
 	function divineError(arg: string | Error) {
 		const x = (typeof arg === 'string' ? arg : arg.stack) as string
 
 		const error = `${x}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '')
-		if (pingMeOnErrors) { colorLog('danger', error); return }
-		pingMe(error)
+		DEV_OR_PROD === 'prod' ? pingMe(error) : colorLog('danger', error)
 	}
 
 	/**Set interval with try-catch and called immediately*/
@@ -690,7 +659,8 @@ export const getMainDependencies = async (
 	}
 
 	function pingMe(message: string) {
-		const theMessage = `<@470322452040515584> - (${appName}) \n ${message}`
+		if (!divineBot || !divineBot.ready) { return }
+		const theMessage = `<@470322452040515584> - (${APP_NAME}) \n ${message}`
 		const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } }
 		divineBot.createMessage('1055939528776495206', divineOptions)
 	}
@@ -712,44 +682,11 @@ export const getMainDependencies = async (
 }
 
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
-export const killProcess = async (message: string) => {
-	bigConsoleError(message)
+export const killProcess = (message: string) => {
+	if (message) { bigConsoleError(message) }
 	process.exit()
 }
-/**
- * @description Checks if the project is using the latest version of "myUtils"
- * @param failureHandler to notify/warm me to update "utils" in that project, divineError if prod, bigConsoleError otherwise
- * @returns a boolean, although I'm not sure what I should it for (if for anything) yet
- */
-export async function myUtils_checkIfUpToDate(errorHandler: (message: string) => void) {
 
-	const latestVersion = await getLatestVersion()
-	const installedVersion = (await import('./package.json', { assert: { type: "json" } })).default.version
-	const isUpToDate = installedVersion === latestVersion
-
-	if (!isUpToDate) { errorHandler(getFailureMessage()) }
-	else { colorLog('info', '@botoron/my-utils is up to date 👍') }
-	return isUpToDate
-
-	function getFailureMessage() {
-		return toSingleLine(`
-	Project is using an outdated version of myUtils, 
-	- (${installedVersion} vs ${latestVersion}) -
-	PLEASE UPDATE:          npm i @botoron/utils`)
-	}
-
-	async function getLatestVersion() {
-		type pck = { objects: [{ package: { version: string } }] }
-		const response: pck = (await new Promise((resolve) => {
-			try {
-				fetch(`http://registry.npmjs.com/-/v1/search?text=@botoron/utils&size=1`).
-					then(res => res.json().then((x) => resolve(x as pck)))
-			}
-			catch { return { objects: [{ package: { version: '0' } }] } }
-		}))
-		return response.objects[0].package.version
-	}
-}
 /**Easily run the scripts of this (utils) repo's package.json */
 export const npmRun = async (npmCommand: validNpmCommand) => {
 
