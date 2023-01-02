@@ -350,12 +350,38 @@ export const isOdd = (number: number) => Boolean(Number(number) % 2)
 export const isWithinRange = (number: number, max: number, min: number) => number <= max && number >= min
 /**Returns a number up to (but not included) provided max, eg: roll(1) will ALWAYS return zero */
 export const roll = (maxRoll: number) => Math.floor(Math.random() * Number(maxRoll))
-/**Convert a timestamp to DD/MM/YYYY (plus HH:MM:SS includeHours) */
-export const timeStampToDate = (timeStamp: number, includeHours: boolean) => {
+
+/**With the following options: fullYear, hourOnly, includeHour, listFirst (MM or DD) */
+
+/**
+ * @param options.fullYear true (default, 4 digits) or false (2 digits)  
+ * @param options.hourOnly default: false
+ * @param options.includeHour default: false
+ * @param options.listFirst 'MM' (default) or 'DD'
+ * @param options.timeStamp default: Date.now()
+ */
+export const getFormattedTimestamp = (options?: {
+	/**202X vs 2X, default: false */ fullYear?: boolean,
+	/**default: false */ hourOnly?: boolean,
+	 /**default: false */ includeHour?: boolean,
+	/**defaul: MM */ listFirst?: 'MM' | 'DD',
+	/**default: Date.now */ timeStamp: number
+}) => {
+
+	const defaults = { timeStamp: Date.now(), fullYear: true, hourOnly: false, includeHour: false, listFirst: 'MM' as 'DD' | 'MM' }
+	const { fullYear, hourOnly, includeHour, listFirst, timeStamp } = addMissingPropsToObjects(options!, defaults)
+
 	const asDate = new Date(timeStamp)
-	const clockTime = `${asDate}`.slice(16, 24)
-	let x = `${(asDate.getMonth() + 1)}/${(asDate.getDate() + 1)}/${asDate.getFullYear()}`
-	if (includeHours) { x += ` ${clockTime}` }
+	const hour = `${asDate}`.slice(16, 24)
+	if (hourOnly) { return hour }
+
+	const date = asDate.getDate()
+	const month = asDate.getMonth() + 1
+	const monthDaysOrdered = { MM: `${month}/${date}`, DD: `${date}/${month}` }[listFirst!]
+	const year = fullYear ? asDate.getFullYear() : `${asDate.getFullYear()}`.slice(2)
+
+	let x = `${monthDaysOrdered}/${year}`
+	if (includeHour) { x += ` ${hour}` }
 	return x
 }
 /**1 becomes '1st' , 2 becomes '2nd', 3 becomes '3rd' and so on */
@@ -392,6 +418,15 @@ export const replaceObject = <T extends {}>(originalObject: T, newObject: T) => 
 }
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods) */
 export const { stringify } = JSON
+/**Add all default properties missing in an object*/
+export const addMissingPropsToObjects = <T extends {}>(original: T, defaults: Required<T>) => {
+	Object.keys(defaults).forEach(x => {
+		const key = x as keyof T
+		if (original.hasOwnProperty(key)) { return }
+		original[key] = defaults[key]
+	})
+	return original
+}
 
 _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
 _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
@@ -585,7 +620,7 @@ export const copyToClipboard_server = (x: any) => spawn('clip').stdin.end(util.i
 /**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
 export const downloadFile_node = async (filename: string, fileFormat: '.txt' | '.json', data: unknown, killProcessAfterwards: boolean) => {
 	const formatted = stringify(data as object)
-	const dateForFilename = timeStampToDate(Date.now(), true).replace(/\/| |\:/g, '_')
+	const dateForFilename = getFormattedTimestamp().replace(/\/| |\:/g, '_')
 	const completeFilename = filename + '_' + dateForFilename + fileFormat
 
 	colorLog('cyan', `Downloading ${completeFilename}..`)

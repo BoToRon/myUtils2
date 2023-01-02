@@ -335,13 +335,29 @@ export const isOdd = (number) => Boolean(Number(number) % 2);
 export const isWithinRange = (number, max, min) => number <= max && number >= min;
 /**Returns a number up to (but not included) provided max, eg: roll(1) will ALWAYS return zero */
 export const roll = (maxRoll) => Math.floor(Math.random() * Number(maxRoll));
-/**Convert a timestamp to DD/MM/YYYY (plus HH:MM:SS includeHours) */
-export const timeStampToDate = (timeStamp, includeHours) => {
+/**With the following options: fullYear, hourOnly, includeHour, listFirst (MM or DD) */
+/**
+ * @param options.fullYear true (default, 4 digits) or false (2 digits)
+ * @param options.hourOnly default: false
+ * @param options.includeHour default: false
+ * @param options.listFirst 'MM' (default) or 'DD'
+ * @param options.timeStamp default: Date.now()
+ */
+export const getFormattedTimestamp = (options) => {
+    const defaults = { timeStamp: Date.now(), fullYear: true, hourOnly: false, includeHour: false, listFirst: 'MM' };
+    const { fullYear, hourOnly, includeHour, listFirst, timeStamp } = addMissingPropsToObjects(options, defaults);
     const asDate = new Date(timeStamp);
-    const clockTime = `${asDate}`.slice(16, 24);
-    let x = `${(asDate.getMonth() + 1)}/${(asDate.getDate() + 1)}/${asDate.getFullYear()}`;
-    if (includeHours) {
-        x += ` ${clockTime}`;
+    const hour = `${asDate}`.slice(16, 24);
+    if (hourOnly) {
+        return hour;
+    }
+    const date = asDate.getDate();
+    const month = asDate.getMonth() + 1;
+    const monthDaysOrdered = { MM: `${month}/${date}`, DD: `${date}/${month}` }[listFirst];
+    const year = fullYear ? asDate.getFullYear() : `${asDate.getFullYear()}`.slice(2);
+    let x = `${monthDaysOrdered}/${year}`;
+    if (includeHour) {
+        x += ` ${hour}`;
     }
     return x;
 };
@@ -373,11 +389,22 @@ _; /********** FOR OBJECTS ******************** FOR OBJECTS ********************
 export const deepClone = (x) => JSON.parse(JSON.stringify(x));
 /**Replace the values of an object with those of another that shares the schema*/
 export const replaceObject = (originalObject, newObject) => {
-    Object.keys(originalObject).forEach(key => { delete originalObject[key]; });
+    Object.keys(originalObject).forEach(key => delete originalObject[key]);
     Object.keys(newObject).forEach(key => originalObject[key] = newObject[key]);
 };
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods) */
 export const { stringify } = JSON;
+/**Add all default properties missing in an object*/
+export const addMissingPropsToObjects = (original, defaults) => {
+    Object.keys(defaults).forEach(x => {
+        const key = x;
+        if (original.hasOwnProperty(key)) {
+            return;
+        }
+        original[key] = defaults[key];
+    });
+    return original;
+};
 _; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
 _; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
 _; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/

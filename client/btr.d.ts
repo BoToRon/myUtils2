@@ -114,8 +114,21 @@ export declare const isOdd: (number: number) => boolean;
 export declare const isWithinRange: (number: number, max: number, min: number) => boolean;
 /**Returns a number up to (but not included) provided max, eg: roll(1) will ALWAYS return zero */
 export declare const roll: (maxRoll: number) => number;
-/**Convert a timestamp to DD/MM/YYYY (plus HH:MM:SS includeHours) */
-export declare const timeStampToDate: (timeStamp: number, includeHours: boolean) => string;
+/**With the following options: fullYear, hourOnly, includeHour, listFirst (MM or DD) */
+/**
+ * @param options.fullYear true (default, 4 digits) or false (2 digits)
+ * @param options.hourOnly default: false
+ * @param options.includeHour default: false
+ * @param options.listFirst 'MM' (default) or 'DD'
+ * @param options.timeStamp default: Date.now()
+ */
+export declare const getFormattedTimestamp: (options?: {
+    /**202X vs 2X, default: false */ fullYear?: boolean;
+    /**default: false */ hourOnly?: boolean;
+    /**default: false */ includeHour?: boolean;
+    /**defaul: MM */ listFirst?: 'MM' | 'DD';
+    /**default: Date.now */ timeStamp: number;
+}) => string;
 /**1 becomes '1st' , 2 becomes '2nd', 3 becomes '3rd' and so on */
 export declare const toOrdinal: (number: number) => string;
 /**Return a copy that can be altered without having to worry about modifying the original */
@@ -127,6 +140,8 @@ export declare const stringify: {
     (value: any, replacer?: (this: any, key: string, value: any) => any, space?: string | number): string;
     (value: any, replacer?: (string | number)[], space?: string | number): string;
 };
+/**Add all default properties missing in an object*/
+export declare const addMissingPropsToObjects: <T extends {}>(original: T, defaults: Required<T>) => T;
 /**start a setInterval and add it to an array */
 export declare const timer_add: (timers: btr_intervalWithid[], id: string, callBack: Function, interval: number) => void;
 /**Kill a setInterval and remove it from its belonging array */
