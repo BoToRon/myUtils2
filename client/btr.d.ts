@@ -136,6 +136,8 @@ export declare const isWithinRange: (number: number, max: number, min: number) =
 export declare const roll: (maxRoll: number) => number;
 /**1 becomes '1st' , 2 becomes '2nd', 3 becomes '3rd' and so on */
 export declare const toOrdinal: (number: number) => string;
+/**Add all default properties missing in an object*/
+export declare const addMissingPropsToObjects: <T extends {}>(original: T, defaults: Required<T>) => T;
 /**Return a copy that can be altered without having to worry about modifying the original */
 export declare const deepClone: <T>(x: T) => T;
 /**Replace the values of an object with those of another that shares the schema*/
@@ -145,8 +147,12 @@ export declare const stringify: {
     (value: any, replacer?: (this: any, key: string, value: any) => any, space?: string | number): string;
     (value: any, replacer?: (string | number)[], space?: string | number): string;
 };
-/**Add all default properties missing in an object*/
-export declare const addMissingPropsToObjects: <T extends {}>(original: T, defaults: Required<T>) => T;
+/**Generator for unique numbered IDs that accepts a preffix */
+export declare const uniqueId: {
+    get(suffix: string): string;
+    /**Do NOT use this, use uniqueId.get instead */
+    generator: Generator<string, never, unknown>;
+};
 /**start a setInterval and add it to an array */
 export declare const timer_add: (timers: btr_intervalWithId[], id: string, callBack: Function, interval: number) => void;
 /**Kill a setInterval and remove it from its belonging array */
@@ -156,6 +162,7 @@ export declare const timer_kill: (timers: btr_intervalWithId[], id: string) => v
 export declare const copyToClipboard: (x: any) => void;
 /**(Message) 💀 */
 export declare const errorLog: (message: string) => void;
+/**TODO: describe me */
 export declare const getTraceableStack: (error: string | Error) => string;
 /**Returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export declare const isGuest: (username: string) => boolean;
@@ -165,7 +172,7 @@ export declare const successLog: (message: string) => void;
 export declare const toSingleLine: (sentence: string) => string;
 /**For obligatory callbacks */
 export declare const doNothing: (...args: unknown[]) => void;
-/**Syntactic sugar for "null as unknown as T", supports enums up to 5 items */
+/**Syntactic sugar for "null as unknown as T" */
 export declare const nullAs: {
     string: () => string;
     number: () => number;

@@ -389,15 +389,6 @@ _; /********** FOR OBJECTS ******************** FOR OBJECTS ********************
 _; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 _; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 _; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
-/**Return a copy that can be altered without having to worry about modifying the original */
-export const deepClone = (x) => JSON.parse(JSON.stringify(x));
-/**Replace the values of an object with those of another that shares the schema*/
-export const replaceObject = (originalObject, newObject) => {
-    Object.keys(originalObject).forEach(key => delete originalObject[key]);
-    Object.keys(newObject).forEach(key => originalObject[key] = newObject[key]);
-};
-/**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods) */
-export const { stringify } = JSON;
 /**Add all default properties missing in an object*/
 export const addMissingPropsToObjects = (original, defaults) => {
     Object.keys(defaults).forEach(x => {
@@ -408,6 +399,24 @@ export const addMissingPropsToObjects = (original, defaults) => {
         original[key] = defaults[key];
     });
     return original;
+};
+/**Return a copy that can be altered without having to worry about modifying the original */
+export const deepClone = (x) => JSON.parse(JSON.stringify(x));
+/**Replace the values of an object with those of another that shares the schema*/
+export const replaceObject = (originalObject, newObject) => {
+    Object.keys(originalObject).forEach(key => delete originalObject[key]);
+    Object.keys(newObject).forEach(key => originalObject[key] = newObject[key]);
+};
+/**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods) */
+export const { stringify } = JSON;
+/**Generator for unique numbered IDs that accepts a preffix */
+export const uniqueId = {
+    get(suffix) { return suffix + '_' + this.generator.next().value; },
+    /**Do NOT use this, use uniqueId.get instead */
+    generator: (function* () { let i = 0; while (true) {
+        i++;
+        yield `${i}`;
+    } })()
 };
 _; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
 _; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
@@ -448,6 +457,7 @@ _; /********** FOR STRINGS ******************** FOR STRINGS ********************
 export const copyToClipboard = (x) => { isNode ? copyToClipboard_server(x) : copyToClipboard_client(x); };
 /**(Message) 💀 */
 export const errorLog = (message) => colorLog('red', message + ' 💀');
+/**TODO: describe me */
 export const getTraceableStack = (error) => {
     const { stack } = (typeof error === 'string' ? new Error(error) : error);
     return `${stack}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '');
@@ -470,7 +480,7 @@ _; /********** MISC ******************** MISC ******************** MISC ********
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 /**For obligatory callbacks */
 export const doNothing = (...args) => { };
-/**Syntactic sugar for "null as unknown as T", supports enums up to 5 items */
+/**Syntactic sugar for "null as unknown as T" */
 export const nullAs = {
     string: () => null,
     number: () => null,
