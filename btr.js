@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable func-style */
 let _;
 import fs from 'fs'; //DELETETHISFORCLIENT 
 _;
@@ -23,9 +25,10 @@ import { exec, spawn } from 'child_process'; //DELETETHISFORCLIENT
 _;
 import mongodb from 'mongodb'; //DELETETHISFORCLIENT
 _;
+import { z } from 'zod';
+_;
 import { fromZodError } from 'zod-validation-error';
 _;
-import { z } from 'zod';
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
@@ -91,31 +94,29 @@ export const zodCheck_curry = (errorHandler) => {
     return zodCheck;
 };
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
-export const trackVueComponent_curry = (zValidVueComponentName) => {
-    return function trackVueComponent(name, componentConstructor) {
-        if (!zodCheck_curry(alert)(zValidVueComponentName, name)) {
-            return componentConstructor;
-        }
-        colorLog('blue', `Component '${name}' registered to Vue`);
-        if (!window.vueComponents) {
-            window.vueComponents = [];
-        }
-        return getComponent(name, componentConstructor);
-        function toggleComponent(logger) {
-            const { action } = addOrRemoveItem(window.vueComponents, componentConstructor);
-            logger(`Component '${name}' ${action} to/from window.vueComponents`);
-            logAllComponents();
-        }
-        function getComponent(name, componentConstructor) {
-            componentConstructor.beforeCreate = () => toggleComponent(successLog);
-            componentConstructor.beforeDestroy = () => toggleComponent(errorLog);
-            componentConstructor._name = name;
-            return componentConstructor;
-        }
-        function logAllComponents() {
-            colorLog('magenta', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`);
-        }
-    };
+export const trackVueComponent_curry = (zValidVueComponentName) => function trackVueComponent(name, componentConstructor) {
+    if (!zodCheck_curry(alert)(zValidVueComponentName, name)) {
+        return componentConstructor;
+    }
+    colorLog('blue', `Component '${name}' registered to Vue`);
+    if (!window.vueComponents) {
+        window.vueComponents = [];
+    }
+    return getComponent(name, componentConstructor);
+    function toggleComponent(logger) {
+        const { action } = addOrRemoveItem(window.vueComponents, componentConstructor);
+        logger(`Component '${name}' ${action} to/from window.vueComponents`);
+        logAllComponents();
+    }
+    function getComponent(name, componentConstructor) {
+        componentConstructor.beforeCreate = () => toggleComponent(successLog);
+        componentConstructor.beforeDestroy = () => toggleComponent(errorLog);
+        componentConstructor._name = name;
+        return componentConstructor;
+    }
+    function logAllComponents() {
+        colorLog('magenta', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`);
+    }
 };
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -190,17 +191,12 @@ export const getLastItem = (arr) => arr[arr.length - 1];
 export const getRandomItem = (arr) => { const r = roll(arr.length); return { item: arr[r], index: r }; };
 /**Returns a version of the provided array without repeating items */
 export const getUniqueValues = (arr) => [...new Set(arr)];
-/**Map a collection of passable-arguments-of-a-function against said function //TODO: find use cases for this jewel maybe */
-export const mapArgsOfFnAgainstFn = (fn, ...argsArr) => {
-    //TODO: make this await promises.all in case fn is async
-    return argsArr.map(args => fn(args));
-};
 /**Remove a single item from an array, or all copies of that item if its a primitive value */
 export const removeItem = (arr, item) => selfFilter(arr, (x) => x !== item).removedCount;
 /**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
 export const selfFilter = (arr, predicate) => {
     let removedCount = 0;
-    let removedItems = [];
+    const removedItems = [];
     for (let i = 0; i < arr.length; i++) {
         if (predicate(arr[i])) {
             continue;
@@ -256,17 +252,13 @@ _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ****************
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 /**Simple and standard functional programming pipe. Deprecated, use either zPipe (persistenType with zod errors) or pipe_mutableType! */
-export const pipe_persistentType = (initialValue, ...fns) => {
-    return fns.reduce((result, fn) => fn(result), initialValue);
-};
+export const pipe_persistentType = (initialValue, ...fns) => fns.reduce((result, fn) => fn(result), initialValue);
 /**
 * Pipes a value through a number of functions in the order that they appear.
 * Takes between 1 and 12 arguments. `pipe(x, a, b)` is equivalent to `b(a(x))`.
 * If only one argument is provided (`pipe(x)`), this will produce a type error but JS will run fine (and return `x`).
 */
-export const pipe_mutableType = (source, ...project) => {
-    return project.reduce((accumulator, element) => element(accumulator), source);
-};
+export const pipe_mutableType = (source, ...project) => project.reduce((accumulator, element) => element(accumulator), source);
 /** Retry a function up to X amount of times or until it is executed successfully, mainly for fetching/requesting stuff */
 export const retryF = async (
 /**The function to be retried hoping it returns successfully */ fn, 
@@ -275,7 +267,7 @@ export const retryF = async (
 /**Data to be returned as returnType of fn if retryF fails */ defaultReturn, 
 /**Delay between each retry in milliseconds */ delayBetweenRetries) => {
     try {
-        return { data: await fn([args]), was: 'success' };
+        return { data: await fn(...args), was: 'success' };
     }
     catch (error) {
         colorLog('yellow', `retryF > ${fn.name} > ${retriesLeft} retriesLeft. {${error}}`);
@@ -329,22 +321,20 @@ _; /********** FOR NUMBERS ******************** FOR NUMBERS ********************
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 /**Promise-based delay that BREAKS THE LIMIT OF setTimeOut*/
-export const delay = (x) => {
-    return new Promise(resolve => {
-        const maxTimeOut = 1000 * 60 * 60 * 24;
-        const loopsNeeded = Math.floor(x / maxTimeOut);
-        const leftOverTime = x % maxTimeOut;
-        interval(loopsNeeded, leftOverTime);
-        function interval(i, miliseconds) {
-            setTimeout(() => { if (i) {
-                interval(i - 1, maxTimeOut);
-            }
-            else {
-                resolve(true);
-            } }, miliseconds);
+export const delay = (x) => new Promise(resolve => {
+    const maxTimeOut = 1000 * 60 * 60 * 24;
+    const loopsNeeded = Math.floor(x / maxTimeOut);
+    const leftOverTime = x % maxTimeOut;
+    interval(loopsNeeded, leftOverTime);
+    function interval(i, miliseconds) {
+        setTimeout(() => { if (i) {
+            interval(i - 1, maxTimeOut);
         }
-    });
-};
+        else {
+            resolve(true);
+        } }, miliseconds);
+    }
+});
 /**
  * @param options.fullYear true (default, 4 digits) or false (2 digits)
  * @param options.hourOnly default: false
@@ -406,7 +396,7 @@ _; /********** FOR OBJECTS ******************** FOR OBJECTS ********************
 export const addMissingPropsToObjects = (original, defaults) => {
     Object.keys(defaults).forEach(x => {
         const key = x;
-        if (original.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(original, key)) {
             return;
         }
         original[key] = defaults[key];
@@ -415,6 +405,21 @@ export const addMissingPropsToObjects = (original, defaults) => {
 };
 /**Return a copy that can be altered without having to worry about modifying the original */
 export const deepClone = (x) => JSON.parse(JSON.stringify(x));
+/**Generate a Zod Schema from an array/object */
+function getZodSchemaFromDataStructure(dataStructure) {
+    const toLiteral = (x) => typeof x !== 'object' ?
+        getZodSchemaFromDataStructure(x) :
+        z.literal(x);
+    return Array.isArray(dataStructure) ?
+        z.tuple(dataStructure.map(toLiteral)) :
+        z.object(mapObject(dataStructure, toLiteral));
+}
+/**Map an object :D (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
+export const mapObject = (object, mappingFn) => {
+    const newObject = {};
+    Object.entries(object).forEach(entry => { const [key, value] = entry; newObject[key] = mappingFn(value); });
+    return newObject;
+};
 /**Replace the values of an object with those of another that shares the schema*/
 export const replaceObject = (originalObject, newObject) => {
     Object.keys(originalObject).forEach(key => delete originalObject[key]);
@@ -443,7 +448,7 @@ _; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ********
 _; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
 /**start a setInterval and add it to an array */
 export const timer_add = (timers, id, callBack, interval) => {
-    const theTimer = setInterval(() => { callBack; }, interval);
+    const theTimer = setInterval(callBack, interval);
     timers.push({ id, interval: theTimer });
 };
 /**Kill a setInterval and remove it from its belonging array */
@@ -493,7 +498,7 @@ _; /********** MISC ******************** MISC ******************** MISC ********
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 /**For obligatory callbacks */
-export const doNothing = (...args) => { };
+export const doNothing = (...args) => { args; };
 /**Syntactic sugar for "null as unknown as T" */
 export const nullAs = {
     string: () => null,
@@ -546,21 +551,131 @@ _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ************
 _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 /** Check the version of @botoron/utils, the enviroment variables and the package.json scripts */
 export const basicProjectChecks = (
-/**PROD: DivineError, DEV: killProcess */ errorHandler, packageJson, env) => {
+/**PROD: DivineError, DEV: killProcess */ errorHandler, packageJson, tsConfig, eslintConfig, env) => {
     const utilsCheck = myUtils_areUpToDate();
     const scriptsCheck = checkJsonPackageScripts();
     const envCheck = getAndCheckEnviromentVariables();
-    return envCheck && scriptsCheck && utilsCheck;
+    const eslintCheck = checkEslintConfigRules();
+    const tsConfigCheck = checkTsConfigCompilerOptions();
+    return envCheck && eslintCheck && scriptsCheck && tsConfigCheck && utilsCheck;
+    /**Check the rules in a project's eslint config file all fit the established schema */
+    function checkEslintConfigRules() {
+        const zSchema = getZodSchemaFromDataStructure({
+            quotes: ['error', 'single'],
+            'quote-props': ['error', 'as-needed'],
+            'func-style': ['error', 'declaration'],
+            'arrow-body-style': ['error', 'as-needed']
+        });
+        return zodCheck_curry(errorHandler)(zSchema, eslintConfig.rules);
+    }
     /**Check the scripts in a project's package json all fit the established schema */
     function checkJsonPackageScripts() {
         const zPackageJsonScriptsSchema = z.record(z.enum([
-            "btr", "git", "npmScript",
+            'btr', 'git', 'npmScript',
             //for debugging
-            "localtunnel", "nodemon", "transpile", "vue",
+            'localtunnel', 'nodemon', 'transpile', 'vue',
             //for deployement
-            "build-all", "build-client", "build-server", "start"
+            'build-all', 'build-client', 'build-server', 'start'
         ]), z.string());
         return zodCheck_curry(errorHandler)(zPackageJsonScriptsSchema, packageJson.scripts);
+    }
+    /**Check the rules in a project's ts config file all fit the established schema */
+    function checkTsConfigCompilerOptions() {
+        const desiredCompilerOptions = {
+            /* Visit https://aka.ms/tsconfig to read more about this file */
+            /* Projects */
+            // "incremental": true,                              /* Save .tsbuildinfo files to allow for incremental compilation of projects. */
+            // "composite": true,                                /* Enable constraints that allow a TypeScript project to be used with project references. */
+            // "tsBuildInfoFile": "./.tsbuildinfo",              /* Specify the path to .tsbuildinfo incremental compilation file. */
+            // "disableSourceOfProjectReferenceRedirect": true,  /* Disable preferring source files instead of declaration files when referencing composite projects. */
+            // "disableSolutionSearching": true,                 /* Opt a project out of multi-project reference checking when editing. */
+            // "disableReferencedProjectLoad": true,             /* Reduce the number of projects loaded automatically by TypeScript. */
+            /* Language and Environment */
+            target: 'ESNext',
+            // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+            // "jsx": "preserve",                                /* Specify what JSX code is generated. */
+            // "experimentalDecorators": true,                   /* Enable experimental support for TC39 stage 2 draft decorators. */
+            // "emitDecoratorMetadata": true,                    /* Emit design-type metadata for decorated declarations in source files. */
+            // "jsxFactory": "",                                 /* Specify the JSX factory function used when targeting React JSX emit, e.g. 'React.createElement' or 'h'. */
+            // "jsxFragmentFactory": "",                         /* Specify the JSX Fragment reference used for fragments when targeting React JSX emit e.g. 'React.Fragment' or 'Fragment'. */
+            // "jsxImportSource": "",                            /* Specify module specifier used to import the JSX factory functions when using 'jsx: react-jsx*'. */
+            // "reactNamespace": "",                             /* Specify the object invoked for 'createElement'. This only applies when targeting 'react' JSX emit. */
+            // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+            // "useDefineForClassFields": true,                  /* Emit ECMAScript-standard-compliant class fields. */
+            // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+            /* Modules */
+            module: 'ESNext',
+            // "rootDir": "./",                                  /* Specify the root folder within your source files. */
+            moduleResolution: 'node',
+            // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+            // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+            // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+            // "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */
+            // "types": [],                                      /* Specify type package names to be included without being referenced in a source file. */
+            // "allowUmdGlobalAccess": true,                     /* Allow accessing UMD globals from modules. */
+            // "moduleSuffixes": [],                             /* List of file name suffixes to search when resolving a module. */
+            resolveJsonModule: true,
+            // "noResolve": true,                                /* Disallow 'import's, 'require's or '<reference>'s from expanding the number of files TypeScript should add to a project. */
+            /* JavaScript Support */
+            // "allowJs": true,                                  /* Allow JavaScript files to be a part of your program. Use the 'checkJS' option to get errors from these files. */
+            // "checkJs": true,                                  /* Enable error reporting in type-checked JavaScript files. */
+            // "maxNodeModuleJsDepth": 1,                        /* Specify the maximum folder depth used for checking JavaScript files from 'node_modules'. Only applicable with 'allowJs'. */
+            /* Emit */
+            declaration: true,
+            declarationMap: true,
+            // "emitDeclarationOnly": true,                      /* Only output d.ts files and not JavaScript files. */
+            // "sourceMap": true,                                /* Create source map files for emitted JavaScript files. */
+            // "outFile": "./",                                  /* Specify a file that bundles all outputs into one JavaScript file. If 'declaration' is true, also designates a file that bundles all .d.ts output. */
+            // "outDir": "./",                                   /* Specify an output folder for all emitted files. */
+            // "removeComments": true,                           /* Disable emitting comments. */
+            // "noEmit": true,                                   /* Disable emitting files from a compilation. */
+            // "importHelpers": true,                            /* Allow importing helper functions from tslib once per project, instead of including them per-file. */
+            // "importsNotUsedAsValues": "remove",               /* Specify emit/checking behavior for imports that are only used for types. */
+            // "downlevelIteration": true,                       /* Emit more compliant, but verbose and less performant JavaScript for iteration. */
+            // "sourceRoot": "",                                 /* Specify the root path for debuggers to find the reference source code. */
+            // "mapRoot": "",                                    /* Specify the location where debugger should locate map files instead of generated locations. */
+            // "inlineSourceMap": true,                          /* Include sourcemap files inside the emitted JavaScript. */
+            // "inlineSources": true,                            /* Include source code in the sourcemaps inside the emitted JavaScript. */
+            // "emitBOM": true,                                  /* Emit a UTF-8 Byte Order Mark (BOM) in the beginning of output files. */
+            // "newLine": "crlf",                                /* Set the newline character for emitting files. */
+            // "stripInternal": true,                            /* Disable emitting declarations that have '@internal' in their JSDoc comments. */
+            // "noEmitHelpers": true,                            /* Disable generating custom helper functions like '__extends' in compiled output. */
+            // "noEmitOnError": true,                            /* Disable emitting files if any type checking errors are reported. */
+            // "preserveConstEnums": true,                       /* Disable erasing 'const enum' declarations in generated code. */
+            // "declarationDir": "./",                           /* Specify the output directory for generated declaration files. */
+            // "preserveValueImports": true,                     /* Preserve unused imported values in the JavaScript output that would otherwise be removed. */
+            /* Interop Constraints */
+            // "isolatedModules": true,                          /* Ensure that each file can be safely transpiled without relying on other imports. */
+            // "allowSyntheticDefaultImports": true,             /* Allow 'import x from y' when a module doesn't have a default export. */
+            esModuleInterop: true,
+            // "preserveSymlinks": true,                         /* Disable resolving symlinks to their realpath. This correlates to the same flag in node. */
+            forceConsistentCasingInFileNames: true,
+            /* Type Checking */
+            strict: true,
+            noImplicitAny: true,
+            strictNullChecks: true,
+            strictFunctionTypes: true,
+            strictBindCallApply: true,
+            strictPropertyInitialization: true,
+            noImplicitThis: true,
+            useUnknownInCatchVariables: true,
+            alwaysStrict: true,
+            noUnusedLocals: true,
+            noUnusedParameters: true,
+            exactOptionalPropertyTypes: true,
+            //"noImplicitReturns": true, /* Enable error reporting for codepaths that do not explicitly return in a function. */
+            noFallthroughCasesInSwitch: true,
+            noUncheckedIndexedAccess: true,
+            noImplicitOverride: true,
+            noPropertyAccessFromIndexSignature: true,
+            allowUnusedLabels: false,
+            allowUnreachableCode: false, /* Disable error reporting for unreachable code. */
+            /* Completeness */
+            //"skipDefaultLibCheck": true,                       /* Skip type checking .d.ts files that are included with TypeScript. */
+            //"skipLibCheck": true                               /* Skip type checking all .d.ts files. */
+        };
+        const zSchema = getZodSchemaFromDataStructure(desiredCompilerOptions);
+        return zodCheck_curry(errorHandler)(zSchema, tsConfig.compilerOptions);
     }
     /**Check if all the desired enviroment keys are defined */
     function getAndCheckEnviromentVariables() {
@@ -574,7 +689,7 @@ export const basicProjectChecks = (
     /**Check if the project is using the latest version of "myUtils" */
     async function myUtils_areUpToDate() {
         const latestVersion = await getLatestVersion();
-        const installedVersion = (await import('./package.json', { assert: { type: "json" } })).default.version;
+        const installedVersion = (await import('./package.json', { assert: { type: 'json' } })).default.version;
         const isUpToDate = installedVersion === latestVersion;
         if (isUpToDate) {
             colorLog('cyan', '@botoron/my-utils is up to date 👍');
@@ -587,7 +702,7 @@ export const basicProjectChecks = (
         async function getLatestVersion() {
             const response = (await new Promise((resolve) => {
                 try {
-                    fetch(`http://registry.npmjs.com/-/v1/search?text=@botoron/utils&size=1`).
+                    fetch('http://registry.npmjs.com/-/v1/search?text=@botoron/utils&size=1').
                         then(res => res.json().then((x) => resolve(x)));
                 }
                 catch {
@@ -613,7 +728,7 @@ export const copyToClipboard_server = (x) => spawn('clip').stdin.end(util.inspec
 /**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
 export const downloadFile_node = async (filename, fileFormat, data, killProcessAfterwards) => {
     const formatted = stringify(data);
-    const dateForFilename = getFormattedTimestamp().replace(/\/| |\:/g, '_');
+    const dateForFilename = getFormattedTimestamp().replace(/\/| |:/g, '_');
     const completeFilename = filename + '_' + dateForFilename + fileFormat;
     colorLog('cyan', `Downloading ${completeFilename}..`);
     await fsWriteFileAsync(completeFilename, formatted);
@@ -658,16 +773,18 @@ export const getSeparatingCommentBlock = (message) => {
 /**fetch the latest package.json of my-utils */
 export const getLatestPackageJsonFromGithub = async () => {
     const response = await new Promise((resolve) => {
-        fetch('https://api.github.com/repos/botoron/utils/contents/package.json', { method: 'GET' }).then((res) => res.json().then((packageJson) => resolve(packageJson)));
+        fetch('https://api.github.com/repos/botoron/utils/contents/package.json', { method: 'GET' }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ).then((res) => res.json().then((packageJson) => resolve(packageJson)));
     });
     return Buffer.from(response.content, 'base64').toString('utf8');
 };
 /** Return the main perma-dependencies, check myUtil's version and print package.json's script */
-export const getMainDependencies = async (packageJson) => {
+export const getMainDependencies = async (packageJson, tsConfig, eslintConfig) => {
     const env = await getEnviromentVariables();
     const { ADMIN_PASSWORD, APP_NAME, DEV_OR_PROD, ERIS_TOKEN, MONGO_URI, PORT } = env;
     const divineBot = await getDivineBot();
-    basicProjectChecks(divineError, packageJson, { ADMIN_PASSWORD, APP_NAME, DEV_OR_PROD, ERIS_TOKEN, MONGO_URI, PORT });
+    basicProjectChecks(divineError, packageJson, tsConfig, eslintConfig, { ADMIN_PASSWORD, APP_NAME, DEV_OR_PROD, ERIS_TOKEN, MONGO_URI, PORT });
     const httpServer = startAndGetHttpServer();
     const mongoClient = await getMongoClient();
     return { divineBot, divineError, doAndRepeat, env, httpServer, mongoClient, tryF };
@@ -721,7 +838,7 @@ export const getMainDependencies = async (packageJson) => {
                     while (!divineBot.uptime) {
                         await delay(1000);
                     }
-                    successLog("The divine egg has hatched");
+                    successLog('The divine egg has hatched');
                 }
                 catch {
                     colorLog('yellow', `${divinePrepend} Failed to connect.. retrying >:D`);
@@ -741,7 +858,7 @@ export const getMainDependencies = async (packageJson) => {
         while (!mongoClient) {
             await delay(1000);
         }
-        successLog("It's Monging time >:D");
+        successLog('It\'s Monging time >:D');
         return mongoClient;
     }
     function pingMe(message) {
@@ -791,7 +908,7 @@ export const npmRun = async (npmCommand) => {
             return;
         }
         await prompCommitMessageAndPush(utilsRepoName);
-        exec(`npm version ${versionIncrement}`, (err, stdout, stderr) => {
+        exec(`npm version ${versionIncrement}`, (err, stdout) => {
             console.log({ stdout });
             successLog('package.json up-version\'d');
         });
@@ -835,8 +952,8 @@ export async function prompCommitMessageAndPush(repoName) {
         return new Promise(resolve => {
             exec('git add .', () => {
                 successLog('git add .');
-                colorLog('cyan', `Commit message copied to clipboard, paste it in the editor, save and close.`);
-                exec("git commit", () => {
+                colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.');
+                exec('git commit', () => {
                     successLog('git commit');
                     exec('git push', () => {
                         successLog('git push');

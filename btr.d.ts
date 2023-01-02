@@ -7,8 +7,8 @@ import { z, type SafeParseReturnType } from 'zod';
 export declare const zValidVariants: any;
 export type btr_trackedVueComponent = {
     _name: string;
-    beforeCreate?: () => void;
-    beforeDestroy?: () => void;
+    beforeCreate?: btr_voidFn;
+    beforeDestroy?: btr_voidFn;
 };
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void;
 export type btr_intervalWithId = {
@@ -20,6 +20,7 @@ export type btr_globalAlert = {
     show: boolean;
 };
 export type btr_validVariant = z.infer<typeof zValidVariants>;
+export type btr_voidFn = () => void;
 type toastOptions = {
     toaster: string;
     autoHideDelay: number;
@@ -41,9 +42,17 @@ type bvToast = {
 type zSchema<T> = {
     safeParse: (x: T) => SafeParseReturnType<T, T>;
 };
+type eslintConfig = {
+    rules: {
+        [key: string]: string[];
+    };
+};
 type errorMessageHandler = (message: string) => void;
 type arrayPredicate<T> = (arg1: T) => boolean;
 type pipe_persistent_type<T> = (arg: T) => T;
+type tsConfig = {
+    compilerOptions: object;
+};
 type pipe_mutable_type = {
     <T, A>(source: T, a: (value: T) => A): A;
     <T, A, B>(source: T, a: (value: T) => A, b: (value: A) => B): B;
@@ -80,8 +89,6 @@ export declare const getRandomItem: <T>(arr: T[]) => {
 };
 /**Returns a version of the provided array without repeating items */
 export declare const getUniqueValues: <T>(arr: T[]) => T[];
-/**Map a collection of passable-arguments-of-a-function against said function //TODO: find use cases for this jewel maybe */
-export declare const mapArgsOfFnAgainstFn: <F extends (...args: any) => any>(fn: F, ...argsArr: Parameters<F>[]) => any[];
 /**Remove a single item from an array, or all copies of that item if its a primitive value */
 export declare const removeItem: <T>(arr: T[], item: T) => number;
 /**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
@@ -110,7 +117,7 @@ export declare const pipe_persistentType: <T>(initialValue: T, ...fns: pipe_pers
 */
 export declare const pipe_mutableType: pipe_mutable_type;
 /** Retry a function up to X amount of times or until it is executed successfully, mainly for fetching/requesting stuff */
-export declare const retryF: <F extends (...args: any) => any>(fn: F, args: Parameters<F>, retriesLeft: number, defaultReturn: ReturnType<F>, delayBetweenRetries: number) => Promise<{
+export declare const retryF: <F extends (...args: Parameters<F>) => ReturnType<F>>(fn: F, args: Parameters<F>, retriesLeft: number, defaultReturn: ReturnType<F>, delayBetweenRetries: number) => Promise<{
     data: ReturnType<F>;
     was: 'success' | 'failure';
 }>;
@@ -149,11 +156,13 @@ export declare const roll: (maxRoll: number) => number;
 /**1 becomes '1st' , 2 becomes '2nd', 3 becomes '3rd' and so on */
 export declare const toOrdinal: (number: number) => string;
 /**Add all default properties missing in an object*/
-export declare const addMissingPropsToObjects: <T extends {}>(original: T, defaults: Required<T>) => T;
+export declare const addMissingPropsToObjects: <T extends object>(original: T, defaults: Required<T>) => T;
 /**Return a copy that can be altered without having to worry about modifying the original */
 export declare const deepClone: <T>(x: T) => T;
+/**Map an object :D (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
+export declare const mapObject: <F extends (x: never) => ReturnType<F>, O extends object>(object: O, mappingFn: F) => { [key in keyof O]: ReturnType<F>; };
 /**Replace the values of an object with those of another that shares the schema*/
-export declare const replaceObject: <T extends {}>(originalObject: T, newObject: T) => void;
+export declare const replaceObject: <T extends object>(originalObject: T, newObject: T) => void;
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods) */
 export declare const stringify: {
     (value: any, replacer?: (this: any, key: string, value: any) => any, space?: string | number): string;
@@ -166,13 +175,13 @@ export declare const uniqueId: {
     generator: Generator<string, never, unknown>;
 };
 /**start a setInterval and add it to an array */
-export declare const timer_add: (timers: btr_intervalWithId[], id: string, callBack: Function, interval: number) => void;
+export declare const timer_add: (timers: btr_intervalWithId[], id: string, callBack: btr_voidFn, interval: number) => void;
 /**Kill a setInterval and remove it from its belonging array */
 export declare const timer_kill: (timers: btr_intervalWithId[], id: string) => void;
 /**console.log... WITH COLORS :D */
 export declare const colorLog: (color: validChalkColor, message: string) => void;
 /** Copy to clipboard using the corresponding function for the running enviroment (node/client)*/
-export declare const copyToClipboard: (x: any) => void;
+export declare const copyToClipboard: (x: unknown) => void;
 /**(Message) 💀 */
 export declare const errorLog: (message: string) => void;
 /**TODO: describe me */
@@ -194,15 +203,15 @@ export declare const nullAs: {
     T: <T>() => T;
 };
 /**Copy to clipboard, objects arrays get stringify'd */
-export declare const copyToClipboard_client: (x: any) => void;
+export declare const copyToClipboard_client: (x: unknown) => void;
 /**Stringifies and downloads the provided data*/
 export declare const downloadFile_client: (filename: string, fileFormat: '.txt' | '.json', data: unknown) => void;
 /** Check the version of @botoron/utils, the enviroment variables and the package.json scripts */
-export declare const basicProjectChecks: (errorHandler: errorMessageHandler, packageJson: packageJson, env: NodeJS.ProcessEnv) => Promise<boolean>;
+export declare const basicProjectChecks: (errorHandler: errorMessageHandler, packageJson: packageJson, tsConfig: tsConfig, eslintConfig: eslintConfig, env: NodeJS.ProcessEnv) => Promise<boolean>;
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
 export declare const bigConsoleError: (message: string) => void;
 /**Copy to clipboard while running node */
-export declare const copyToClipboard_server: (x: any) => import("stream").Writable;
+export declare const copyToClipboard_server: (x: unknown) => import("stream").Writable;
 /**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
 export declare const downloadFile_node: (filename: string, fileFormat: '.txt' | '.json', data: unknown, killProcessAfterwards: boolean) => Promise<void>;
 /**Wrapper for fs.promise.readFile that announces the start of the file-reading */
@@ -216,14 +225,14 @@ export declare const getSeparatingCommentBlock: (message: string) => string;
 /**fetch the latest package.json of my-utils */
 export declare const getLatestPackageJsonFromGithub: () => Promise<string>;
 /** Return the main perma-dependencies, check myUtil's version and print package.json's script */
-export declare const getMainDependencies: (packageJson: packageJson) => Promise<{
+export declare const getMainDependencies: (packageJson: packageJson, tsConfig: tsConfig, eslintConfig: eslintConfig) => Promise<{
     divineBot: any;
     divineError: (err: string | Error) => void;
-    doAndRepeat: (fn: () => void, interval: number) => void;
+    doAndRepeat: (fn: btr_voidFn, interval: number) => void;
     env: NodeJS.ProcessEnv;
     httpServer: any;
     mongoClient: MongoClient;
-    tryF: <T extends (...args: any) => any>(fn: T, args: Parameters<T>) => void;
+    tryF: <T extends (...args: Parameters<T>) => ReturnType<T>>(fn: T, args: Parameters<T>) => ReturnType<T>;
 }>;
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export declare const killProcess: (message: string) => never;

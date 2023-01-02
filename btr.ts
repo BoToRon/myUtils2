@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable func-style */
 let _
 import fs from 'fs'	//DELETETHISFORCLIENT 
 _
@@ -23,9 +25,10 @@ import { exec, spawn } from 'child_process'	//DELETETHISFORCLIENT
 _
 import mongodb, { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
 _
+import { z, type SafeParseReturnType, type ZodRawShape } from 'zod'
+_
 import { fromZodError } from 'zod-validation-error'
 _
-import { z, type SafeParseReturnType } from 'zod'
 
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
@@ -54,21 +57,24 @@ _ /********** TYPES ******************** TYPES ******************** TYPES ******
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 
-export type btr_trackedVueComponent = { _name: string, beforeCreate?: () => void, beforeDestroy?: () => void }
+export type btr_trackedVueComponent = { _name: string, beforeCreate?: btr_voidFn, beforeDestroy?: btr_voidFn }
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void
 export type btr_intervalWithId = { id: string, interval: NodeJS.Timer }
 export type btr_globalAlert = { message: string, show: boolean }
 export type btr_validVariant = z.infer<typeof zValidVariants>
+export type btr_voidFn = () => void
 
 type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: btr_validVariant, title: string }
 type validChalkColor = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'white' | 'grey' | 'magentaBright'	//DELETETHISFORCLIENT
 type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
 type zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T> }
+type eslintConfig = { rules: { [key: string]: string[] } }
 type validNpmCommand = z.infer<typeof zValidNpmCommand>	//DELETETHISFORCLIENT
 type errorMessageHandler = (message: string) => void
 type arrayPredicate<T> = (arg1: T) => boolean
 type pipe_persistent_type<T> = (arg: T) => T
+type tsConfig = { compilerOptions: object }
 type pipe_mutable_type = {
 	<T, A>(source: T, a: (value: T) => A): A
 	<T, A, B>(source: T, a: (value: T) => A, b: (value: A) => B): B
@@ -116,34 +122,35 @@ export const zodCheck_curry = (errorHandler: errorMessageHandler) => {
 	return zodCheck
 }
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
-export const trackVueComponent_curry = <T>(zValidVueComponentName: zSchema<T>) => {
+export const trackVueComponent_curry = <T>(zValidVueComponentName: zSchema<T>) => function trackVueComponent(
+	name: T,
+	componentConstructor: btr_trackedVueComponent
+) {
 
-	return function trackVueComponent(name: T, componentConstructor: btr_trackedVueComponent) {
+	if (!zodCheck_curry(alert)(zValidVueComponentName, name)) { return componentConstructor }
+	colorLog('blue', `Component '${name}' registered to Vue`)
+	if (!window.vueComponents) { window.vueComponents = [] }
 
-		if (!zodCheck_curry(alert)(zValidVueComponentName, name)) { return componentConstructor }
-		colorLog('blue', `Component '${name}' registered to Vue`)
-		if (!window.vueComponents) { window.vueComponents = [] }
+	return getComponent(name, componentConstructor)
 
-		return getComponent(name, componentConstructor)
+	function toggleComponent(logger: errorMessageHandler) {
+		const { action } = addOrRemoveItem(window.vueComponents, componentConstructor)
+		logger(`Component '${name}' ${action} to/from window.vueComponents`)
+		logAllComponents()
+	}
 
-		function toggleComponent(logger: errorMessageHandler) {
-			const { action } = addOrRemoveItem(window.vueComponents, componentConstructor)
-			logger(`Component '${name}' ${action} to/from window.vueComponents`)
-			logAllComponents()
-		}
+	function getComponent(name: T, componentConstructor: btr_trackedVueComponent) {
+		componentConstructor.beforeCreate = () => toggleComponent(successLog)
+		componentConstructor.beforeDestroy = () => toggleComponent(errorLog)
+		componentConstructor._name = name as string
+		return componentConstructor
+	}
 
-		function getComponent(name: T, componentConstructor: btr_trackedVueComponent) {
-			componentConstructor.beforeCreate = () => toggleComponent(successLog)
-			componentConstructor.beforeDestroy = () => toggleComponent(errorLog)
-			componentConstructor._name = name as string
-			return componentConstructor
-		}
-
-		function logAllComponents() {
-			colorLog('magenta', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`)
-		}
+	function logAllComponents() {
+		colorLog('magenta', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`)
 	}
 }
+
 
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -209,17 +216,12 @@ export const getLastItem = <T>(arr: T[]) => arr[arr.length - 1]
 export const getRandomItem = <T>(arr: T[]) => { const r = roll(arr.length); return { item: arr[r], index: r } }
 /**Returns a version of the provided array without repeating items */
 export const getUniqueValues = <T>(arr: T[]) => [...new Set(arr)]
-/**Map a collection of passable-arguments-of-a-function against said function //TODO: find use cases for this jewel maybe */
-export const mapArgsOfFnAgainstFn = <F extends (...args: any) => any>(fn: F, ...argsArr: Parameters<F>[]) => {
-	//TODO: make this await promises.all in case fn is async
-	return argsArr.map(args => fn(args))
-}
 /**Remove a single item from an array, or all copies of that item if its a primitive value */
 export const removeItem = <T>(arr: T[], item: T) => selfFilter(arr, (x: T) => x !== item).removedCount
 /**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
 export const selfFilter = <T>(arr: T[], predicate: arrayPredicate<T>) => {
 	let removedCount = 0
-	let removedItems: T[] = []
+	const removedItems: T[] = []
 	for (let i = 0; i < arr.length; i++) {
 		if (predicate(arr[i])) { continue }
 		removedItems.push(arr.splice(i, 1)[0])
@@ -266,26 +268,28 @@ _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS *****************
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 
 /**Simple and standard functional programming pipe. Deprecated, use either zPipe (persistenType with zod errors) or pipe_mutableType! */
-export const pipe_persistentType = <T>(initialValue: T, ...fns: pipe_persistent_type<T>[]) => {
-	return fns.reduce((result, fn) => fn(result), initialValue)
-}
+export const pipe_persistentType = <T>(
+	initialValue: T,
+	...fns: pipe_persistent_type<T>[]
+) => fns.reduce((result, fn) => fn(result), initialValue)
 /**
 * Pipes a value through a number of functions in the order that they appear.
 * Takes between 1 and 12 arguments. `pipe(x, a, b)` is equivalent to `b(a(x))`.
 * If only one argument is provided (`pipe(x)`), this will produce a type error but JS will run fine (and return `x`).
 */
-export const pipe_mutableType: pipe_mutable_type = (source: unknown, ...project: ((value: unknown) => unknown)[]): unknown => {
-	return project.reduce((accumulator, element) => element(accumulator), source)
-}
+export const pipe_mutableType: pipe_mutable_type = (
+	source: unknown,
+	...project: ((value: unknown) => unknown)[]
+): unknown => project.reduce((accumulator, element) => element(accumulator), source)
 /** Retry a function up to X amount of times or until it is executed successfully, mainly for fetching/requesting stuff */
-export const retryF = async <F extends (...args: any) => any>(
+export const retryF = async <F extends (...args: Parameters<F>) => ReturnType<F>>(
  /**The function to be retried hoping it returns successfully */	fn: F,
 	/**Arguments to pass to fn */ args: Parameters<F>,
 	/**Number, is reduced by 1 every attempt, retryF stops when it reaches 0 */ retriesLeft: number,
 	/**Data to be returned as returnType of fn if retryF fails */ defaultReturn: ReturnType<F>,
 	/**Delay between each retry in milliseconds */ delayBetweenRetries: number,
 ): Promise<{ data: ReturnType<F>, was: 'success' | 'failure' }> => {
-	try { return { data: await fn([args]), was: 'success' } }
+	try { return { data: await fn(...args), was: 'success' } }
 	catch (error) {
 		colorLog('yellow', `retryF > ${fn.name} > ${retriesLeft} retriesLeft. {${error}}`)
 		if (!retriesLeft) { return { data: defaultReturn, was: 'failure' } }
@@ -335,18 +339,16 @@ _ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** 
 _ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 
 /**Promise-based delay that BREAKS THE LIMIT OF setTimeOut*/
-export const delay = (x: number) => {
-	return new Promise(resolve => {
-		const maxTimeOut = 1000 * 60 * 60 * 24
-		const loopsNeeded = Math.floor(x / maxTimeOut)
-		const leftOverTime = x % maxTimeOut
-		interval(loopsNeeded, leftOverTime)
+export const delay = (x: number) => new Promise(resolve => {
+	const maxTimeOut = 1000 * 60 * 60 * 24
+	const loopsNeeded = Math.floor(x / maxTimeOut)
+	const leftOverTime = x % maxTimeOut
+	interval(loopsNeeded, leftOverTime)
 
-		function interval(i: number, miliseconds: number) {
-			setTimeout(() => { if (i) { interval(i - 1, maxTimeOut) } else { resolve(true) } }, miliseconds)
-		}
-	})
-}
+	function interval(i: number, miliseconds: number) {
+		setTimeout(() => { if (i) { interval(i - 1, maxTimeOut) } else { resolve(true) } }, miliseconds)
+	}
+})
 /**
  * @param options.fullYear true (default, 4 digits) or false (2 digits)  
  * @param options.hourOnly default: false
@@ -412,18 +414,35 @@ _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** 
 _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 
 /**Add all default properties missing in an object*/
-export const addMissingPropsToObjects = <T extends {}>(original: T, defaults: Required<T>) => {
+export const addMissingPropsToObjects = <T extends object>(original: T, defaults: Required<T>) => {
 	Object.keys(defaults).forEach(x => {
 		const key = x as keyof T
-		if (original.hasOwnProperty(key)) { return }
+		if (Object.prototype.hasOwnProperty.call(original, key)) { return }
 		original[key] = defaults[key]
 	})
 	return original
 }
 /**Return a copy that can be altered without having to worry about modifying the original */
 export const deepClone = <T>(x: T) => JSON.parse(JSON.stringify(x)) as T
+/**Generate a Zod Schema from an array/object */
+function getZodSchemaFromDataStructure(dataStructure: object) {
+
+	const toLiteral = (x: unknown): z.ZodLiteral<unknown> => typeof x !== 'object' ?
+		getZodSchemaFromDataStructure(x!) as unknown as z.ZodLiteral<unknown> :
+		z.literal(x as never) as z.ZodLiteral<unknown>
+
+	return Array.isArray(dataStructure) ?
+		z.tuple(dataStructure.map(toLiteral) as []) :
+		z.object(mapObject(dataStructure, toLiteral) as ZodRawShape)
+}
+/**Map an object :D (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
+export const mapObject = <F extends (x: never) => ReturnType<F>, O extends object>(object: O, mappingFn: F) => {
+	const newObject = {} as { [key in keyof O]: ReturnType<F> }
+	Object.entries(object).forEach(entry => { const [key, value] = entry; newObject[key as keyof O] = mappingFn(value as never) })
+	return newObject as { [key in keyof O]: ReturnType<F> }
+}
 /**Replace the values of an object with those of another that shares the schema*/
-export const replaceObject = <T extends {}>(originalObject: T, newObject: T) => {
+export const replaceObject = <T extends object>(originalObject: T, newObject: T) => {
 	Object.keys(originalObject).forEach(key => delete originalObject[key as keyof T])
 	Object.keys(newObject).forEach(key => originalObject[key as keyof T] = newObject[key as keyof T])
 }
@@ -448,8 +467,8 @@ _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS *********
 _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
 
 /**start a setInterval and add it to an array */
-export const timer_add = (timers: btr_intervalWithId[], id: string, callBack: Function, interval: number) => {
-	const theTimer: ReturnType<typeof setInterval> = setInterval(() => { callBack }, interval)
+export const timer_add = (timers: btr_intervalWithId[], id: string, callBack: btr_voidFn, interval: number) => {
+	const theTimer: ReturnType<typeof setInterval> = setInterval(callBack, interval)
 	timers.push({ id, interval: theTimer })
 }
 /**Kill a setInterval and remove it from its belonging array */
@@ -474,7 +493,7 @@ _ /********** FOR STRINGS ******************** FOR STRINGS ******************** 
 /**console.log... WITH COLORS :D */
 export const colorLog = (color: validChalkColor, message: string) => console.log(chalk[color].bold(message)) //DELETETHISFORCLIENT
 /** Copy to clipboard using the corresponding function for the running enviroment (node/client)*/
-export const copyToClipboard = (x: any) => { isNode ? copyToClipboard_server(x) : copyToClipboard_client(x) }
+export const copyToClipboard = (x: unknown) => { isNode ? copyToClipboard_server(x) : copyToClipboard_client(x) }
 /**(Message) 💀 */
 export const errorLog = (message: string) => colorLog('red', message + ' 💀')
 /**TODO: describe me */
@@ -501,7 +520,7 @@ _ /********** MISC ******************** MISC ******************** MISC *********
 _ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 
 /**For obligatory callbacks */
-export const doNothing = (...args: unknown[]) => { }
+export const doNothing = (...args: unknown[]) => { args }
 /**Syntactic sugar for "null as unknown as T" */
 export const nullAs = {
 	string: () => null as unknown as string,
@@ -523,7 +542,7 @@ _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY *************
 _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 
 /**Copy to clipboard, objects arrays get stringify'd */
-export const copyToClipboard_client = (x: any) => {
+export const copyToClipboard_client = (x: unknown) => {
 	const text = stringify(x) as string
 	const a = document.createElement('textarea')
 	a.innerHTML = text
@@ -558,26 +577,145 @@ _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY *************
 export const basicProjectChecks = (
 	/**PROD: DivineError, DEV: killProcess */ errorHandler: errorMessageHandler,
 	packageJson: packageJson,
+	tsConfig: tsConfig,
+	eslintConfig: eslintConfig,
 	env: NodeJS.ProcessEnv
 ) => {
 
 	const utilsCheck = myUtils_areUpToDate()
 	const scriptsCheck = checkJsonPackageScripts()
 	const envCheck = getAndCheckEnviromentVariables()
-	return envCheck && scriptsCheck && utilsCheck
+	const eslintCheck = checkEslintConfigRules()
+	const tsConfigCheck = checkTsConfigCompilerOptions()
+
+	return envCheck && eslintCheck && scriptsCheck && tsConfigCheck && utilsCheck
+
+	/**Check the rules in a project's eslint config file all fit the established schema */
+	function checkEslintConfigRules() {
+
+		const zSchema = getZodSchemaFromDataStructure({
+			quotes: ['error', 'single'],
+			'quote-props': ['error', 'as-needed'],
+			'func-style': ['error', 'declaration'],
+			'arrow-body-style': ['error', 'as-needed']
+		})
+
+		return zodCheck_curry(errorHandler)(zSchema, eslintConfig.rules)
+	}
 
 	/**Check the scripts in a project's package json all fit the established schema */
 	function checkJsonPackageScripts() {
 		const zPackageJsonScriptsSchema = z.record(
 			z.enum([
-				"btr", "git", "npmScript",
+				'btr', 'git', 'npmScript',
 				//for debugging
-				"localtunnel", "nodemon", "transpile", "vue",
+				'localtunnel', 'nodemon', 'transpile', 'vue',
 				//for deployement
-				"build-all", "build-client", "build-server", "start"
+				'build-all', 'build-client', 'build-server', 'start'
 			]), z.string())
 
 		return zodCheck_curry(errorHandler)(zPackageJsonScriptsSchema, packageJson.scripts,)
+	}
+
+	/**Check the rules in a project's ts config file all fit the established schema */
+	function checkTsConfigCompilerOptions() {
+
+		const desiredCompilerOptions = {
+			/* Visit https://aka.ms/tsconfig to read more about this file */
+			/* Projects */
+			// "incremental": true,                              /* Save .tsbuildinfo files to allow for incremental compilation of projects. */
+			// "composite": true,                                /* Enable constraints that allow a TypeScript project to be used with project references. */
+			// "tsBuildInfoFile": "./.tsbuildinfo",              /* Specify the path to .tsbuildinfo incremental compilation file. */
+			// "disableSourceOfProjectReferenceRedirect": true,  /* Disable preferring source files instead of declaration files when referencing composite projects. */
+			// "disableSolutionSearching": true,                 /* Opt a project out of multi-project reference checking when editing. */
+			// "disableReferencedProjectLoad": true,             /* Reduce the number of projects loaded automatically by TypeScript. */
+			/* Language and Environment */
+			target: 'ESNext', /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
+			// "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+			// "jsx": "preserve",                                /* Specify what JSX code is generated. */
+			// "experimentalDecorators": true,                   /* Enable experimental support for TC39 stage 2 draft decorators. */
+			// "emitDecoratorMetadata": true,                    /* Emit design-type metadata for decorated declarations in source files. */
+			// "jsxFactory": "",                                 /* Specify the JSX factory function used when targeting React JSX emit, e.g. 'React.createElement' or 'h'. */
+			// "jsxFragmentFactory": "",                         /* Specify the JSX Fragment reference used for fragments when targeting React JSX emit e.g. 'React.Fragment' or 'Fragment'. */
+			// "jsxImportSource": "",                            /* Specify module specifier used to import the JSX factory functions when using 'jsx: react-jsx*'. */
+			// "reactNamespace": "",                             /* Specify the object invoked for 'createElement'. This only applies when targeting 'react' JSX emit. */
+			// "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+			// "useDefineForClassFields": true,                  /* Emit ECMAScript-standard-compliant class fields. */
+			// "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+			/* Modules */
+			module: 'ESNext', /* Specify what module code is generated. */
+			// "rootDir": "./",                                  /* Specify the root folder within your source files. */
+			moduleResolution: 'node', /* Specify how TypeScript looks up a file from a given module specifier. */
+			// "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+			// "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+			// "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+			// "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */
+			// "types": [],                                      /* Specify type package names to be included without being referenced in a source file. */
+			// "allowUmdGlobalAccess": true,                     /* Allow accessing UMD globals from modules. */
+			// "moduleSuffixes": [],                             /* List of file name suffixes to search when resolving a module. */
+			resolveJsonModule: true, /* Enable importing .json files. */
+			// "noResolve": true,                                /* Disallow 'import's, 'require's or '<reference>'s from expanding the number of files TypeScript should add to a project. */
+			/* JavaScript Support */
+			// "allowJs": true,                                  /* Allow JavaScript files to be a part of your program. Use the 'checkJS' option to get errors from these files. */
+			// "checkJs": true,                                  /* Enable error reporting in type-checked JavaScript files. */
+			// "maxNodeModuleJsDepth": 1,                        /* Specify the maximum folder depth used for checking JavaScript files from 'node_modules'. Only applicable with 'allowJs'. */
+			/* Emit */
+			declaration: true, /* Generate .d.ts files from TypeScript and JavaScript files in your project. */
+			declarationMap: true, /* Create sourcemaps for d.ts files. */
+			// "emitDeclarationOnly": true,                      /* Only output d.ts files and not JavaScript files. */
+			// "sourceMap": true,                                /* Create source map files for emitted JavaScript files. */
+			// "outFile": "./",                                  /* Specify a file that bundles all outputs into one JavaScript file. If 'declaration' is true, also designates a file that bundles all .d.ts output. */
+			// "outDir": "./",                                   /* Specify an output folder for all emitted files. */
+			// "removeComments": true,                           /* Disable emitting comments. */
+			// "noEmit": true,                                   /* Disable emitting files from a compilation. */
+			// "importHelpers": true,                            /* Allow importing helper functions from tslib once per project, instead of including them per-file. */
+			// "importsNotUsedAsValues": "remove",               /* Specify emit/checking behavior for imports that are only used for types. */
+			// "downlevelIteration": true,                       /* Emit more compliant, but verbose and less performant JavaScript for iteration. */
+			// "sourceRoot": "",                                 /* Specify the root path for debuggers to find the reference source code. */
+			// "mapRoot": "",                                    /* Specify the location where debugger should locate map files instead of generated locations. */
+			// "inlineSourceMap": true,                          /* Include sourcemap files inside the emitted JavaScript. */
+			// "inlineSources": true,                            /* Include source code in the sourcemaps inside the emitted JavaScript. */
+			// "emitBOM": true,                                  /* Emit a UTF-8 Byte Order Mark (BOM) in the beginning of output files. */
+			// "newLine": "crlf",                                /* Set the newline character for emitting files. */
+			// "stripInternal": true,                            /* Disable emitting declarations that have '@internal' in their JSDoc comments. */
+			// "noEmitHelpers": true,                            /* Disable generating custom helper functions like '__extends' in compiled output. */
+			// "noEmitOnError": true,                            /* Disable emitting files if any type checking errors are reported. */
+			// "preserveConstEnums": true,                       /* Disable erasing 'const enum' declarations in generated code. */
+			// "declarationDir": "./",                           /* Specify the output directory for generated declaration files. */
+			// "preserveValueImports": true,                     /* Preserve unused imported values in the JavaScript output that would otherwise be removed. */
+			/* Interop Constraints */
+			// "isolatedModules": true,                          /* Ensure that each file can be safely transpiled without relying on other imports. */
+			// "allowSyntheticDefaultImports": true,             /* Allow 'import x from y' when a module doesn't have a default export. */
+			esModuleInterop: true, /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */
+			// "preserveSymlinks": true,                         /* Disable resolving symlinks to their realpath. This correlates to the same flag in node. */
+			forceConsistentCasingInFileNames: true, /* Ensure that casing is correct in imports. */
+			/* Type Checking */
+			strict: true, /* Enable all strict type-checking options. */
+			noImplicitAny: true, /* Enable error reporting for expressions and declarations with an implied 'any' type. */
+			strictNullChecks: true, /* When type checking, take into account 'null' and 'undefined'. */
+			strictFunctionTypes: true, /* When assigning functions, check to ensure parameters and the return values are subtype-compatible. */
+			strictBindCallApply: true, /* Check that the arguments for 'bind', 'call', and 'apply' methods match the original function. */
+			strictPropertyInitialization: true, /* Check for class properties that are declared but not set in the constructor. */
+			noImplicitThis: true, /* Enable error reporting when 'this' is given the type 'any'. */
+			useUnknownInCatchVariables: true, /* Default catch clause variables as 'unknown' instead of 'any'. */
+			alwaysStrict: true, /* Ensure 'use strict' is always emitted. */
+			noUnusedLocals: true, /* Enable error reporting when local variables aren't read. */
+			noUnusedParameters: true, /* Raise an error when a function parameter isn't read. */
+			exactOptionalPropertyTypes: true, /* Interpret optional property types as written, rather than adding 'undefined'. */
+			//"noImplicitReturns": true, /* Enable error reporting for codepaths that do not explicitly return in a function. */
+			noFallthroughCasesInSwitch: true, /* Enable error reporting for fallthrough cases in switch statements. */
+			noUncheckedIndexedAccess: true, /* Add 'undefined' to a type when accessed using an index. */
+			noImplicitOverride: true, /* Ensure overriding members in derived classes are marked with an override modifier. */
+			noPropertyAccessFromIndexSignature: true, /* Enforces using indexed accessors for keys declared using an indexed type. */
+			allowUnusedLabels: false, /* Disable error reporting for unused labels. */
+			allowUnreachableCode: false, /* Disable error reporting for unreachable code. */
+			/* Completeness */
+			//"skipDefaultLibCheck": true,                       /* Skip type checking .d.ts files that are included with TypeScript. */
+			//"skipLibCheck": true                               /* Skip type checking all .d.ts files. */
+		}
+
+		const zSchema = getZodSchemaFromDataStructure(desiredCompilerOptions)
+		return zodCheck_curry(errorHandler)(zSchema, tsConfig.compilerOptions)
 	}
 
 	/**Check if all the desired enviroment keys are defined */
@@ -591,7 +729,7 @@ export const basicProjectChecks = (
 	/**Check if the project is using the latest version of "myUtils" */
 	async function myUtils_areUpToDate() {
 		const latestVersion = await getLatestVersion()
-		const installedVersion = (await import('./package.json', { assert: { type: "json" } })).default.version
+		const installedVersion = (await import('./package.json', { assert: { type: 'json' } })).default.version
 		const isUpToDate = installedVersion === latestVersion
 
 		if (isUpToDate) { colorLog('cyan', '@botoron/my-utils is up to date 👍') }
@@ -604,7 +742,7 @@ export const basicProjectChecks = (
 			type pck = { objects: [{ package: { version: string } }] }
 			const response: pck = (await new Promise((resolve) => {
 				try {
-					fetch(`http://registry.npmjs.com/-/v1/search?text=@botoron/utils&size=1`).
+					fetch('http://registry.npmjs.com/-/v1/search?text=@botoron/utils&size=1').
 						then(res => res.json().then((x) => resolve(x as pck)))
 				}
 				catch { return { objects: [{ package: { version: '0' } }] } }
@@ -623,11 +761,11 @@ export const bigConsoleError = (message: string) => {
 	logAsterisks(3)
 }
 /**Copy to clipboard while running node */
-export const copyToClipboard_server = (x: any) => spawn('clip').stdin.end(util.inspect(x))
+export const copyToClipboard_server = (x: unknown) => spawn('clip').stdin.end(util.inspect(x))
 /**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
 export const downloadFile_node = async (filename: string, fileFormat: '.txt' | '.json', data: unknown, killProcessAfterwards: boolean) => {
 	const formatted = stringify(data as object)
-	const dateForFilename = getFormattedTimestamp().replace(/\/| |\:/g, '_')
+	const dateForFilename = getFormattedTimestamp().replace(/\/| |:/g, '_')
 	const completeFilename = filename + '_' + dateForFilename + fileFormat
 
 	colorLog('cyan', `Downloading ${completeFilename}..`)
@@ -671,19 +809,20 @@ export const getLatestPackageJsonFromGithub = async () => {
 
 	const response: response_github_file = await new Promise((resolve) => {
 		fetch('https://api.github.com/repos/botoron/utils/contents/package.json', { method: 'GET' }
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		).then((res: any) => res.json().then((packageJson: any) => resolve(packageJson)))
 	})
 
 	return Buffer.from(response.content, 'base64').toString('utf8')
 }
 /** Return the main perma-dependencies, check myUtil's version and print package.json's script */
-export const getMainDependencies = async (packageJson: packageJson) => {
+export const getMainDependencies = async (packageJson: packageJson, tsConfig: tsConfig, eslintConfig: eslintConfig) => {
 
 	const env = await getEnviromentVariables()
 	const { ADMIN_PASSWORD, APP_NAME, DEV_OR_PROD, ERIS_TOKEN, MONGO_URI, PORT } = env
 
 	const divineBot = await getDivineBot()
-	basicProjectChecks(divineError, packageJson, { ADMIN_PASSWORD, APP_NAME, DEV_OR_PROD, ERIS_TOKEN, MONGO_URI, PORT })
+	basicProjectChecks(divineError, packageJson, tsConfig, eslintConfig, { ADMIN_PASSWORD, APP_NAME, DEV_OR_PROD, ERIS_TOKEN, MONGO_URI, PORT })
 
 	const httpServer = startAndGetHttpServer()
 	const mongoClient = await getMongoClient()
@@ -694,7 +833,7 @@ export const getMainDependencies = async (packageJson: packageJson) => {
 	function divineError(err: string | Error) { (DEV_OR_PROD === 'prod' ? pingMe : killProcess)(getTraceableStack(err)) }
 
 	/**Set interval with try-catch and called immediately*/
-	function doAndRepeat(fn: () => void, interval: number) {
+	function doAndRepeat(fn: btr_voidFn, interval: number) {
 		const tryIt = () => tryF(fn, [])
 		setInterval(tryIt, interval)
 		tryIt()
@@ -740,7 +879,7 @@ export const getMainDependencies = async (packageJson: packageJson) => {
 					divineBot.connect()
 					colorLog('cyan', 'waiting for DivineBot')
 					while (!divineBot.uptime) { await delay(1000) }
-					successLog("The divine egg has hatched")
+					successLog('The divine egg has hatched')
 				}
 				catch {
 					colorLog('yellow', `${divinePrepend} Failed to connect.. retrying >:D`)
@@ -757,7 +896,7 @@ export const getMainDependencies = async (packageJson: packageJson) => {
 		mongo.connect((err, client) => { if (err) { throw err } mongoClient = client as MongoClient })
 		colorLog('cyan', 'waiting for Mongo')
 		while (!mongoClient) { await delay(1000) }
-		successLog("It's Monging time >:D")
+		successLog('It\'s Monging time >:D')
 		return mongoClient
 	}
 
@@ -778,8 +917,8 @@ export const getMainDependencies = async (packageJson: packageJson) => {
 	}
 
 	/**tryCatch wrapper for functions with DivineError as the error handler */
-	function tryF<T extends (...args: any) => any>(fn: T, args: Parameters<T>): void {
-		try { return fn(...args as Parameters<T>[]) }
+	function tryF<T extends (...args: Parameters<T>) => ReturnType<T>>(fn: T, args: Parameters<T>) {
+		try { return fn(...args) }
 		catch (err) { divineError(err as Error) }
 	}
 }
@@ -801,13 +940,13 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 		if (!zodCheck_curry(tryAgain)(zValidVersionIncrement, versionIncrement)) { return }
 		await prompCommitMessageAndPush(utilsRepoName)
 
-		exec(`npm version ${versionIncrement}`, (err, stdout, stderr) => {
+		exec(`npm version ${versionIncrement}`, (err, stdout) => {
 			console.log({ stdout })
 			successLog('package.json up-version\'d')
 		})
 	}
 
-	function transpileFiles(followUp: Function) {
+	function transpileFiles(followUp: btr_voidFn) {
 		const filename = 'btr.ts'
 		exec('tsc --declaration --target esnext ' + filename, async () => {
 			successLog(filename + ' transpiled')
@@ -853,8 +992,8 @@ export async function prompCommitMessageAndPush(repoName: string) {
 		return new Promise(resolve => {
 			exec('git add .', () => {
 				successLog('git add .')
-				colorLog('cyan', `Commit message copied to clipboard, paste it in the editor, save and close.`)
-				exec("git commit", () => {
+				colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.')
+				exec('git commit', () => {
 					successLog('git commit')
 					exec('git push', () => {
 						successLog('git push')

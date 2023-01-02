@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable func-style */
 let _;
 _;
 _;
@@ -11,9 +13,10 @@ _;
 _;
 _;
 _;
+import { z } from 'zod';
+_;
 import { fromZodError } from 'zod-validation-error';
 _;
-import { z } from 'zod';
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
@@ -78,31 +81,29 @@ export const zodCheck_curry = (errorHandler) => {
     return zodCheck;
 };
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
-export const trackVueComponent_curry = (zValidVueComponentName) => {
-    return function trackVueComponent(name, componentConstructor) {
-        if (!zodCheck_curry(alert)(zValidVueComponentName, name)) {
-            return componentConstructor;
-        }
-        colorLog('blue', `Component '${name}' registered to Vue`);
-        if (!window.vueComponents) {
-            window.vueComponents = [];
-        }
-        return getComponent(name, componentConstructor);
-        function toggleComponent(logger) {
-            const { action } = addOrRemoveItem(window.vueComponents, componentConstructor);
-            logger(`Component '${name}' ${action} to/from window.vueComponents`);
-            logAllComponents();
-        }
-        function getComponent(name, componentConstructor) {
-            componentConstructor.beforeCreate = () => toggleComponent(successLog);
-            componentConstructor.beforeDestroy = () => toggleComponent(errorLog);
-            componentConstructor._name = name;
-            return componentConstructor;
-        }
-        function logAllComponents() {
-            colorLog('magenta', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`);
-        }
-    };
+export const trackVueComponent_curry = (zValidVueComponentName) => function trackVueComponent(name, componentConstructor) {
+    if (!zodCheck_curry(alert)(zValidVueComponentName, name)) {
+        return componentConstructor;
+    }
+    colorLog('blue', `Component '${name}' registered to Vue`);
+    if (!window.vueComponents) {
+        window.vueComponents = [];
+    }
+    return getComponent(name, componentConstructor);
+    function toggleComponent(logger) {
+        const { action } = addOrRemoveItem(window.vueComponents, componentConstructor);
+        logger(`Component '${name}' ${action} to/from window.vueComponents`);
+        logAllComponents();
+    }
+    function getComponent(name, componentConstructor) {
+        componentConstructor.beforeCreate = () => toggleComponent(successLog);
+        componentConstructor.beforeDestroy = () => toggleComponent(errorLog);
+        componentConstructor._name = name;
+        return componentConstructor;
+    }
+    function logAllComponents() {
+        colorLog('magenta', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`);
+    }
 };
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -177,17 +178,12 @@ export const getLastItem = (arr) => arr[arr.length - 1];
 export const getRandomItem = (arr) => { const r = roll(arr.length); return { item: arr[r], index: r }; };
 /**Returns a version of the provided array without repeating items */
 export const getUniqueValues = (arr) => [...new Set(arr)];
-/**Map a collection of passable-arguments-of-a-function against said function //TODO: find use cases for this jewel maybe */
-export const mapArgsOfFnAgainstFn = (fn, ...argsArr) => {
-    //TODO: make this await promises.all in case fn is async
-    return argsArr.map(args => fn(args));
-};
 /**Remove a single item from an array, or all copies of that item if its a primitive value */
 export const removeItem = (arr, item) => selfFilter(arr, (x) => x !== item).removedCount;
 /**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
 export const selfFilter = (arr, predicate) => {
     let removedCount = 0;
-    let removedItems = [];
+    const removedItems = [];
     for (let i = 0; i < arr.length; i++) {
         if (predicate(arr[i])) {
             continue;
@@ -243,17 +239,13 @@ _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ****************
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 /**Simple and standard functional programming pipe. Deprecated, use either zPipe (persistenType with zod errors) or pipe_mutableType! */
-export const pipe_persistentType = (initialValue, ...fns) => {
-    return fns.reduce((result, fn) => fn(result), initialValue);
-};
+export const pipe_persistentType = (initialValue, ...fns) => fns.reduce((result, fn) => fn(result), initialValue);
 /**
 * Pipes a value through a number of functions in the order that they appear.
 * Takes between 1 and 12 arguments. `pipe(x, a, b)` is equivalent to `b(a(x))`.
 * If only one argument is provided (`pipe(x)`), this will produce a type error but JS will run fine (and return `x`).
 */
-export const pipe_mutableType = (source, ...project) => {
-    return project.reduce((accumulator, element) => element(accumulator), source);
-};
+export const pipe_mutableType = (source, ...project) => project.reduce((accumulator, element) => element(accumulator), source);
 /** Retry a function up to X amount of times or until it is executed successfully, mainly for fetching/requesting stuff */
 export const retryF = async (
 /**The function to be retried hoping it returns successfully */ fn, 
@@ -262,7 +254,7 @@ export const retryF = async (
 /**Data to be returned as returnType of fn if retryF fails */ defaultReturn, 
 /**Delay between each retry in milliseconds */ delayBetweenRetries) => {
     try {
-        return { data: await fn([args]), was: 'success' };
+        return { data: await fn(...args), was: 'success' };
     }
     catch (error) {
         colorLog('yellow', `retryF > ${fn.name} > ${retriesLeft} retriesLeft. {${error}}`);
@@ -316,22 +308,20 @@ _; /********** FOR NUMBERS ******************** FOR NUMBERS ********************
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 /**Promise-based delay that BREAKS THE LIMIT OF setTimeOut*/
-export const delay = (x) => {
-    return new Promise(resolve => {
-        const maxTimeOut = 1000 * 60 * 60 * 24;
-        const loopsNeeded = Math.floor(x / maxTimeOut);
-        const leftOverTime = x % maxTimeOut;
-        interval(loopsNeeded, leftOverTime);
-        function interval(i, miliseconds) {
-            setTimeout(() => { if (i) {
-                interval(i - 1, maxTimeOut);
-            }
-            else {
-                resolve(true);
-            } }, miliseconds);
+export const delay = (x) => new Promise(resolve => {
+    const maxTimeOut = 1000 * 60 * 60 * 24;
+    const loopsNeeded = Math.floor(x / maxTimeOut);
+    const leftOverTime = x % maxTimeOut;
+    interval(loopsNeeded, leftOverTime);
+    function interval(i, miliseconds) {
+        setTimeout(() => { if (i) {
+            interval(i - 1, maxTimeOut);
         }
-    });
-};
+        else {
+            resolve(true);
+        } }, miliseconds);
+    }
+});
 /**
  * @param options.fullYear true (default, 4 digits) or false (2 digits)
  * @param options.hourOnly default: false
@@ -393,7 +383,7 @@ _; /********** FOR OBJECTS ******************** FOR OBJECTS ********************
 export const addMissingPropsToObjects = (original, defaults) => {
     Object.keys(defaults).forEach(x => {
         const key = x;
-        if (original.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(original, key)) {
             return;
         }
         original[key] = defaults[key];
@@ -402,6 +392,21 @@ export const addMissingPropsToObjects = (original, defaults) => {
 };
 /**Return a copy that can be altered without having to worry about modifying the original */
 export const deepClone = (x) => JSON.parse(JSON.stringify(x));
+/**Generate a Zod Schema from an array/object */
+function getZodSchemaFromDataStructure(dataStructure) {
+    const toLiteral = (x) => typeof x !== 'object' ?
+        getZodSchemaFromDataStructure(x) :
+        z.literal(x);
+    return Array.isArray(dataStructure) ?
+        z.tuple(dataStructure.map(toLiteral)) :
+        z.object(mapObject(dataStructure, toLiteral));
+}
+/**Map an object :D (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
+export const mapObject = (object, mappingFn) => {
+    const newObject = {};
+    Object.entries(object).forEach(entry => { const [key, value] = entry; newObject[key] = mappingFn(value); });
+    return newObject;
+};
 /**Replace the values of an object with those of another that shares the schema*/
 export const replaceObject = (originalObject, newObject) => {
     Object.keys(originalObject).forEach(key => delete originalObject[key]);
@@ -430,7 +435,7 @@ _; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ********
 _; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
 /**start a setInterval and add it to an array */
 export const timer_add = (timers, id, callBack, interval) => {
-    const theTimer = setInterval(() => { callBack; }, interval);
+    const theTimer = setInterval(callBack, interval);
     timers.push({ id, interval: theTimer });
 };
 /**Kill a setInterval and remove it from its belonging array */
@@ -479,7 +484,7 @@ _; /********** MISC ******************** MISC ******************** MISC ********
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 /**For obligatory callbacks */
-export const doNothing = (...args) => { };
+export const doNothing = (...args) => { args; };
 /**Syntactic sugar for "null as unknown as T" */
 export const nullAs = {
     string: () => null,

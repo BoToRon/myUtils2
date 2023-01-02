@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable func-style */
 let _
 _
 _
@@ -11,9 +13,10 @@ _
 _
 _
 _
+import { z, type SafeParseReturnType, type ZodRawShape } from 'zod'
+_
 import { fromZodError } from 'zod-validation-error'
 _
-import { z, type SafeParseReturnType } from 'zod'
 
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
@@ -41,19 +44,22 @@ _ /********** TYPES ******************** TYPES ******************** TYPES ******
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 
-export type btr_trackedVueComponent = { _name: string, beforeCreate?: () => void, beforeDestroy?: () => void }
+export type btr_trackedVueComponent = { _name: string, beforeCreate?: btr_voidFn, beforeDestroy?: btr_voidFn }
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void
 export type btr_intervalWithId = { id: string, interval: NodeJS.Timer }
 export type btr_globalAlert = { message: string, show: boolean }
 export type btr_validVariant = z.infer<typeof zValidVariants>
+export type btr_voidFn = () => void
 
 type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: btr_validVariant, title: string }
 type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
 type zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T> }
+type eslintConfig = { rules: { [key: string]: string[] } }
 type errorMessageHandler = (message: string) => void
 type arrayPredicate<T> = (arg1: T) => boolean
 type pipe_persistent_type<T> = (arg: T) => T
+type tsConfig = { compilerOptions: object }
 type pipe_mutable_type = {
 	<T, A>(source: T, a: (value: T) => A): A
 	<T, A, B>(source: T, a: (value: T) => A, b: (value: A) => B): B
@@ -101,34 +107,35 @@ export const zodCheck_curry = (errorHandler: errorMessageHandler) => {
 	return zodCheck
 }
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
-export const trackVueComponent_curry = <T>(zValidVueComponentName: zSchema<T>) => {
+export const trackVueComponent_curry = <T>(zValidVueComponentName: zSchema<T>) => function trackVueComponent(
+	name: T,
+	componentConstructor: btr_trackedVueComponent
+) {
 
-	return function trackVueComponent(name: T, componentConstructor: btr_trackedVueComponent) {
+	if (!zodCheck_curry(alert)(zValidVueComponentName, name)) { return componentConstructor }
+	colorLog('blue', `Component '${name}' registered to Vue`)
+	if (!window.vueComponents) { window.vueComponents = [] }
 
-		if (!zodCheck_curry(alert)(zValidVueComponentName, name)) { return componentConstructor }
-		colorLog('blue', `Component '${name}' registered to Vue`)
-		if (!window.vueComponents) { window.vueComponents = [] }
+	return getComponent(name, componentConstructor)
 
-		return getComponent(name, componentConstructor)
+	function toggleComponent(logger: errorMessageHandler) {
+		const { action } = addOrRemoveItem(window.vueComponents, componentConstructor)
+		logger(`Component '${name}' ${action} to/from window.vueComponents`)
+		logAllComponents()
+	}
 
-		function toggleComponent(logger: errorMessageHandler) {
-			const { action } = addOrRemoveItem(window.vueComponents, componentConstructor)
-			logger(`Component '${name}' ${action} to/from window.vueComponents`)
-			logAllComponents()
-		}
+	function getComponent(name: T, componentConstructor: btr_trackedVueComponent) {
+		componentConstructor.beforeCreate = () => toggleComponent(successLog)
+		componentConstructor.beforeDestroy = () => toggleComponent(errorLog)
+		componentConstructor._name = name as string
+		return componentConstructor
+	}
 
-		function getComponent(name: T, componentConstructor: btr_trackedVueComponent) {
-			componentConstructor.beforeCreate = () => toggleComponent(successLog)
-			componentConstructor.beforeDestroy = () => toggleComponent(errorLog)
-			componentConstructor._name = name as string
-			return componentConstructor
-		}
-
-		function logAllComponents() {
-			colorLog('magenta', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`)
-		}
+	function logAllComponents() {
+		colorLog('magenta', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`)
 	}
 }
+
 
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -194,17 +201,12 @@ export const getLastItem = <T>(arr: T[]) => arr[arr.length - 1]
 export const getRandomItem = <T>(arr: T[]) => { const r = roll(arr.length); return { item: arr[r], index: r } }
 /**Returns a version of the provided array without repeating items */
 export const getUniqueValues = <T>(arr: T[]) => [...new Set(arr)]
-/**Map a collection of passable-arguments-of-a-function against said function //TODO: find use cases for this jewel maybe */
-export const mapArgsOfFnAgainstFn = <F extends (...args: any) => any>(fn: F, ...argsArr: Parameters<F>[]) => {
-	//TODO: make this await promises.all in case fn is async
-	return argsArr.map(args => fn(args))
-}
 /**Remove a single item from an array, or all copies of that item if its a primitive value */
 export const removeItem = <T>(arr: T[], item: T) => selfFilter(arr, (x: T) => x !== item).removedCount
 /**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
 export const selfFilter = <T>(arr: T[], predicate: arrayPredicate<T>) => {
 	let removedCount = 0
-	let removedItems: T[] = []
+	const removedItems: T[] = []
 	for (let i = 0; i < arr.length; i++) {
 		if (predicate(arr[i])) { continue }
 		removedItems.push(arr.splice(i, 1)[0])
@@ -251,26 +253,28 @@ _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS *****************
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 
 /**Simple and standard functional programming pipe. Deprecated, use either zPipe (persistenType with zod errors) or pipe_mutableType! */
-export const pipe_persistentType = <T>(initialValue: T, ...fns: pipe_persistent_type<T>[]) => {
-	return fns.reduce((result, fn) => fn(result), initialValue)
-}
+export const pipe_persistentType = <T>(
+	initialValue: T,
+	...fns: pipe_persistent_type<T>[]
+) => fns.reduce((result, fn) => fn(result), initialValue)
 /**
 * Pipes a value through a number of functions in the order that they appear.
 * Takes between 1 and 12 arguments. `pipe(x, a, b)` is equivalent to `b(a(x))`.
 * If only one argument is provided (`pipe(x)`), this will produce a type error but JS will run fine (and return `x`).
 */
-export const pipe_mutableType: pipe_mutable_type = (source: unknown, ...project: ((value: unknown) => unknown)[]): unknown => {
-	return project.reduce((accumulator, element) => element(accumulator), source)
-}
+export const pipe_mutableType: pipe_mutable_type = (
+	source: unknown,
+	...project: ((value: unknown) => unknown)[]
+): unknown => project.reduce((accumulator, element) => element(accumulator), source)
 /** Retry a function up to X amount of times or until it is executed successfully, mainly for fetching/requesting stuff */
-export const retryF = async <F extends (...args: any) => any>(
+export const retryF = async <F extends (...args: Parameters<F>) => ReturnType<F>>(
  /**The function to be retried hoping it returns successfully */	fn: F,
 	/**Arguments to pass to fn */ args: Parameters<F>,
 	/**Number, is reduced by 1 every attempt, retryF stops when it reaches 0 */ retriesLeft: number,
 	/**Data to be returned as returnType of fn if retryF fails */ defaultReturn: ReturnType<F>,
 	/**Delay between each retry in milliseconds */ delayBetweenRetries: number,
 ): Promise<{ data: ReturnType<F>, was: 'success' | 'failure' }> => {
-	try { return { data: await fn([args]), was: 'success' } }
+	try { return { data: await fn(...args), was: 'success' } }
 	catch (error) {
 		colorLog('yellow', `retryF > ${fn.name} > ${retriesLeft} retriesLeft. {${error}}`)
 		if (!retriesLeft) { return { data: defaultReturn, was: 'failure' } }
@@ -320,18 +324,16 @@ _ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** 
 _ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 
 /**Promise-based delay that BREAKS THE LIMIT OF setTimeOut*/
-export const delay = (x: number) => {
-	return new Promise(resolve => {
-		const maxTimeOut = 1000 * 60 * 60 * 24
-		const loopsNeeded = Math.floor(x / maxTimeOut)
-		const leftOverTime = x % maxTimeOut
-		interval(loopsNeeded, leftOverTime)
+export const delay = (x: number) => new Promise(resolve => {
+	const maxTimeOut = 1000 * 60 * 60 * 24
+	const loopsNeeded = Math.floor(x / maxTimeOut)
+	const leftOverTime = x % maxTimeOut
+	interval(loopsNeeded, leftOverTime)
 
-		function interval(i: number, miliseconds: number) {
-			setTimeout(() => { if (i) { interval(i - 1, maxTimeOut) } else { resolve(true) } }, miliseconds)
-		}
-	})
-}
+	function interval(i: number, miliseconds: number) {
+		setTimeout(() => { if (i) { interval(i - 1, maxTimeOut) } else { resolve(true) } }, miliseconds)
+	}
+})
 /**
  * @param options.fullYear true (default, 4 digits) or false (2 digits)  
  * @param options.hourOnly default: false
@@ -397,18 +399,35 @@ _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** 
 _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 
 /**Add all default properties missing in an object*/
-export const addMissingPropsToObjects = <T extends {}>(original: T, defaults: Required<T>) => {
+export const addMissingPropsToObjects = <T extends object>(original: T, defaults: Required<T>) => {
 	Object.keys(defaults).forEach(x => {
 		const key = x as keyof T
-		if (original.hasOwnProperty(key)) { return }
+		if (Object.prototype.hasOwnProperty.call(original, key)) { return }
 		original[key] = defaults[key]
 	})
 	return original
 }
 /**Return a copy that can be altered without having to worry about modifying the original */
 export const deepClone = <T>(x: T) => JSON.parse(JSON.stringify(x)) as T
+/**Generate a Zod Schema from an array/object */
+function getZodSchemaFromDataStructure(dataStructure: object) {
+
+	const toLiteral = (x: unknown): z.ZodLiteral<unknown> => typeof x !== 'object' ?
+		getZodSchemaFromDataStructure(x!) as unknown as z.ZodLiteral<unknown> :
+		z.literal(x as never) as z.ZodLiteral<unknown>
+
+	return Array.isArray(dataStructure) ?
+		z.tuple(dataStructure.map(toLiteral) as []) :
+		z.object(mapObject(dataStructure, toLiteral) as ZodRawShape)
+}
+/**Map an object :D (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
+export const mapObject = <F extends (x: never) => ReturnType<F>, O extends object>(object: O, mappingFn: F) => {
+	const newObject = {} as { [key in keyof O]: ReturnType<F> }
+	Object.entries(object).forEach(entry => { const [key, value] = entry; newObject[key as keyof O] = mappingFn(value as never) })
+	return newObject as { [key in keyof O]: ReturnType<F> }
+}
 /**Replace the values of an object with those of another that shares the schema*/
-export const replaceObject = <T extends {}>(originalObject: T, newObject: T) => {
+export const replaceObject = <T extends object>(originalObject: T, newObject: T) => {
 	Object.keys(originalObject).forEach(key => delete originalObject[key as keyof T])
 	Object.keys(newObject).forEach(key => originalObject[key as keyof T] = newObject[key as keyof T])
 }
@@ -433,8 +452,8 @@ _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS *********
 _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
 
 /**start a setInterval and add it to an array */
-export const timer_add = (timers: btr_intervalWithId[], id: string, callBack: Function, interval: number) => {
-	const theTimer: ReturnType<typeof setInterval> = setInterval(() => { callBack }, interval)
+export const timer_add = (timers: btr_intervalWithId[], id: string, callBack: btr_voidFn, interval: number) => {
+	const theTimer: ReturnType<typeof setInterval> = setInterval(callBack, interval)
 	timers.push({ id, interval: theTimer })
 }
 /**Kill a setInterval and remove it from its belonging array */
@@ -458,7 +477,7 @@ _ /********** FOR STRINGS ******************** FOR STRINGS ******************** 
 
 /**console.log... WITH COLORS :D */
 /** Copy to clipboard using the corresponding function for the running enviroment (node/client)*/
-export const copyToClipboard = (x: any) => { isNode ? copyToClipboard_server(x) : copyToClipboard_client(x) }
+export const copyToClipboard = (x: unknown) => { isNode ? copyToClipboard_server(x) : copyToClipboard_client(x) }
 /**(Message) 💀 */
 export const errorLog = (message: string) => colorLog('red', message + ' 💀')
 /**TODO: describe me */
@@ -485,7 +504,7 @@ _ /********** MISC ******************** MISC ******************** MISC *********
 _ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 
 /**For obligatory callbacks */
-export const doNothing = (...args: unknown[]) => { }
+export const doNothing = (...args: unknown[]) => { args }
 /**Syntactic sugar for "null as unknown as T" */
 export const nullAs = {
 	string: () => null as unknown as string,
@@ -507,7 +526,7 @@ _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY *************
 _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 
 /**Copy to clipboard, objects arrays get stringify'd */
-export const copyToClipboard_client = (x: any) => {
+export const copyToClipboard_client = (x: unknown) => {
 	const text = stringify(x) as string
 	const a = document.createElement('textarea')
 	a.innerHTML = text
