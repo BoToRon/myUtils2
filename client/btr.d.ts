@@ -27,6 +27,7 @@ type zSchema<T> = {
     safeParse: (x: T) => SafeParseReturnType<T, T>;
 };
 type errorMessageHandler = (message: string) => void;
+type arrayPredicate<T> = (arg1: T) => boolean;
 type pipe_persistent_type<T> = (arg: T) => T;
 type pipe_mutable_type = {
     <T, A>(source: T, a: (value: T) => A): A;
@@ -46,6 +47,8 @@ export declare const addOrRemoveItem: <T>(arr: T[], item: T) => {
     action: "removed" | "added";
     arr: T[];
 };
+/**Adds an item to an array, or replaces the first one if found. WARNING: make sure the predicate can only find ONE item */
+export declare const addOrReplaceItem: <T>(arr: T[], newItem: T, predicate: arrayPredicate<T>) => void;
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
 export declare const asFormattedList: (arr: (string | number | boolean)[], useAndForTheLastItem: boolean) => string;
 /**Compare array A to array B, returns the answer along ab error message, if any */
@@ -67,7 +70,7 @@ export declare const mapArgsOfFnAgainstFn: <F extends (...args: any) => any>(fn:
 /**Remove a single item from an array, or all copies of that item if its a primitive value */
 export declare const removeItem: <T>(arr: T[], item: T) => number;
 /**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
-export declare const selfFilter: <T>(arr: T[], predicate: (arg1: T) => boolean) => {
+export declare const selfFilter: <T>(arr: T[], predicate: arrayPredicate<T>) => {
     removedItems: T[];
     removedCount: number;
 };
@@ -76,11 +79,11 @@ export declare const shuffle: <T>(arr: T[]) => T[];
 /**Sort an array of objects based on the value a property. A: Ascending, D: Descesding  */
 export declare const sortBy: <T extends object>(arr: T[], key: keyof T, direction: 'A' | 'D') => T[];
 /**syntactic sugar for selfFilter(arr, predicate).removedItems */
-export declare const spliceIf: <T>(arr: T[], predicate: (arg1: T) => boolean) => T[];
+export declare const spliceIf: <T>(arr: T[], predicate: arrayPredicate<T>) => T[];
 /**Remove X amount of items from the end of an array */
 export declare const spliceLast: <T>(arr: T[], count: number) => T[];
 /**Transfer items that meet a given condition from one array to another */
-export declare const transferItems: <T>(origin: T[], destination: T[], predicate: (arg1: T) => boolean) => {
+export declare const transferItems: <T>(origin: T[], destination: T[], predicate: arrayPredicate<T>) => {
     transferedCount: number;
 };
 /**Simple and standard functional programming pipe. Deprecated, use either zPipe (persistenType with zod errors) or pipe_mutableType! */
@@ -106,15 +109,6 @@ export declare const zPipe: <T>(zSchema: zSchema<T>, initialValue: T, ...fns: pi
 };
 /**Promise-based delay that BREAKS THE LIMIT OF setTimeOut*/
 export declare const delay: (x: number) => Promise<unknown>;
-/**Self-explanatory */
-export declare const isEven: (number: number) => boolean;
-/**Self-explanatory */
-export declare const isOdd: (number: number) => boolean;
-/**Returns whether a number is either the minimum provided, the maximum provided or any number in-between */
-export declare const isWithinRange: (number: number, max: number, min: number) => boolean;
-/**Returns a number up to (but not included) provided max, eg: roll(1) will ALWAYS return zero */
-export declare const roll: (maxRoll: number) => number;
-/**With the following options: fullYear, hourOnly, includeHour, listFirst (MM or DD) */
 /**
  * @param options.fullYear true (default, 4 digits) or false (2 digits)
  * @param options.hourOnly default: false
@@ -129,6 +123,14 @@ export declare const getFormattedTimestamp: (options?: {
     /**defaul: MM */ listFirst?: 'MM' | 'DD';
     /**default: Date.now */ timeStamp: number;
 }) => string;
+/**Self-explanatory */
+export declare const isEven: (number: number) => boolean;
+/**Self-explanatory */
+export declare const isOdd: (number: number) => boolean;
+/**Returns whether a number is either the minimum provided, the maximum provided or any number in-between */
+export declare const isWithinRange: (number: number, max: number, min: number) => boolean;
+/**Returns a number up to (but not included) provided max, eg: roll(1) will ALWAYS return zero */
+export declare const roll: (maxRoll: number) => number;
 /**1 becomes '1st' , 2 becomes '2nd', 3 becomes '3rd' and so on */
 export declare const toOrdinal: (number: number) => string;
 /**Return a copy that can be altered without having to worry about modifying the original */

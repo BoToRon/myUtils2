@@ -52,6 +52,7 @@ type packageJson = { name: string, version: string, scripts: { [key: string]: st
 type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
 type zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T> }
 type errorMessageHandler = (message: string) => void
+type arrayPredicate<T> = (arg1: T) => boolean
 type pipe_persistent_type<T> = (arg: T) => T
 type pipe_mutable_type = {
 	<T, A>(source: T, a: (value: T) => A): A
@@ -148,6 +149,11 @@ export const addOrRemoveItem = <T>(arr: T[], item: T) => {
 	else { removeItem(arr, item); x = 'removed' }
 	return { action: x, arr }
 }
+/**Adds an item to an array, or replaces the first one if found. WARNING: make sure the predicate can only find ONE item */
+export const addOrReplaceItem = <T>(arr: T[], newItem: T, predicate: arrayPredicate<T>) => {
+	const replaceableItem = arr.find(x => predicate(x))
+	replaceableItem ? arr[arr.indexOf(replaceableItem)] = newItem : arr.push(newItem)
+}
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
 export const asFormattedList = (arr: (string | number | boolean)[], useAndForTheLastItem: boolean) => {
 	let string = ''
@@ -196,7 +202,7 @@ export const mapArgsOfFnAgainstFn = <F extends (...args: any) => any>(fn: F, ...
 /**Remove a single item from an array, or all copies of that item if its a primitive value */
 export const removeItem = <T>(arr: T[], item: T) => selfFilter(arr, (x: T) => x !== item).removedCount
 /**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
-export const selfFilter = <T>(arr: T[], predicate: (arg1: T) => boolean) => {
+export const selfFilter = <T>(arr: T[], predicate: arrayPredicate<T>) => {
 	let removedCount = 0
 	let removedItems: T[] = []
 	for (let i = 0; i < arr.length; i++) {
@@ -224,16 +230,15 @@ export const sortBy = <T extends object>(arr: T[], key: keyof T, direction: 'A' 
 	return arr
 }
 /**syntactic sugar for selfFilter(arr, predicate).removedItems */
-export const spliceIf = <T>(arr: T[], predicate: (arg1: T) => boolean) => selfFilter(arr, predicate).removedItems
+export const spliceIf = <T>(arr: T[], predicate: arrayPredicate<T>) => selfFilter(arr, predicate).removedItems
 /**Remove X amount of items from the end of an array */
 export const spliceLast = <T>(arr: T[], count: number) => arr.splice(-count)
 /**Transfer items that meet a given condition from one array to another */
-export const transferItems = <T>(origin: T[], destination: T[], predicate: (arg1: T) => boolean) => {
+export const transferItems = <T>(origin: T[], destination: T[], predicate: arrayPredicate<T>) => {
 	const x = selfFilter(origin, predicate)
 	destination.push(...x.removedItems)
 	return { transferedCount: x.removedCount }
 }
-
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
@@ -327,17 +332,6 @@ export const delay = (x: number) => {
 		}
 	})
 }
-/**Self-explanatory */
-export const isEven = (number: number) => !isOdd(number)
-/**Self-explanatory */
-export const isOdd = (number: number) => Boolean(Number(number) % 2)
-/**Returns whether a number is either the minimum provided, the maximum provided or any number in-between */
-export const isWithinRange = (number: number, max: number, min: number) => number <= max && number >= min
-/**Returns a number up to (but not included) provided max, eg: roll(1) will ALWAYS return zero */
-export const roll = (maxRoll: number) => Math.floor(Math.random() * Number(maxRoll))
-
-/**With the following options: fullYear, hourOnly, includeHour, listFirst (MM or DD) */
-
 /**
  * @param options.fullYear true (default, 4 digits) or false (2 digits)  
  * @param options.hourOnly default: false
@@ -369,6 +363,14 @@ export const getFormattedTimestamp = (options?: {
 	if (includeHour) { x += ` ${hour}` }
 	return x
 }
+/**Self-explanatory */
+export const isEven = (number: number) => !isOdd(number)
+/**Self-explanatory */
+export const isOdd = (number: number) => Boolean(Number(number) % 2)
+/**Returns whether a number is either the minimum provided, the maximum provided or any number in-between */
+export const isWithinRange = (number: number, max: number, min: number) => number <= max && number >= min
+/**Returns a number up to (but not included) provided max, eg: roll(1) will ALWAYS return zero */
+export const roll = (maxRoll: number) => Math.floor(Math.random() * Number(maxRoll))
 /**1 becomes '1st' , 2 becomes '2nd', 3 becomes '3rd' and so on */
 export const toOrdinal = (number: number) => {
 	const asString = String(number)
