@@ -337,12 +337,12 @@ export const delay = (x) => {
  * @param options.hourOnly default: false
  * @param options.includeHour default: false
  * @param options.listFirst 'MM' (default) or 'DD'
- * @param options.timeStamp default: Date.now()
+ * @param options.timestamp default: Date.now()
  */
 export const getFormattedTimestamp = (options) => {
-    const defaults = { timeStamp: Date.now(), fullYear: true, hourOnly: false, includeHour: false, listFirst: 'MM' };
-    const { fullYear, hourOnly, includeHour, listFirst, timeStamp } = addMissingPropsToObjects(options, defaults);
-    const asDate = new Date(timeStamp);
+    const defaults = { timestamp: Date.now(), fullYear: true, hourOnly: false, includeHour: false, listFirst: 'MM' };
+    const { fullYear, hourOnly, includeHour, listFirst, timestamp } = addMissingPropsToObjects(options, defaults);
+    const asDate = new Date(timestamp);
     const hour = `${asDate}`.slice(16, 24);
     if (hourOnly) {
         return hour;

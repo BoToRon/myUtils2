@@ -126,14 +126,14 @@ export declare const delay: (x: number) => Promise<unknown>;
  * @param options.hourOnly default: false
  * @param options.includeHour default: false
  * @param options.listFirst 'MM' (default) or 'DD'
- * @param options.timeStamp default: Date.now()
+ * @param options.timestamp default: Date.now()
  */
 export declare const getFormattedTimestamp: (options?: {
     /**202X vs 2X, default: false */ fullYear?: boolean;
     /**default: false */ hourOnly?: boolean;
     /**default: false */ includeHour?: boolean;
     /**defaul: MM */ listFirst?: 'MM' | 'DD';
-    /**default: Date.now */ timeStamp: number;
+    /**default: Date.now */ timestamp: number;
 }) => string;
 /**Self-explanatory */
 export declare const isEven: (number: number) => boolean;

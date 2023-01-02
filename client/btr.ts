@@ -337,20 +337,20 @@ export const delay = (x: number) => {
  * @param options.hourOnly default: false
  * @param options.includeHour default: false
  * @param options.listFirst 'MM' (default) or 'DD'
- * @param options.timeStamp default: Date.now()
+ * @param options.timestamp default: Date.now()
  */
 export const getFormattedTimestamp = (options?: {
 	/**202X vs 2X, default: false */ fullYear?: boolean,
 	/**default: false */ hourOnly?: boolean,
 	 /**default: false */ includeHour?: boolean,
 	/**defaul: MM */ listFirst?: 'MM' | 'DD',
-	/**default: Date.now */ timeStamp: number
+	/**default: Date.now */ timestamp: number
 }) => {
 
-	const defaults = { timeStamp: Date.now(), fullYear: true, hourOnly: false, includeHour: false, listFirst: 'MM' as 'DD' | 'MM' }
-	const { fullYear, hourOnly, includeHour, listFirst, timeStamp } = addMissingPropsToObjects(options!, defaults)
+	const defaults = { timestamp: Date.now(), fullYear: true, hourOnly: false, includeHour: false, listFirst: 'MM' as 'DD' | 'MM' }
+	const { fullYear, hourOnly, includeHour, listFirst, timestamp } = addMissingPropsToObjects(options!, defaults)
 
-	const asDate = new Date(timeStamp)
+	const asDate = new Date(timestamp)
 	const hour = `${asDate}`.slice(16, 24)
 	if (hourOnly) { return hour }
 
