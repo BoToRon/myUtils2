@@ -43,7 +43,7 @@ _ /********** TYPES ******************** TYPES ******************** TYPES ******
 
 export type btr_trackedVueComponent = { _name: string, beforeCreate?: () => void, beforeDestroy?: () => void }
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void
-export type btr_intervalWithid = [id: string, interval: NodeJS.Timer]
+export type btr_intervalWithId = { id: string, interval: NodeJS.Timer }
 export type btr_globalAlert = { message: string, show: boolean }
 export type btr_validVariant = z.infer<typeof zValidVariants>
 
@@ -340,11 +340,11 @@ export const delay = (x: number) => {
  * @param options.timestamp default: Date.now()
  */
 export const getFormattedTimestamp = (options?: {
-	/**202X vs 2X, default: false */ fullYear?: boolean,
-	/**default: false */ hourOnly?: boolean,
-	 /**default: false */ includeHour?: boolean,
-	/**defaul: MM */ listFirst?: 'MM' | 'DD',
-	/**default: Date.now */ timestamp: number
+	fullYear?: boolean,
+	hourOnly?: boolean,
+	includeHour?: boolean,
+	listFirst?: 'MM' | 'DD',
+	timestamp: number
 }) => {
 
 	const defaults = { timestamp: Date.now(), fullYear: true, hourOnly: false, includeHour: false, listFirst: 'MM' as 'DD' | 'MM' }
@@ -427,15 +427,15 @@ _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS *********
 _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
 
 /**start a setInterval and add it to an array */
-export const timer_add = (timers: btr_intervalWithid[], id: string, callBack: Function, interval: number) => {
+export const timer_add = (timers: btr_intervalWithId[], id: string, callBack: Function, interval: number) => {
 	const theTimer: ReturnType<typeof setInterval> = setInterval(() => { callBack }, interval)
-	timers.push([id, theTimer])
+	timers.push({ id, interval: theTimer })
 }
 /**Kill a setInterval and remove it from its belonging array */
-export const timer_kill = (timers: btr_intervalWithid[], id: string) => {
-	const theTimer = timers.find(x => x[0] === id)
+export const timer_kill = (timers: btr_intervalWithId[], id: string) => {
+	const theTimer = timers.find(x => x.id === id)
 	if (!theTimer) { return }
-	clearInterval(theTimer[1])
+	clearInterval(theTimer.interval)
 	removeItem(timers, theTimer)
 }
 
@@ -483,11 +483,9 @@ export const doNothing = (...args: unknown[]) => { }
 export const nullAs = {
 	string: () => null as unknown as string,
 	number: () => null as unknown as number,
-	t1<T1>(x: T1) { doNothing(x); return null as T1 },
-	t2<T1, T2>(x: T1, y: T2) { doNothing(x, y); return null as T1 | T2 },
-	t3<T1, T2, T3>(x: T1, y: T2, z: T3) { doNothing(x, y, z); return null as T1 | T2 | T3 },
-	t4<T1, T2, T3, T4>(x: T1, y: T2, z: T3, _: T4) { doNothing(x, y, z, _); return null as T1 | T2 | T3 | T4 },
-	t5<T1, T2, T3, T4, T5>(x: T1, y: T2, z: T3, _: T4, $: T5) { doNothing(x, y, z, _, $); return null as T1 | T2 | T3 | T4 | T5 },
+	T3: <T1, T2, T3>() => null as T1 | T2 | T3,
+	T2: <T1, T2>() => null as T1 | T2,
+	T: <T>() => null as T,
 }
 
 _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/

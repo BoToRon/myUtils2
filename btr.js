@@ -435,15 +435,15 @@ _; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ********
 /**start a setInterval and add it to an array */
 export const timer_add = (timers, id, callBack, interval) => {
     const theTimer = setInterval(() => { callBack; }, interval);
-    timers.push([id, theTimer]);
+    timers.push({ id, interval: theTimer });
 };
 /**Kill a setInterval and remove it from its belonging array */
 export const timer_kill = (timers, id) => {
-    const theTimer = timers.find(x => x[0] === id);
+    const theTimer = timers.find(x => x.id === id);
     if (!theTimer) {
         return;
     }
-    clearInterval(theTimer[1]);
+    clearInterval(theTimer.interval);
     removeItem(timers, theTimer);
 };
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
@@ -488,11 +488,9 @@ export const doNothing = (...args) => { };
 export const nullAs = {
     string: () => null,
     number: () => null,
-    t1(x) { doNothing(x); return null; },
-    t2(x, y) { doNothing(x, y); return null; },
-    t3(x, y, z) { doNothing(x, y, z); return null; },
-    t4(x, y, z, _) { doNothing(x, y, z, _); return null; },
-    t5(x, y, z, _, $) { doNothing(x, y, z, _, $); return null; },
+    T3: () => null,
+    T2: () => null,
+    T: () => null,
 };
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
