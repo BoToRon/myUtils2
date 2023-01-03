@@ -701,10 +701,11 @@ export const basicProjectChecks = async (
 	function checkEslintConfigRules() {
 
 		const zSchema = getZodSchemaFromDataStructure({
-			quotes: ['error', 'single'],
-			'quote-props': ['error', 'as-needed'],
+			'arrow-body-style': ['error', 'as-needed'],
 			'func-style': ['error', 'declaration'],
-			'arrow-body-style': ['error', 'as-needed']
+			'quote-props': ['error', 'as-needed'],
+			quotes: ['error', 'single'],
+			'no-undef': 'off',
 		})
 
 		const x = (error: string) => errorHandler('---------- CHECK_ESLINT_CONFIG_RULES: ---------- ' + error)

@@ -22,9 +22,10 @@ module.exports = {
 		'@typescript-eslint'
 	],
 	rules: {
-		quotes: ['error', 'single'],
-		'quote-props': ['error', 'as-needed'],
-		'func-style': ['error', 'declaration'],
 		'arrow-body-style': ['error', 'as-needed'],
+		'func-style': ['error', 'declaration'],
+		'quote-props': ['error', 'as-needed'],
+		quotes: ['error', 'single'],
+		'no-undef': 'off',
 	}
 }
