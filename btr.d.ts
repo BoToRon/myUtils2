@@ -1,6 +1,5 @@
 /// <reference types="node" />
 /// <reference types="node" />
-/// <reference types="node" />
 import { type SafeParseReturnType, z } from 'zod';
 export declare const zValidVariants: any;
 export type btr_trackedVueComponent = {
@@ -246,7 +245,7 @@ export declare function fsReadFileAsync(filePath: string): Promise<any>;
 /**Wrapper for fsWriteFileAsync that announces the start of the file-writing */
 export declare function fsWriteFileAsync(filePath: string, content: string): Promise<any>;
 /** Get the contents of the .env */
-export declare function getEnviromentVariables(): Promise<NodeJS.ProcessEnv>;
+export declare function getEnviromentVariables(): Promise<z.infer<any>>;
 /**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
 export declare const getSeparatingCommentBlock: (message: string) => string;
 /**fetch the latest package.json of my-utils */

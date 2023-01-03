@@ -13,7 +13,7 @@ _;
 _;
 _;
 _;
-import { z } from 'zod';
+import { z, string } from 'zod';
 _;
 import { fromZodError } from 'zod-validation-error';
 _;
@@ -32,6 +32,14 @@ const isNode = typeof process !== 'undefined' && process.versions != null && pro
 const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile']);
 const zValidNpmCommand_package = z.enum(['all', 'git', 'transpile']);
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch']);
+const zMyEnv = z.object({
+    ADMIN_PASSWORD: string(),
+    APP_NAME: string(),
+    DEV_OR_PROD: string(),
+    ERIS_TOKEN: string(),
+    MONGO_URI: string(),
+    PORT: string(),
+});
 _; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/

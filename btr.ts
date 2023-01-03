@@ -25,7 +25,7 @@ import { exec, spawn } from 'child_process'	//DELETETHISFORCLIENT
 _
 import mongodb, { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
 _
-import { type Primitive, type SafeParseReturnType, z, type ZodRawShape, type ZodTypeAny } from 'zod'
+import { type Primitive, type SafeParseReturnType, z, type ZodRawShape, type ZodTypeAny, string } from 'zod'
 _
 import { fromZodError } from 'zod-validation-error'
 _
@@ -46,6 +46,14 @@ const isNode = typeof process !== 'undefined' && process.versions != null && pro
 const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile'])
 const zValidNpmCommand_package = z.enum(['all', 'git', 'transpile'])
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch'])
+const zMyEnv = z.object({
+	ADMIN_PASSWORD: string(),
+	APP_NAME: string(),
+	DEV_OR_PROD: string(),
+	ERIS_TOKEN: string(),
+	MONGO_URI: string(),
+	PORT: string(),
+})
 
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
@@ -77,6 +85,7 @@ type messageHandler = (message: string) => void
 type arrayPredicate<T> = (arg1: T) => boolean
 type pipe_persistent_type<T> = (arg: T) => T
 type tsConfig = { compilerOptions: object }
+type myEnv = z.infer<typeof zMyEnv>
 type pipe_mutable_type = {
 	<T, A>(source: T, a: (value: T) => A): A
 	<T, A, B>(source: T, a: (value: T) => A, b: (value: A) => B): B
@@ -174,7 +183,7 @@ export const divine = {
 	init: async () => {
 
 		const { APP_NAME, ERIS_TOKEN } = await getEnviromentVariables()
-		const bot = eris(ERIS_TOKEN as string)
+		const bot = eris(ERIS_TOKEN)
 		await connectToDiscord()
 		divine.bot = bot
 
@@ -674,7 +683,7 @@ _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY *************
 
 /**Copy to clipboard, objects arrays get stringify'd */
 export const copyToClipboard_client = (x: unknown) => {
-	const text = stringify(x) as string
+	const text = stringify(x)
 	const a = document.createElement('textarea')
 	a.innerHTML = text
 	document.body.appendChild(a)
@@ -871,18 +880,20 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 
 	/**Check if all the desired enviroment keys are defined */
 	async function getAndCheckEnviromentVariables() {
-		const str = z.string()
-		const env: unknown = await getEnviromentVariables()
-		const desiredEnv = z.object({ ADMIN_PASSWORD: str, APP_NAME: str, DEV_OR_PROD: str, ERIS_TOKEN: str, MONGO_URI: str, PORT: str, })
-		return zodCheck_curry(errorHandler, false)(desiredEnv, env)
+		const env = await getEnviromentVariables()
+		return zodCheck_curry(errorHandler, false)(zMyEnv, env)
 	}
 
 	/**Turn off that damn skipLibCheck that comes on by default */
 	async function getSkipLibCheckOfVueIsFalse() {
-		const file = await fsReadFileAsync('./client/node_modules/@vue/tsconfig/tsconfig.json')
-		const answer = file.includes('"skipLibCheck": true')
-		if (!answer) { errorHandler('skipLibCheck should be FALSE') }
-		return answer
+		const { DEV_OR_PROD } = await getEnviromentVariables()
+		if (DEV_OR_PROD !== 'DEV') { return true }
+
+		const path = './client/node_modules/@vue/tsconfig/tsconfig.json'
+		const file = await fsReadFileAsync(path)
+		const skipLibCheckIsOn = file.includes('"skipLibCheck": true')
+		if (skipLibCheckIsOn) { errorHandler(`skipLibCheck should be FALSE, fix at (${path})`) }
+		return !skipLibCheckIsOn
 	}
 
 	/**Check if the project is using the latest version of "myUtils" */
@@ -951,7 +962,7 @@ export async function fsWriteFileAsync(filePath: string, content: string) {
 export async function getEnviromentVariables() {
 	const require = createRequire(import.meta.url)
 	require('dotenv').config({ path: './.env' })
-	return process.env
+	return process.env as myEnv
 }
 /**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
 export const getSeparatingCommentBlock = (message: string) => {
@@ -981,14 +992,14 @@ export const getMainDependencies = async () => {
 	const env = await getEnviromentVariables()
 	const { MONGO_URI, PORT } = env
 
-	const mongoClient = await getMongoClient(MONGO_URI as string)
-	const httpServer = startAndGetHttpServer(PORT as string)
+	const mongoClient = await getMongoClient(MONGO_URI)
+	const httpServer = startAndGetHttpServer(PORT)
 	divine.init()
 
 	return { httpServer, mongoClient }
 
 	async function getMongoClient(MONGO_URI: string) {
-		const mongo = new mongodb.MongoClient(MONGO_URI as string)
+		const mongo = new mongodb.MongoClient(MONGO_URI)
 		let mongoClient: MongoClient = <MongoClient>nullAs()
 		mongo.connect((err, client) => { if (err) { throw err } mongoClient = client as MongoClient })
 		colorLog('cyan', 'waiting for Mongo')

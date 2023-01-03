@@ -13,7 +13,7 @@ _
 _
 _
 _
-import { type Primitive, type SafeParseReturnType, z, type ZodRawShape, type ZodTypeAny } from 'zod'
+import { type Primitive, type SafeParseReturnType, z, type ZodRawShape, type ZodTypeAny, string } from 'zod'
 _
 import { fromZodError } from 'zod-validation-error'
 _
@@ -34,6 +34,14 @@ const isNode = typeof process !== 'undefined' && process.versions != null && pro
 const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile'])
 const zValidNpmCommand_package = z.enum(['all', 'git', 'transpile'])
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch'])
+const zMyEnv = z.object({
+	ADMIN_PASSWORD: string(),
+	APP_NAME: string(),
+	DEV_OR_PROD: string(),
+	ERIS_TOKEN: string(),
+	MONGO_URI: string(),
+	PORT: string(),
+})
 
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
@@ -64,6 +72,7 @@ type messageHandler = (message: string) => void
 type arrayPredicate<T> = (arg1: T) => boolean
 type pipe_persistent_type<T> = (arg: T) => T
 type tsConfig = { compilerOptions: object }
+type myEnv = z.infer<typeof zMyEnv>
 type pipe_mutable_type = {
 	<T, A>(source: T, a: (value: T) => A): A
 	<T, A, B>(source: T, a: (value: T) => A, b: (value: A) => B): B
@@ -161,7 +170,7 @@ export const divine = {
 	init: async () => {
 
 		const { APP_NAME, ERIS_TOKEN } = await getEnviromentVariables()
-		const bot = eris(ERIS_TOKEN as string)
+		const bot = eris(ERIS_TOKEN)
 		await connectToDiscord()
 		divine.bot = bot
 
@@ -660,7 +669,7 @@ _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY *************
 
 /**Copy to clipboard, objects arrays get stringify'd */
 export const copyToClipboard_client = (x: unknown) => {
-	const text = stringify(x) as string
+	const text = stringify(x)
 	const a = document.createElement('textarea')
 	a.innerHTML = text
 	document.body.appendChild(a)

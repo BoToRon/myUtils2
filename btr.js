@@ -25,7 +25,7 @@ import { exec, spawn } from 'child_process'; //DELETETHISFORCLIENT
 _;
 import mongodb from 'mongodb'; //DELETETHISFORCLIENT
 _;
-import { z } from 'zod';
+import { z, string } from 'zod';
 _;
 import { fromZodError } from 'zod-validation-error';
 _;
@@ -44,6 +44,14 @@ const isNode = typeof process !== 'undefined' && process.versions != null && pro
 const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile']);
 const zValidNpmCommand_package = z.enum(['all', 'git', 'transpile']);
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch']);
+const zMyEnv = z.object({
+    ADMIN_PASSWORD: string(),
+    APP_NAME: string(),
+    DEV_OR_PROD: string(),
+    ERIS_TOKEN: string(),
+    MONGO_URI: string(),
+    PORT: string(),
+});
 _; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
@@ -819,19 +827,22 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
     }
     /**Check if all the desired enviroment keys are defined */
     async function getAndCheckEnviromentVariables() {
-        const str = z.string();
         const env = await getEnviromentVariables();
-        const desiredEnv = z.object({ ADMIN_PASSWORD: str, APP_NAME: str, DEV_OR_PROD: str, ERIS_TOKEN: str, MONGO_URI: str, PORT: str, });
-        return zodCheck_curry(errorHandler, false)(desiredEnv, env);
+        return zodCheck_curry(errorHandler, false)(zMyEnv, env);
     }
     /**Turn off that damn skipLibCheck that comes on by default */
     async function getSkipLibCheckOfVueIsFalse() {
-        const file = await fsReadFileAsync('./client/node_modules/@vue/tsconfig/tsconfig.json');
-        const answer = file.includes('"skipLibCheck": true');
-        if (!answer) {
-            errorHandler('skipLibCheck should be FALSE');
+        const { DEV_OR_PROD } = await getEnviromentVariables();
+        if (DEV_OR_PROD !== 'DEV') {
+            return true;
         }
-        return answer;
+        const path = './client/node_modules/@vue/tsconfig/tsconfig.json';
+        const file = await fsReadFileAsync(path);
+        const skipLibCheckIsOn = file.includes('"skipLibCheck": true');
+        if (skipLibCheckIsOn) {
+            errorHandler(`skipLibCheck should be FALSE, fix at (${path})`);
+        }
+        return !skipLibCheckIsOn;
     }
     /**Check if the project is using the latest version of "myUtils" */
     async function myUtils_areUpToDate() {
