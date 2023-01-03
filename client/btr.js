@@ -507,7 +507,7 @@ function getZodSchemaFromData(data) {
         return z.nullable(nullAs());
     }
     if (typeof data !== 'object') {
-        return toLiteral(data);
+        return z.literal(data);
     }
     if (Array.isArray(data)) {
         return z.tuple(data.map(toLiteral));

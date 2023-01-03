@@ -13,7 +13,7 @@ _
 _
 _
 _
-import { z, ZodTypeAny, type SafeParseReturnType, type ZodRawShape } from 'zod'
+import { type Primitive, type SafeParseReturnType, z, type ZodRawShape, type ZodTypeAny } from 'zod'
 _
 import { fromZodError } from 'zod-validation-error'
 _
@@ -543,7 +543,7 @@ function getZodSchemaFromData(data: unknown) {
 		z.literal(x as never) as z.ZodLiteral<unknown>
 
 	if (!data) { return z.nullable(<ZodTypeAny>nullAs()) }
-	if (typeof data !== 'object') { return toLiteral(data) }
+	if (typeof data !== 'object') { return z.literal(data as Primitive) }
 	if (Array.isArray(data)) { return z.tuple(data.map(toLiteral) as []) }
 	return z.object(mapObject(data, toLiteral) as ZodRawShape)
 }

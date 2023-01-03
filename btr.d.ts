@@ -1,7 +1,7 @@
 /// <reference types="node" />
 /// <reference types="node" />
 /// <reference types="node" />
-import { z, type SafeParseReturnType } from 'zod';
+import { type SafeParseReturnType, z } from 'zod';
 export declare const zValidVariants: any;
 export type btr_trackedVueComponent = {
     _name: string;
@@ -30,13 +30,6 @@ type validChalkColor = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' 
 type zSchema<T> = {
     safeParse: (x: T) => SafeParseReturnType<T, T>;
     strict?: () => zSchema<T>;
-};
-type packageJson = {
-    name: string;
-    version: string;
-    scripts: {
-        [key: string]: string;
-    };
 };
 type bvToast = {
     toast: (message: string, toastOptions: toastOptions) => void;
@@ -264,7 +257,7 @@ export declare const getMainDependencies: () => Promise<{
     mongoClient: MongoClient;
 }>;
 /**Get the package json of the project with this (utils) package installed */
-export declare function getPackageJsonOfProject(): Promise<packageJson>;
+export declare function importFileFromProject<T>(filename: string, extension: 'cjs' | 'js' | 'json'): Promise<T>;
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export declare const killProcess: (message: string) => never;
 /**Easily run the scripts of this (utils) repo's package.json */

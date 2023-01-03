@@ -25,7 +25,7 @@ import { exec, spawn } from 'child_process'	//DELETETHISFORCLIENT
 _
 import mongodb, { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
 _
-import { z, ZodTypeAny, type SafeParseReturnType, type ZodRawShape } from 'zod'
+import { type Primitive, type SafeParseReturnType, z, type ZodRawShape, type ZodTypeAny } from 'zod'
 _
 import { fromZodError } from 'zod-validation-error'
 _
@@ -556,7 +556,7 @@ function getZodSchemaFromData(data: unknown) {
 		z.literal(x as never) as z.ZodLiteral<unknown>
 
 	if (!data) { return z.nullable(<ZodTypeAny>nullAs()) }
-	if (typeof data !== 'object') { return toLiteral(data) }
+	if (typeof data !== 'object') { return z.literal(data as Primitive) }
 	if (Array.isArray(data)) { return z.tuple(data.map(toLiteral) as []) }
 	return z.object(mapObject(data, toLiteral) as ZodRawShape)
 }
@@ -719,23 +719,17 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 	/**Check the rules in a project's eslint config file all fit the established schema */
 	async function checkEslintConfigRules() {
 
-		const zSchema = getZodSchemaFromData({
+		const desiredRules = {
 			'arrow-body-style': ['error', 'as-needed'],
 			'func-style': ['error', 'declaration'],
 			'quote-props': ['error', 'as-needed'],
 			quotes: ['error', 'single'],
 			semi: ['error', 'never'],
-		})
-
-		const eslintConfig = await getEslintConfigFile()
-		return zodCheck_curry(errorHandler)(zSchema, eslintConfig.rules)
-
-		/**Get the eslint config file of the main project */
-		async function getEslintConfigFile() {
-			const path = './.eslintrc.cjs'
-			const eslintConfig = (await import(path)).default
-			return eslintConfig as eslintConfig
+			'no-undef': 'off',
 		}
+
+		const eslintConfingOfProject = <eslintConfig>await importFileFromProject('.eslintrc', 'cjs')
+		return zodCheck_curry(errorHandler)(getZodSchemaFromData(desiredRules), eslintConfingOfProject.rules)
 	}
 
 	/**Check the scripts in a project's package json all fit the established schema */
@@ -759,8 +753,8 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 			vue: 'cd client & npm run dev'
 		}
 
-		const zPackageJsonScriptsSchema = getZodSchemaFromData(desiredPackageJsonScripts)
-		return zodCheck_curry(errorHandler)(zPackageJsonScriptsSchema, (await getPackageJsonOfProject()).scripts)
+		const packageJsonOfProject = <packageJson>await importFileFromProject('package', 'json')
+		return zodCheck_curry(errorHandler)(getZodSchemaFromData(desiredPackageJsonScripts), packageJsonOfProject.scripts)
 	}
 
 	/**Check the rules in a project's ts config file all fit the established schema */
@@ -880,7 +874,7 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 		const str = z.string()
 		const env: unknown = await getEnviromentVariables()
 		const desiredEnv = z.object({ ADMIN_PASSWORD: str, APP_NAME: str, DEV_OR_PROD: str, ERIS_TOKEN: str, MONGO_URI: str, PORT: str, })
-		return zodCheck_curry(errorHandler)(desiredEnv, env)
+		return zodCheck_curry(errorHandler, false)(desiredEnv, env)
 	}
 
 	/**Turn off that damn skipLibCheck that comes on by default */
@@ -1013,10 +1007,11 @@ export const getMainDependencies = async () => {
 	}
 }
 /**Get the package json of the project with this (utils) package installed */
-export async function getPackageJsonOfProject() {
-	const path = '../../../package.json'
-	const mainPackageJson = (await import(path, { assert: { type: 'json' } })).default
-	return mainPackageJson as packageJson
+export async function importFileFromProject<T>(filename: string, extension: 'cjs' | 'js' | 'json') {
+	const path = `../../../${filename}.${extension}`
+	const options = extension === 'json' ? { assert: { type: 'json' } } : {}
+	const mainPackageJson = (await import(path, options)).default
+	return mainPackageJson as T
 }
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export const killProcess = (message: string) => { bigConsoleError(message); process.exit() }
