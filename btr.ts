@@ -574,19 +574,23 @@ _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY *************
 _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 
 /** Check the version of @botoron/utils, the enviroment variables and the package.json scripts */
-export const basicProjectChecks = (
-	/**PROD: DivineError, DEV: killProcess */ errorHandler: errorMessageHandler,
-	packageJson: packageJson,
-	tsConfig: tsConfig,
-	eslintConfig: eslintConfig,
-	env: NodeJS.ProcessEnv
-) => {
+export const basicProjectChecks = async (packageJson: packageJson, tsConfig: tsConfig, eslintConfig: eslintConfig,) => {
 
-	const utilsCheck = myUtils_areUpToDate()
-	const scriptsCheck = checkJsonPackageScripts()
-	const envCheck = getAndCheckEnviromentVariables()
-	const eslintCheck = checkEslintConfigRules()
+
+	const env = await getEnviromentVariables()
+	const erroHandler = await getErrorHandler()
+
+	async function getErrorHandler(env: NodeJS.ProcessEnv) {
+		if (env.DEV_OR_PROD === 'DEV') { return killProcess }
+		return divineError()
+	}
+
+
 	const tsConfigCheck = checkTsConfigCompilerOptions()
+	const envCheck = getAndCheckEnviromentVariables(env)
+	const scriptsCheck = checkJsonPackageScripts()
+	const eslintCheck = checkEslintConfigRules()
+	const utilsCheck = myUtils_areUpToDate()
 
 	return envCheck && eslintCheck && scriptsCheck && tsConfigCheck && utilsCheck
 
@@ -600,7 +604,8 @@ export const basicProjectChecks = (
 			'arrow-body-style': ['error', 'as-needed']
 		})
 
-		return zodCheck_curry(errorHandler)(zSchema, eslintConfig.rules)
+		const x = (error: string) => errorHandler('---------- CHECK_ESLINT_CONFIG_RULES: ---------- ' + error)
+		return zodCheck_curry(x)(zSchema, eslintConfig.rules)
 	}
 
 	/**Check the scripts in a project's package json all fit the established schema */
@@ -719,7 +724,7 @@ export const basicProjectChecks = (
 	}
 
 	/**Check if all the desired enviroment keys are defined */
-	function getAndCheckEnviromentVariables() {
+	function getAndCheckEnviromentVariables(env: NodeJS.ProcessEnv) {
 		const desiredEnvKeys = ['ADMIN_PASSWORD', 'APP_NAME', 'DEV_OR_PROD', 'ERIS_TOKEN', 'MONGO_URI', 'PORT']
 		const { answer, errorMessage } = compareArrays(Object.keys(env), 'hasAllItemsOf', desiredEnvKeys)
 		if (errorMessage) { errorHandler(errorMessage) }
@@ -819,11 +824,10 @@ export const getLatestPackageJsonFromGithub = async () => {
 export const getMainDependencies = async (packageJson: packageJson, tsConfig: tsConfig, eslintConfig: eslintConfig) => {
 
 	const env = await getEnviromentVariables()
-	const { ADMIN_PASSWORD, APP_NAME, DEV_OR_PROD, ERIS_TOKEN, MONGO_URI, PORT } = env
+	const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN, MONGO_URI, PORT } = env
 
 	const divineBot = await getDivineBot()
-	basicProjectChecks(divineError, packageJson, tsConfig, eslintConfig, { ADMIN_PASSWORD, APP_NAME, DEV_OR_PROD, ERIS_TOKEN, MONGO_URI, PORT })
-
+	basicProjectChecks(packageJson, tsConfig, eslintConfig)
 	const httpServer = startAndGetHttpServer()
 	const mongoClient = await getMongoClient()
 
