@@ -5,14 +5,12 @@
 	"description": "Utilities of me for me",
 	"main": "btr.js",
 	"scripts": {
-		"npmRun": "ts-node-esm --transpileOnly btr.ts",
-		"_________________________________________________a": "__________________________________________________",
-		"all": "npm run npmRun --btrCommand=publish & npm publish",
-		"transpile": "npm run npmRun --btrCommand=transpile",
-		"git": "npm run npmRun --btrCommand=git",
-		"_________________________________________________b": "__________________________________________________",
-		"_tsIndex": "tsc --declaration --listEmittedFiles --target esnext btr.ts",
-		"test": "ts-node-esm test.ts"
+		"test": "ts-node-esm test.ts",
+		"npmScript": "ts-node-esm --transpileOnly btr.ts",
+		"__________________________________________________": "__________________________________________________",
+		"all": "npm run npmScript --command_package=all & npm publish",
+		"transpile": "npm run npmScript --command_package=transpile",
+		"git": "npm run npmScript --command_package=git"
 	},
 	"repository": {
 		"type": "git",

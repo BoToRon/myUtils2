@@ -43,9 +43,9 @@ _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ***********
 
 export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'])
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
-const zValidVersionIncrement = z.enum(['major', 'minor', 'patch'])	//DELETETHISFORCLIENT
-const zValidNpmCommand = z.enum(['git', 'publish', 'transpile'])
-const mainPackageJson = await getPackageJsonOfProject() //DELETETHISFORCLIENT
+const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile'])
+const zValidNpmCommand_package = z.enum(['all', 'git', 'transpile'])
+const zValidVersionIncrement = z.enum(['major', 'minor', 'patch'])
 
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
@@ -69,9 +69,10 @@ type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, va
 type validChalkColor = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'white' | 'grey' | 'magentaBright'	//DELETETHISFORCLIENT
 type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
+type validNpmCommand_package = z.infer<typeof zValidNpmCommand_package>
+type validNpmCommand_project = z.infer<typeof zValidNpmCommand_project>
 type zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T> }
 type eslintConfig = { rules: { [key: string]: string[] } }
-type validNpmCommand = z.infer<typeof zValidNpmCommand>	//DELETETHISFORCLIENT
 type messageHandler = (message: string) => void
 type arrayPredicate<T> = (arg1: T) => boolean
 type pipe_persistent_type<T> = (arg: T) => T
@@ -687,9 +688,9 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 	const skipLibCheckIsFalse = await getSkipLibCheckOfVueIsFalse()
 	const tsConfigCheck = await checkTsConfigCompilerOptions()
 	const envCheck = await getAndCheckEnviromentVariables()
+	const scriptsCheck = await checkJsonPackageScripts()
 	const eslintCheck = await checkEslintConfigRules()
 	const utilsCheck = await myUtils_areUpToDate()
-	const scriptsCheck = checkJsonPackageScripts()
 
 	return envCheck && eslintCheck && scriptsCheck && skipLibCheckIsFalse && tsConfigCheck && utilsCheck
 
@@ -715,24 +716,28 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 	}
 
 	/**Check the scripts in a project's package json all fit the established schema */
-	function checkJsonPackageScripts() {
+
+	async function checkJsonPackageScripts() {
 
 		const desiredPackageJsonScripts = {
 			btr: 'npm i @botoron/utils',
-			'build-server': 'npm run npmScript --command=build',
+			'btr-u': 'npm uninstall @botoron/utils',
+			'build-server': 'npm run npmScript --command_project=build',
 			'build-client': 'cd client & npm run build-only',
 			'build-all': 'tsc --target esnext server/init.ts --outDir ../dist & cd client & npm run build-only && cd ..',
-			git: 'npm run npmScript --command=git',
+			check: 'npm run npmScript --command_project=check',
+			git: 'npm run npmScript --command_project=git',
 			localtunnel: 'lt --port 3000',
 			nodemon: 'nodemon test/server/init.js',
 			npmScript: 'node node_modules/@botoron/utils/btr.js',
 			start: 'node test/server/init.js',
-			transpile: 'npm run npmScript --command=transpile',
+			test: 'ts-node-esm test.ts',
+			transpile: 'npm run npmScript --command_project=transpile',
 			vue: 'cd client & npm run dev'
 		}
 
 		const zPackageJsonScriptsSchema = getZodSchemaFromDataStructure(desiredPackageJsonScripts)
-		return zodCheck_curry(errorHandler)(zPackageJsonScriptsSchema, mainPackageJson.scripts)
+		return zodCheck_curry(errorHandler)(zPackageJsonScriptsSchema, (await getPackageJsonOfProject()).scripts)
 	}
 
 	/**Check the rules in a project's ts config file all fit the established schema */
@@ -993,13 +998,13 @@ export async function getPackageJsonOfProject() {
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export const killProcess = (message: string) => { bigConsoleError(message); process.exit() }
 /**Easily run the scripts of this (utils) repo's package.json */
-export const npmRun = async (npmCommand: validNpmCommand) => {
+export const npmRun_package = async (npmCommand: validNpmCommand_package) => {
 
 	const utilsRepoName = 'Utils 🛠️'
 
 	if (npmCommand === 'transpile') { transpileFiles(() => colorLog('magenta', 'Process over')) }
 	if (npmCommand === 'git') { prompCommitMessageAndPush(utilsRepoName) }
-	if (npmCommand === 'publish') { transpileFiles(promptVersioning) }
+	if (npmCommand === 'all') { transpileFiles(promptVersioning) }
 
 	async function promptVersioning() {
 		function tryAgain(error: string) { colorLog('yellow', error); promptVersioning() }
@@ -1037,114 +1042,37 @@ export const npmRun = async (npmCommand: validNpmCommand) => {
 		})
 	}
 }
-/**Prompt to submit a git commit message and then push */
-export async function prompCommitMessageAndPush(repoName: string) {
+/**Run convenient scripts for and from a project's root folder */
+export const npmRun_project = async (npmCommand: validNpmCommand_project) => {
 
-	//order matters with these 3
-	const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test)'
-
-	logDetailsForPrompt()
-	const commitMessage = await questionAsPromise(`Enter commit type ${commitTypes} plus a message:`)
-
-	function tryAgain(error: string) { colorLog('yellow', error); prompCommitMessageAndPush(repoName); return }
-	if (!zodCheck_curry(tryAgain)(get_zValidCommitMessage(), commitMessage)) { return }
-	copyToClipboard_server(commitMessage)
-	await gitAddCommitPush()
-
-	function get_zValidCommitMessage() {
-		const commitRegex = new RegExp(`(?<!.)${commitTypes}:`)
-		return z.string().min(15).max(50).regex(commitRegex, `String must start with ${commitTypes}:`)
-	}
-
-	function gitAddCommitPush() {
-		return new Promise(resolve => {
-			exec('git add .', () => {
-				successLog('git add .')
-				colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.')
-				exec('git commit', () => {
-					successLog('git commit')
-					exec('git push', () => {
-						successLog('git push')
-						resolve(true)
-					})
-				})
-			})
-		})
-	}
-
-	function logDetailsForPrompt() {
-		delay(500).then(() => {
-			colorLog('yellow', '50-character limits ends at that line: * * * * * |')
-			colorLog('green', repoName)
-			console.log()
-		})
-	}
-}
-/**Prompts a question in the terminal, awaits for the input and returns it */
-export async function questionAsPromise(question: string) {
-	const readline = getReadLine.createInterface({ input: process.stdin, output: process.stdout })
-	const input = await new Promise(res => { readline.question(chalk.magenta(question) + '\n', res) }) as string
-	readline.close()
-	return input
-}
-
-const btrCommand = process.env.npm_config_btrCommand as validNpmCommand
-if (btrCommand) { zodCheckAndHandle(zValidNpmCommand, btrCommand, npmRun, [btrCommand], console.log) }
-
-/*
- * -------------------------------------------------------------------
- * Regarding passing a function with its arguments to another function
- * -------------------------------------------------------------------
- * 
- * looks like														is called as								must apply as										explanation
- * wrppr(fn: F, args: Parameters<F>)		xyz(fn, [...fn.args])				fn(...args as Parameters<F>[])	"args" is passed as an array
- * wrppr(fn: F, ...args: Parameters<F>)	xyz(fn, arg1, arg2, etc..)	fn(...args as Parameters<F>[])  "..args" is spread into an array
- * 
- * EITHER WAY the arguments must be applied to fn as "fn(...args)" where "args = Parameters<F>[]"
- * 
- ? WHICH TO USE 
- * Both are effectively the same, it's a question of taste
- * Option A is clear in that it makes you pass all of fn.args encapsulated into a single array argument
- * Option B is cooler in that it adjusts the length of the arguments needed as they will be spread by the wrapping function	 
- ! in B "args" must be spread parameters, meaning the MUST be the last arguments passed to "wrppr", A doesn't have this problem :)
- * // Answer: Use A, so make sure to stay consistent when doing this, but either way use this comment block as reference
- * 
- ! Extra
- * wrppr(fn: F, ...args: Parameters<F>[])
- * "...args" is actually a collection of args, where each item is valid conjunt of arguments for fn
- * so you can all on each item of "args", eg: args.forEach(x => fn(x))
- * (see mapArgsOfFnAgainstFn as an existing example)
- */
-
-export const npmScript = async (options: { serverFolder_dist?: string, serverFolder_src?: string, fileWithRef?: string }) => {
+	//async (options: { serverFolder_dist?: string, serverFolder_src?: string, fileWithRef?: string })
+	//if (!options) { options = defaults }
+	//const { serverFolder_dist, serverFolder_src, fileWithRef } = addMissingPropsToObjects(options!, defaults)
 
 	await basicProjectChecks()
 
 	const defaults = { serverFolder_dist: '../dist', serverFolder_src: './test', fileWithRef: 'ref' }
-	if (!options) { options = defaults }
-	const { serverFolder_dist, serverFolder_src, fileWithRef } = addMissingPropsToObjects(options!, defaults)
-
-	const command = `${process.env['npm_config_command']}`
+	const { serverFolder_dist, serverFolder_src, fileWithRef } = defaults
 	const { APP_NAME } = await getEnviromentVariables()
 
-	if (['build', 'transpile'].includes(command)) { canTranspileCheckAndHandle() }
-	else if (command === 'git') { prompCommitMessageAndPush(`${APP_NAME}`) }
-	else { killProcess(`'${command}' is NOT a valid npmRun command`) }
+	if (npmCommand === 'check') { basicProjectChecks() }
+	if (npmCommand === 'git') { prompCommitMessageAndPush(`${APP_NAME}`) }
+	if (['build', 'transpile'].includes(npmCommand)) { canTranspileCheckAndHandle() }
 
 	async function canTranspileCheckAndHandle() {
 
 		const canTranspile = await getCanTranspile()
-
 		if (!canTranspile) { killProcess(`CANT TRANSPILE, ${fileWithRef}.js has debugging: on`) }
-		if (command === 'build') { transpileToDistFolder_plusCopyOverOtherFiles() }
-		if (command === 'transpile') { transpileServerFilesToDevFolder() }
+
+		if (npmCommand === 'build') { transpileToDistFolder_plusCopyOverOtherFiles() }
+		if (npmCommand === 'transpile') { transpileServerFilesToTestFolder() }
 
 		async function getCanTranspile() {
 			try { return !/debugging: true/.test(await fsReadFileAsync(`test/server/${fileWithRef}.js`)) }
 			catch { return true }
 		}
 
-		function transpileServerFilesToDevFolder() {
+		function transpileServerFilesToTestFolder() {
 			exec(`tsc --target esnext server/init.ts --outDir ${serverFolder_src}`, async () => {
 				const packageJson = await fsReadFileAsync('package.json')
 				await fsWriteFileAsync('test/package.json', packageJson)
@@ -1207,9 +1135,85 @@ export const npmScript = async (options: { serverFolder_dist?: string, serverFol
 			})
 		}
 	}
+}
+/**Prompt to submit a git commit message and then push */
+export async function prompCommitMessageAndPush(repoName: string) {
 
+	//order matters with these 3
+	const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test)'
+
+	logDetailsForPrompt()
+	const commitMessage = await questionAsPromise(`Enter commit type ${commitTypes} plus a message:`)
+
+	function tryAgain(error: string) { colorLog('yellow', error); prompCommitMessageAndPush(repoName); return }
+	if (!zodCheck_curry(tryAgain)(get_zValidCommitMessage(), commitMessage)) { return }
+	copyToClipboard_server(commitMessage)
+	await gitAddCommitPush()
+
+	function get_zValidCommitMessage() {
+		const commitRegex = new RegExp(`(?<!.)${commitTypes}:`)
+		return z.string().min(15).max(50).regex(commitRegex, `String must start with ${commitTypes}:`)
+	}
+
+	function gitAddCommitPush() {
+		return new Promise(resolve => {
+			exec('git add .', () => {
+				successLog('git add .')
+				colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.')
+				exec('git commit', () => {
+					successLog('git commit')
+					exec('git push', () => {
+						successLog('git push')
+						resolve(true)
+					})
+				})
+			})
+		})
+	}
+
+	function logDetailsForPrompt() {
+		delay(500).then(() => {
+			colorLog('yellow', '50-character limits ends at that line: * * * * * |')
+			colorLog('green', repoName)
+			console.log()
+		})
+	}
+}
+/**Prompts a question in the terminal, awaits for the input and returns it */
+export async function questionAsPromise(question: string) {
+	const readline = getReadLine.createInterface({ input: process.stdin, output: process.stdout })
+	const input = await new Promise(res => { readline.question(chalk.magenta(question) + '\n', res) }) as string
+	readline.close()
+	return input
 }
 
+const command_package = process.env.npm_config_command_package as validNpmCommand_package
+const command_project = process.env.npm_config_command_project as validNpmCommand_project
+if (command_package) { zodCheckAndHandle(zValidNpmCommand_package, command_package, npmRun_package, [command_package], console.log) }
+if (command_project) { zodCheckAndHandle(zValidNpmCommand_project, command_project, npmRun_project, [command_project], console.log) }
 
-
+/*
+ * -------------------------------------------------------------------
+ * Regarding passing a function with its arguments to another function
+ * -------------------------------------------------------------------
+ * 
+ * looks like														is called as								must apply as										explanation
+ * wrppr(fn: F, args: Parameters<F>)		xyz(fn, [...fn.args])				fn(...args as Parameters<F>[])	"args" is passed as an array
+ * wrppr(fn: F, ...args: Parameters<F>)	xyz(fn, arg1, arg2, etc..)	fn(...args as Parameters<F>[])  "..args" is spread into an array
+ * 
+ * EITHER WAY the arguments must be applied to fn as "fn(...args)" where "args = Parameters<F>[]"
+ * 
+ ? WHICH TO USE 
+ * Both are effectively the same, it's a question of taste
+ * Option A is clear in that it makes you pass all of fn.args encapsulated into a single array argument
+ * Option B is cooler in that it adjusts the length of the arguments needed as they will be spread by the wrapping function	 
+ ! in B "args" must be spread parameters, meaning the MUST be the last arguments passed to "wrppr", A doesn't have this problem :)
+ * // Answer: Use A, so make sure to stay consistent when doing this, but either way use this comment block as reference
+ * 
+ ! Extra
+ * wrppr(fn: F, ...args: Parameters<F>[])
+ * "...args" is actually a collection of args, where each item is valid conjunt of arguments for fn
+ * so you can all on each item of "args", eg: args.forEach(x => fn(x))
+ * (see mapArgsOfFnAgainstFn as an existing example)
+ */
 

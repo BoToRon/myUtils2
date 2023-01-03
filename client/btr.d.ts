@@ -45,7 +45,9 @@ export declare const newToast_client_curry: ($bvToast: bvToast) => btr_newToastF
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
 export declare const zodCheck_curry: (errorHandler?: messageHandler) => <T>(schema: zSchema<T>, data: T) => boolean;
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
-export declare const trackVueComponent_curry: <T>(zValidVueComponentName: zSchema<T>) => (name: T, componentConstructor: btr_trackedVueComponent) => btr_trackedVueComponent;
+export declare const trackVueComponent_curry: <T>(zValidVueComponentName: zSchema<T>) => (name: T, componentConstructor: btr_trackedVueComponent, window: {
+    vueComponents: btr_trackedVueComponent[];
+}) => btr_trackedVueComponent;
 export declare const divine: {
     bot: eris.Client;
     error: (err: string | Error) => Promise<void>;

@@ -40,17 +40,9 @@ type bvToast = {
 type zSchema<T> = {
     safeParse: (x: T) => SafeParseReturnType<T, T>;
 };
-type eslintConfig = {
-    rules: {
-        [key: string]: string[];
-    };
-};
 type messageHandler = (message: string) => void;
 type arrayPredicate<T> = (arg1: T) => boolean;
 type pipe_persistent_type<T> = (arg: T) => T;
-type tsConfig = {
-    compilerOptions: object;
-};
 type pipe_mutable_type = {
     <T, A>(source: T, a: (value: T) => A): A;
     <T, A, B>(source: T, a: (value: T) => A, b: (value: A) => B): B;
@@ -63,7 +55,9 @@ export declare const newToast_client_curry: ($bvToast: bvToast) => btr_newToastF
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
 export declare const zodCheck_curry: (errorHandler?: messageHandler) => <T>(schema: zSchema<T>, data: T) => boolean;
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
-export declare const trackVueComponent_curry: <T>(zValidVueComponentName: zSchema<T>) => (name: T, componentConstructor: btr_trackedVueComponent) => btr_trackedVueComponent;
+export declare const trackVueComponent_curry: <T>(zValidVueComponentName: zSchema<T>) => (name: T, componentConstructor: btr_trackedVueComponent, window: {
+    vueComponents: btr_trackedVueComponent[];
+}) => btr_trackedVueComponent;
 export declare const divine: {
     bot: eris.Client;
     error: (err: string | Error) => Promise<void>;
@@ -231,7 +225,7 @@ export declare const copyToClipboard_client: (x: unknown) => void;
 /**Stringifies and downloads the provided data*/
 export declare const downloadFile_client: (filename: string, fileFormat: '.txt' | '.json', data: unknown) => void;
 /** Check the version of @botoron/utils, the enviroment variables and various config files */
-export declare const basicProjectChecks: (packageJson: packageJson, tsConfig: tsConfig, eslintConfig: eslintConfig, errorHandler?: messageHandler) => Promise<boolean>;
+export declare const basicProjectChecks: (errorHandler?: messageHandler) => Promise<boolean>;
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
 export declare const bigConsoleError: (message: string) => void;
 /**Copy to clipboard while running node */
@@ -249,14 +243,18 @@ export declare const getSeparatingCommentBlock: (message: string) => string;
 /**fetch the latest package.json of my-utils */
 export declare const getLatestPackageJsonFromGithub: () => Promise<string>;
 /** Return the main perma-dependencies, check myUtil's version and print package.json's script */
-export declare const getMainDependencies: (packageJson: packageJson, tsConfig: tsConfig, eslintConfig: eslintConfig) => Promise<{
+export declare const getMainDependencies: () => Promise<{
     httpServer: any;
     mongoClient: MongoClient;
 }>;
+/**Get the package json of the project with this (utils) package installed */
+export declare function getPackageJsonOfProject(): Promise<packageJson>;
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export declare const killProcess: (message: string) => never;
 /**Easily run the scripts of this (utils) repo's package.json */
-export declare const npmRun: (npmCommand: z.infer<any>) => Promise<void>;
+export declare const npmRun_package: (npmCommand: z.infer<any>) => Promise<void>;
+/**Run convenient scripts for and from a project's root folder */
+export declare const npmRun_project: (npmCommand: z.infer<any>) => Promise<void>;
 /**Prompt to submit a git commit message and then push */
 export declare function prompCommitMessageAndPush(repoName: string): Promise<void>;
 /**Prompts a question in the terminal, awaits for the input and returns it */

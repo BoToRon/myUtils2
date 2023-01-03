@@ -31,7 +31,9 @@ _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ***********
 
 export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'])
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
-const zValidNpmCommand = z.enum(['git', 'publish', 'transpile'])
+const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile'])
+const zValidNpmCommand_package = z.enum(['all', 'git', 'transpile'])
+const zValidVersionIncrement = z.enum(['major', 'minor', 'patch'])
 
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
@@ -54,6 +56,8 @@ export type btr_voidFn = () => void
 type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: btr_validVariant, title: string }
 type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
+type validNpmCommand_package = z.infer<typeof zValidNpmCommand_package>
+type validNpmCommand_project = z.infer<typeof zValidNpmCommand_project>
 type zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T> }
 type eslintConfig = { rules: { [key: string]: string[] } }
 type messageHandler = (message: string) => void
@@ -109,7 +113,8 @@ export const zodCheck_curry = (errorHandler = divine.error as messageHandler) =>
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
 export const trackVueComponent_curry = <T>(zValidVueComponentName: zSchema<T>) => function trackVueComponent(
 	name: T,
-	componentConstructor: btr_trackedVueComponent
+	componentConstructor: btr_trackedVueComponent,
+	window: { vueComponents: btr_trackedVueComponent[] },
 ) {
 
 	if (!zodCheck_curry(alert)(zValidVueComponentName, name)) { return componentConstructor }
@@ -391,7 +396,6 @@ export const tryF = <T extends (...args: Parameters<T>) => ReturnType<T>>(
  * @param args The arguments to be applied to successHandler
  * @param errorHandler The function that will execute if data does NOT fits zSchema
  */
-
 export const zodCheckAndHandle = <D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(
 	zSchema: zSchema<D>,
 	data: D,
@@ -519,7 +523,7 @@ export const deepClone = <T>(x: T) => JSON.parse(JSON.stringify(x)) as T
 /**Generate a Zod Schema from an array/object */
 function getZodSchemaFromDataStructure(dataStructure: object) {
 
-	const toLiteral = (x: unknown): z.ZodLiteral<unknown> => typeof x !== 'object' ?
+	const toLiteral = (x: unknown): z.ZodLiteral<unknown> => typeof x === 'object' ?
 		getZodSchemaFromDataStructure(x!) as unknown as z.ZodLiteral<unknown> :
 		z.literal(x as never) as z.ZodLiteral<unknown>
 

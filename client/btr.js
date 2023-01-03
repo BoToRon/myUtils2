@@ -29,7 +29,9 @@ _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark']);
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
-const zValidNpmCommand = z.enum(['git', 'publish', 'transpile']);
+const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile']);
+const zValidNpmCommand_package = z.enum(['all', 'git', 'transpile']);
+const zValidVersionIncrement = z.enum(['major', 'minor', 'patch']);
 _; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
@@ -81,7 +83,7 @@ export const zodCheck_curry = (errorHandler = divine.error) => {
     return zodCheck;
 };
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
-export const trackVueComponent_curry = (zValidVueComponentName) => function trackVueComponent(name, componentConstructor) {
+export const trackVueComponent_curry = (zValidVueComponentName) => function trackVueComponent(name, componentConstructor, window) {
     if (!zodCheck_curry(alert)(zValidVueComponentName, name)) {
         return componentConstructor;
     }
@@ -493,7 +495,7 @@ export const addMissingPropsToObjects = (original, defaults) => {
 export const deepClone = (x) => JSON.parse(JSON.stringify(x));
 /**Generate a Zod Schema from an array/object */
 function getZodSchemaFromDataStructure(dataStructure) {
-    const toLiteral = (x) => typeof x !== 'object' ?
+    const toLiteral = (x) => typeof x === 'object' ?
         getZodSchemaFromDataStructure(x) :
         z.literal(x);
     return Array.isArray(dataStructure) ?
