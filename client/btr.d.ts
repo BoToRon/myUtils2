@@ -30,7 +30,7 @@ type bvToast = {
 type zSchema<T> = {
     safeParse: (x: T) => SafeParseReturnType<T, T>;
 };
-type errorMessageHandler = (message: string) => void;
+type messageHandler = (message: string) => void;
 type arrayPredicate<T> = (arg1: T) => boolean;
 type pipe_persistent_type<T> = (arg: T) => T;
 type pipe_mutable_type = {
@@ -43,9 +43,15 @@ type pipe_mutable_type = {
 /**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
 export declare const newToast_client_curry: ($bvToast: bvToast) => btr_newToastFn;
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
-export declare const zodCheck_curry: (errorHandler: errorMessageHandler) => <T>(schema: zSchema<T>, data: T) => boolean;
+export declare const zodCheck_curry: (errorHandler?: messageHandler) => <T>(schema: zSchema<T>, data: T) => boolean;
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
 export declare const trackVueComponent_curry: <T>(zValidVueComponentName: zSchema<T>) => (name: T, componentConstructor: btr_trackedVueComponent) => btr_trackedVueComponent;
+export declare const divine: {
+    bot: eris.Client;
+    error: (err: string | Error) => Promise<void>;
+    init: () => Promise<void>;
+    ping: (message: string) => Promise<void>;
+};
 /**Adds an item to an array, or removes it if it already was added. Returns the action applied and the array */
 export declare const addOrRemoveItem: <T>(arr: T[], item: T) => {
     action: "removed" | "added";
@@ -88,6 +94,8 @@ export declare const spliceLast: <T>(arr: T[], count: number) => T[];
 export declare const transferItems: <T>(origin: T[], destination: T[], predicate: arrayPredicate<T>) => {
     transferedCount: number;
 };
+/**Set interval with try-catch and called immediately*/
+export declare const doAndRepeat: (fn: btr_voidFn, interval: number) => void;
 /**Simple and standard functional programming pipe. Deprecated, use either zPipe (persistenType with zod errors) or pipe_mutableType! */
 export declare const pipe_persistentType: <T>(initialValue: T, ...fns: pipe_persistent_type<T>[]) => T;
 /**
@@ -96,13 +104,31 @@ export declare const pipe_persistentType: <T>(initialValue: T, ...fns: pipe_pers
 * If only one argument is provided (`pipe(x)`), this will produce a type error but JS will run fine (and return `x`).
 */
 export declare const pipe_mutableType: pipe_mutable_type;
-/** Retry a function up to X amount of times or until it is executed successfully, mainly for fetching/requesting stuff */
+/**
+ * Retry a function up to X amount of times or until it is executed successfully, mainly for fetching/requesting stuff
+ * @param fn The function to be retried hoping it returns successfully
+ * @param args Arguments to pass to fn
+ * @param retriesLeft Number, is reduced by 1 every attempt, retryF stops when it reaches 0
+ * @param defaultReturn Data to be returned as returnType of fn if retryF fails
+ * @param delayBetweenRetries Delay between each retry in milliseconds
+ * @returns
+ */
 export declare const retryF: <F extends (...args: Parameters<F>) => ReturnType<F>>(fn: F, args: Parameters<F>, retriesLeft: number, defaultReturn: ReturnType<F>, delayBetweenRetries: number) => Promise<{
     data: ReturnType<F>;
     was: 'success' | 'failure';
 }>;
+/**tryCatch wrapper for functions with divineError as the default error handler */
+export declare const tryF: <T extends (...args: Parameters<T>) => ReturnType<T>>(fn: T, args: Parameters<T>, errorHandler?: messageHandler) => ReturnType<T>;
 /** Check data against a provided schema, and execute either the success or error handler */
-export declare const zodCheckAndHandle: <D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(zSchema: zSchema<D>, data: D, successHandler: SH, args: Parameters<SH>, errorHandler: errorMessageHandler) => void;
+/**
+ * Check data against a provided schema, and execute either the success or error handler
+ * @param zSchema The zSchema to test data against
+ * @param data The data to be tested against zSchema
+ * @param successHandler The function that will execute if data fits zSchema
+ * @param args The arguments to be applied to successHandler
+ * @param errorHandler The function that will execute if data does NOT fits zSchema
+ */
+export declare const zodCheckAndHandle: <D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(zSchema: zSchema<D>, data: D, successHandler: SH, args: Parameters<SH>, errorHandler?: messageHandler) => void;
 /**Pipe with schema validation and error logging */
 export declare const zPipe: <T>(zSchema: zSchema<T>, initialValue: T, ...fns: pipe_persistent_type<T>[]) => {
     value: T;

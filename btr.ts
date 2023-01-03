@@ -71,7 +71,7 @@ type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
 type zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T> }
 type eslintConfig = { rules: { [key: string]: string[] } }
 type validNpmCommand = z.infer<typeof zValidNpmCommand>	//DELETETHISFORCLIENT
-type errorMessageHandler = (message: string) => void
+type messageHandler = (message: string) => void
 type arrayPredicate<T> = (arg1: T) => boolean
 type pipe_persistent_type<T> = (arg: T) => T
 type tsConfig = { compilerOptions: object }
@@ -110,9 +110,9 @@ export const newToast_client_curry = ($bvToast: bvToast) => {
 	return body
 }
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
-export const zodCheck_curry = (errorHandler: errorMessageHandler) => {
+export const zodCheck_curry = (errorHandler = divine.error as messageHandler) => {
 	function zodCheck<T>(schema: zSchema<T>, data: T) {
-		function body<T>(errorHandler: errorMessageHandler, schema: zSchema<T>, data: T) {
+		function body<T>(errorHandler: messageHandler, schema: zSchema<T>, data: T) {
 			const result = schema.safeParse(data) as SafeParseReturnType<T, null>
 			if (result.success === false) { errorHandler(fromZodError(result.error).message) }
 			return result.success as boolean
@@ -133,7 +133,7 @@ export const trackVueComponent_curry = <T>(zValidVueComponentName: zSchema<T>) =
 
 	return getComponent(name, componentConstructor)
 
-	function toggleComponent(logger: errorMessageHandler) {
+	function toggleComponent(logger: messageHandler) {
 		const { action } = addOrRemoveItem(window.vueComponents, componentConstructor)
 		logger(`Component '${name}' ${action} to/from window.vueComponents`)
 		logAllComponents()
@@ -151,6 +151,84 @@ export const trackVueComponent_curry = <T>(zValidVueComponentName: zSchema<T>) =
 	}
 }
 
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+
+export const divine = {
+	bot: null as unknown as eris.Client,
+	error: async (err: string | Error) => {
+		const message = getTraceableStack(err)
+		const { DEV_OR_PROD } = await getEnviromentVariables()
+		DEV_OR_PROD === 'DEV' ? killProcess(message) : divine.ping(message)
+	},
+	init: async () => {
+
+		const { APP_NAME, ERIS_TOKEN } = await getEnviromentVariables()
+		const bot = eris(ERIS_TOKEN as string)
+		await connectToDiscord()
+		divine.bot = bot
+
+		async function connectToDiscord() {
+			const divinePrepend = '***DivineBot:***'
+
+			bot.on('messageReactionRemove', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('remove', a, b, c))
+			bot.on('messageReactionAdd', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('add', a, b, c))
+			bot.on('disconnect', () => { colorLog('red', `${divinePrepend}: Disconnected D: ... retrying!`); connectToDiscord() })
+			bot.on('connect', () => divine.ping(`(${APP_NAME}) - I'm alive bitch >:D`))
+
+			const idOfRoleAssigningMessage = '822523162724925473'
+			await attemptConnection()
+
+			function role(action: 'add' | 'remove', message: eris.PossiblyUncachedMessage, emoji: eris.PartialEmoji, reactor: eris.Member) {
+				try {
+					if (message.id !== idOfRoleAssigningMessage) { return }
+
+					const role = [
+						{ app: 'UntCG', emoji: 'cards', id: 'SAMPLEROLEID' },
+						{ app: 'CwCA', emoji: 'chess', id: 'SAMPLEROLEID' },
+						{ app: 'Cool', emoji: 'cool', id: 'SAMPLEROLEID' },
+						{ app: 'Divine', emoji: 'divine', id: 'SAMPLEROLEID' },
+						{ app: 'Bluejay', emoji: 'bluejay', id: 'SAMPLEROLEID' },
+						{ app: 'Cute', emoji: 'cute', id: 'SAMPLEROLEID' },
+					].find(x => x.emoji === emoji.name)
+
+					if (role) { ({ add: reactor.addRole, remove: reactor.removeRole })[action](role.id) }
+				}
+				catch (e) { console.log('divineBot.role.tryCatch.error = ', e) }
+			}
+
+			async function attemptConnection() {
+				try {
+					bot.connect()
+					colorLog('cyan', 'waiting for DivineBot')
+					while (!bot.uptime) { await delay(1000) }
+					successLog('The divine egg has hatched')
+				}
+				catch {
+					colorLog('yellow', `${divinePrepend} Failed to connect.. retrying >:D`)
+					await delay(1000)
+					attemptConnection()
+				}
+			}
+		}
+	},
+	ping: async (message: string) => {
+		if (!divine.bot.ready) { return }
+		const { APP_NAME } = await getEnviromentVariables()
+
+		const theMessage = `<@470322452040515584> - (${APP_NAME}) \n ${message}`
+		const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } }
+		divine.bot.createMessage('1055939528776495206', divineOptions)
+	}
+}
 
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -267,27 +345,37 @@ _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS *****************
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 
+/**Set interval with try-catch and called immediately*/
+export const doAndRepeat = (fn: btr_voidFn, interval: number) => {
+	const tryIt = () => tryF(fn, [])
+	setInterval(tryIt, interval)
+	tryIt()
+}
 /**Simple and standard functional programming pipe. Deprecated, use either zPipe (persistenType with zod errors) or pipe_mutableType! */
-export const pipe_persistentType = <T>(
-	initialValue: T,
-	...fns: pipe_persistent_type<T>[]
-) => fns.reduce((result, fn) => fn(result), initialValue)
+export const pipe_persistentType = <T>(initialValue: T, ...fns: pipe_persistent_type<T>[]) =>
+	fns.reduce((result, fn) => fn(result), initialValue)
 /**
 * Pipes a value through a number of functions in the order that they appear.
 * Takes between 1 and 12 arguments. `pipe(x, a, b)` is equivalent to `b(a(x))`.
 * If only one argument is provided (`pipe(x)`), this will produce a type error but JS will run fine (and return `x`).
 */
-export const pipe_mutableType: pipe_mutable_type = (
-	source: unknown,
-	...project: ((value: unknown) => unknown)[]
-): unknown => project.reduce((accumulator, element) => element(accumulator), source)
-/** Retry a function up to X amount of times or until it is executed successfully, mainly for fetching/requesting stuff */
+export const pipe_mutableType: pipe_mutable_type = (source: unknown, ...project: ((value: unknown) => unknown)[]): unknown =>
+	project.reduce((accumulator, element) => element(accumulator), source)
+/**
+ * Retry a function up to X amount of times or until it is executed successfully, mainly for fetching/requesting stuff
+ * @param fn The function to be retried hoping it returns successfully
+ * @param args Arguments to pass to fn
+ * @param retriesLeft Number, is reduced by 1 every attempt, retryF stops when it reaches 0
+ * @param defaultReturn Data to be returned as returnType of fn if retryF fails
+ * @param delayBetweenRetries Delay between each retry in milliseconds
+ * @returns 
+ */
 export const retryF = async <F extends (...args: Parameters<F>) => ReturnType<F>>(
- /**The function to be retried hoping it returns successfully */	fn: F,
-	/**Arguments to pass to fn */ args: Parameters<F>,
-	/**Number, is reduced by 1 every attempt, retryF stops when it reaches 0 */ retriesLeft: number,
-	/**Data to be returned as returnType of fn if retryF fails */ defaultReturn: ReturnType<F>,
-	/**Delay between each retry in milliseconds */ delayBetweenRetries: number,
+	fn: F,
+	args: Parameters<F>,
+	retriesLeft: number,
+	defaultReturn: ReturnType<F>,
+	delayBetweenRetries: number,
 ): Promise<{ data: ReturnType<F>, was: 'success' | 'failure' }> => {
 	try { return { data: await fn(...args), was: 'success' } }
 	catch (error) {
@@ -298,14 +386,33 @@ export const retryF = async <F extends (...args: Parameters<F>) => ReturnType<F>
 		return await retryF(fn, args, retriesLeft - 1, defaultReturn, delayBetweenRetries)
 	}
 }
+/**tryCatch wrapper for functions with divineError as the default error handler */
+export const tryF = <T extends (...args: Parameters<T>) => ReturnType<T>>(
+	fn: T,
+	args: Parameters<T>,
+	errorHandler = divine.error as messageHandler
+) => {
+	try { return fn(...args) }
+	catch (err) { errorHandler(err as string) }
+}
 /** Check data against a provided schema, and execute either the success or error handler */
 // ? TODO: maybe make it a placeholder and create an initialized that pre-determines the errorHandler like with zodCheck and zodCheck_get 
+
+/**
+ * Check data against a provided schema, and execute either the success or error handler
+ * @param zSchema The zSchema to test data against
+ * @param data The data to be tested against zSchema
+ * @param successHandler The function that will execute if data fits zSchema
+ * @param args The arguments to be applied to successHandler
+ * @param errorHandler The function that will execute if data does NOT fits zSchema
+ */
+
 export const zodCheckAndHandle = <D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(
-	/** The zSchema to test data against */	zSchema: zSchema<D>,
-	/** The data to be tested against zSchema */	data: D,
-	/** The function that will execute if data fits zSchema */	successHandler: SH,
-	/** The arguments to be applied to successHandler */	args: Parameters<SH>,
-	/** The function that will execute if data does NOT fits zSchema */ errorHandler: errorMessageHandler,
+	zSchema: zSchema<D>,
+	data: D,
+	successHandler: SH,
+	args: Parameters<SH>,
+	errorHandler = divine.error as messageHandler,
 ) => {
 	const zResult = zSchema.safeParse(data)
 	if (zResult.success === false) { errorHandler(fromZodError(zResult.error).message) }
@@ -573,19 +680,15 @@ _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY *************
 _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 
-/** Check the version of @botoron/utils, the enviroment variables and the package.json scripts */
-export const basicProjectChecks = async (packageJson: packageJson, tsConfig: tsConfig, eslintConfig: eslintConfig,) => {
-
+/** Check the version of @botoron/utils, the enviroment variables and various config files */
+export const basicProjectChecks = async (
+	packageJson: packageJson,
+	tsConfig: tsConfig,
+	eslintConfig: eslintConfig,
+	errorHandler = divine.error as messageHandler
+) => {
 
 	const env = await getEnviromentVariables()
-	const erroHandler = await getErrorHandler()
-
-	async function getErrorHandler(env: NodeJS.ProcessEnv) {
-		if (env.DEV_OR_PROD === 'DEV') { return killProcess }
-		return divineError()
-	}
-
-
 	const tsConfigCheck = checkTsConfigCompilerOptions()
 	const envCheck = getAndCheckEnviromentVariables(env)
 	const scriptsCheck = checkJsonPackageScripts()
@@ -823,78 +926,18 @@ export const getLatestPackageJsonFromGithub = async () => {
 /** Return the main perma-dependencies, check myUtil's version and print package.json's script */
 export const getMainDependencies = async (packageJson: packageJson, tsConfig: tsConfig, eslintConfig: eslintConfig) => {
 
+	await basicProjectChecks(packageJson, tsConfig, eslintConfig)
+
 	const env = await getEnviromentVariables()
-	const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN, MONGO_URI, PORT } = env
+	const { MONGO_URI, PORT } = env
 
-	const divineBot = await getDivineBot()
-	basicProjectChecks(packageJson, tsConfig, eslintConfig)
-	const httpServer = startAndGetHttpServer()
-	const mongoClient = await getMongoClient()
+	const mongoClient = await getMongoClient(MONGO_URI as string)
+	const httpServer = startAndGetHttpServer(PORT as string)
+	divine.init()
 
-	return { divineBot, divineError, doAndRepeat, env, httpServer, mongoClient, tryF }
+	return { httpServer, mongoClient }
 
-	/**notify me about things breaking via discord, if if production mode */
-	function divineError(err: string | Error) { (DEV_OR_PROD === 'prod' ? pingMe : killProcess)(getTraceableStack(err)) }
-
-	/**Set interval with try-catch and called immediately*/
-	function doAndRepeat(fn: btr_voidFn, interval: number) {
-		const tryIt = () => tryF(fn, [])
-		setInterval(tryIt, interval)
-		tryIt()
-	}
-
-	async function getDivineBot() {
-
-		const divineBot = eris(ERIS_TOKEN as string)
-		connectToDiscord()
-		return divineBot
-
-		async function connectToDiscord() {
-			const divinePrepend = '***DivineBot:***'
-
-			divineBot.on('messageReactionAdd', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('add', a, b, c))
-			divineBot.on('messageReactionRemove', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('remove', a, b, c))
-			divineBot.on('disconnect', () => { colorLog('red', `${divinePrepend}: Disconnected D: ... retrying!`); connectToDiscord() })
-			divineBot.on('connect', () => { if (DEV_OR_PROD === 'prod') { pingMe(`(${APP_NAME}) - I'm alive bitch >:D`) } })
-
-			const idOfRoleAssigningMessage = '822523162724925473'
-			await attemptConnection()
-
-			function role(action: 'add' | 'remove', message: eris.PossiblyUncachedMessage, emoji: eris.PartialEmoji, reactor: eris.Member) {
-				try {
-					if (message.id !== idOfRoleAssigningMessage) { return }
-
-					const role = [
-						{ app: 'UntCG', emoji: 'cards', id: 'SAMPLEROLEID' },
-						{ app: 'CwCA', emoji: 'chess', id: 'SAMPLEROLEID' },
-						{ app: 'Cool', emoji: 'cool', id: 'SAMPLEROLEID' },
-						{ app: 'Divine', emoji: 'divine', id: 'SAMPLEROLEID' },
-						{ app: 'Bluejay', emoji: 'bluejay', id: 'SAMPLEROLEID' },
-						{ app: 'Cute', emoji: 'cute', id: 'SAMPLEROLEID' },
-					].find(x => x.emoji === emoji.name)
-
-					if (role) { ({ add: reactor.addRole, remove: reactor.removeRole })[action](role.id) }
-				}
-				catch (e) { console.log('divineBot.role.tryCatch.error = ', e) }
-			}
-
-			async function attemptConnection() {
-				try {
-					divineBot.connect()
-					colorLog('cyan', 'waiting for DivineBot')
-					while (!divineBot.uptime) { await delay(1000) }
-					successLog('The divine egg has hatched')
-				}
-				catch {
-					colorLog('yellow', `${divinePrepend} Failed to connect.. retrying >:D`)
-					await delay(1000)
-					attemptConnection()
-				}
-			}
-		}
-	}
-
-	async function getMongoClient() {
+	async function getMongoClient(MONGO_URI: string) {
 		const mongo = new mongodb.MongoClient(MONGO_URI as string)
 		let mongoClient: MongoClient = null as unknown as MongoClient
 		mongo.connect((err, client) => { if (err) { throw err } mongoClient = client as MongoClient })
@@ -904,26 +947,13 @@ export const getMainDependencies = async (packageJson: packageJson, tsConfig: ts
 		return mongoClient
 	}
 
-	function pingMe(message: string) {
-		if (!divineBot || !divineBot.ready) { return }
-		const theMessage = `<@470322452040515584> - (${APP_NAME}) \n ${message}`
-		const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } }
-		divineBot.createMessage('1055939528776495206', divineOptions)
-	}
-
-	function startAndGetHttpServer() {
+	function startAndGetHttpServer(PORT: string) {
 		const app = express()
 		const httpServer = http.createServer(app)
 		app.use(express.static(path.resolve() + '/public'))
 		app.get('/', (_request, response) => response.sendFile(path.resolve() + '/public/index.html'))
 		httpServer.listen(PORT, () => delay(1500).then(() => console.log(`server up at: http://localhost:${PORT}/`)))
 		return httpServer
-	}
-
-	/**tryCatch wrapper for functions with DivineError as the error handler */
-	function tryF<T extends (...args: Parameters<T>) => ReturnType<T>>(fn: T, args: Parameters<T>) {
-		try { return fn(...args) }
-		catch (err) { divineError(err as Error) }
 	}
 }
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
