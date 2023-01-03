@@ -33,11 +33,11 @@ const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile']);
 const zValidNpmCommand_package = z.enum(['all', 'git', 'transpile']);
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch']);
 const zMyEnv = z.object({
+    DEV_OR_PROD: z.enum(['DEV', 'PROD']),
     ADMIN_PASSWORD: string(),
-    APP_NAME: string(),
-    DEV_OR_PROD: string(),
     ERIS_TOKEN: string(),
     MONGO_URI: string(),
+    APP_NAME: string(),
     PORT: string(),
 });
 _; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/

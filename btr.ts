@@ -47,11 +47,11 @@ const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile'])
 const zValidNpmCommand_package = z.enum(['all', 'git', 'transpile'])
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch'])
 const zMyEnv = z.object({
+	DEV_OR_PROD: z.enum(['DEV', 'PROD']),
 	ADMIN_PASSWORD: string(),
-	APP_NAME: string(),
-	DEV_OR_PROD: string(),
 	ERIS_TOKEN: string(),
 	MONGO_URI: string(),
+	APP_NAME: string(),
 	PORT: string(),
 })
 
@@ -716,14 +716,22 @@ _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY *************
 /** Check the version of @botoron/utils, the enviroment variables and various config files */
 export const basicProjectChecks = async (errorHandler = divine.error as messageHandler) => {
 
-	const skipLibCheckIsFalse = await getSkipLibCheckOfVueIsFalse()
-	const tsConfigCheck = await checkTsConfigCompilerOptions()
-	const envCheck = await getAndCheckEnviromentVariables()
-	const scriptsCheck = await checkJsonPackageScripts()
-	const eslintCheck = await checkEslintConfigRules()
-	const utilsCheck = await myUtils_areUpToDate()
+	const addToErrors = (error: string) => errors.push(error)
+	const errors: string[] = []
 
-	return envCheck && eslintCheck && scriptsCheck && skipLibCheckIsFalse && tsConfigCheck && utilsCheck
+	const allChecksPass = await Promise.all([
+		checkEnviromentVariables, checkEslintConfigRules, checkJsonPackageScripts,
+		checkTsConfigCompilerOptions, checkUtilsVersion, checkVueDevFiles
+	])
+
+	if (errors.length) { errorHandler(errors.join('\n\n')) }
+	return allChecksPass
+
+	/**Check if all the desired enviroment keys are defined */
+	async function checkEnviromentVariables() {
+		const env = await getEnviromentVariables()
+		return zodCheck_curry(addToErrors, false)(zMyEnv, env)
+	}
 
 	/**Check the rules in a project's eslint config file all fit the established schema */
 	async function checkEslintConfigRules() {
@@ -738,11 +746,10 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 		}
 
 		const eslintConfingOfProject = <eslintConfig>await importFileFromProject('.eslintrc', 'cjs')
-		return zodCheck_curry(errorHandler)(getZodSchemaFromData(desiredRules), eslintConfingOfProject.rules)
+		return zodCheck_curry(addToErrors)(getZodSchemaFromData(desiredRules), eslintConfingOfProject.rules)
 	}
 
 	/**Check the scripts in a project's package json all fit the established schema */
-
 	async function checkJsonPackageScripts() {
 
 		const desiredPackageJsonScripts = {
@@ -763,7 +770,7 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 		}
 
 		const packageJsonOfProject = <packageJson>await importFileFromProject('package', 'json')
-		return zodCheck_curry(errorHandler)(getZodSchemaFromData(desiredPackageJsonScripts), packageJsonOfProject.scripts)
+		return zodCheck_curry(addToErrors)(getZodSchemaFromData(desiredPackageJsonScripts), packageJsonOfProject.scripts)
 	}
 
 	/**Check the rules in a project's ts config file all fit the established schema */
@@ -865,39 +872,24 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 
 		const tsConfig = await getTsConfigJson()
 		const zSchema = getZodSchemaFromData(desiredCompilerOptions)
-		return zodCheck_curry(errorHandler)(zSchema, tsConfig.compilerOptions)
+		return zodCheck_curry(addToErrors)(zSchema, tsConfig.compilerOptions)
 
 		/**Get the ts config file of the main project */
 		async function getTsConfigJson() {
-			return JSON.parse(
-				(await fsReadFileAsync('./tsconfig.json')).
-					replace(/\/(\/|\*).{1,}/g, '').
-					replace(/(\n|\r|\t)/g, '').
-					replace(', }', ' }') //{ { <-- commented here to keep the colour of brackets the same
-			) as tsConfig
+			try {
+				return JSON.parse(
+					(await fsReadFileAsync('./tsconfig.json')).
+						replace(/\/(\/|\*).{1,}/g, '').
+						replace(/(\n|\r|\t)/g, '').
+						replace(', }', ' }') //{ { <-- commented here to keep the colour of brackets the same
+				) as tsConfig
+
+			} catch (e) { return e as tsConfig }
 		}
 	}
 
-	/**Check if all the desired enviroment keys are defined */
-	async function getAndCheckEnviromentVariables() {
-		const env = await getEnviromentVariables()
-		return zodCheck_curry(errorHandler, false)(zMyEnv, env)
-	}
-
-	/**Turn off that damn skipLibCheck that comes on by default */
-	async function getSkipLibCheckOfVueIsFalse() {
-		const { DEV_OR_PROD } = await getEnviromentVariables()
-		if (DEV_OR_PROD !== 'DEV') { return true }
-
-		const path = './client/node_modules/@vue/tsconfig/tsconfig.json'
-		const file = await fsReadFileAsync(path)
-		const skipLibCheckIsOn = file.includes('"skipLibCheck": true')
-		if (skipLibCheckIsOn) { errorHandler(`skipLibCheck should be FALSE, fix at (${path})`) }
-		return !skipLibCheckIsOn
-	}
-
 	/**Check if the project is using the latest version of "myUtils" */
-	async function myUtils_areUpToDate() {
+	async function checkUtilsVersion() {
 		const latestVersion = await getLatestVersion()
 		const installedVersion = (await import('./package.json', { assert: { type: 'json' } })).default.version
 		const isUpToDate = installedVersion === latestVersion
@@ -918,6 +910,32 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 				catch { return { objects: [{ package: { version: '0' } }] } }
 			}))
 			return response.objects[0].package.version
+		}
+	}
+
+	/**Turn off that damn skipLibCheck that comes on by default */
+	async function checkVueDevFiles() {
+
+		//TODO: make sure all files ending with .vue match "trackVueComponent"
+
+		const { DEV_OR_PROD } = await getEnviromentVariables()
+		if (DEV_OR_PROD !== 'DEV') { return true }
+
+		const allVueChecksPass = await Promise.all([
+			readVueFile('vue.config.js', 'export const devServer = { proxy: \'http://localhost:\' + process.env.port }'),
+			readVueFile('vite.config.ts', 'optimizeDeps: { exclude: [\'node_modules/@botoron/utils\'], },'),
+			readVueFile('vue.config.js', 'export const assetsDir = resolve(__dirname, \'../assets\')'),
+			readVueFile('node_modules/@vue/tsconfig/tsconfig.json', '"skipLibCheck": false'),
+			readVueFile('env.d.ts', '/// <reference types="../types" />'),
+		])
+
+		return allVueChecksPass
+
+		async function readVueFile(clientSlash: string, mustMatch: string) {
+			const path = './client/' + clientSlash
+			const file = await fsReadFileAsync(path)
+			if (file.includes(mustMatch)) { return true }
+			addToErrors(path + ' must include: ' + mustMatch)
 		}
 	}
 }
@@ -1019,10 +1037,13 @@ export const getMainDependencies = async () => {
 }
 /**Get the package json of the project with this (utils) package installed */
 export async function importFileFromProject<T>(filename: string, extension: 'cjs' | 'js' | 'json') {
-	const path = `../../../${filename}.${extension}`
-	const options = extension === 'json' ? { assert: { type: 'json' } } : {}
-	const mainPackageJson = (await import(path, options)).default
-	return mainPackageJson as T
+	try {
+		const path = `../../../${filename}.${extension}`
+		const options = extension === 'json' ? { assert: { type: 'json' } } : {}
+		const mainPackageJson = (await import(path, options)).default
+		return mainPackageJson as T
+
+	} catch (e) { return e }
 }
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export const killProcess = (message: string) => { bigConsoleError(message); process.exit() }
