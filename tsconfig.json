@@ -4,7 +4,7 @@
 			"ES2022",
 			"DOM"
 		],
-		//"declaration": true,	 does not seem to work unless explicitly specifiying --declaration in the command
+		//"declaration": true, does not seem to work unless explicitly specifiying --declaration in the command
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,
 		"module": "ESNext",

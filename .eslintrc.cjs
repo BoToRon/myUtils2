@@ -26,6 +26,7 @@ module.exports = {
 		'func-style': ['error', 'declaration'],
 		'quote-props': ['error', 'as-needed'],
 		quotes: ['error', 'single'],
+		semi: ['error', 'never'],
 		'no-undef': 'off',
 	}
 }

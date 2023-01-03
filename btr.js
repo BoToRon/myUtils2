@@ -81,16 +81,13 @@ export const newToast_client_curry = ($bvToast) => {
     return body;
 };
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
-export const zodCheck_curry = (errorHandler = divine.error) => {
+export const zodCheck_curry = (errorHandler = divine.error, strictModeIfObject = true) => {
     function zodCheck(schema, data) {
-        function body(errorHandler, schema, data) {
-            const result = schema.safeParse(data);
-            if (result.success === false) {
-                errorHandler(fromZodError(result.error).message);
-            }
+        function body(errorHandler, schema, data, strictModeIfObject = true) {
+            const result = zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler, strictModeIfObject);
             return result.success;
         }
-        return body(errorHandler, schema, data);
+        return body(errorHandler, schema, data, strictModeIfObject);
     }
     return zodCheck;
 };
@@ -130,7 +127,7 @@ _; /********** DIVINE ******************** DIVINE ******************** DIVINE **
 _; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
 _; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
 export const divine = {
-    bot: null,
+    bot: nullAs(),
     error: async (err) => {
         const message = getTraceableStack(err);
         const { DEV_OR_PROD } = await getEnviromentVariables();
@@ -244,25 +241,14 @@ export const asFormattedList = (arr, useAndForTheLastItem) => {
     });
     return string;
 };
-/**Compare array A to array B, returns the answer along ab error message, if any */
-export const compareArrays = (myArray, comparisonType, desiredArray) => {
-    const missingItems = desiredArray.filter(x => !myArray.includes(x));
-    const nonDesiredItems = myArray.filter(x => !desiredArray.includes(x));
-    const arraysAreEqual = !nonDesiredItems.length && !missingItems.length && myArray.length === desiredArray.length;
-    if (comparisonType === 'isPartialOf') {
-        return answerWithMaybeError(!nonDesiredItems.length);
-    }
-    if (comparisonType === 'hasAllItemsOf') {
-        return answerWithMaybeError(!missingItems.length);
-    }
-    if (comparisonType === 'isEqualTo') {
-        return answerWithMaybeError(arraysAreEqual);
-    }
-    return answerWithMaybeError(false);
-    function answerWithMaybeError(answer) {
-        const errorMessage = answer ? nullAs.string() : getTraceableStack(`"array_A ${comparisonType} array_B" = ${answer}`);
-        return { answer, errorMessage };
-    }
+/**Compare array A to array B and return the details */
+export const getArrayDifferences = (baseArray, testArray) => {
+    const nonDesiredItems = baseArray.filter(x => !testArray.includes(x));
+    const missingItems = testArray.filter(x => !baseArray.includes(x));
+    const lengthDifference = baseArray.length - testArray.length;
+    const arraysHaveTheSameItems = !nonDesiredItems.length && !missingItems.length;
+    const arraysAreEqual = arraysHaveTheSameItems && !lengthDifference;
+    return { arraysAreEqual, arraysHaveTheSameItems, lengthDifference, missingItems, nonDesiredItems };
 };
 /**syntax sugar for arr[arr.length - 1] */
 export const getLastItem = (arr) => arr[arr.length - 1];
@@ -375,8 +361,29 @@ export const tryF = (fn, args, errorHandler = divine.error) => {
         errorHandler(err);
     }
 };
-/** Check data against a provided schema, and execute either the success or error handler */
-// ? TODO: maybe make it a placeholder and create an initialized that pre-determines the errorHandler like with zodCheck and zodCheck_get 
+/**
+ * Test data against an schema with strict-mode (no unspecified keys) for objects set by default and handle the error message if any
+ * @param schema The schema to test the data against
+ * @param data The data to be tested
+ * @param errorHandler The handler for the message error
+ * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not
+ * @returns
+ */
+export const zGetSafeParseResultAndHandleErrorMessage = (schema, data, errorHandler = nullAs(), strictModeIfObject = true) => {
+    const result = getResult();
+    if (result.success === false && errorHandler) {
+        errorHandler(fromZodError(result.error).message);
+    }
+    return result;
+    function getResult() {
+        if (!schema.strict || !strictModeIfObject) {
+            return schema.safeParse(data);
+        }
+        else {
+            return schema.strict().safeParse(data);
+        }
+    }
+};
 /**
  * Check data against a provided schema, and execute either the success or error handler
  * @param zSchema The zSchema to test data against
@@ -384,30 +391,28 @@ export const tryF = (fn, args, errorHandler = divine.error) => {
  * @param successHandler The function that will execute if data fits zSchema
  * @param args The arguments to be applied to successHandler
  * @param errorHandler The function that will execute if data does NOT fits zSchema
+ * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not *
  */
-export const zodCheckAndHandle = (zSchema, data, successHandler, args, errorHandler = divine.error) => {
-    const zResult = zSchema.safeParse(data);
-    if (zResult.success === false) {
-        errorHandler(fromZodError(zResult.error).message);
-    }
+export const zodCheckAndHandle = (zSchema, data, successHandler, args, errorHandler = divine.error, strictModeIfObject = true) => {
+    const zResult = zGetSafeParseResultAndHandleErrorMessage(zSchema, data, errorHandler, strictModeIfObject);
     if (zResult.success === true && successHandler) {
         successHandler(...args);
     }
 };
-/**Pipe with schema validation and error logging */
-export const zPipe = (zSchema, initialValue, ...fns) => {
-    const initialPipeState = { value: initialValue, error: nullAs.string(), failedAt: nullAs.string() };
+/**Pipe with schema validation and an basic error tracking */
+export const zPipe = (zSchema, strictModeIfObject, initialValue, ...fns) => {
+    const initialPipeState = { value: initialValue, error: nullAs(), failedAt: nullAs() };
     return fns.reduce((pipeState, fn, index) => {
         if (pipeState.error) {
             return pipeState;
         }
         pipeState.value = fn(pipeState.value);
-        const zResult = zSchema.safeParse(pipeState.value);
-        if (zResult.success === false) {
-            pipeState.failedAt = `Step ${index + 1}: ${fn.name}`;
-            pipeState.error = fromZodError(zResult.error).message;
-        }
+        zGetSafeParseResultAndHandleErrorMessage(zSchema, pipeState.value, errorHandler, strictModeIfObject);
         return pipeState;
+        function errorHandler(err) {
+            pipeState.failedAt = `Step ${index + 1}: ${fn.name}`;
+            pipeState.error = err;
+        }
     }, initialPipeState);
 };
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
@@ -506,13 +511,20 @@ export const addMissingPropsToObjects = (original, defaults) => {
 /**Return a copy that can be altered without having to worry about modifying the original */
 export const deepClone = (x) => JSON.parse(JSON.stringify(x));
 /**Generate a Zod Schema from an array/object */
-function getZodSchemaFromDataStructure(dataStructure) {
+function getZodSchemaFromData(data) {
     const toLiteral = (x) => typeof x === 'object' ?
-        getZodSchemaFromDataStructure(x) :
+        getZodSchemaFromData(x) :
         z.literal(x);
-    return Array.isArray(dataStructure) ?
-        z.tuple(dataStructure.map(toLiteral)) :
-        z.object(mapObject(dataStructure, toLiteral));
+    if (!data) {
+        return z.nullable(nullAs());
+    }
+    if (typeof data !== 'object') {
+        return toLiteral(data);
+    }
+    if (Array.isArray(data)) {
+        return z.tuple(data.map(toLiteral));
+    }
+    return z.object(mapObject(data, toLiteral));
 }
 /**Map an object :D (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
 export const mapObject = (object, mappingFn) => {
@@ -597,16 +609,22 @@ _; /********** MISC ******************** MISC ******************** MISC ********
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+/**
+ * Compare data B against an schema created from data A
+ * @param A The first piece of data
+ * @param B The second piece of data
+ * @param errorHandler The handler for the message error
+ * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not
+ * @returns
+ */
+export const dataIsEqual = (A, B, errorHandler = nullAs(), strictModeIfObject = true) => {
+    const zodSchema = getZodSchemaFromData(A);
+    return zGetSafeParseResultAndHandleErrorMessage(zodSchema, B, errorHandler, strictModeIfObject);
+};
 /**For obligatory callbacks */
 export const doNothing = (...args) => { args; };
 /**Syntactic sugar for "null as unknown as T" */
-export const nullAs = {
-    string: () => null,
-    number: () => null,
-    T3: () => null,
-    T2: () => null,
-    T: () => null,
-};
+export function nullAs() { return null; }
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
@@ -660,11 +678,12 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
     return envCheck && eslintCheck && scriptsCheck && skipLibCheckIsFalse && tsConfigCheck && utilsCheck;
     /**Check the rules in a project's eslint config file all fit the established schema */
     async function checkEslintConfigRules() {
-        const zSchema = getZodSchemaFromDataStructure({
-            quotes: ['error', 'single'],
-            'quote-props': ['error', 'as-needed'],
+        const zSchema = getZodSchemaFromData({
+            'arrow-body-style': ['error', 'as-needed'],
             'func-style': ['error', 'declaration'],
-            'arrow-body-style': ['error', 'as-needed']
+            'quote-props': ['error', 'as-needed'],
+            quotes: ['error', 'single'],
+            semi: ['error', 'never'],
         });
         const eslintConfig = await getEslintConfigFile();
         return zodCheck_curry(errorHandler)(zSchema, eslintConfig.rules);
@@ -693,7 +712,7 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
             transpile: 'npm run npmScript --command_project=transpile',
             vue: 'cd client & npm run dev'
         };
-        const zPackageJsonScriptsSchema = getZodSchemaFromDataStructure(desiredPackageJsonScripts);
+        const zPackageJsonScriptsSchema = getZodSchemaFromData(desiredPackageJsonScripts);
         return zodCheck_curry(errorHandler)(zPackageJsonScriptsSchema, (await getPackageJsonOfProject()).scripts);
     }
     /**Check the rules in a project's ts config file all fit the established schema */
@@ -792,7 +811,7 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
             //"skipLibCheck": true                               /* Skip type checking all .d.ts files. */
         };
         const tsConfig = await getTsConfigJson();
-        const zSchema = getZodSchemaFromDataStructure(desiredCompilerOptions);
+        const zSchema = getZodSchemaFromData(desiredCompilerOptions);
         return zodCheck_curry(errorHandler)(zSchema, tsConfig.compilerOptions);
         /**Get the ts config file of the main project */
         async function getTsConfigJson() {
@@ -923,7 +942,7 @@ export const getMainDependencies = async () => {
     return { httpServer, mongoClient };
     async function getMongoClient(MONGO_URI) {
         const mongo = new mongodb.MongoClient(MONGO_URI);
-        let mongoClient = null;
+        let mongoClient = nullAs();
         mongo.connect((err, client) => { if (err) {
             throw err;
         } mongoClient = client; });
@@ -1155,27 +1174,3 @@ if (command_package) {
 if (command_project) {
     zodCheckAndHandle(zValidNpmCommand_project, command_project, npmRun_project, [command_project], console.log);
 }
-/*
- * -------------------------------------------------------------------
- * Regarding passing a function with its arguments to another function
- * -------------------------------------------------------------------
- *
- * looks like														is called as								must apply as										explanation
- * wrppr(fn: F, args: Parameters<F>)		xyz(fn, [...fn.args])				fn(...args as Parameters<F>[])	"args" is passed as an array
- * wrppr(fn: F, ...args: Parameters<F>)	xyz(fn, arg1, arg2, etc..)	fn(...args as Parameters<F>[])  "..args" is spread into an array
- *
- * EITHER WAY the arguments must be applied to fn as "fn(...args)" where "args = Parameters<F>[]"
- *
- ? WHICH TO USE
- * Both are effectively the same, it's a question of taste
- * Option A is clear in that it makes you pass all of fn.args encapsulated into a single array argument
- * Option B is cooler in that it adjusts the length of the arguments needed as they will be spread by the wrapping function
- ! in B "args" must be spread parameters, meaning the MUST be the last arguments passed to "wrppr", A doesn't have this problem :)
- * // Answer: Use A, so make sure to stay consistent when doing this, but either way use this comment block as reference
- *
- ! Extra
- * wrppr(fn: F, ...args: Parameters<F>[])
- * "...args" is actually a collection of args, where each item is valid conjunt of arguments for fn
- * so you can all on each item of "args", eg: args.forEach(x => fn(x))
- * (see mapArgsOfFnAgainstFn as an existing example)
- */

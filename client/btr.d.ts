@@ -24,11 +24,12 @@ type toastOptions = {
     variant: btr_validVariant;
     title: string;
 };
-type bvToast = {
-    toast: (message: string, toastOptions: toastOptions) => void;
-};
 type zSchema<T> = {
     safeParse: (x: T) => SafeParseReturnType<T, T>;
+    strict?: () => zSchema<T>;
+};
+type bvToast = {
+    toast: (message: string, toastOptions: toastOptions) => void;
 };
 type messageHandler = (message: string) => void;
 type arrayPredicate<T> = (arg1: T) => boolean;
@@ -43,7 +44,7 @@ type pipe_mutable_type = {
 /**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
 export declare const newToast_client_curry: ($bvToast: bvToast) => btr_newToastFn;
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
-export declare const zodCheck_curry: (errorHandler?: messageHandler) => <T>(schema: zSchema<T>, data: T) => boolean;
+export declare const zodCheck_curry: (errorHandler?: messageHandler, strictModeIfObject?: boolean) => <T>(schema: zSchema<T>, data: T) => boolean;
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
 export declare const trackVueComponent_curry: <T>(zValidVueComponentName: zSchema<T>) => (name: T, componentConstructor: btr_trackedVueComponent, window: {
     vueComponents: btr_trackedVueComponent[];
@@ -63,10 +64,13 @@ export declare const addOrRemoveItem: <T>(arr: T[], item: T) => {
 export declare const addOrReplaceItem: <T>(arr: T[], newItem: T, predicate: arrayPredicate<T>) => void;
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
 export declare const asFormattedList: (arr: (string | number | boolean)[], useAndForTheLastItem: boolean) => string;
-/**Compare array A to array B, returns the answer along ab error message, if any */
-export declare const compareArrays: <T>(myArray: T[], comparisonType: 'isEqualTo' | 'hasAllItemsOf' | 'isPartialOf', desiredArray: T[]) => {
-    answer: boolean;
-    errorMessage: string;
+/**Compare array A to array B and return the details */
+export declare const getArrayDifferences: <T>(baseArray: T[], testArray: T[]) => {
+    arraysAreEqual: boolean;
+    arraysHaveTheSameItems: boolean;
+    lengthDifference: number;
+    missingItems: T[];
+    nonDesiredItems: T[];
 };
 /**syntax sugar for arr[arr.length - 1] */
 export declare const getLastItem: <T>(arr: T[]) => T;
@@ -121,7 +125,15 @@ export declare const retryF: <F extends (...args: Parameters<F>) => ReturnType<F
 }>;
 /**tryCatch wrapper for functions with divineError as the default error handler */
 export declare const tryF: <T extends (...args: Parameters<T>) => ReturnType<T>>(fn: T, args: Parameters<T>, errorHandler?: messageHandler) => ReturnType<T>;
-/** Check data against a provided schema, and execute either the success or error handler */
+/**
+ * Test data against an schema with strict-mode (no unspecified keys) for objects set by default and handle the error message if any
+ * @param schema The schema to test the data against
+ * @param data The data to be tested
+ * @param errorHandler The handler for the message error
+ * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not
+ * @returns
+ */
+export declare const zGetSafeParseResultAndHandleErrorMessage: <T>(schema: zSchema<T>, data: T, errorHandler?: messageHandler, strictModeIfObject?: boolean) => SafeParseReturnType<T_1, T_1>;
 /**
  * Check data against a provided schema, and execute either the success or error handler
  * @param zSchema The zSchema to test data against
@@ -129,10 +141,11 @@ export declare const tryF: <T extends (...args: Parameters<T>) => ReturnType<T>>
  * @param successHandler The function that will execute if data fits zSchema
  * @param args The arguments to be applied to successHandler
  * @param errorHandler The function that will execute if data does NOT fits zSchema
+ * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not *
  */
-export declare const zodCheckAndHandle: <D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(zSchema: zSchema<D>, data: D, successHandler: SH, args: Parameters<SH>, errorHandler?: messageHandler) => void;
-/**Pipe with schema validation and error logging */
-export declare const zPipe: <T>(zSchema: zSchema<T>, initialValue: T, ...fns: pipe_persistent_type<T>[]) => {
+export declare const zodCheckAndHandle: <D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(zSchema: zSchema<D>, data: D, successHandler: SH, args: Parameters<SH>, errorHandler?: messageHandler, strictModeIfObject?: boolean) => void;
+/**Pipe with schema validation and an basic error tracking */
+export declare const zPipe: <T>(zSchema: zSchema<T>, strictModeIfObject: boolean, initialValue: T, ...fns: pipe_persistent_type<T>[]) => {
     value: T;
     error: string;
     failedAt: string;
@@ -199,16 +212,19 @@ export declare const isGuest: (username: string) => boolean;
 export declare const successLog: (message: string) => void;
 /**Returns an string with its linebreaks converted into simple one-char spaces */
 export declare const toSingleLine: (sentence: string) => string;
+/**
+ * Compare data B against an schema created from data A
+ * @param A The first piece of data
+ * @param B The second piece of data
+ * @param errorHandler The handler for the message error
+ * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not
+ * @returns
+ */
+export declare const dataIsEqual: (A: unknown, B: unknown, errorHandler?: messageHandler, strictModeIfObject?: boolean) => SafeParseReturnType<T, T>;
 /**For obligatory callbacks */
 export declare const doNothing: (...args: unknown[]) => void;
 /**Syntactic sugar for "null as unknown as T" */
-export declare const nullAs: {
-    string: () => string;
-    number: () => number;
-    T3: <T1, T2, T3>() => T1 | T2 | T3;
-    T2: <T1_1, T2_1>() => T1_1 | T2_1;
-    T: <T>() => T;
-};
+export declare function nullAs<T>(): T;
 /**Copy to clipboard, objects arrays get stringify'd */
 export declare const copyToClipboard_client: (x: unknown) => void;
 /**Stringifies and downloads the provided data*/
