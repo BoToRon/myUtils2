@@ -45,6 +45,7 @@ export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warnin
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch'])	//DELETETHISFORCLIENT
 const zValidNpmCommand = z.enum(['git', 'publish', 'transpile'])
+const mainPackageJson = await getPackageJsonOfProject() //DELETETHISFORCLIENT
 
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
@@ -124,7 +125,8 @@ export const zodCheck_curry = (errorHandler = divine.error as messageHandler) =>
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
 export const trackVueComponent_curry = <T>(zValidVueComponentName: zSchema<T>) => function trackVueComponent(
 	name: T,
-	componentConstructor: btr_trackedVueComponent
+	componentConstructor: btr_trackedVueComponent,
+	window: { vueComponents: btr_trackedVueComponent[] },
 ) {
 
 	if (!zodCheck_curry(alert)(zValidVueComponentName, name)) { return componentConstructor }
@@ -406,7 +408,6 @@ export const tryF = <T extends (...args: Parameters<T>) => ReturnType<T>>(
  * @param args The arguments to be applied to successHandler
  * @param errorHandler The function that will execute if data does NOT fits zSchema
  */
-
 export const zodCheckAndHandle = <D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(
 	zSchema: zSchema<D>,
 	data: D,
@@ -534,7 +535,7 @@ export const deepClone = <T>(x: T) => JSON.parse(JSON.stringify(x)) as T
 /**Generate a Zod Schema from an array/object */
 function getZodSchemaFromDataStructure(dataStructure: object) {
 
-	const toLiteral = (x: unknown): z.ZodLiteral<unknown> => typeof x !== 'object' ?
+	const toLiteral = (x: unknown): z.ZodLiteral<unknown> => typeof x === 'object' ?
 		getZodSchemaFromDataStructure(x!) as unknown as z.ZodLiteral<unknown> :
 		z.literal(x as never) as z.ZodLiteral<unknown>
 
@@ -681,53 +682,61 @@ _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY *************
 _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 
 /** Check the version of @botoron/utils, the enviroment variables and various config files */
-export const basicProjectChecks = async (
-	packageJson: packageJson,
-	tsConfig: tsConfig,
-	eslintConfig: eslintConfig,
-	errorHandler = divine.error as messageHandler
-) => {
+export const basicProjectChecks = async (errorHandler = divine.error as messageHandler) => {
 
-	const env = await getEnviromentVariables()
-	const tsConfigCheck = checkTsConfigCompilerOptions()
-	const envCheck = getAndCheckEnviromentVariables(env)
+	const skipLibCheckIsFalse = await getSkipLibCheckOfVueIsFalse()
+	const tsConfigCheck = await checkTsConfigCompilerOptions()
+	const envCheck = await getAndCheckEnviromentVariables()
+	const eslintCheck = await checkEslintConfigRules()
+	const utilsCheck = await myUtils_areUpToDate()
 	const scriptsCheck = checkJsonPackageScripts()
-	const eslintCheck = checkEslintConfigRules()
-	const utilsCheck = myUtils_areUpToDate()
 
-	return envCheck && eslintCheck && scriptsCheck && tsConfigCheck && utilsCheck
+	return envCheck && eslintCheck && scriptsCheck && skipLibCheckIsFalse && tsConfigCheck && utilsCheck
 
 	/**Check the rules in a project's eslint config file all fit the established schema */
-	function checkEslintConfigRules() {
+	async function checkEslintConfigRules() {
 
 		const zSchema = getZodSchemaFromDataStructure({
-			'arrow-body-style': ['error', 'as-needed'],
-			'func-style': ['error', 'declaration'],
-			'quote-props': ['error', 'as-needed'],
 			quotes: ['error', 'single'],
-			'no-undef': 'off',
+			'quote-props': ['error', 'as-needed'],
+			'func-style': ['error', 'declaration'],
+			'arrow-body-style': ['error', 'as-needed']
 		})
 
-		const x = (error: string) => errorHandler('---------- CHECK_ESLINT_CONFIG_RULES: ---------- ' + error)
-		return zodCheck_curry(x)(zSchema, eslintConfig.rules)
+		const eslintConfig = await getEslintConfigFile()
+		return zodCheck_curry(errorHandler)(zSchema, eslintConfig.rules)
+
+		/**Get the eslint config file of the main project */
+		async function getEslintConfigFile() {
+			const path = './.eslintrc.cjs'
+			const eslintConfig = (await import(path)).default
+			return eslintConfig as eslintConfig
+		}
 	}
 
 	/**Check the scripts in a project's package json all fit the established schema */
 	function checkJsonPackageScripts() {
-		const zPackageJsonScriptsSchema = z.record(
-			z.enum([
-				'btr', 'git', 'npmScript',
-				//for debugging
-				'localtunnel', 'nodemon', 'transpile', 'vue',
-				//for deployement
-				'build-all', 'build-client', 'build-server', 'start'
-			]), z.string())
 
-		return zodCheck_curry(errorHandler)(zPackageJsonScriptsSchema, packageJson.scripts,)
+		const desiredPackageJsonScripts = {
+			btr: 'npm i @botoron/utils',
+			'build-server': 'npm run npmScript --command=build',
+			'build-client': 'cd client & npm run build-only',
+			'build-all': 'tsc --target esnext server/init.ts --outDir ../dist & cd client & npm run build-only && cd ..',
+			git: 'npm run npmScript --command=git',
+			localtunnel: 'lt --port 3000',
+			nodemon: 'nodemon test/server/init.js',
+			npmScript: 'node node_modules/@botoron/utils/btr.js',
+			start: 'node test/server/init.js',
+			transpile: 'npm run npmScript --command=transpile',
+			vue: 'cd client & npm run dev'
+		}
+
+		const zPackageJsonScriptsSchema = getZodSchemaFromDataStructure(desiredPackageJsonScripts)
+		return zodCheck_curry(errorHandler)(zPackageJsonScriptsSchema, mainPackageJson.scripts)
 	}
 
 	/**Check the rules in a project's ts config file all fit the established schema */
-	function checkTsConfigCompilerOptions() {
+	async function checkTsConfigCompilerOptions() {
 
 		const desiredCompilerOptions = {
 			/* Visit https://aka.ms/tsconfig to read more about this file */
@@ -823,15 +832,34 @@ export const basicProjectChecks = async (
 			//"skipLibCheck": true                               /* Skip type checking all .d.ts files. */
 		}
 
+		const tsConfig = await getTsConfigJson()
 		const zSchema = getZodSchemaFromDataStructure(desiredCompilerOptions)
 		return zodCheck_curry(errorHandler)(zSchema, tsConfig.compilerOptions)
+
+		/**Get the ts config file of the main project */
+		async function getTsConfigJson() {
+			return JSON.parse(
+				(await fsReadFileAsync('./tsconfig.json')).
+					replace(/\/(\/|\*).{1,}/g, '').
+					replace(/(\n|\r|\t)/g, '').
+					replace(', }', ' }') //{ { <-- commented here to keep the colour of brackets the same
+			) as tsConfig
+		}
 	}
 
 	/**Check if all the desired enviroment keys are defined */
-	function getAndCheckEnviromentVariables(env: NodeJS.ProcessEnv) {
-		const desiredEnvKeys = ['ADMIN_PASSWORD', 'APP_NAME', 'DEV_OR_PROD', 'ERIS_TOKEN', 'MONGO_URI', 'PORT']
-		const { answer, errorMessage } = compareArrays(Object.keys(env), 'hasAllItemsOf', desiredEnvKeys)
-		if (errorMessage) { errorHandler(errorMessage) }
+	async function getAndCheckEnviromentVariables() {
+		const str = z.string()
+		const env: unknown = await getEnviromentVariables()
+		const desiredEnv = z.object({ ADMIN_PASSWORD: str, APP_NAME: str, DEV_OR_PROD: str, ERIS_TOKEN: str, MONGO_URI: str, PORT: str, })
+		return zodCheck_curry(errorHandler)(desiredEnv, env)
+	}
+
+	/**Turn off that damn skipLibCheck that comes on by default */
+	async function getSkipLibCheckOfVueIsFalse() {
+		const file = await fsReadFileAsync('./client/node_modules/@vue/tsconfig/tsconfig.json')
+		const answer = file.includes('"skipLibCheck": true')
+		if (!answer) { errorHandler('skipLibCheck should be FALSE') }
 		return answer
 	}
 
@@ -925,10 +953,9 @@ export const getLatestPackageJsonFromGithub = async () => {
 	return Buffer.from(response.content, 'base64').toString('utf8')
 }
 /** Return the main perma-dependencies, check myUtil's version and print package.json's script */
-export const getMainDependencies = async (packageJson: packageJson, tsConfig: tsConfig, eslintConfig: eslintConfig) => {
+export const getMainDependencies = async () => {
 
-	await basicProjectChecks(packageJson, tsConfig, eslintConfig)
-
+	await basicProjectChecks()
 	const env = await getEnviromentVariables()
 	const { MONGO_URI, PORT } = env
 
@@ -956,6 +983,12 @@ export const getMainDependencies = async (packageJson: packageJson, tsConfig: ts
 		httpServer.listen(PORT, () => delay(1500).then(() => console.log(`server up at: http://localhost:${PORT}/`)))
 		return httpServer
 	}
+}
+/**Get the package json of the project with this (utils) package installed */
+export async function getPackageJsonOfProject() {
+	const path = '../../../package.json'
+	const mainPackageJson = (await import(path, { assert: { type: 'json' } })).default
+	return mainPackageJson as packageJson
 }
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export const killProcess = (message: string) => { bigConsoleError(message); process.exit() }
@@ -1058,12 +1091,6 @@ export async function questionAsPromise(question: string) {
 const btrCommand = process.env.npm_config_btrCommand as validNpmCommand
 if (btrCommand) { zodCheckAndHandle(zValidNpmCommand, btrCommand, npmRun, [btrCommand], console.log) }
 
-
-
-
-
-
-
 /*
  * -------------------------------------------------------------------
  * Regarding passing a function with its arguments to another function
@@ -1088,3 +1115,101 @@ if (btrCommand) { zodCheckAndHandle(zValidNpmCommand, btrCommand, npmRun, [btrCo
  * so you can all on each item of "args", eg: args.forEach(x => fn(x))
  * (see mapArgsOfFnAgainstFn as an existing example)
  */
+
+export const npmScript = async (options: { serverFolder_dist?: string, serverFolder_src?: string, fileWithRef?: string }) => {
+
+	await basicProjectChecks()
+
+	const defaults = { serverFolder_dist: '../dist', serverFolder_src: './test', fileWithRef: 'ref' }
+	if (!options) { options = defaults }
+	const { serverFolder_dist, serverFolder_src, fileWithRef } = addMissingPropsToObjects(options!, defaults)
+
+	const command = `${process.env['npm_config_command']}`
+	const { APP_NAME } = await getEnviromentVariables()
+
+	if (['build', 'transpile'].includes(command)) { canTranspileCheckAndHandle() }
+	else if (command === 'git') { prompCommitMessageAndPush(`${APP_NAME}`) }
+	else { killProcess(`'${command}' is NOT a valid npmRun command`) }
+
+	async function canTranspileCheckAndHandle() {
+
+		const canTranspile = await getCanTranspile()
+
+		if (!canTranspile) { killProcess(`CANT TRANSPILE, ${fileWithRef}.js has debugging: on`) }
+		if (command === 'build') { transpileToDistFolder_plusCopyOverOtherFiles() }
+		if (command === 'transpile') { transpileServerFilesToDevFolder() }
+
+		async function getCanTranspile() {
+			try { return !/debugging: true/.test(await fsReadFileAsync(`test/server/${fileWithRef}.js`)) }
+			catch { return true }
+		}
+
+		function transpileServerFilesToDevFolder() {
+			exec(`tsc --target esnext server/init.ts --outDir ${serverFolder_src}`, async () => {
+				const packageJson = await fsReadFileAsync('package.json')
+				await fsWriteFileAsync('test/package.json', packageJson)
+				successLog(`files transpiled to ${serverFolder_src}`)
+			})
+		}
+
+		async function transpileToDistFolder_plusCopyOverOtherFiles() {
+			if (!(await checkDevPropsOfRef('server/' + fileWithRef + '.ts', false))) { return }
+			await transpileTypesFile()
+			await copyFileToDis('.env')
+			await copyFileToDis('.gitignore')
+			await copyFileToDis('package.json')
+			await copyFileToDis('types.js')
+
+			exec(`tsc --target esnext server/init.ts server/io.ts --outDir ${serverFolder_dist}`, async () => {
+				await checkDevPropsOfRef(serverFolder_dist + '/server/' + fileWithRef + '.js', true)
+				successLog('(server) Build sucessful!')
+			})
+
+			async function checkDevPropsOfRef(filePath: string, toggleForProduction: boolean) {
+				let fileContent = await fsReadFileAsync(filePath)
+				if (!checkFor('devOrProd = \'dev\'', 'devOrProd = \'prod\'')) { return }
+				if (toggleForProduction) { await fsWriteFileAsync(filePath, fileContent) }
+				return true
+
+				function checkFor(forSrc: string, forDist: string) {
+					if (!fileContent.includes(forSrc)) { killProcess(`main.ts.ref must include: (${forSrc})`); return }
+					if (toggleForProduction) { fileContent = fileContent.replace(forSrc, forDist) }
+					return true
+				}
+			}
+
+			async function copyFileToDis(filename: string,) {
+				let content = await fsReadFileAsync(filename)
+				if (filename === 'package.json') { deleteAllPackageJsonScriptsExceptStart() }
+				await fsWriteFileAsync('../dist/' + filename, content)
+
+				function deleteAllPackageJsonScriptsExceptStart() {
+					content = content.replace(/"scripts": {[^}]{1,}/, `"scripts": { 
+		"start": "node server/init.js",
+		"git": "git add . & git commit & git push",
+		"btr": "npm i @botoron/utils"
+	`)
+				}
+			}
+		}
+
+		async function transpileTypesFile() {
+			return await new Promise(resolve => {
+				fsReadFileAsync('types.d.ts').then(typesFile => {
+					fsWriteFileAsync('types.ts', typesFile).then(() => {
+						exec('tsc --target esnext types.ts', () => {
+							successLog('types.d.ts transpiled to root folder!')
+							fs.unlinkSync('types.ts')
+							delay(1000).then(() => resolve(true))
+						})
+					})
+				})
+			})
+		}
+	}
+
+}
+
+
+
+
