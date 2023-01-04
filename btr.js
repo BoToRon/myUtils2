@@ -707,7 +707,7 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
     /**Check the scripts in a project's package json all fit the established schema */
     async function checkJsonPackageScripts() {
         const pathToUtilsEslint = './scripts.json';
-        const desiredPackageJsonScripts = (await import(pathToUtilsEslint)).default;
+        const desiredPackageJsonScripts = (await import(pathToUtilsEslint, { assert: { type: 'json' } })).default;
         const packageJsonOfProject = await importFileFromProject('package', 'json');
         return zodCheck_curry(addToErrors)(getZodSchemaFromData(desiredPackageJsonScripts), packageJsonOfProject.scripts);
     }
