@@ -7,6 +7,11 @@ export type btr_trackedVueComponent = {
     beforeDestroy?: btr_voidFn;
 };
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void;
+export type btr_socketEventInfo = {
+    event: string;
+    timestamp: number;
+    data: unknown;
+};
 export type btr_intervalWithId = {
     id: string;
     interval: NodeJS.Timer;

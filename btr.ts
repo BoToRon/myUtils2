@@ -71,6 +71,7 @@ _ /********** TYPES ******************** TYPES ******************** TYPES ******
 
 export type btr_trackedVueComponent = { _name: string, beforeCreate?: btr_voidFn, beforeDestroy?: btr_voidFn }
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void
+export type btr_socketEventInfo = { event: string, timestamp: number, data: unknown }
 export type btr_intervalWithId = { id: string, interval: NodeJS.Timer }
 export type btr_globalAlert = { message: string, show: boolean }
 export type btr_validVariant = z.infer<typeof zValidVariants>

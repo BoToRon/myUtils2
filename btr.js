@@ -141,7 +141,7 @@ export const divine = {
     error: async (err) => {
         const message = getTraceableStack(err);
         const { DEV_OR_PROD } = await getEnviromentVariables();
-        DEV_OR_PROD === 'DEV' ? killProcess(message) : divine.ping(message);
+        DEV_OR_PROD !== 'PROD' ? killProcess(message) : divine.ping(message);
     },
     init: (async () => {
         delay(1000).then(async () => {
@@ -149,7 +149,7 @@ export const divine = {
                 return;
             }
             const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = await getEnviromentVariables();
-            if (DEV_OR_PROD === 'DEV') {
+            if (DEV_OR_PROD !== 'PROD') {
                 return;
             }
             const divinePrepend = '***DivineBot:***';

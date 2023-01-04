@@ -38,12 +38,12 @@ const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', '
 const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile'])
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch'])
 const zMyEnv = z.object({
-  DEV_OR_PROD: z.enum(['DEV', 'PROD']),
-  ADMIN_PASSWORD: string(),
-  ERIS_TOKEN: string(),
-  MONGO_URI: string(),
-  APP_NAME: string(),
-  PORT: string(),
+	DEV_OR_PROD: z.enum(['DEV', 'PROD']),
+	ADMIN_PASSWORD: string(),
+	ERIS_TOKEN: string(),
+	MONGO_URI: string(),
+	APP_NAME: string(),
+	PORT: string(),
 })
 
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
@@ -59,6 +59,7 @@ _ /********** TYPES ******************** TYPES ******************** TYPES ******
 
 export type btr_trackedVueComponent = { _name: string, beforeCreate?: btr_voidFn, beforeDestroy?: btr_voidFn }
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void
+export type btr_socketEventInfo = { event: string, timestamp: number, data: unknown }
 export type btr_intervalWithId = { id: string, interval: NodeJS.Timer }
 export type btr_globalAlert = { message: string, show: boolean }
 export type btr_validVariant = z.infer<typeof zValidVariants>
@@ -76,12 +77,12 @@ type pipe_persistent_type<T> = (arg: T) => T
 type tsConfig = { compilerOptions: object }
 type myEnv = z.infer<typeof zMyEnv>
 type pipe_mutable_type = {
-  <T, A>(source: T, a: (value: T) => A): A
-  <T, A, B>(source: T, a: (value: T) => A, b: (value: A) => B): B
-  <T, A, B, C>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C): C
-  <T, A, B, C, D>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D): D
-  <T, A, B, C, D, E>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D, e: (value: D) => E): E
-  //can always make it longer 😉
+	<T, A>(source: T, a: (value: T) => A): A
+	<T, A, B>(source: T, a: (value: T) => A, b: (value: A) => B): B
+	<T, A, B, C>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C): C
+	<T, A, B, C, D>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D): D
+	<T, A, B, C, D, E>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D, e: (value: D) => E): E
+	//can always make it longer 😉
 }
 
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
@@ -97,58 +98,58 @@ _ /********** CURRIES ******************** CURRIES ******************** CURRIES 
 
 /**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
 export const newToast_client_curry = ($bvToast: bvToast) => {
-  const body: btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => {
-    if (!zodCheck_curry(alert)(zValidVariants, variant)) { return }
-    $bvToast.toast(message, {
-      toaster: 'b-toaster-bottom-right',
-      autoHideDelay: 5000,
-      solid: true,
-      variant,
-      title
-    })
-  }
-  return body
+	const body: btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => {
+		if (!zodCheck_curry(alert)(zValidVariants, variant)) { return }
+		$bvToast.toast(message, {
+			toaster: 'b-toaster-bottom-right',
+			autoHideDelay: 5000,
+			solid: true,
+			variant,
+			title
+		})
+	}
+	return body
 }
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
 export const zodCheck_curry = (errorHandler = divine.error as messageHandler, strictModeIfObject = true) => {
-  function zodCheck<T>(schema: zSchema<T>, data: T) {
-    function body<T>(errorHandler: messageHandler, schema: zSchema<T>, data: T, strictModeIfObject = true) {
-      const result = zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler, strictModeIfObject)
-      return result.success as boolean
-    }
-    return body(errorHandler, schema, data, strictModeIfObject)
-  }
-  return zodCheck
+	function zodCheck<T>(schema: zSchema<T>, data: T) {
+		function body<T>(errorHandler: messageHandler, schema: zSchema<T>, data: T, strictModeIfObject = true) {
+			const result = zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler, strictModeIfObject)
+			return result.success as boolean
+		}
+		return body(errorHandler, schema, data, strictModeIfObject)
+	}
+	return zodCheck
 }
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
 export const trackVueComponent_curry = <T>(zValidVueComponentName: zSchema<T>) => function trackVueComponent(
-  name: T,
-  componentConstructor: btr_trackedVueComponent,
-  window: { vueComponents: btr_trackedVueComponent[] },
+	name: T,
+	componentConstructor: btr_trackedVueComponent,
+	window: { vueComponents: btr_trackedVueComponent[] },
 ) {
 
-  if (!zodCheck_curry(alert)(zValidVueComponentName, name)) { return componentConstructor }
-  colorLog('blue', `Component '${name}' registered to Vue`)
-  if (!window.vueComponents) { window.vueComponents = [] }
+	if (!zodCheck_curry(alert)(zValidVueComponentName, name)) { return componentConstructor }
+	colorLog('blue', `Component '${name}' registered to Vue`)
+	if (!window.vueComponents) { window.vueComponents = [] }
 
-  return getComponent(name, componentConstructor)
+	return getComponent(name, componentConstructor)
 
-  function toggleComponent(logger: messageHandler) {
-    const { action } = addOrRemoveItem(window.vueComponents, componentConstructor)
-    logger(`Component '${name}' ${action} to/from window.vueComponents`)
-    logAllComponents()
-  }
+	function toggleComponent(logger: messageHandler) {
+		const { action } = addOrRemoveItem(window.vueComponents, componentConstructor)
+		logger(`Component '${name}' ${action} to/from window.vueComponents`)
+		logAllComponents()
+	}
 
-  function getComponent(name: T, componentConstructor: btr_trackedVueComponent) {
-    componentConstructor.beforeCreate = () => toggleComponent(successLog)
-    componentConstructor.beforeDestroy = () => toggleComponent(errorLog)
-    componentConstructor._name = name as string
-    return componentConstructor
-  }
+	function getComponent(name: T, componentConstructor: btr_trackedVueComponent) {
+		componentConstructor.beforeCreate = () => toggleComponent(successLog)
+		componentConstructor.beforeDestroy = () => toggleComponent(errorLog)
+		componentConstructor._name = name as string
+		return componentConstructor
+	}
 
-  function logAllComponents() {
-    colorLog('magenta', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`)
-  }
+	function logAllComponents() {
+		colorLog('magenta', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`)
+	}
 }
 
 _ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
@@ -163,72 +164,72 @@ _ /********** DIVINE ******************** DIVINE ******************** DIVINE ***
 _ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
 
 export const divine = {
-  bot: <eris.Client>nullAs(),
-  error: async (err: string | Error) => {
-    const message = getTraceableStack(err)
-    const { DEV_OR_PROD } = await getEnviromentVariables()
-    DEV_OR_PROD === 'DEV' ? killProcess(message) : divine.ping(message)
-  },
-  init: (async () => {
-    delay(1000).then(async () => {
-      if (command_package || command_project) { return }
+	bot: <eris.Client>nullAs(),
+	error: async (err: string | Error) => {
+		const message = getTraceableStack(err)
+		const { DEV_OR_PROD } = await getEnviromentVariables()
+		DEV_OR_PROD !== 'PROD' ? killProcess(message) : divine.ping(message)
+	},
+	init: (async () => {
+		delay(1000).then(async () => {
+			if (command_package || command_project) { return }
 
-      const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = await getEnviromentVariables()
-      if (DEV_OR_PROD === 'DEV') { return }
+			const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = await getEnviromentVariables()
+			if (DEV_OR_PROD !== 'PROD') { return }
 
-      const divinePrepend = '***DivineBot:***'
-      const bot = eris(ERIS_TOKEN)
+			const divinePrepend = '***DivineBot:***'
+			const bot = eris(ERIS_TOKEN)
 
-      bot.on('messageReactionRemove', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('remove', a, b, c))
-      bot.on('messageReactionAdd', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('add', a, b, c))
-      bot.on('disconnect', () => { colorLog('red', `${divinePrepend}: Disconnected D: ... retrying!`) })
-      bot.on('connect', () => divine.ping(`(${APP_NAME}) - I'm alive bitch >:D`))
+			bot.on('messageReactionRemove', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('remove', a, b, c))
+			bot.on('messageReactionAdd', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('add', a, b, c))
+			bot.on('disconnect', () => { colorLog('red', `${divinePrepend}: Disconnected D: ... retrying!`) })
+			bot.on('connect', () => divine.ping(`(${APP_NAME}) - I'm alive bitch >:D`))
 
-      const idOfRoleAssigningMessage = '822523162724925473'
-      await attemptConnection()
-      divine.bot = bot
+			const idOfRoleAssigningMessage = '822523162724925473'
+			await attemptConnection()
+			divine.bot = bot
 
-      function role(action: 'add' | 'remove', message: eris.PossiblyUncachedMessage, emoji: eris.PartialEmoji, reactor: eris.Member) {
-        try {
-          if (message.id !== idOfRoleAssigningMessage) { return }
+			function role(action: 'add' | 'remove', message: eris.PossiblyUncachedMessage, emoji: eris.PartialEmoji, reactor: eris.Member) {
+				try {
+					if (message.id !== idOfRoleAssigningMessage) { return }
 
-          const role = [
-            { app: 'UntCG', emoji: 'cards', id: 'SAMPLEROLEID' },
-            { app: 'CwCA', emoji: 'chess', id: 'SAMPLEROLEID' },
-            { app: 'Cool', emoji: 'cool', id: 'SAMPLEROLEID' },
-            { app: 'Divine', emoji: 'divine', id: 'SAMPLEROLEID' },
-            { app: 'Bluejay', emoji: 'bluejay', id: 'SAMPLEROLEID' },
-            { app: 'Cute', emoji: 'cute', id: 'SAMPLEROLEID' },
-          ].find(x => x.emoji === emoji.name)
+					const role = [
+						{ app: 'UntCG', emoji: 'cards', id: 'SAMPLEROLEID' },
+						{ app: 'CwCA', emoji: 'chess', id: 'SAMPLEROLEID' },
+						{ app: 'Cool', emoji: 'cool', id: 'SAMPLEROLEID' },
+						{ app: 'Divine', emoji: 'divine', id: 'SAMPLEROLEID' },
+						{ app: 'Bluejay', emoji: 'bluejay', id: 'SAMPLEROLEID' },
+						{ app: 'Cute', emoji: 'cute', id: 'SAMPLEROLEID' },
+					].find(x => x.emoji === emoji.name)
 
-          if (role) { ({ add: reactor.addRole, remove: reactor.removeRole })[action](role.id) }
-        }
-        catch (e) { console.log('divineBot.role.tryCatch.error = ', e) }
-      }
+					if (role) { ({ add: reactor.addRole, remove: reactor.removeRole })[action](role.id) }
+				}
+				catch (e) { console.log('divineBot.role.tryCatch.error = ', e) }
+			}
 
-      async function attemptConnection() {
-        try {
-          bot.connect()
-          colorLog('cyan', 'waiting for DivineBot')
-          while (!bot.uptime) { await delay(1000) }
-          successLog('The divine egg has hatched')
-        }
-        catch {
-          colorLog('yellow', `${divinePrepend} Failed to connect.. retrying >:D`)
-          await delay(1000)
-          attemptConnection()
-        }
-      }
-    })
-  })(),
-  ping: async (message: string) => {
-    while (!divine.bot?.ready) { await delay(1000) }
-    const { APP_NAME } = await getEnviromentVariables()
+			async function attemptConnection() {
+				try {
+					bot.connect()
+					colorLog('cyan', 'waiting for DivineBot')
+					while (!bot.uptime) { await delay(1000) }
+					successLog('The divine egg has hatched')
+				}
+				catch {
+					colorLog('yellow', `${divinePrepend} Failed to connect.. retrying >:D`)
+					await delay(1000)
+					attemptConnection()
+				}
+			}
+		})
+	})(),
+	ping: async (message: string) => {
+		while (!divine.bot?.ready) { await delay(1000) }
+		const { APP_NAME } = await getEnviromentVariables()
 
-    const theMessage = `<@470322452040515584> - (${APP_NAME}) \n ${message}`
-    const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } }
-    divine.bot.createMessage('1055939528776495206', divineOptions)
-  }
+		const theMessage = `<@470322452040515584> - (${APP_NAME}) \n ${message}`
+		const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } }
+		divine.bot.createMessage('1055939528776495206', divineOptions)
+	}
 }
 
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -244,77 +245,77 @@ _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FO
 
 /**Adds an item to an array, or removes it if it already was added. Returns the action applied and the array */
 export const addOrRemoveItem = <T>(arr: T[], item: T) => {
-  let x: 'added' | 'removed'
-  const isInArray = arr.includes(item)
-  if (!isInArray) { arr.push(item); x = 'added' }
-  else { removeItem(arr, item); x = 'removed' }
-  return { action: x, arr }
+	let x: 'added' | 'removed'
+	const isInArray = arr.includes(item)
+	if (!isInArray) { arr.push(item); x = 'added' }
+	else { removeItem(arr, item); x = 'removed' }
+	return { action: x, arr }
 }
 /**Adds an item to an array, or replaces the first one if found. WARNING: make sure the predicate can only find ONE item */
 export const addOrReplaceItem = <T>(arr: T[], newItem: T, predicate: arrayPredicate<T>) => {
-  const replaceableItem = arr.find(x => predicate(x))
-  replaceableItem ? arr[arr.indexOf(replaceableItem)] = newItem : arr.push(newItem)
+	const replaceableItem = arr.find(x => predicate(x))
+	replaceableItem ? arr[arr.indexOf(replaceableItem)] = newItem : arr.push(newItem)
 }
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
 export const asFormattedList = (arr: (string | number | boolean)[], useAndForTheLastItem: boolean) => {
-  let string = ''
-  arr.forEach((item, index) => {
-    const isLastItem = index === arr.length - 1
-    const isSemiLastItem = index === arr.length - 2
+	let string = ''
+	arr.forEach((item, index) => {
+		const isLastItem = index === arr.length - 1
+		const isSemiLastItem = index === arr.length - 2
 
-    if (isSemiLastItem && useAndForTheLastItem) { string += item + ' and ' }
-    else if (isLastItem) { string += item }
-    else { string += item + ', ' }
-  })
-  return string
+		if (isSemiLastItem && useAndForTheLastItem) { string += item + ' and ' }
+		else if (isLastItem) { string += item }
+		else { string += item + ', ' }
+	})
+	return string
 }
 /**Compare array A to array B and return the details */
 export const compareArrays = <T>(baseArray: T[], testArray: T[],) => {
-  const nonDesiredItems = testArray.filter(x => !baseArray.includes(x))
-  const missingItems = baseArray.filter(x => !testArray.includes(x))
-  const lengthDifference = baseArray.length - testArray.length
+	const nonDesiredItems = testArray.filter(x => !baseArray.includes(x))
+	const missingItems = baseArray.filter(x => !testArray.includes(x))
+	const lengthDifference = baseArray.length - testArray.length
 
-  const arraysHaveTheSameItems = !nonDesiredItems.length && !missingItems.length
-  const arraysAreEqual = arraysHaveTheSameItems && !lengthDifference
+	const arraysHaveTheSameItems = !nonDesiredItems.length && !missingItems.length
+	const arraysAreEqual = arraysHaveTheSameItems && !lengthDifference
 
-  return { arraysAreEqual, arraysHaveTheSameItems, lengthDifference, missingItems, nonDesiredItems }
+	return { arraysAreEqual, arraysHaveTheSameItems, lengthDifference, missingItems, nonDesiredItems }
 }
 /**syntax sugar for arr[arr.length - 1] */
 export const getLastItem = <T>(arr: T[]) => arr[arr.length - 1]
 /**returns a random item along its index */
-export const getRandomItem = <T>(arr: T[]) => { const r = roll(arr.length); return { item: arr[r], index: r } }
+export const getRandomItem = <T>(arr: T[]) => { const r = roll(arr.length); return { item: arr[r] as T, index: r } }
 /**Returns a version of the provided array without repeating items */
 export const getUniqueValues = <T>(arr: T[]) => [...new Set(arr)]
 /**Remove a single item from an array, or all copies of that item if its a primitive value */
 export const removeItem = <T>(arr: T[], item: T) => selfFilter(arr, (x: T) => x !== item).removedCount
 /**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
 export const selfFilter = <T>(arr: T[], predicate: arrayPredicate<T>) => {
-  let removedCount = 0
-  const removedItems: T[] = []
-  for (let i = 0; i < arr.length; i++) {
-    const item = arr[i] as T
-    if (predicate(item)) { continue }
-    removedItems.push(arr.splice(i, 1)[0] as T)
-    removedCount++
-    i--
-  }
-  return { removedItems, removedCount }
+	let removedCount = 0
+	const removedItems: T[] = []
+	for (let i = 0; i < arr.length; i++) {
+		const item = arr[i] as T
+		if (predicate(item)) { continue }
+		removedItems.push(arr.splice(i, 1)[0] as T)
+		removedCount++
+		i--
+	}
+	return { removedItems, removedCount }
 }
 /**Randomizes the order of the items in the array */
 export const shuffle = <T>(arr: T[]) => {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const rand = roll(i + 1);
-    [arr[i], arr[rand]] = [arr[rand] as T, arr[i] as T]
-  }
-  return arr
+	for (let i = arr.length - 1; i > 0; i--) {
+		const rand = roll(i + 1);
+		[arr[i], arr[rand]] = [arr[rand] as T, arr[i] as T]
+	}
+	return arr
 }
 /**Sort an array of objects based on the value a property. A: Ascending, D: Descesding  */
 export const sortBy = <T extends object>(arr: T[], key: keyof T, direction: 'A' | 'D') => {
-  if (!arr.length) { return arr }
-  if (typeof arr[0] === 'string') { arr.sort((a, b) => (a > b) ? 1 : -1) }
-  else { arr.sort((a, b) => (a[key] > b[key]) ? 1 : -1) }
-  if (direction === 'D') { arr.reverse() }
-  return arr
+	if (!arr.length) { return arr }
+	if (typeof arr[0] === 'string') { arr.sort((a, b) => (a > b) ? 1 : -1) }
+	else { arr.sort((a, b) => (a[key] > b[key]) ? 1 : -1) }
+	if (direction === 'D') { arr.reverse() }
+	return arr
 }
 /**syntactic sugar for selfFilter(arr, predicate).removedItems */
 export const spliceIf = <T>(arr: T[], predicate: arrayPredicate<T>) => selfFilter(arr, predicate).removedItems
@@ -322,9 +323,9 @@ export const spliceIf = <T>(arr: T[], predicate: arrayPredicate<T>) => selfFilte
 export const spliceLast = <T>(arr: T[], count: number) => arr.splice(-count)
 /**Transfer items that meet a given condition from one array to another */
 export const transferItems = <T>(origin: T[], destination: T[], predicate: arrayPredicate<T>) => {
-  const x = selfFilter(origin, predicate)
-  destination.push(...x.removedItems)
-  return { transferedCount: x.removedCount }
+	const x = selfFilter(origin, predicate)
+	destination.push(...x.removedItems)
+	return { transferedCount: x.removedCount }
 }
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
@@ -339,20 +340,20 @@ _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS *****************
 
 /**Set interval with try-catch and called immediately*/
 export const doAndRepeat = (fn: btr_voidFn, interval: number) => {
-  const tryIt = () => tryF(fn, [])
-  setInterval(tryIt, interval)
-  tryIt()
+	const tryIt = () => tryF(fn, [])
+	setInterval(tryIt, interval)
+	tryIt()
 }
 /**Simple and standard functional programming pipe. Deprecated, use either zPipe (persistenType with zod errors) or pipe_mutableType! */
 export const pipe_persistentType = <T>(initialValue: T, ...fns: pipe_persistent_type<T>[]) =>
-  fns.reduce((result, fn) => fn(result), initialValue)
+	fns.reduce((result, fn) => fn(result), initialValue)
 /**
 * Pipes a value through a number of functions in the order that they appear.
 * Takes between 1 and 12 arguments. `pipe(x, a, b)` is equivalent to `b(a(x))`.
 * If only one argument is provided (`pipe(x)`), this will produce a type error but JS will run fine (and return `x`).
 */
 export const pipe_mutableType: pipe_mutable_type = (source: unknown, ...project: ((value: unknown) => unknown)[]): unknown =>
-  project.reduce((accumulator, element) => element(accumulator), source)
+	project.reduce((accumulator, element) => element(accumulator), source)
 /**
  * Retry a function up to X amount of times or until it is executed successfully, mainly for fetching/requesting stuff
  * @param fn The function to be retried hoping it returns successfully
@@ -363,29 +364,29 @@ export const pipe_mutableType: pipe_mutable_type = (source: unknown, ...project:
  * @returns 
  */
 export const retryF = async <F extends (...args: Parameters<F>) => ReturnType<F>>(
-  fn: F,
-  args: Parameters<F>,
-  retriesLeft: number,
-  defaultReturn: ReturnType<F>,
-  delayBetweenRetries: number,
+	fn: F,
+	args: Parameters<F>,
+	retriesLeft: number,
+	defaultReturn: ReturnType<F>,
+	delayBetweenRetries: number,
 ): Promise<{ data: ReturnType<F>, was: 'success' | 'failure' }> => {
-  try { return { data: await fn(...args), was: 'success' } }
-  catch (error) {
-    colorLog('yellow', `retryF > ${fn.name} > ${retriesLeft} retriesLeft. {${error}}`)
-    if (!retriesLeft) { return { data: defaultReturn, was: 'failure' } }
+	try { return { data: await fn(...args), was: 'success' } }
+	catch (error) {
+		colorLog('yellow', `retryF > ${fn.name} > ${retriesLeft} retriesLeft. {${error}}`)
+		if (!retriesLeft) { return { data: defaultReturn, was: 'failure' } }
 
-    await delay(delayBetweenRetries)
-    return await retryF(fn, args, retriesLeft - 1, defaultReturn, delayBetweenRetries)
-  }
+		await delay(delayBetweenRetries)
+		return await retryF(fn, args, retriesLeft - 1, defaultReturn, delayBetweenRetries)
+	}
 }
 /**tryCatch wrapper for functions with divineError as the default error handler */
 export const tryF = <T extends (...args: Parameters<T>) => ReturnType<T>>(
-  fn: T,
-  args: Parameters<T>,
-  errorHandler = divine.error as messageHandler
+	fn: T,
+	args: Parameters<T>,
+	errorHandler = divine.error as messageHandler
 ) => {
-  try { return fn(...args) }
-  catch (err) { errorHandler(err as string) }
+	try { return fn(...args) }
+	catch (err) { errorHandler(err as string) }
 }
 /**
  * Test data against an schema with strict-mode (no unspecified keys) for objects set by default and handle the error message if any
@@ -396,20 +397,20 @@ export const tryF = <T extends (...args: Parameters<T>) => ReturnType<T>>(
  * @returns 
  */
 export const zGetSafeParseResultAndHandleErrorMessage = <T>(
-  schema: zSchema<T>,
-  data: T,
-  errorHandler = <messageHandler>nullAs(),
-  strictModeIfObject = true
+	schema: zSchema<T>,
+	data: T,
+	errorHandler = <messageHandler>nullAs(),
+	strictModeIfObject = true
 ) => {
 
-  const result = getResult()
-  if (result.success === false && errorHandler) { errorHandler(fromZodError(result.error).message) }
-  return result
+	const result = getResult()
+	if (result.success === false && errorHandler) { errorHandler(fromZodError(result.error).message) }
+	return result
 
-  function getResult() {
-    if (!schema.strict || !strictModeIfObject) { return schema.safeParse(data) }
-    else { return schema.strict().safeParse(data) }
-  }
+	function getResult() {
+		if (!schema.strict || !strictModeIfObject) { return schema.safeParse(data) }
+		else { return schema.strict().safeParse(data) }
+	}
 }
 /**
  * Check data against a provided schema, and execute either the success or error handler
@@ -421,34 +422,34 @@ export const zGetSafeParseResultAndHandleErrorMessage = <T>(
  * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not * 
  */
 export const zodCheckAndHandle = <D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(
-  zSchema: zSchema<D>,
-  data: D,
-  successHandler: SH,
-  args: Parameters<SH>,
-  errorHandler = divine.error as messageHandler,
-  strictModeIfObject = true
+	zSchema: zSchema<D>,
+	data: D,
+	successHandler: SH,
+	args: Parameters<SH>,
+	errorHandler = divine.error as messageHandler,
+	strictModeIfObject = true
 ) => {
-  const zResult = zGetSafeParseResultAndHandleErrorMessage(zSchema, data, errorHandler, strictModeIfObject)
-  if (zResult.success === true && successHandler) { successHandler(...args as Parameters<SH>) }
+	const zResult = zGetSafeParseResultAndHandleErrorMessage(zSchema, data, errorHandler, strictModeIfObject)
+	if (zResult.success === true && successHandler) { successHandler(...args as Parameters<SH>) }
 }
 /**Pipe with schema validation and an basic error tracking */
 export const zPipe = <T>(zSchema: zSchema<T>, strictModeIfObject: boolean, initialValue: T, ...fns: pipe_persistent_type<T>[]) => {
 
-  const initialPipeState = { value: initialValue, error: <string>nullAs(), failedAt: <string>nullAs() }
-  return fns.reduce((pipeState, fn, index) => {
+	const initialPipeState = { value: initialValue, error: <string>nullAs(), failedAt: <string>nullAs() }
+	return fns.reduce((pipeState, fn, index) => {
 
-    if (pipeState.error) { return pipeState }
-    pipeState.value = fn(pipeState.value)
+		if (pipeState.error) { return pipeState }
+		pipeState.value = fn(pipeState.value)
 
-    zGetSafeParseResultAndHandleErrorMessage(zSchema, pipeState.value, errorHandler, strictModeIfObject)
-    return pipeState
+		zGetSafeParseResultAndHandleErrorMessage(zSchema, pipeState.value, errorHandler, strictModeIfObject)
+		return pipeState
 
-    function errorHandler(err: string) {
-      pipeState.failedAt = `Step ${index + 1}: ${fn.name}`
-      pipeState.error = err
-    }
+		function errorHandler(err: string) {
+			pipeState.failedAt = `Step ${index + 1}: ${fn.name}`
+			pipeState.error = err
+		}
 
-  }, initialPipeState)
+	}, initialPipeState)
 }
 
 _ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
@@ -464,19 +465,19 @@ _ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** 
 
 /**Promise-based delay that BREAKS THE LIMIT OF setTimeOut*/
 export function delay(x: number) {
-  return new Promise(resolve => {
-    const maxTimeOut = 1000 * 60 * 60 * 24
-    const loopsNeeded = Math.floor(x / maxTimeOut)
-    const leftOverTime = x % maxTimeOut
-    interval(loopsNeeded, leftOverTime)
+	return new Promise(resolve => {
+		const maxTimeOut = 1000 * 60 * 60 * 24
+		const loopsNeeded = Math.floor(x / maxTimeOut)
+		const leftOverTime = x % maxTimeOut
+		interval(loopsNeeded, leftOverTime)
 
-    function interval(i: number, miliseconds: number) {
-      setTimeout(() => {
-        if (i) { interval(i - 1, maxTimeOut) }
-        else { resolve(true) }
-      }, miliseconds)
-    }
-  })
+		function interval(i: number, miliseconds: number) {
+			setTimeout(() => {
+				if (i) { interval(i - 1, maxTimeOut) }
+				else { resolve(true) }
+			}, miliseconds)
+		}
+	})
 }
 /**
  * @param options.fullYear true (default, 4 digits) or false (2 digits)  
@@ -486,28 +487,28 @@ export function delay(x: number) {
  * @param options.timestamp default: Date.now()
  */
 export const getFormattedTimestamp = (options?: {
-  fullYear?: boolean,
-  hourOnly?: boolean,
-  includeHour?: boolean,
-  listFirst?: 'MM' | 'DD',
-  timestamp?: number
+	fullYear?: boolean,
+	hourOnly?: boolean,
+	includeHour?: boolean,
+	listFirst?: 'MM' | 'DD',
+	timestamp?: number
 }) => {
 
-  const defaults = { timestamp: Date.now(), fullYear: true, hourOnly: false, includeHour: false, listFirst: 'MM' as 'DD' | 'MM' }
-  const { fullYear, hourOnly, includeHour, listFirst, timestamp } = addMissingPropsToObjects(options!, defaults)
+	const defaults = { timestamp: Date.now(), fullYear: true, hourOnly: false, includeHour: false, listFirst: 'MM' as 'DD' | 'MM' }
+	const { fullYear, hourOnly, includeHour, listFirst, timestamp } = addMissingPropsToObjects(options!, defaults)
 
-  const asDate = new Date(timestamp)
-  const hour = `${asDate}`.slice(16, 24)
-  if (hourOnly) { return hour }
+	const asDate = new Date(timestamp)
+	const hour = `${asDate}`.slice(16, 24)
+	if (hourOnly) { return hour }
 
-  const date = asDate.getDate()
-  const month = asDate.getMonth() + 1
-  const monthDaysOrdered = { MM: `${month}/${date}`, DD: `${date}/${month}` }[listFirst!]
-  const year = fullYear ? asDate.getFullYear() : `${asDate.getFullYear()}`.slice(2)
+	const date = asDate.getDate()
+	const month = asDate.getMonth() + 1
+	const monthDaysOrdered = { MM: `${month}/${date}`, DD: `${date}/${month}` }[listFirst!]
+	const year = fullYear ? asDate.getFullYear() : `${asDate.getFullYear()}`.slice(2)
 
-  let x = `${monthDaysOrdered}/${year}`
-  if (includeHour) { x += ` ${hour}` }
-  return x
+	let x = `${monthDaysOrdered}/${year}`
+	if (includeHour) { x += ` ${hour}` }
+	return x
 }
 /**Self-explanatory */
 export const isEven = (number: number) => !isOdd(number)
@@ -519,16 +520,16 @@ export const isWithinRange = (number: number, max: number, min: number) => numbe
 export const roll = (maxRoll: number) => Math.floor(Math.random() * Number(maxRoll))
 /**1 becomes '1st' , 2 becomes '2nd', 3 becomes '3rd' and so on */
 export const toOrdinal = (number: number) => {
-  const asString = String(number)
-  const lastDigit = asString[asString.length - 1]
-  if ([11, 12, 13].includes(Number(number))) { return `${number}th` }
+	const asString = String(number)
+	const lastDigit = asString[asString.length - 1]
+	if ([11, 12, 13].includes(Number(number))) { return `${number}th` }
 
-  switch (lastDigit) {
-    case '1': return `${number}st`
-    case '2': return `${number}nd`
-    case '3': return `${number}rd`
-    default: return `${number}th`
-  }
+	switch (lastDigit) {
+		case '1': return `${number}st`
+		case '2': return `${number}nd`
+		case '3': return `${number}rd`
+		default: return `${number}th`
+	}
 }
 
 _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
@@ -545,46 +546,46 @@ _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** 
 /**Add all default properties missing in an object*/
 export const addMissingPropsToObjects = <T extends object>(original: T, defaults: Required<T>) => {
 
-  Object.keys(defaults).forEach(x => {
-    const key = x as keyof T
-    if (Object.prototype.hasOwnProperty.call(original, key)) { return }
-    original[key] = defaults[key]
-  })
+	Object.keys(defaults).forEach(x => {
+		const key = x as keyof T
+		if (Object.prototype.hasOwnProperty.call(original, key)) { return }
+		original[key] = defaults[key]
+	})
 
-  return original as Required<T>
+	return original as Required<T>
 }
 /**Return a copy that can be altered without having to worry about modifying the original */
 export const deepClone = <T>(x: T) => JSON.parse(JSON.stringify(x)) as T
 /**Generate a Zod Schema from an array/object */
 function getZodSchemaFromData(data: unknown) {
 
-  const toLiteral = (x: unknown): z.ZodLiteral<unknown> => typeof x === 'object' ?
-    getZodSchemaFromData(x!) as unknown as z.ZodLiteral<unknown> :
-    z.literal(x as never) as z.ZodLiteral<unknown>
+	const toLiteral = (x: unknown): z.ZodLiteral<unknown> => typeof x === 'object' ?
+		getZodSchemaFromData(x!) as unknown as z.ZodLiteral<unknown> :
+		z.literal(x as never) as z.ZodLiteral<unknown>
 
-  if (!data) { return z.nullable(<ZodTypeAny>nullAs()) }
-  if (typeof data !== 'object') { return z.literal(data as Primitive) }
-  if (Array.isArray(data)) { return z.tuple(data.map(toLiteral) as []) }
-  return z.object(mapObject(data, toLiteral) as ZodRawShape)
+	if (!data) { return z.nullable(<ZodTypeAny>nullAs()) }
+	if (typeof data !== 'object') { return z.literal(data as Primitive) }
+	if (Array.isArray(data)) { return z.tuple(data.map(toLiteral) as []) }
+	return z.object(mapObject(data, toLiteral) as ZodRawShape)
 }
 /**Map an object :D (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
 export const mapObject = <F extends (x: never) => ReturnType<F>, O extends object>(object: O, mappingFn: F) => {
-  const newObject = {} as { [key in keyof O]: ReturnType<F> }
-  Object.entries(object).forEach(entry => { const [key, value] = entry; newObject[key as keyof O] = mappingFn(value as never) })
-  return newObject as { [key in keyof O]: ReturnType<F> }
+	const newObject = {} as { [key in keyof O]: ReturnType<F> }
+	Object.entries(object).forEach(entry => { const [key, value] = entry; newObject[key as keyof O] = mappingFn(value as never) })
+	return newObject as { [key in keyof O]: ReturnType<F> }
 }
 /**Replace the values of an object with those of another that shares the schema*/
 export const replaceObject = <T extends object>(originalObject: T, newObject: T) => {
-  Object.keys(originalObject).forEach(key => delete originalObject[key as keyof T])
-  Object.keys(newObject).forEach(key => originalObject[key as keyof T] = newObject[key as keyof T])
+	Object.keys(originalObject).forEach(key => delete originalObject[key as keyof T])
+	Object.keys(newObject).forEach(key => originalObject[key as keyof T] = newObject[key as keyof T])
 }
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods) */
 export const { stringify } = JSON
 /**Generator for unique numbered IDs that accepts a preffix */
 export const uniqueId = {
-  get(suffix: string) { return suffix + '_' + this.generator.next().value },
-  /**Do NOT use this, use uniqueId.get instead */
-  generator: (function* () { let i = 0; while (true) { i++; yield `${i}` } })()
+	get(suffix: string) { return suffix + '_' + this.generator.next().value },
+	/**Do NOT use this, use uniqueId.get instead */
+	generator: (function* () { let i = 0; while (true) { i++; yield `${i}` } })()
 }
 
 _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
@@ -600,15 +601,15 @@ _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS *********
 
 /**start a setInterval and add it to an array */
 export const timer_add = (timers: btr_intervalWithId[], id: string, callBack: btr_voidFn, interval: number) => {
-  const theTimer: ReturnType<typeof setInterval> = setInterval(callBack, interval)
-  timers.push({ id, interval: theTimer })
+	const theTimer: ReturnType<typeof setInterval> = setInterval(callBack, interval)
+	timers.push({ id, interval: theTimer })
 }
 /**Kill a setInterval and remove it from its belonging array */
 export const timer_kill = (timers: btr_intervalWithId[], id: string) => {
-  const theTimer = timers.find(x => x.id === id)
-  if (!theTimer) { return }
-  clearInterval(theTimer.interval)
-  removeItem(timers, theTimer)
+	const theTimer = timers.find(x => x.id === id)
+	if (!theTimer) { return }
+	clearInterval(theTimer.interval)
+	removeItem(timers, theTimer)
 }
 
 _ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
@@ -629,8 +630,8 @@ export const copyToClipboard = (x: unknown) => { isNode ? copyToClipboard_server
 export const errorLog = (message: string) => colorLog('red', message + ' 💀')
 /**TODO: describe me */
 export const getTraceableStack = (error: string | Error) => {
-  const { stack } = (typeof error === 'string' ? new Error(error) : error)
-  return `${stack}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '')
+	const { stack } = (typeof error === 'string' ? new Error(error) : error)
+	return `${stack}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '')
 }
 /**Returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export const isGuest = (username: string) => /Guest[0-9]{13}/i.test(`${username}`)
@@ -659,8 +660,8 @@ _ /********** MISC ******************** MISC ******************** MISC *********
  * @returns 
  */
 export const dataIsEqual = (A: unknown, B: unknown, errorHandler = <messageHandler>nullAs(), strictModeIfObject = true) => {
-  const zodSchema = getZodSchemaFromData(A as object)
-  return zGetSafeParseResultAndHandleErrorMessage(zodSchema, B, errorHandler, strictModeIfObject)
+	const zodSchema = getZodSchemaFromData(A as object)
+	return zGetSafeParseResultAndHandleErrorMessage(zodSchema, B, errorHandler, strictModeIfObject)
 }
 /**For obligatory callbacks */
 export const doNothing = (...args: unknown[]) => { args }
@@ -680,21 +681,21 @@ _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY *************
 
 /**Copy to clipboard, objects arrays get stringify'd */
 export const copyToClipboard_client = (x: unknown) => {
-  const text = stringify(x)
-  const a = document.createElement('textarea')
-  a.innerHTML = text
-  document.body.appendChild(a)
-  a.select()
-  document.execCommand('copy')
-  document.body.removeChild(a)
+	const text = stringify(x)
+	const a = document.createElement('textarea')
+	a.innerHTML = text
+	document.body.appendChild(a)
+	a.select()
+	document.execCommand('copy')
+	document.body.removeChild(a)
 }
 /**Stringifies and downloads the provided data*/
 export const downloadFile_client = (filename: string, fileFormat: '.txt' | '.json', data: unknown) => {
-  if (isNode) { colorLog('downloadFile_client can only be run clientside!'); return }
-  const a = document.createElement('a')
-  a.href = window.URL.createObjectURL(new Blob([data as BlobPart], { type: 'text/plain' }))
-  a.download = `${filename}${fileFormat}`
-  a.click()
+	if (isNode) { colorLog('downloadFile_client can only be run clientside!'); return }
+	const a = document.createElement('a')
+	a.href = window.URL.createObjectURL(new Blob([data as BlobPart], { type: 'text/plain' }))
+	a.download = `${filename}${fileFormat}`
+	a.click()
 }
 
 const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)
