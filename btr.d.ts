@@ -80,13 +80,15 @@ export declare const compareArrays: <T>(baseArray: T[], testArray: T[]) => {
 };
 /**syntax sugar for arr[arr.length - 1] */
 export declare const getLastItem: <T>(arr: T[]) => T;
-/**returns a random item along its index */
+/**Returns a random item along its index */
 export declare const getRandomItem: <T>(arr: T[]) => {
     item: T;
     index: number;
 };
 /**Returns a version of the provided array without repeating items */
 export declare const getUniqueValues: <T>(arr: T[]) => T[];
+/**Returns whether an item is the last one in an array or not (warning: maybe don't use with primitives) */
+export declare const isLastItem: <T>(arr: T[], item: T) => boolean;
 /**Remove a single item from an array, or all copies of that item if its a primitive value */
 export declare const removeItem: <T>(arr: T[], item: T) => number;
 /**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
