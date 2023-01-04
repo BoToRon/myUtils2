@@ -238,9 +238,9 @@ export const asFormattedList = (arr, useAndForTheLastItem) => {
     return string;
 };
 /**Compare array A to array B and return the details */
-export const getArrayDifferences = (baseArray, testArray) => {
-    const nonDesiredItems = baseArray.filter(x => !testArray.includes(x));
-    const missingItems = testArray.filter(x => !baseArray.includes(x));
+export const compareArrays = (baseArray, testArray) => {
+    const nonDesiredItems = testArray.filter(x => !baseArray.includes(x));
+    const missingItems = baseArray.filter(x => !testArray.includes(x));
     const lengthDifference = baseArray.length - testArray.length;
     const arraysHaveTheSameItems = !nonDesiredItems.length && !missingItems.length;
     const arraysAreEqual = arraysHaveTheSameItems && !lengthDifference;

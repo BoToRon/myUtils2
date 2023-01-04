@@ -278,9 +278,9 @@ export const asFormattedList = (arr: (string | number | boolean)[], useAndForThe
   return string
 }
 /**Compare array A to array B and return the details */
-export const getArrayDifferences = <T>(baseArray: T[], testArray: T[],) => {
-  const nonDesiredItems = baseArray.filter(x => !testArray.includes(x))
-  const missingItems = testArray.filter(x => !baseArray.includes(x))
+export const compareArrays = <T>(baseArray: T[], testArray: T[],) => {
+  const nonDesiredItems = testArray.filter(x => !baseArray.includes(x))
+  const missingItems = baseArray.filter(x => !testArray.includes(x))
   const lengthDifference = baseArray.length - testArray.length
 
   const arraysHaveTheSameItems = !nonDesiredItems.length && !missingItems.length
@@ -722,8 +722,9 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
   const errors: string[] = []
 
   const allChecksPass = await Promise.all([
-    checkEnviromentVariables(), checkEslintConfigRules(), checkJsonPackageScripts(),
-    checkTsConfigCompilerOptions(), checkUtilsVersion(), checkVueDevFiles()
+    checkEnviromentVariables(), checkEslintConfigRules(), checkFilesAndFolderStructure(),
+    checkGitIgnore(), checkJsonPackageScripts(), checkTsConfigCompilerOptions(),
+    checkUtilsVersion(), checkVueDevFiles(), checkAllVueComponentsAreTrackeable()
   ])
 
   if (errors.length) { errorHandler('\n\n' + errors.join('\n\n') + '\n\n'); return false }
@@ -743,13 +744,46 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
     return zodCheck_curry(addToErrors)(getZodSchemaFromData(desiredEslintConfig), eslintConfingOfProject)
   }
 
+  /**Check the structure of the project */
+  function checkFilesAndFolderStructure() {
+
+    const currentFilesAndFolders = getFilesAndFolders('.')
+
+    const desiredFilesAndFolders = [
+      './.env', './.eslintrc.cjs', './.git', './.gitignore',
+      './node_modules', './package-lock.json', './package.json', './README.md',
+      './test', './TODO.MD',
+
+      './tsconfig.json', './types.d.ts', './types_io.ts', './types_z.ts',
+      './server/deps.ts', './server/fns.ts', './server/init.ts', './server/io.ts', './server/ref.ts',
+
+      './client/env.d.ts', './client/index.html', './client/node_modules', './client/package-lock.json', './client/package.json',
+      './client/tsconfig.config.json', './client/tsconfig.json', './client/vite.config.ts', './client/vue.config.js',
+
+      './client/src/App.vue', './client/src/assets', './client/src/index.ts',
+      './client/src/main.ts', './client/src/socket.ts', './client/src/store.ts',
+    ]
+
+    const missingItems = compareArrays(desiredFilesAndFolders, currentFilesAndFolders).missingItems
+    if (missingItems.length) { console.log(`The following files/directories are missing: [${missingItems.join(', ')}]`) }
+    return missingItems.length === 0
+  }
+
+  /**Check all files/folders that should be ignored by default are so */
+  async function checkGitIgnore() {
+    const desiredIgnores = ['.env', 'client/node_modules', 'node_modules', 'test/*']
+    const currentIgnores = (await fsReadFileAsync('./.gitignore')).split('\n')
+    const missingItems = compareArrays(desiredIgnores, currentIgnores).missingItems
+
+    if (missingItems.length) { addToErrors(`.gitignore must include the following: [${missingItems.join(', ')}]`) }
+    return missingItems.length === 0
+  }
+
   /**Check the scripts in a project's package json all fit the established schema */
   async function checkJsonPackageScripts() {
-    const pathToUtilsEslint = './scripts.json'
-    const desiredPackageJsonScripts = (await import(pathToUtilsEslint, { assert: { type: 'json' } })).default
-
-    const packageJsonOfProject = <packageJson>await importFileFromProject('package', 'json')
-    return zodCheck_curry(addToErrors)(getZodSchemaFromData(desiredPackageJsonScripts), packageJsonOfProject.scripts)
+    const currentPackageJsonScripts = (<packageJson>await importFileFromProject('package', 'json')).scripts
+    const desiredPackageJsonScripts = (await import('./scripts.json', { assert: { type: 'json' } })).default.scripts
+    return zodCheck_curry(addToErrors)(getZodSchemaFromData(desiredPackageJsonScripts), currentPackageJsonScripts)
   }
 
   /**Check the rules in a project's ts config file all fit the established schema */
@@ -783,7 +817,7 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
     if (!isUpToDate) { errorHandler(`Outdated "utils" package. (${installedVersion} vs ${latestVersion}) PLEASE UPDATE: npm run btr`) }
     return isUpToDate
 
-    //Check if the project is using the latest version of "@botoron/utils"
+    /**Check if the project is using the latest version of "@botoron/utils" */
     async function getLatestVersion() {
       type pck = { objects: [{ package: { version: string } }] }
       const response: pck = (await new Promise((resolve) => {
@@ -797,10 +831,29 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
     }
   }
 
+  /**Check all the vue components are trackable by the window */
+  async function checkAllVueComponentsAreTrackeable() {
+
+    const { DEV_OR_PROD } = await getEnviromentVariables()
+    if (DEV_OR_PROD !== 'DEV') { return true }
+
+    let checkIsPassed = true
+    const path = './client/src'
+    const dotVueFiles = getFilesAndFolders(path).filter(file => file.includes('.vue'))
+
+    for await (const file of dotVueFiles) {
+      const wantedMatch = 'window.trackVueComponent'
+      const vueFile = await fsReadFileAsync(file)
+      if (vueFile.includes(wantedMatch)) { continue }
+      addToErrors(`${file} must include "${wantedMatch}"`)
+      checkIsPassed = false
+    }
+
+    return checkIsPassed
+  }
+
   /**Turn off that damn skipLibCheck that comes on by default */
   async function checkVueDevFiles() {
-
-    //TODO: make sure all files ending with .vue match "trackVueComponent"
 
     const { DEV_OR_PROD } = await getEnviromentVariables()
     if (DEV_OR_PROD !== 'DEV') { return true }
@@ -821,6 +874,22 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
       if (file.includes(mustMatch)) { return true }
       addToErrors(`file     (${path})     must include:    ${mustMatch}`)
     }
+  }
+
+  /**Get all the file and folders within a folder, stopping at predefined folders */
+  function getFilesAndFolders(directory: string) {
+    const results: string[] = []
+
+    fs.readdirSync(directory).forEach((file) => {
+      file = directory + '/' + file
+      const stat = fs.statSync(file)
+
+      const stopHere = /node_modules|git|test|assets/.test(file)
+      if (stat && stat.isDirectory() && !stopHere) { results.push(...getFilesAndFolders(file)) }
+      else results.push(file)
+    })
+
+    return results
   }
 }
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */

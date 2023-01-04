@@ -66,7 +66,7 @@ export declare const addOrReplaceItem: <T>(arr: T[], newItem: T, predicate: arra
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
 export declare const asFormattedList: (arr: (string | number | boolean)[], useAndForTheLastItem: boolean) => string;
 /**Compare array A to array B and return the details */
-export declare const getArrayDifferences: <T>(baseArray: T[], testArray: T[]) => {
+export declare const compareArrays: <T>(baseArray: T[], testArray: T[]) => {
     arraysAreEqual: boolean;
     arraysHaveTheSameItems: boolean;
     lengthDifference: number;
@@ -232,7 +232,7 @@ export declare const copyToClipboard_client: (x: unknown) => void;
 /**Stringifies and downloads the provided data*/
 export declare const downloadFile_client: (filename: string, fileFormat: '.txt' | '.json', data: unknown) => void;
 /** Check the version of @botoron/utils, the enviroment variables and various config files */
-export declare const basicProjectChecks: (errorHandler?: messageHandler) => Promise<false | [boolean, boolean, boolean, boolean, boolean, true | [boolean, boolean, boolean, boolean, boolean]]>;
+export declare const basicProjectChecks: (errorHandler?: messageHandler) => Promise<false | [boolean, boolean, boolean, boolean, boolean, boolean, boolean, true | [boolean, boolean, boolean, boolean, boolean], boolean]>;
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
 export declare const bigConsoleError: (message: string) => void;
 /**Copy to clipboard while running node */

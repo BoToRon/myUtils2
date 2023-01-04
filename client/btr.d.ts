@@ -65,7 +65,7 @@ export declare const addOrReplaceItem: <T>(arr: T[], newItem: T, predicate: arra
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
 export declare const asFormattedList: (arr: (string | number | boolean)[], useAndForTheLastItem: boolean) => string;
 /**Compare array A to array B and return the details */
-export declare const getArrayDifferences: <T>(baseArray: T[], testArray: T[]) => {
+export declare const compareArrays: <T>(baseArray: T[], testArray: T[]) => {
     arraysAreEqual: boolean;
     arraysHaveTheSameItems: boolean;
     lengthDifference: number;

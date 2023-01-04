@@ -265,9 +265,9 @@ export const asFormattedList = (arr: (string | number | boolean)[], useAndForThe
   return string
 }
 /**Compare array A to array B and return the details */
-export const getArrayDifferences = <T>(baseArray: T[], testArray: T[],) => {
-  const nonDesiredItems = baseArray.filter(x => !testArray.includes(x))
-  const missingItems = testArray.filter(x => !baseArray.includes(x))
+export const compareArrays = <T>(baseArray: T[], testArray: T[],) => {
+  const nonDesiredItems = testArray.filter(x => !baseArray.includes(x))
+  const missingItems = baseArray.filter(x => !testArray.includes(x))
   const lengthDifference = baseArray.length - testArray.length
 
   const arraysHaveTheSameItems = !nonDesiredItems.length && !missingItems.length
