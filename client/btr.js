@@ -27,6 +27,8 @@ _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
+const command_package = process.env['npm_config_command_package'];
+const command_project = process.env['npm_config_command_project'];
 export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark']);
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile']);
@@ -129,19 +131,24 @@ export const divine = {
         const { DEV_OR_PROD } = await getEnviromentVariables();
         DEV_OR_PROD === 'DEV' ? killProcess(message) : divine.ping(message);
     },
-    init: async () => {
-        const { APP_NAME, ERIS_TOKEN } = await getEnviromentVariables();
-        const bot = eris(ERIS_TOKEN);
-        await connectToDiscord();
-        divine.bot = bot;
-        async function connectToDiscord() {
+    init: (async () => {
+        delay(1000).then(async () => {
+            if (command_package || command_project) {
+                return;
+            }
+            const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = await getEnviromentVariables();
+            if (DEV_OR_PROD === 'DEV') {
+                return;
+            }
             const divinePrepend = '***DivineBot:***';
+            const bot = eris(ERIS_TOKEN);
             bot.on('messageReactionRemove', (a, b, c) => role('remove', a, b, c));
             bot.on('messageReactionAdd', (a, b, c) => role('add', a, b, c));
-            bot.on('disconnect', () => { colorLog('red', `${divinePrepend}: Disconnected D: ... retrying!`); connectToDiscord(); });
+            bot.on('disconnect', () => { colorLog('red', `${divinePrepend}: Disconnected D: ... retrying!`); });
             bot.on('connect', () => divine.ping(`(${APP_NAME}) - I'm alive bitch >:D`));
             const idOfRoleAssigningMessage = '822523162724925473';
             await attemptConnection();
+            divine.bot = bot;
             function role(action, message, emoji, reactor) {
                 try {
                     if (message.id !== idOfRoleAssigningMessage) {
@@ -178,11 +185,11 @@ export const divine = {
                     attemptConnection();
                 }
             }
-        }
-    },
+        });
+    })(),
     ping: async (message) => {
-        if (!divine.bot?.ready) {
-            return;
+        while (!divine.bot?.ready) {
+            await delay(1000);
         }
         const { APP_NAME } = await getEnviromentVariables();
         const theMessage = `<@470322452040515584> - (${APP_NAME}) \n ${message}`;
@@ -423,20 +430,24 @@ _; /********** FOR NUMBERS ******************** FOR NUMBERS ********************
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 /**Promise-based delay that BREAKS THE LIMIT OF setTimeOut*/
-export const delay = (x) => new Promise(resolve => {
-    const maxTimeOut = 1000 * 60 * 60 * 24;
-    const loopsNeeded = Math.floor(x / maxTimeOut);
-    const leftOverTime = x % maxTimeOut;
-    interval(loopsNeeded, leftOverTime);
-    function interval(i, miliseconds) {
-        setTimeout(() => { if (i) {
-            interval(i - 1, maxTimeOut);
+export function delay(x) {
+    return new Promise(resolve => {
+        const maxTimeOut = 1000 * 60 * 60 * 24;
+        const loopsNeeded = Math.floor(x / maxTimeOut);
+        const leftOverTime = x % maxTimeOut;
+        interval(loopsNeeded, leftOverTime);
+        function interval(i, miliseconds) {
+            setTimeout(() => {
+                if (i) {
+                    interval(i - 1, maxTimeOut);
+                }
+                else {
+                    resolve(true);
+                }
+            }, miliseconds);
         }
-        else {
-            resolve(true);
-        } }, miliseconds);
-    }
-});
+    });
+}
 /**
  * @param options.fullYear true (default, 4 digits) or false (2 digits)
  * @param options.hourOnly default: false

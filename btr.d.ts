@@ -53,7 +53,7 @@ export declare const trackVueComponent_curry: <T>(zValidVueComponentName: zSchem
 export declare const divine: {
     bot: eris.Client;
     error: (err: string | Error) => Promise<void>;
-    init: () => Promise<void>;
+    init: Promise<void>;
     ping: (message: string) => Promise<void>;
 };
 /**Adds an item to an array, or removes it if it already was added. Returns the action applied and the array */
@@ -152,7 +152,7 @@ export declare const zPipe: <T>(zSchema: zSchema<T>, strictModeIfObject: boolean
     failedAt: string;
 };
 /**Promise-based delay that BREAKS THE LIMIT OF setTimeOut*/
-export declare const delay: (x: number) => Promise<unknown>;
+export declare function delay(x: number): Promise<unknown>;
 /**
  * @param options.fullYear true (default, 4 digits) or false (2 digits)
  * @param options.hourOnly default: false
@@ -249,11 +249,10 @@ export declare function getEnviromentVariables(): Promise<z.infer<any>>;
 export declare const getSeparatingCommentBlock: (message: string) => string;
 /**fetch the latest package.json of my-utils */
 export declare const getLatestPackageJsonFromGithub: () => Promise<string>;
-/** Return the main perma-dependencies, check myUtil's version and print package.json's script */
-export declare const getMainDependencies: () => Promise<{
-    httpServer: any;
-    mongoClient: MongoClient;
-}>;
+/**It's monging time >:D */
+export declare const getMongoClient: () => Promise<MongoClient>;
+/**Start and return an http Express server */
+export declare const getStartedHttpServer: () => Promise<any>;
 /**Get the package json of the project with this (utils) package installed */
 export declare function importFileFromProject<T>(filename: string, extension: 'cjs' | 'js' | 'json'): Promise<any>;
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */

@@ -52,7 +52,7 @@ export declare const trackVueComponent_curry: <T>(zValidVueComponentName: zSchem
 export declare const divine: {
     bot: eris.Client;
     error: (err: string | Error) => Promise<void>;
-    init: () => Promise<void>;
+    init: Promise<void>;
     ping: (message: string) => Promise<void>;
 };
 /**Adds an item to an array, or removes it if it already was added. Returns the action applied and the array */
@@ -151,7 +151,7 @@ export declare const zPipe: <T>(zSchema: zSchema<T>, strictModeIfObject: boolean
     failedAt: string;
 };
 /**Promise-based delay that BREAKS THE LIMIT OF setTimeOut*/
-export declare const delay: (x: number) => Promise<unknown>;
+export declare function delay(x: number): Promise<unknown>;
 /**
  * @param options.fullYear true (default, 4 digits) or false (2 digits)
  * @param options.hourOnly default: false

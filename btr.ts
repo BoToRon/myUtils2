@@ -41,6 +41,9 @@ _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ***********
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 
+const command_package = process.env['npm_config_command_package'] as validNpmCommand_package
+const command_project = process.env['npm_config_command_project'] as validNpmCommand_project
+
 export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'])
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
 const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile'])
@@ -179,23 +182,24 @@ export const divine = {
     const { DEV_OR_PROD } = await getEnviromentVariables()
     DEV_OR_PROD === 'DEV' ? killProcess(message) : divine.ping(message)
   },
-  init: async () => {
+  init: (async () => {
+    delay(1000).then(async () => {
+      if (command_package || command_project) { return }
 
-    const { APP_NAME, ERIS_TOKEN } = await getEnviromentVariables()
-    const bot = eris(ERIS_TOKEN)
-    await connectToDiscord()
-    divine.bot = bot
+      const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = await getEnviromentVariables()
+      if (DEV_OR_PROD === 'DEV') { return }
 
-    async function connectToDiscord() {
       const divinePrepend = '***DivineBot:***'
+      const bot = eris(ERIS_TOKEN)
 
       bot.on('messageReactionRemove', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('remove', a, b, c))
       bot.on('messageReactionAdd', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('add', a, b, c))
-      bot.on('disconnect', () => { colorLog('red', `${divinePrepend}: Disconnected D: ... retrying!`); connectToDiscord() })
+      bot.on('disconnect', () => { colorLog('red', `${divinePrepend}: Disconnected D: ... retrying!`) })
       bot.on('connect', () => divine.ping(`(${APP_NAME}) - I'm alive bitch >:D`))
 
       const idOfRoleAssigningMessage = '822523162724925473'
       await attemptConnection()
+      divine.bot = bot
 
       function role(action: 'add' | 'remove', message: eris.PossiblyUncachedMessage, emoji: eris.PartialEmoji, reactor: eris.Member) {
         try {
@@ -228,10 +232,10 @@ export const divine = {
           attemptConnection()
         }
       }
-    }
-  },
+    })
+  })(),
   ping: async (message: string) => {
-    if (!divine.bot?.ready) { return }
+    while (!divine.bot?.ready) { await delay(1000) }
     const { APP_NAME } = await getEnviromentVariables()
 
     const theMessage = `<@470322452040515584> - (${APP_NAME}) \n ${message}`
@@ -472,16 +476,21 @@ _ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** 
 _ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 
 /**Promise-based delay that BREAKS THE LIMIT OF setTimeOut*/
-export const delay = (x: number) => new Promise(resolve => {
-  const maxTimeOut = 1000 * 60 * 60 * 24
-  const loopsNeeded = Math.floor(x / maxTimeOut)
-  const leftOverTime = x % maxTimeOut
-  interval(loopsNeeded, leftOverTime)
+export function delay(x: number) {
+  return new Promise(resolve => {
+    const maxTimeOut = 1000 * 60 * 60 * 24
+    const loopsNeeded = Math.floor(x / maxTimeOut)
+    const leftOverTime = x % maxTimeOut
+    interval(loopsNeeded, leftOverTime)
 
-  function interval(i: number, miliseconds: number) {
-    setTimeout(() => { if (i) { interval(i - 1, maxTimeOut) } else { resolve(true) } }, miliseconds)
-  }
-})
+    function interval(i: number, miliseconds: number) {
+      setTimeout(() => {
+        if (i) { interval(i - 1, maxTimeOut) }
+        else { resolve(true) }
+      }, miliseconds)
+    }
+  })
+}
 /**
  * @param options.fullYear true (default, 4 digits) or false (2 digits)  
  * @param options.hourOnly default: false
@@ -956,37 +965,28 @@ export const getLatestPackageJsonFromGithub = async () => {
 
   return Buffer.from(response.content, 'base64').toString('utf8')
 }
-/** Return the main perma-dependencies, check myUtil's version and print package.json's script */
-export const getMainDependencies = async () => {
+/**It's monging time >:D */
+export const getMongoClient = async () => {
+  const { MONGO_URI } = await getEnviromentVariables()
 
-  await basicProjectChecks()
-  const env = await getEnviromentVariables()
-  const { MONGO_URI, PORT } = env
+  const mongo = new mongodb.MongoClient(MONGO_URI)
+  let mongoClient: MongoClient = <MongoClient>nullAs()
+  mongo.connect((err, client) => { if (err) { throw err } mongoClient = client as MongoClient })
+  colorLog('cyan', 'waiting for Mongo')
+  while (!mongoClient) { await delay(1000) }
+  successLog('It\'s Monging time >:D')
+  return mongoClient
+}
+/**Start and return an http Express server */
+export const getStartedHttpServer = async () => {
+  const { PORT } = await getEnviromentVariables()
 
-  const mongoClient = await getMongoClient(MONGO_URI)
-  const httpServer = startAndGetHttpServer(PORT)
-  divine.init()
-
-  return { httpServer, mongoClient }
-
-  async function getMongoClient(MONGO_URI: string) {
-    const mongo = new mongodb.MongoClient(MONGO_URI)
-    let mongoClient: MongoClient = <MongoClient>nullAs()
-    mongo.connect((err, client) => { if (err) { throw err } mongoClient = client as MongoClient })
-    colorLog('cyan', 'waiting for Mongo')
-    while (!mongoClient) { await delay(1000) }
-    successLog('It\'s Monging time >:D')
-    return mongoClient
-  }
-
-  function startAndGetHttpServer(PORT: string) {
-    const app = express()
-    const httpServer = http.createServer(app)
-    app.use(express.static(path.resolve() + '/public'))
-    app.get('/', (_request, response) => response.sendFile(path.resolve() + '/public/index.html'))
-    httpServer.listen(PORT, () => delay(1500).then(() => console.log(`server up at: http://localhost:${PORT}/`)))
-    return httpServer
-  }
+  const app = express()
+  const httpServer = http.createServer(app)
+  app.use(express.static(path.resolve() + '/public'))
+  app.get('/', (_request, response) => response.sendFile(path.resolve() + '/public/index.html'))
+  httpServer.listen(PORT, () => delay(1500).then(() => console.log(`server up at: http://localhost:${PORT}/`)))
+  return httpServer
 }
 /**Get the package json of the project with this (utils) package installed */
 export async function importFileFromProject<T>(filename: string, extension: 'cjs' | 'js' | 'json') {
@@ -1217,8 +1217,6 @@ export async function questionAsPromise(question: string) {
   return input
 }
 
-const command_package = process.env['npm_config_command_package'] as validNpmCommand_package
-const command_project = process.env['npm_config_command_project'] as validNpmCommand_project
 if (command_package) { zodCheckAndHandle(zValidNpmCommand_package, command_package, npmRun_package, [command_package], console.log) }
 if (command_project) { zodCheckAndHandle(zValidNpmCommand_project, command_project, npmRun_project, [command_project], console.log) }
 

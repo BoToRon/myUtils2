@@ -29,6 +29,9 @@ _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ***********
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 
+const command_package = process.env['npm_config_command_package'] as validNpmCommand_package
+const command_project = process.env['npm_config_command_project'] as validNpmCommand_project
+
 export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'])
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
 const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile'])
@@ -166,23 +169,24 @@ export const divine = {
     const { DEV_OR_PROD } = await getEnviromentVariables()
     DEV_OR_PROD === 'DEV' ? killProcess(message) : divine.ping(message)
   },
-  init: async () => {
+  init: (async () => {
+    delay(1000).then(async () => {
+      if (command_package || command_project) { return }
 
-    const { APP_NAME, ERIS_TOKEN } = await getEnviromentVariables()
-    const bot = eris(ERIS_TOKEN)
-    await connectToDiscord()
-    divine.bot = bot
+      const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = await getEnviromentVariables()
+      if (DEV_OR_PROD === 'DEV') { return }
 
-    async function connectToDiscord() {
       const divinePrepend = '***DivineBot:***'
+      const bot = eris(ERIS_TOKEN)
 
       bot.on('messageReactionRemove', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('remove', a, b, c))
       bot.on('messageReactionAdd', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('add', a, b, c))
-      bot.on('disconnect', () => { colorLog('red', `${divinePrepend}: Disconnected D: ... retrying!`); connectToDiscord() })
+      bot.on('disconnect', () => { colorLog('red', `${divinePrepend}: Disconnected D: ... retrying!`) })
       bot.on('connect', () => divine.ping(`(${APP_NAME}) - I'm alive bitch >:D`))
 
       const idOfRoleAssigningMessage = '822523162724925473'
       await attemptConnection()
+      divine.bot = bot
 
       function role(action: 'add' | 'remove', message: eris.PossiblyUncachedMessage, emoji: eris.PartialEmoji, reactor: eris.Member) {
         try {
@@ -215,10 +219,10 @@ export const divine = {
           attemptConnection()
         }
       }
-    }
-  },
+    })
+  })(),
   ping: async (message: string) => {
-    if (!divine.bot?.ready) { return }
+    while (!divine.bot?.ready) { await delay(1000) }
     const { APP_NAME } = await getEnviromentVariables()
 
     const theMessage = `<@470322452040515584> - (${APP_NAME}) \n ${message}`
@@ -459,16 +463,21 @@ _ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** 
 _ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 
 /**Promise-based delay that BREAKS THE LIMIT OF setTimeOut*/
-export const delay = (x: number) => new Promise(resolve => {
-  const maxTimeOut = 1000 * 60 * 60 * 24
-  const loopsNeeded = Math.floor(x / maxTimeOut)
-  const leftOverTime = x % maxTimeOut
-  interval(loopsNeeded, leftOverTime)
+export function delay(x: number) {
+  return new Promise(resolve => {
+    const maxTimeOut = 1000 * 60 * 60 * 24
+    const loopsNeeded = Math.floor(x / maxTimeOut)
+    const leftOverTime = x % maxTimeOut
+    interval(loopsNeeded, leftOverTime)
 
-  function interval(i: number, miliseconds: number) {
-    setTimeout(() => { if (i) { interval(i - 1, maxTimeOut) } else { resolve(true) } }, miliseconds)
-  }
-})
+    function interval(i: number, miliseconds: number) {
+      setTimeout(() => {
+        if (i) { interval(i - 1, maxTimeOut) }
+        else { resolve(true) }
+      }, miliseconds)
+    }
+  })
+}
 /**
  * @param options.fullYear true (default, 4 digits) or false (2 digits)  
  * @param options.hourOnly default: false
