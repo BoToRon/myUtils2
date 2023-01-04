@@ -80,7 +80,6 @@ type packageJson = { name: string, version: string, scripts: { [key: string]: st
 type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
 type validNpmCommand_package = z.infer<typeof zValidNpmCommand_package>
 type validNpmCommand_project = z.infer<typeof zValidNpmCommand_project>
-type eslintConfig = { rules: { [key: string]: string[] } }
 type messageHandler = (message: string) => void
 type arrayPredicate<T> = (arg1: T) => boolean
 type pipe_persistent_type<T> = (arg: T) => T
@@ -720,11 +719,11 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 	const errors: string[] = []
 
 	const allChecksPass = await Promise.all([
-		checkEnviromentVariables, checkEslintConfigRules, checkJsonPackageScripts,
-		checkTsConfigCompilerOptions, checkUtilsVersion, checkVueDevFiles
+		checkEnviromentVariables(), checkEslintConfigRules(), checkJsonPackageScripts(),
+		checkTsConfigCompilerOptions(), checkUtilsVersion(), checkVueDevFiles()
 	])
 
-	if (errors.length) { errorHandler(errors.join('\n\n')) }
+	if (errors.length) { errorHandler('\n\n' + errors.join('\n\n') + '\n\n') }
 	return allChecksPass
 
 	/**Check if all the desired enviroment keys are defined */
@@ -735,18 +734,10 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 
 	/**Check the rules in a project's eslint config file all fit the established schema */
 	async function checkEslintConfigRules() {
-
-		const desiredRules = {
-			'arrow-body-style': ['error', 'as-needed'],
-			'func-style': ['error', 'declaration'],
-			'quote-props': ['error', 'as-needed'],
-			quotes: ['error', 'single'],
-			semi: ['error', 'never'],
-			'no-undef': 'off',
-		}
-
-		const eslintConfingOfProject = <eslintConfig>await importFileFromProject('.eslintrc', 'cjs')
-		return zodCheck_curry(addToErrors)(getZodSchemaFromData(desiredRules), eslintConfingOfProject.rules)
+		const pathToUtilsEslint = './.eslintrc.cjs'
+		const desiredEslintConfig = (await import(pathToUtilsEslint)).default
+		const eslintConfingOfProject = await importFileFromProject('.eslintrc', 'cjs')
+		return zodCheck_curry(addToErrors)(getZodSchemaFromData(desiredEslintConfig), eslintConfingOfProject)
 	}
 
 	/**Check the scripts in a project's package json all fit the established schema */
@@ -935,7 +926,7 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 			const path = './client/' + clientSlash
 			const file = await fsReadFileAsync(path)
 			if (file.includes(mustMatch)) { return true }
-			addToErrors(path + ' must include: ' + mustMatch)
+			addToErrors(`file     (${path})     must include:    ${mustMatch}`)
 		}
 	}
 }
@@ -1100,12 +1091,12 @@ export const npmRun_project = async (npmCommand: validNpmCommand_project) => {
 	//const { serverFolder_dist, serverFolder_src, fileWithRef } = addMissingPropsToObjects(options!, defaults)
 
 	await basicProjectChecks()
+	if (npmCommand === 'check') { return }
 
 	const defaults = { serverFolder_dist: '../dist', serverFolder_src: './test', fileWithRef: 'ref' }
 	const { serverFolder_dist, serverFolder_src, fileWithRef } = defaults
 	const { APP_NAME } = await getEnviromentVariables()
 
-	if (npmCommand === 'check') { basicProjectChecks() }
 	if (npmCommand === 'git') { prompCommitMessageAndPush(`${APP_NAME}`) }
 	if (['build', 'transpile'].includes(npmCommand)) { canTranspileCheckAndHandle() }
 

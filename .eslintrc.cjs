@@ -1,26 +1,11 @@
 module.exports = {
-	ignorePatterns: ['btr.d.ts', 'client'],
-	env: {
-		browser: true,
-		es2021: true,
-		node: true
-	},
-	extends: [
-		'eslint:recommended',
-		'plugin:vue/vue3-essential',
-		'plugin:@typescript-eslint/recommended'
-	],
-	overrides: [
-	],
+	env: { browser: true, es2021: true, node: true },
+	plugins: ['vue', '@typescript-eslint'],
+
+	extends: ['eslint:recommended', 'plugin:vue/vue3-essential', 'plugin:@typescript-eslint/recommended'],
+	parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
 	parser: '@typescript-eslint/parser',
-	parserOptions: {
-		ecmaVersion: 'latest',
-		sourceType: 'module'
-	},
-	plugins: [
-		'vue',
-		'@typescript-eslint'
-	],
+
 	rules: {
 		'arrow-body-style': ['error', 'as-needed'],
 		'func-style': ['error', 'declaration'],
@@ -28,5 +13,11 @@ module.exports = {
 		quotes: ['error', 'single'],
 		semi: ['error', 'never'],
 		'no-undef': 'off',
-	}
+	},
+
+	overrides: [{
+		files: ['*.vue'],
+		parser: 'vue-eslint-parser',
+		parserOptions: { parser: '@typescript-eslint/parser', ecmaVersion: 'latest', sourceType: 'module' },
+	}],
 }

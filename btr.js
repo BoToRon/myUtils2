@@ -680,11 +680,11 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
     const addToErrors = (error) => errors.push(error);
     const errors = [];
     const allChecksPass = await Promise.all([
-        checkEnviromentVariables, checkEslintConfigRules, checkJsonPackageScripts,
-        checkTsConfigCompilerOptions, checkUtilsVersion, checkVueDevFiles
+        checkEnviromentVariables(), checkEslintConfigRules(), checkJsonPackageScripts(),
+        checkTsConfigCompilerOptions(), checkUtilsVersion(), checkVueDevFiles()
     ]);
     if (errors.length) {
-        errorHandler(errors.join('\n\n'));
+        errorHandler('\n\n' + errors.join('\n\n') + '\n\n');
     }
     return allChecksPass;
     /**Check if all the desired enviroment keys are defined */
@@ -694,16 +694,10 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
     }
     /**Check the rules in a project's eslint config file all fit the established schema */
     async function checkEslintConfigRules() {
-        const desiredRules = {
-            'arrow-body-style': ['error', 'as-needed'],
-            'func-style': ['error', 'declaration'],
-            'quote-props': ['error', 'as-needed'],
-            quotes: ['error', 'single'],
-            semi: ['error', 'never'],
-            'no-undef': 'off',
-        };
+        const pathToUtilsEslint = './.eslintrc.cjs';
+        const desiredEslintConfig = (await import(pathToUtilsEslint)).default;
         const eslintConfingOfProject = await importFileFromProject('.eslintrc', 'cjs');
-        return zodCheck_curry(addToErrors)(getZodSchemaFromData(desiredRules), eslintConfingOfProject.rules);
+        return zodCheck_curry(addToErrors)(getZodSchemaFromData(desiredEslintConfig), eslintConfingOfProject);
     }
     /**Check the scripts in a project's package json all fit the established schema */
     async function checkJsonPackageScripts() {
@@ -885,7 +879,7 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
             if (file.includes(mustMatch)) {
                 return true;
             }
-            addToErrors(path + ' must include: ' + mustMatch);
+            addToErrors(`file     (${path})     must include:    ${mustMatch}`);
         }
     }
 };
@@ -1049,12 +1043,12 @@ export const npmRun_project = async (npmCommand) => {
     //if (!options) { options = defaults }
     //const { serverFolder_dist, serverFolder_src, fileWithRef } = addMissingPropsToObjects(options!, defaults)
     await basicProjectChecks();
+    if (npmCommand === 'check') {
+        return;
+    }
     const defaults = { serverFolder_dist: '../dist', serverFolder_src: './test', fileWithRef: 'ref' };
     const { serverFolder_dist, serverFolder_src, fileWithRef } = defaults;
     const { APP_NAME } = await getEnviromentVariables();
-    if (npmCommand === 'check') {
-        basicProjectChecks();
-    }
     if (npmCommand === 'git') {
         prompCommitMessageAndPush(`${APP_NAME}`);
     }

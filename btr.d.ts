@@ -233,7 +233,7 @@ export declare const copyToClipboard_client: (x: unknown) => void;
 /**Stringifies and downloads the provided data*/
 export declare const downloadFile_client: (filename: string, fileFormat: '.txt' | '.json', data: unknown) => void;
 /** Check the version of @botoron/utils, the enviroment variables and various config files */
-export declare const basicProjectChecks: (errorHandler?: messageHandler) => Promise<[() => Promise<boolean>, () => Promise<boolean>, () => Promise<boolean>, () => Promise<boolean>, () => Promise<boolean>, () => Promise<true | [boolean, boolean, boolean, boolean, boolean]>]>;
+export declare const basicProjectChecks: (errorHandler?: messageHandler) => Promise<[boolean, boolean, boolean, boolean, boolean, true | [boolean, boolean, boolean, boolean, boolean]]>;
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
 export declare const bigConsoleError: (message: string) => void;
 /**Copy to clipboard while running node */

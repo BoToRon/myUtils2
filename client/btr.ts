@@ -67,7 +67,6 @@ type packageJson = { name: string, version: string, scripts: { [key: string]: st
 type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
 type validNpmCommand_package = z.infer<typeof zValidNpmCommand_package>
 type validNpmCommand_project = z.infer<typeof zValidNpmCommand_project>
-type eslintConfig = { rules: { [key: string]: string[] } }
 type messageHandler = (message: string) => void
 type arrayPredicate<T> = (arg1: T) => boolean
 type pipe_persistent_type<T> = (arg: T) => T
