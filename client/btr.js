@@ -29,8 +29,8 @@ _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark']);
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
+const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile']);
 const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile']);
-const zValidNpmCommand_package = z.enum(['all', 'git', 'transpile']);
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch']);
 const zMyEnv = z.object({
     DEV_OR_PROD: z.enum(['DEV', 'PROD']),
@@ -181,7 +181,7 @@ export const divine = {
         }
     },
     ping: async (message) => {
-        if (!divine.bot.ready) {
+        if (!divine.bot?.ready) {
             return;
         }
         const { APP_NAME } = await getEnviromentVariables();
@@ -259,7 +259,8 @@ export const selfFilter = (arr, predicate) => {
     let removedCount = 0;
     const removedItems = [];
     for (let i = 0; i < arr.length; i++) {
-        if (predicate(arr[i])) {
+        const item = arr[i];
+        if (predicate(item)) {
             continue;
         }
         removedItems.push(arr.splice(i, 1)[0]);

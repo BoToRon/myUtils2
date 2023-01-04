@@ -1,5 +1,4 @@
 /// <reference types="node" />
-/// <reference types="node" />
 import { type SafeParseReturnType, z } from 'zod';
 export declare const zValidVariants: any;
 export type btr_trackedVueComponent = {
@@ -166,7 +165,7 @@ export declare const getFormattedTimestamp: (options?: {
     hourOnly?: boolean;
     includeHour?: boolean;
     listFirst?: 'MM' | 'DD';
-    timestamp: number;
+    timestamp?: number;
 }) => string;
 /**Self-explanatory */
 export declare const isEven: (number: number) => boolean;
@@ -179,7 +178,7 @@ export declare const roll: (maxRoll: number) => number;
 /**1 becomes '1st' , 2 becomes '2nd', 3 becomes '3rd' and so on */
 export declare const toOrdinal: (number: number) => string;
 /**Add all default properties missing in an object*/
-export declare const addMissingPropsToObjects: <T extends object>(original: T, defaults: Required<T>) => T;
+export declare const addMissingPropsToObjects: <T extends object>(original: T, defaults: Required<T>) => Required<T>;
 /**Return a copy that can be altered without having to worry about modifying the original */
 export declare const deepClone: <T>(x: T) => T;
 /**Map an object :D (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
@@ -233,11 +232,11 @@ export declare const copyToClipboard_client: (x: unknown) => void;
 /**Stringifies and downloads the provided data*/
 export declare const downloadFile_client: (filename: string, fileFormat: '.txt' | '.json', data: unknown) => void;
 /** Check the version of @botoron/utils, the enviroment variables and various config files */
-export declare const basicProjectChecks: (errorHandler?: messageHandler) => Promise<[boolean, boolean, boolean, boolean, boolean, true | [boolean, boolean, boolean, boolean, boolean]]>;
+export declare const basicProjectChecks: (errorHandler?: messageHandler) => Promise<false | [boolean, boolean, boolean, boolean, boolean, true | [boolean, boolean, boolean, boolean, boolean]]>;
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
 export declare const bigConsoleError: (message: string) => void;
 /**Copy to clipboard while running node */
-export declare const copyToClipboard_server: (x: unknown) => import("stream").Writable;
+export declare const copyToClipboard_server: (x: unknown) => any;
 /**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
 export declare const downloadFile_node: (filename: string, fileFormat: '.txt' | '.json', data: unknown, killProcessAfterwards: boolean) => Promise<void>;
 /**Wrapper for fs.promise.readFile that announces the start of the file-reading */

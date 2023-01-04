@@ -164,7 +164,7 @@ export declare const getFormattedTimestamp: (options?: {
     hourOnly?: boolean;
     includeHour?: boolean;
     listFirst?: 'MM' | 'DD';
-    timestamp: number;
+    timestamp?: number;
 }) => string;
 /**Self-explanatory */
 export declare const isEven: (number: number) => boolean;
@@ -177,7 +177,7 @@ export declare const roll: (maxRoll: number) => number;
 /**1 becomes '1st' , 2 becomes '2nd', 3 becomes '3rd' and so on */
 export declare const toOrdinal: (number: number) => string;
 /**Add all default properties missing in an object*/
-export declare const addMissingPropsToObjects: <T extends object>(original: T, defaults: Required<T>) => T;
+export declare const addMissingPropsToObjects: <T extends object>(original: T, defaults: Required<T>) => Required<T>;
 /**Return a copy that can be altered without having to worry about modifying the original */
 export declare const deepClone: <T>(x: T) => T;
 /**Map an object :D (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */

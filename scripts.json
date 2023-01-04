@@ -1,0 +1,18 @@
+{
+	"scripts": {
+		"btr": "npm i @botoron/utils",
+		"btr-u": "npm uninstall @botoron/utils",
+		"build-server": "npm run npmScript --command_project=build",
+		"build-client": "cd client & npm run build-only",
+		"build-all": "tsc --target esnext server/init.ts --outDir ../dist & cd client & npm run build-only && cd ..",
+		"check": "npm run npmScript --command_project=check",
+		"localtunnel": "lt --port 3000",
+		"nodemon": "nodemon test/server/init.js",
+		"npmScript": "node node_modules/@botoron/utils/btr.js",
+		"start": "node test/server/init.js",
+		"test": "ts-node-esm test.ts",
+		"transpile": "npm run npmScript --command_project=transpile",
+		"vue": "cd client & npm run dev",
+		"git": "npm run npmScript --command_project=git"
+	}
+}

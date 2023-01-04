@@ -10,7 +10,8 @@
 		"__________________________________________________": "__________________________________________________",
 		"all": "npm run npmScript --command_package=all & npm publish",
 		"transpile": "npm run npmScript --command_package=transpile",
-		"git": "npm run npmScript --command_package=git"
+		"git": "npm run npmScript --command_package=git",
+		"convertArrowFunctionsToDeclarations": "npm run npmScript --command_package=arrowsToDeclarations"
 	},
 	"repository": {
 		"type": "git",
@@ -27,6 +28,8 @@
 	"homepage": "https://github.com/BoToRon/utils#readme",
 	"dependencies": {
 		"chalk": "^5.2.0",
+		"clipboardy": "^3.0.0",
+		"copy-to-clipboard": "^3.3.3",
 		"eris": "^0.17.1",
 		"express": "^4.18.2",
 		"mongodb": "^4.13.0",

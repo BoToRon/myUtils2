@@ -9,19 +9,19 @@ import http from 'http'; //DELETETHISFORCLIENT
 _;
 import path from 'path'; //DELETETHISFORCLIENT
 _;
-import util from 'util'; //DELETETHISFORCLIENT
-_;
 import chalk from 'chalk'; //DELETETHISFORCLIENT
 _;
 import express from 'express'; //DELETETHISFORCLIENT
 _;
 import fetch from 'node-fetch'; //DELETETHISFORCLIENT
 _;
+import clipboard from 'clipboardy'; //DELETETHISFORCLIENT
+_;
 import getReadLine from 'readline'; //DELETETHISFORCLIENT
 _;
-import { createRequire } from 'module'; //DELETETHISFORCLIENT
+import { exec } from 'child_process'; //DELETETHISFORCLIENT
 _;
-import { exec, spawn } from 'child_process'; //DELETETHISFORCLIENT
+import { createRequire } from 'module'; //DELETETHISFORCLIENT
 _;
 import mongodb from 'mongodb'; //DELETETHISFORCLIENT
 _;
@@ -41,8 +41,8 @@ _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark']);
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
+const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile']);
 const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile']);
-const zValidNpmCommand_package = z.enum(['all', 'git', 'transpile']);
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch']);
 const zMyEnv = z.object({
     DEV_OR_PROD: z.enum(['DEV', 'PROD']),
@@ -193,7 +193,7 @@ export const divine = {
         }
     },
     ping: async (message) => {
-        if (!divine.bot.ready) {
+        if (!divine.bot?.ready) {
             return;
         }
         const { APP_NAME } = await getEnviromentVariables();
@@ -271,7 +271,8 @@ export const selfFilter = (arr, predicate) => {
     let removedCount = 0;
     const removedItems = [];
     for (let i = 0; i < arr.length; i++) {
-        if (predicate(arr[i])) {
+        const item = arr[i];
+        if (predicate(item)) {
             continue;
         }
         removedItems.push(arr.splice(i, 1)[0]);
@@ -685,8 +686,12 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
     ]);
     if (errors.length) {
         errorHandler('\n\n' + errors.join('\n\n') + '\n\n');
+        return false;
     }
-    return allChecksPass;
+    else {
+        colorLog('cyan', 'all basicProjectChecks passed 👍');
+        return allChecksPass;
+    }
     /**Check if all the desired enviroment keys are defined */
     async function checkEnviromentVariables() {
         const env = await getEnviromentVariables();
@@ -701,127 +706,21 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
     }
     /**Check the scripts in a project's package json all fit the established schema */
     async function checkJsonPackageScripts() {
-        const desiredPackageJsonScripts = {
-            btr: 'npm i @botoron/utils',
-            'btr-u': 'npm uninstall @botoron/utils',
-            'build-server': 'npm run npmScript --command_project=build',
-            'build-client': 'cd client & npm run build-only',
-            'build-all': 'tsc --target esnext server/init.ts --outDir ../dist & cd client & npm run build-only && cd ..',
-            check: 'npm run npmScript --command_project=check',
-            git: 'npm run npmScript --command_project=git',
-            localtunnel: 'lt --port 3000',
-            nodemon: 'nodemon test/server/init.js',
-            npmScript: 'node node_modules/@botoron/utils/btr.js',
-            start: 'node test/server/init.js',
-            test: 'ts-node-esm test.ts',
-            transpile: 'npm run npmScript --command_project=transpile',
-            vue: 'cd client & npm run dev'
-        };
+        const pathToUtilsEslint = './scripts.json';
+        const desiredPackageJsonScripts = (await import(pathToUtilsEslint)).default;
         const packageJsonOfProject = await importFileFromProject('package', 'json');
         return zodCheck_curry(addToErrors)(getZodSchemaFromData(desiredPackageJsonScripts), packageJsonOfProject.scripts);
     }
     /**Check the rules in a project's ts config file all fit the established schema */
     async function checkTsConfigCompilerOptions() {
-        const desiredCompilerOptions = {
-            /* Visit https://aka.ms/tsconfig to read more about this file */
-            /* Projects */
-            // "incremental": true,                              /* Save .tsbuildinfo files to allow for incremental compilation of projects. */
-            // "composite": true,                                /* Enable constraints that allow a TypeScript project to be used with project references. */
-            // "tsBuildInfoFile": "./.tsbuildinfo",              /* Specify the path to .tsbuildinfo incremental compilation file. */
-            // "disableSourceOfProjectReferenceRedirect": true,  /* Disable preferring source files instead of declaration files when referencing composite projects. */
-            // "disableSolutionSearching": true,                 /* Opt a project out of multi-project reference checking when editing. */
-            // "disableReferencedProjectLoad": true,             /* Reduce the number of projects loaded automatically by TypeScript. */
-            /* Language and Environment */
-            target: 'ESNext',
-            // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
-            // "jsx": "preserve",                                /* Specify what JSX code is generated. */
-            // "experimentalDecorators": true,                   /* Enable experimental support for TC39 stage 2 draft decorators. */
-            // "emitDecoratorMetadata": true,                    /* Emit design-type metadata for decorated declarations in source files. */
-            // "jsxFactory": "",                                 /* Specify the JSX factory function used when targeting React JSX emit, e.g. 'React.createElement' or 'h'. */
-            // "jsxFragmentFactory": "",                         /* Specify the JSX Fragment reference used for fragments when targeting React JSX emit e.g. 'React.Fragment' or 'Fragment'. */
-            // "jsxImportSource": "",                            /* Specify module specifier used to import the JSX factory functions when using 'jsx: react-jsx*'. */
-            // "reactNamespace": "",                             /* Specify the object invoked for 'createElement'. This only applies when targeting 'react' JSX emit. */
-            // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
-            // "useDefineForClassFields": true,                  /* Emit ECMAScript-standard-compliant class fields. */
-            // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
-            /* Modules */
-            module: 'ESNext',
-            // "rootDir": "./",                                  /* Specify the root folder within your source files. */
-            moduleResolution: 'node',
-            // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
-            // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
-            // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
-            // "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */
-            // "types": [],                                      /* Specify type package names to be included without being referenced in a source file. */
-            // "allowUmdGlobalAccess": true,                     /* Allow accessing UMD globals from modules. */
-            // "moduleSuffixes": [],                             /* List of file name suffixes to search when resolving a module. */
-            resolveJsonModule: true,
-            // "noResolve": true,                                /* Disallow 'import's, 'require's or '<reference>'s from expanding the number of files TypeScript should add to a project. */
-            /* JavaScript Support */
-            // "allowJs": true,                                  /* Allow JavaScript files to be a part of your program. Use the 'checkJS' option to get errors from these files. */
-            // "checkJs": true,                                  /* Enable error reporting in type-checked JavaScript files. */
-            // "maxNodeModuleJsDepth": 1,                        /* Specify the maximum folder depth used for checking JavaScript files from 'node_modules'. Only applicable with 'allowJs'. */
-            /* Emit */
-            declaration: true,
-            declarationMap: true,
-            // "emitDeclarationOnly": true,                      /* Only output d.ts files and not JavaScript files. */
-            // "sourceMap": true,                                /* Create source map files for emitted JavaScript files. */
-            // "outFile": "./",                                  /* Specify a file that bundles all outputs into one JavaScript file. If 'declaration' is true, also designates a file that bundles all .d.ts output. */
-            // "outDir": "./",                                   /* Specify an output folder for all emitted files. */
-            // "removeComments": true,                           /* Disable emitting comments. */
-            // "noEmit": true,                                   /* Disable emitting files from a compilation. */
-            // "importHelpers": true,                            /* Allow importing helper functions from tslib once per project, instead of including them per-file. */
-            // "importsNotUsedAsValues": "remove",               /* Specify emit/checking behavior for imports that are only used for types. */
-            // "downlevelIteration": true,                       /* Emit more compliant, but verbose and less performant JavaScript for iteration. */
-            // "sourceRoot": "",                                 /* Specify the root path for debuggers to find the reference source code. */
-            // "mapRoot": "",                                    /* Specify the location where debugger should locate map files instead of generated locations. */
-            // "inlineSourceMap": true,                          /* Include sourcemap files inside the emitted JavaScript. */
-            // "inlineSources": true,                            /* Include source code in the sourcemaps inside the emitted JavaScript. */
-            // "emitBOM": true,                                  /* Emit a UTF-8 Byte Order Mark (BOM) in the beginning of output files. */
-            // "newLine": "crlf",                                /* Set the newline character for emitting files. */
-            // "stripInternal": true,                            /* Disable emitting declarations that have '@internal' in their JSDoc comments. */
-            // "noEmitHelpers": true,                            /* Disable generating custom helper functions like '__extends' in compiled output. */
-            // "noEmitOnError": true,                            /* Disable emitting files if any type checking errors are reported. */
-            // "preserveConstEnums": true,                       /* Disable erasing 'const enum' declarations in generated code. */
-            // "declarationDir": "./",                           /* Specify the output directory for generated declaration files. */
-            // "preserveValueImports": true,                     /* Preserve unused imported values in the JavaScript output that would otherwise be removed. */
-            /* Interop Constraints */
-            // "isolatedModules": true,                          /* Ensure that each file can be safely transpiled without relying on other imports. */
-            // "allowSyntheticDefaultImports": true,             /* Allow 'import x from y' when a module doesn't have a default export. */
-            esModuleInterop: true,
-            // "preserveSymlinks": true,                         /* Disable resolving symlinks to their realpath. This correlates to the same flag in node. */
-            forceConsistentCasingInFileNames: true,
-            /* Type Checking */
-            strict: true,
-            noImplicitAny: true,
-            strictNullChecks: true,
-            strictFunctionTypes: true,
-            strictBindCallApply: true,
-            strictPropertyInitialization: true,
-            noImplicitThis: true,
-            useUnknownInCatchVariables: true,
-            alwaysStrict: true,
-            noUnusedLocals: true,
-            noUnusedParameters: true,
-            exactOptionalPropertyTypes: true,
-            //"noImplicitReturns": true, /* Enable error reporting for codepaths that do not explicitly return in a function. */
-            noFallthroughCasesInSwitch: true,
-            noUncheckedIndexedAccess: true,
-            noImplicitOverride: true,
-            noPropertyAccessFromIndexSignature: true,
-            allowUnusedLabels: false,
-            allowUnreachableCode: false, /* Disable error reporting for unreachable code. */
-            /* Completeness */
-            //"skipDefaultLibCheck": true,                       /* Skip type checking .d.ts files that are included with TypeScript. */
-            //"skipLibCheck": true                               /* Skip type checking all .d.ts files. */
-        };
-        const tsConfig = await getTsConfigJson();
-        const zSchema = getZodSchemaFromData(desiredCompilerOptions);
-        return zodCheck_curry(addToErrors)(zSchema, tsConfig.compilerOptions);
+        const desiredTsConfig = await getTsConfigJson('./node_modules/@botoron/utils/tsconfig.json');
+        const usedTsConfig = await getTsConfigJson('./tsconfig.json');
+        const zSchema = getZodSchemaFromData(desiredTsConfig);
+        return zodCheck_curry(addToErrors)(zSchema, usedTsConfig);
         /**Get the ts config file of the main project */
-        async function getTsConfigJson() {
+        async function getTsConfigJson(filepath) {
             try {
-                return JSON.parse((await fsReadFileAsync('./tsconfig.json')).
+                return JSON.parse((await fsReadFileAsync(filepath)).
                     replace(/\/(\/|\*).{1,}/g, '').
                     replace(/(\n|\r|\t)/g, '').
                     replace(', }', ' }') //{ { <-- commented here to keep the colour of brackets the same
@@ -837,11 +736,8 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
         const latestVersion = await getLatestVersion();
         const installedVersion = (await import('./package.json', { assert: { type: 'json' } })).default.version;
         const isUpToDate = installedVersion === latestVersion;
-        if (isUpToDate) {
-            colorLog('cyan', '@botoron/my-utils is up to date 👍');
-        }
-        else {
-            errorHandler(`Outdated "btr/utils" package. (${installedVersion} vs ${latestVersion}) PLEASE UPDATE: npm run btr`);
+        if (!isUpToDate) {
+            errorHandler(`Outdated "utils" package. (${installedVersion} vs ${latestVersion}) PLEASE UPDATE: npm run btr`);
         }
         return isUpToDate;
         //Check if the project is using the latest version of "@botoron/utils"
@@ -894,7 +790,7 @@ export const bigConsoleError = (message) => {
     logAsterisks(3);
 };
 /**Copy to clipboard while running node */
-export const copyToClipboard_server = (x) => spawn('clip').stdin.end(util.inspect(x));
+export const copyToClipboard_server = (x) => clipboard.write(JSON.stringify(x));
 /**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
 export const downloadFile_node = async (filename, fileFormat, data, killProcessAfterwards) => {
     const formatted = stringify(data);
@@ -906,7 +802,7 @@ export const downloadFile_node = async (filename, fileFormat, data, killProcessA
     if (!killProcessAfterwards) {
         return;
     }
-    if (process.env.quokka) {
+    if (process.env['quokka']) {
         return;
     }
     process.exit();
@@ -997,6 +893,9 @@ export const killProcess = (message) => { bigConsoleError(message); process.exit
 /**Easily run the scripts of this (utils) repo's package.json */
 export const npmRun_package = async (npmCommand) => {
     const utilsRepoName = 'Utils 🛠️';
+    if (npmCommand === 'arrowsToDeclarations') {
+        convertArrowFunctionsToDeclarations();
+    }
     if (npmCommand === 'transpile') {
         transpileFiles(() => colorLog('magenta', 'Process over'));
     }
@@ -1006,6 +905,25 @@ export const npmRun_package = async (npmCommand) => {
     if (npmCommand === 'all') {
         transpileFiles(promptVersioning);
     }
+    async function convertArrowFunctionsToDeclarations() {
+        let content = await fsReadFileAsync('./arrowFns/input.ts');
+        const found = content.match(/const \w{1,} = (<.{1,}>){0,}\(.{1,}\) => {/g);
+        found.forEach(match => { content = content.replace(match, convert(match)); });
+        const hour = getFormattedTimestamp({ hourOnly: true });
+        await fsWriteFileAsync('./arrowFns/output.ts', content);
+        colorLog('yellow', `[${hour}]: ${found.length} arrow functions converted to funtion declarations (check arrowFns/output.td)`);
+        function convert(arrowFn) {
+            const typesRegex = /(<T>){1,}/;
+            const nameRegex = /(?<=const )\w{1,}/;
+            const paramsRegex = /(?<=const \w{1,} = (<.{1,}>){0,})\(.{1,}(?= => {)/;
+            const fnName = arrowFn.match(nameRegex)[0];
+            const params = arrowFn.match(paramsRegex)[0];
+            const types = (arrowFn.match(typesRegex) || [])[0] || '';
+            console.log('..converting ' + fnName);
+            const renamed = `function ${fnName}${types}${params} {`;
+            return renamed;
+        }
+    }
     async function promptVersioning() {
         function tryAgain(error) { colorLog('yellow', error); promptVersioning(); }
         const versionIncrement = await questionAsPromise('Type of package version increment (major, minor, patch)?');
@@ -1013,7 +931,7 @@ export const npmRun_package = async (npmCommand) => {
             return;
         }
         await prompCommitMessageAndPush(utilsRepoName);
-        exec(`npm version ${versionIncrement}`, (err, stdout) => {
+        exec(`npm version ${versionIncrement}`, (_err, stdout) => {
             console.log({ stdout });
             successLog('package.json up-version\'d');
         });
@@ -1190,8 +1108,8 @@ export async function questionAsPromise(question) {
     readline.close();
     return input;
 }
-const command_package = process.env.npm_config_command_package;
-const command_project = process.env.npm_config_command_project;
+const command_package = process.env['npm_config_command_package'];
+const command_project = process.env['npm_config_command_project'];
 if (command_package) {
     zodCheckAndHandle(zValidNpmCommand_package, command_package, npmRun_package, [command_package], console.log);
 }

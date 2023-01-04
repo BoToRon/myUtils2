@@ -1,6 +1,7 @@
 node_modules
 logs.js
 chain.ts
+test.js
 test.ts
 indexOg.ts
 indexCopy.ts
