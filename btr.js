@@ -690,7 +690,7 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
         return false;
     }
     else {
-        colorLog('cyan', 'all basicProjectChecks passed 👍');
+        successLog('all basicProjectChecks passed');
         return allChecksPass;
     }
     /**Check if all the desired enviroment keys are defined */
@@ -728,7 +728,7 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
     /**Check all files/folders that should be ignored by default are so */
     async function checkGitIgnore() {
         const desiredIgnores = ['.env', 'client/node_modules', 'node_modules', 'test/*'];
-        const currentIgnores = (await fsReadFileAsync('./.gitignore')).split('\n');
+        const currentIgnores = (await fsReadFileAsync('./.gitignore')).split('\r\n');
         const missingItems = compareArrays(desiredIgnores, currentIgnores).missingItems;
         if (missingItems.length) {
             addToErrors(`.gitignore must include the following: [${missingItems.join(', ')}]`);
