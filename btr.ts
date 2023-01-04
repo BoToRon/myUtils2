@@ -572,7 +572,7 @@ export const addMissingPropsToObjects = <T extends object>(original: T, defaults
 /**Return a copy that can be altered without having to worry about modifying the original */
 export const deepClone = <T>(x: T) => JSON.parse(JSON.stringify(x)) as T
 /**Generate a Zod Schema from an array/object */
-function getZodSchemaFromData(data: unknown) {
+export const getZodSchemaFromData = (data: unknown) => {
 
 	const toLiteral = (x: unknown): z.ZodLiteral<unknown> => typeof x === 'object' ?
 		getZodSchemaFromData(x!) as unknown as z.ZodLiteral<unknown> :
