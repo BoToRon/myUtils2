@@ -295,7 +295,7 @@ export const compareArrays = <T>(baseArray: T[], testArray: T[],) => {
 /**syntax sugar for arr[arr.length - 1] */
 export const getLastItem = <T>(arr: T[]) => arr[arr.length - 1]
 /**returns a random item along its index */
-export const getRandomItem = <T>(arr: T[]) => { const r = roll(arr.length); return { item: arr[r], index: r } }
+export const getRandomItem = <T>(arr: T[]) => { const r = roll(arr.length); return { item: arr[r] as T, index: r } }
 /**Returns a version of the provided array without repeating items */
 export const getUniqueValues = <T>(arr: T[]) => [...new Set(arr)]
 /**Remove a single item from an array, or all copies of that item if its a primitive value */
