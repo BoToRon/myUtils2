@@ -533,7 +533,7 @@ export const addMissingPropsToObjects = (original, defaults) => {
 /**Return a copy that can be altered without having to worry about modifying the original */
 export const deepClone = (x) => JSON.parse(JSON.stringify(x));
 /**Generate a Zod Schema from an array/object */
-function getZodSchemaFromData(data) {
+export const getZodSchemaFromData = (data) => {
     const toLiteral = (x) => typeof x === 'object' ?
         getZodSchemaFromData(x) :
         z.literal(x);
@@ -547,7 +547,7 @@ function getZodSchemaFromData(data) {
         return z.tuple(data.map(toLiteral));
     }
     return z.object(mapObject(data, toLiteral));
-}
+};
 /**Map an object :D (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
 export const mapObject = (object, mappingFn) => {
     const newObject = {};
@@ -645,7 +645,7 @@ export const dataIsEqual = (A, B, errorHandler = nullAs(), strictModeIfObject = 
 };
 /**For obligatory callbacks */
 export const doNothing = (...args) => { args; };
-/**Syntactic sugar for "null as unknown as T" */
+/** @returns null as the provided type */
 export function nullAs() { return null; }
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
@@ -692,11 +692,12 @@ _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ************
 /** Check the version of @botoron/utils, the enviroment variables and various config files */
 export const basicProjectChecks = async (errorHandler = divine.error) => {
     const addToErrors = (error) => errors.push(error);
+    const { DEV_OR_PROD } = await getEnviromentVariables();
     const errors = [];
     const allChecksPass = await Promise.all([
-        checkEnviromentVariables(), checkEslintConfigRules(), checkFilesAndFolderStructure(),
-        checkGitIgnore(), checkJsonPackageScripts(), checkTsConfigCompilerOptions(),
-        checkUtilsVersion(), checkVueDevFiles(), checkAllVueComponentsAreTrackeable()
+        checkAllTopLevelFunctionAreDescribed(), checkAllVueComponentsAreTrackeable(), checkEnviromentVariables(),
+        checkEslintConfigRules(), checkFilesAndFolderStructure(), checkGitIgnore(), checkJsonPackageScripts(),
+        checkTsConfigCompilerOptions(), checkUtilsVersion(), checkVueDevFiles(),
     ]);
     if (errors.length) {
         errorHandler('\n\n' + errors.join('\n\n') + '\n\n');
@@ -705,6 +706,56 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
     else {
         successLog('all basicProjectChecks passed');
         return allChecksPass;
+    }
+    /**Check all the top-level functions in main .ts server files have a description */
+    async function checkAllTopLevelFunctionAreDescribed() {
+        if (DEV_OR_PROD !== 'DEV') {
+            return true;
+        }
+        let checkIsPassed = true;
+        const path = './server';
+        const serverTsFiles = getFilesAndFolders(path, '.ts');
+        for await (const file of serverTsFiles) {
+            const content = await fsReadFileAsync(file);
+            const lines = content.split('\n');
+            const uncommentedTopLevelFunctions = lines.reduce((acc, line, index) => {
+                const isTopLevelFunction = /^(async|function)/.test(line);
+                if (!isTopLevelFunction) {
+                    return acc;
+                }
+                const isCommented = /\*\//.test(lines[index - 1]);
+                if (isCommented) {
+                    return acc;
+                }
+                acc.push(line.slice(0, line.length - 5).replace(/(async |function |\(.{1,})/g, ''));
+                return acc;
+            }, []);
+            if (!uncommentedTopLevelFunctions.length) {
+                return true;
+            }
+            addToErrors(`(${file}) Uncommented top-level functions: [${uncommentedTopLevelFunctions.join(', ')}]`);
+            checkIsPassed = false;
+        }
+        return checkIsPassed;
+    }
+    /**Check all the vue components are trackable by the window */
+    async function checkAllVueComponentsAreTrackeable() {
+        if (DEV_OR_PROD !== 'DEV') {
+            return true;
+        }
+        let checkIsPassed = true;
+        const path = './client/src';
+        const dotVueFiles = getFilesAndFolders(path, '.vue');
+        for await (const file of dotVueFiles) {
+            const wantedMatch = 'window.trackVueComponent';
+            const vueFile = await fsReadFileAsync(file);
+            if (vueFile.includes(wantedMatch)) {
+                continue;
+            }
+            addToErrors(`${file} must include "${wantedMatch}"`);
+            checkIsPassed = false;
+        }
+        return checkIsPassed;
     }
     /**Check if all the desired enviroment keys are defined */
     async function checkEnviromentVariables() {
@@ -720,13 +771,13 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
     }
     /**Check the structure of the project */
     function checkFilesAndFolderStructure() {
-        const currentFilesAndFolders = getFilesAndFolders('.');
+        const currentFilesAndFolders = getFilesAndFolders('.', null);
         const desiredFilesAndFolders = [
             './.env', './.eslintrc.cjs', './.git', './.gitignore',
             './node_modules', './package-lock.json', './package.json', './README.md',
             './test', './TODO.MD',
             './tsconfig.json', './types.d.ts', './types_io.ts', './types_z.ts',
-            './server/deps.ts', './server/fns.ts', './server/init.ts', './server/io.ts', './server/ref.ts',
+            './server/fns.ts', './server/init.ts', './server/io.ts', './server/ref.ts',
             './client/env.d.ts', './client/index.html', './client/node_modules', './client/package-lock.json', './client/package.json',
             './client/tsconfig.config.json', './client/tsconfig.json', './client/vite.config.ts', './client/vue.config.js',
             './client/src/App.vue', './client/src/assets', './client/src/index.ts',
@@ -734,7 +785,7 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
         ];
         const missingItems = compareArrays(desiredFilesAndFolders, currentFilesAndFolders).missingItems;
         if (missingItems.length) {
-            console.log(`The following files/directories are missing: [${missingItems.join(', ')}]`);
+            addToErrors(`The following files/directories are missing: [${missingItems.join(', ')}]`);
         }
         return missingItems.length === 0;
     }
@@ -797,29 +848,8 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
             return response.objects[0].package.version;
         }
     }
-    /**Check all the vue components are trackable by the window */
-    async function checkAllVueComponentsAreTrackeable() {
-        const { DEV_OR_PROD } = await getEnviromentVariables();
-        if (DEV_OR_PROD !== 'DEV') {
-            return true;
-        }
-        let checkIsPassed = true;
-        const path = './client/src';
-        const dotVueFiles = getFilesAndFolders(path).filter(file => file.includes('.vue'));
-        for await (const file of dotVueFiles) {
-            const wantedMatch = 'window.trackVueComponent';
-            const vueFile = await fsReadFileAsync(file);
-            if (vueFile.includes(wantedMatch)) {
-                continue;
-            }
-            addToErrors(`${file} must include "${wantedMatch}"`);
-            checkIsPassed = false;
-        }
-        return checkIsPassed;
-    }
     /**Turn off that damn skipLibCheck that comes on by default */
     async function checkVueDevFiles() {
-        const { DEV_OR_PROD } = await getEnviromentVariables();
         if (DEV_OR_PROD !== 'DEV') {
             return true;
         }
@@ -841,19 +871,19 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
         }
     }
     /**Get all the file and folders within a folder, stopping at predefined folders */
-    function getFilesAndFolders(directory) {
+    function getFilesAndFolders(directory, extension) {
         const results = [];
         fs.readdirSync(directory).forEach((file) => {
             file = directory + '/' + file;
             const stat = fs.statSync(file);
             const stopHere = /node_modules|git|test|assets/.test(file);
             if (stat && stat.isDirectory() && !stopHere) {
-                results.push(...getFilesAndFolders(file));
+                results.push(...getFilesAndFolders(file, null));
             }
             else
                 results.push(file);
         });
-        return results;
+        return extension ? results.filter(filename => filename.includes(extension)) : results;
     }
 };
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
@@ -896,7 +926,7 @@ export async function fsWriteFileAsync(filePath, content) {
     const file = await fs.promises.writeFile(filePath, content);
     return file;
 }
-/** Get the contents of the .env */
+/** Get the contents of the project's .env */
 export async function getEnviromentVariables() {
     const require = createRequire(import.meta.url);
     require('dotenv').config({ path: './.env' });

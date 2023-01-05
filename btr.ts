@@ -1,3 +1,4 @@
+
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable func-style */
 let _
@@ -681,7 +682,7 @@ export const dataIsEqual = (A: unknown, B: unknown, errorHandler = <messageHandl
 }
 /**For obligatory callbacks */
 export const doNothing = (...args: unknown[]) => { args }
-/**Syntactic sugar for "null as unknown as T" */
+/** @returns null as the provided type */
 export function nullAs<T>() { return null as T }
 
 _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
@@ -731,16 +732,69 @@ _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY *************
 export const basicProjectChecks = async (errorHandler = divine.error as messageHandler) => {
 
 	const addToErrors = (error: string) => errors.push(error)
+	const { DEV_OR_PROD } = await getEnviromentVariables()
 	const errors: string[] = []
 
 	const allChecksPass = await Promise.all([
-		checkEnviromentVariables(), checkEslintConfigRules(), checkFilesAndFolderStructure(),
-		checkGitIgnore(), checkJsonPackageScripts(), checkTsConfigCompilerOptions(),
-		checkUtilsVersion(), checkVueDevFiles(), checkAllVueComponentsAreTrackeable()
+		checkAllTopLevelFunctionAreDescribed(), checkAllVueComponentsAreTrackeable(), checkEnviromentVariables(),
+		checkEslintConfigRules(), checkFilesAndFolderStructure(), checkGitIgnore(), checkJsonPackageScripts(),
+		checkTsConfigCompilerOptions(), checkUtilsVersion(), checkVueDevFiles(),
 	])
 
 	if (errors.length) { errorHandler('\n\n' + errors.join('\n\n') + '\n\n'); return false }
 	else { successLog('all basicProjectChecks passed'); return allChecksPass }
+
+	/**Check all the top-level functions in main .ts server files have a description */
+	async function checkAllTopLevelFunctionAreDescribed() {
+
+		if (DEV_OR_PROD !== 'DEV') { return true }
+
+		let checkIsPassed = true
+		const path = './server'
+		const serverTsFiles = getFilesAndFolders(path, '.ts')
+
+		for await (const file of serverTsFiles) {
+			const content = await fsReadFileAsync(file)
+			const lines = content.split('\n')
+
+			const uncommentedTopLevelFunctions = lines.reduce((acc, line, index) => {
+				const isTopLevelFunction = /^(async|function)/.test(line)
+				if (!isTopLevelFunction) { return acc }
+
+				const isCommented = /\*\//.test(lines[index - 1] as string)
+				if (isCommented) { return acc }
+
+				acc.push(line.slice(0, line.length - 5).replace(/(async |function |\(.{1,})/g, ''))
+				return acc
+			}, [] as string[])
+
+			if (!uncommentedTopLevelFunctions.length) { return true }
+			addToErrors(`(${file}) Uncommented top-level functions: [${uncommentedTopLevelFunctions.join(', ')}]`)
+			checkIsPassed = false
+		}
+
+		return checkIsPassed
+	}
+
+	/**Check all the vue components are trackable by the window */
+	async function checkAllVueComponentsAreTrackeable() {
+
+		if (DEV_OR_PROD !== 'DEV') { return true }
+
+		let checkIsPassed = true
+		const path = './client/src'
+		const dotVueFiles = getFilesAndFolders(path, '.vue')
+
+		for await (const file of dotVueFiles) {
+			const wantedMatch = 'window.trackVueComponent'
+			const vueFile = await fsReadFileAsync(file)
+			if (vueFile.includes(wantedMatch)) { continue }
+			addToErrors(`${file} must include "${wantedMatch}"`)
+			checkIsPassed = false
+		}
+
+		return checkIsPassed
+	}
 
 	/**Check if all the desired enviroment keys are defined */
 	async function checkEnviromentVariables() {
@@ -759,7 +813,7 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 	/**Check the structure of the project */
 	function checkFilesAndFolderStructure() {
 
-		const currentFilesAndFolders = getFilesAndFolders('.')
+		const currentFilesAndFolders = getFilesAndFolders('.', null)
 
 		const desiredFilesAndFolders = [
 			'./.env', './.eslintrc.cjs', './.git', './.gitignore',
@@ -767,7 +821,7 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 			'./test', './TODO.MD',
 
 			'./tsconfig.json', './types.d.ts', './types_io.ts', './types_z.ts',
-			'./server/deps.ts', './server/fns.ts', './server/init.ts', './server/io.ts', './server/ref.ts',
+			'./server/fns.ts', './server/init.ts', './server/io.ts', './server/ref.ts',
 
 			'./client/env.d.ts', './client/index.html', './client/node_modules', './client/package-lock.json', './client/package.json',
 			'./client/tsconfig.config.json', './client/tsconfig.json', './client/vite.config.ts', './client/vue.config.js',
@@ -777,7 +831,7 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 		]
 
 		const missingItems = compareArrays(desiredFilesAndFolders, currentFilesAndFolders).missingItems
-		if (missingItems.length) { console.log(`The following files/directories are missing: [${missingItems.join(', ')}]`) }
+		if (missingItems.length) { addToErrors(`The following files/directories are missing: [${missingItems.join(', ')}]`) }
 		return missingItems.length === 0
 	}
 
@@ -843,31 +897,9 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 		}
 	}
 
-	/**Check all the vue components are trackable by the window */
-	async function checkAllVueComponentsAreTrackeable() {
-
-		const { DEV_OR_PROD } = await getEnviromentVariables()
-		if (DEV_OR_PROD !== 'DEV') { return true }
-
-		let checkIsPassed = true
-		const path = './client/src'
-		const dotVueFiles = getFilesAndFolders(path).filter(file => file.includes('.vue'))
-
-		for await (const file of dotVueFiles) {
-			const wantedMatch = 'window.trackVueComponent'
-			const vueFile = await fsReadFileAsync(file)
-			if (vueFile.includes(wantedMatch)) { continue }
-			addToErrors(`${file} must include "${wantedMatch}"`)
-			checkIsPassed = false
-		}
-
-		return checkIsPassed
-	}
-
 	/**Turn off that damn skipLibCheck that comes on by default */
 	async function checkVueDevFiles() {
 
-		const { DEV_OR_PROD } = await getEnviromentVariables()
 		if (DEV_OR_PROD !== 'DEV') { return true }
 
 		const allVueChecksPass = await Promise.all([
@@ -889,7 +921,7 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 	}
 
 	/**Get all the file and folders within a folder, stopping at predefined folders */
-	function getFilesAndFolders(directory: string) {
+	function getFilesAndFolders(directory: string, extension: '.ts' | '.vue' | null) {
 		const results: string[] = []
 
 		fs.readdirSync(directory).forEach((file) => {
@@ -897,11 +929,11 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 			const stat = fs.statSync(file)
 
 			const stopHere = /node_modules|git|test|assets/.test(file)
-			if (stat && stat.isDirectory() && !stopHere) { results.push(...getFilesAndFolders(file)) }
+			if (stat && stat.isDirectory() && !stopHere) { results.push(...getFilesAndFolders(file, null)) }
 			else results.push(file)
 		})
 
-		return results
+		return extension ? results.filter(filename => filename.includes(extension)) : results
 	}
 }
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
@@ -941,7 +973,7 @@ export async function fsWriteFileAsync(filePath: string, content: string) {
 	const file = await fs.promises.writeFile(filePath, content)
 	return file
 }
-/** Get the contents of the .env */
+/** Get the contents of the project's .env */
 export async function getEnviromentVariables() {
 	const require = createRequire(import.meta.url)
 	require('dotenv').config({ path: './.env' })

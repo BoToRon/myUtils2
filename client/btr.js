@@ -521,7 +521,7 @@ export const addMissingPropsToObjects = (original, defaults) => {
 /**Return a copy that can be altered without having to worry about modifying the original */
 export const deepClone = (x) => JSON.parse(JSON.stringify(x));
 /**Generate a Zod Schema from an array/object */
-function getZodSchemaFromData(data) {
+export const getZodSchemaFromData = (data) => {
     const toLiteral = (x) => typeof x === 'object' ?
         getZodSchemaFromData(x) :
         z.literal(x);
@@ -535,7 +535,7 @@ function getZodSchemaFromData(data) {
         return z.tuple(data.map(toLiteral));
     }
     return z.object(mapObject(data, toLiteral));
-}
+};
 /**Map an object :D (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
 export const mapObject = (object, mappingFn) => {
     const newObject = {};
@@ -632,7 +632,7 @@ export const dataIsEqual = (A, B, errorHandler = nullAs(), strictModeIfObject = 
 };
 /**For obligatory callbacks */
 export const doNothing = (...args) => { args; };
-/**Syntactic sugar for "null as unknown as T" */
+/** @returns null as the provided type */
 export function nullAs() { return null; }
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/

@@ -188,6 +188,8 @@ export declare const toOrdinal: (number: number) => string;
 export declare const addMissingPropsToObjects: <T extends object>(original: T, defaults: Required<T>) => Required<T>;
 /**Return a copy that can be altered without having to worry about modifying the original */
 export declare const deepClone: <T>(x: T) => T;
+/**Generate a Zod Schema from an array/object */
+export declare const getZodSchemaFromData: (data: unknown) => any;
 /**Map an object :D (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
 export declare const mapObject: <F extends (x: never) => ReturnType<F>, O extends object>(object: O, mappingFn: F) => { [key in keyof O]: ReturnType<F>; };
 /**Replace the values of an object with those of another that shares the schema*/
@@ -232,14 +234,14 @@ export declare const toSingleLine: (sentence: string) => string;
 export declare const dataIsEqual: (A: unknown, B: unknown, errorHandler?: messageHandler, strictModeIfObject?: boolean) => SafeParseReturnType<T, T>;
 /**For obligatory callbacks */
 export declare const doNothing: (...args: unknown[]) => void;
-/**Syntactic sugar for "null as unknown as T" */
+/** @returns null as the provided type */
 export declare function nullAs<T>(): T;
 /**Copy to clipboard, objects arrays get stringify'd */
 export declare const copyToClipboard_client: (x: unknown) => void;
 /**Stringifies and downloads the provided data*/
 export declare const downloadFile_client: (filename: string, fileFormat: '.txt' | '.json', data: unknown) => void;
 /** Check the version of @botoron/utils, the enviroment variables and various config files */
-export declare const basicProjectChecks: (errorHandler?: messageHandler) => Promise<false | [boolean, boolean, boolean, boolean, boolean, boolean, boolean, true | [boolean, boolean, boolean, boolean, boolean], boolean]>;
+export declare const basicProjectChecks: (errorHandler?: messageHandler) => Promise<false | [boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, true | [boolean, boolean, boolean, boolean, boolean]]>;
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
 export declare const bigConsoleError: (message: string) => void;
 /**Copy to clipboard while running node */
@@ -250,7 +252,7 @@ export declare const downloadFile_node: (filename: string, fileFormat: '.txt' | 
 export declare function fsReadFileAsync(filePath: string): Promise<any>;
 /**Wrapper for fsWriteFileAsync that announces the start of the file-writing */
 export declare function fsWriteFileAsync(filePath: string, content: string): Promise<any>;
-/** Get the contents of the .env */
+/** Get the contents of the project's .env */
 export declare function getEnviromentVariables(): Promise<z.infer<any>>;
 /**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
 export declare const getSeparatingCommentBlock: (message: string) => string;
