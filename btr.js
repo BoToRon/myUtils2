@@ -691,14 +691,15 @@ _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ************
 _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 /** Check the version of @botoron/utils, the enviroment variables and various config files */
 export const basicProjectChecks = async (errorHandler = divine.error) => {
+    //TODO: make sure io.ts exports { initializedIo } so that the code in the file is ran by only calling init.ts?
+    //TODO: an schema for ref's esqueleton? (temp, debug, debugLog, devOrProd, socket)
+    //TODO: check "ref.ts" matches (getDebugOptions, mongoCollection)
+    //TODO: check all exports are exported in-line ("export function sampleFunction.." instead of "export { fn1, fn2, etc }" )
+    //TODO: make sure all top-level variables are exported
     const addToErrors = (error) => errors.push(error);
     const { DEV_OR_PROD } = await getEnviromentVariables();
     const errors = [];
-    const allChecksPass = await Promise.all([
-        checkAllTopLevelFunctionAreDescribed(), checkAllVueComponentsAreTrackeable(), checkEnviromentVariables(),
-        checkEslintConfigRules(), checkFilesAndFolderStructure(), checkGitIgnore(), checkJsonPackageScripts(),
-        checkTsConfigCompilerOptions(), checkUtilsVersion(), checkVueDevFiles(),
-    ]);
+    const allChecksPass = await allChecks();
     if (errors.length) {
         errorHandler('\n\n' + errors.join('\n\n') + '\n\n');
         return false;
@@ -706,6 +707,14 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
     else {
         successLog('all basicProjectChecks passed');
         return allChecksPass;
+    }
+    /**Promise.all([basic checks]) */
+    async function allChecks() {
+        return await Promise.all([
+            checkAllTopLevelFunctionAreDescribed(), checkAllVueComponentsAreTrackeable(), checkEnviromentVariables(),
+            checkEslintConfigRules(), checkFilesAndFolderStructure(), checkGitIgnore(), checkJsonPackageScripts(),
+            checkTsConfigCompilerOptions(), checkUtilsVersion(), checkVueDevFiles(),
+        ]);
     }
     /**Check all the top-level functions in main .ts server files have a description */
     async function checkAllTopLevelFunctionAreDescribed() {
@@ -719,7 +728,7 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
             const content = await fsReadFileAsync(file);
             const lines = content.split('\n');
             const uncommentedTopLevelFunctions = lines.reduce((acc, line, index) => {
-                const isTopLevelFunction = /^(async|function)/.test(line);
+                const isTopLevelFunction = /^(export ){0,}(async|function)/.test(line);
                 if (!isTopLevelFunction) {
                     return acc;
                 }
@@ -727,13 +736,13 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
                 if (isCommented) {
                     return acc;
                 }
-                acc.push(line.slice(0, line.length - 5).replace(/(async |function |\(.{1,})/g, ''));
+                acc.push(line.slice(0, line.length - 5).replace(/(export ){0,}(async |function |\(.{1,})/g, ''));
                 return acc;
             }, []);
             if (!uncommentedTopLevelFunctions.length) {
-                return true;
+                continue;
             }
-            addToErrors(`(${file}) Uncommented top-level functions: [${uncommentedTopLevelFunctions.join(', ')}]`);
+            addToErrors(`Uncommented top-level functions     (in ${file}):     [${uncommentedTopLevelFunctions.join(', ')}]`);
             checkIsPassed = false;
         }
         return checkIsPassed;

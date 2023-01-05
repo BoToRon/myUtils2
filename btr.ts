@@ -1,4 +1,3 @@
-
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable func-style */
 let _
@@ -731,18 +730,28 @@ _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY *************
 /** Check the version of @botoron/utils, the enviroment variables and various config files */
 export const basicProjectChecks = async (errorHandler = divine.error as messageHandler) => {
 
+	//TODO: make sure io.ts exports { initializedIo } so that the code in the file is ran by only calling init.ts?
+	//TODO: an schema for ref's esqueleton? (temp, debug, debugLog, devOrProd, socket)
+	//TODO: check "ref.ts" matches (getDebugOptions, mongoCollection)
+	//TODO: check all exports are exported in-line ("export function sampleFunction.." instead of "export { fn1, fn2, etc }" )
+	//TODO: make sure all top-level variables are exported
+
 	const addToErrors = (error: string) => errors.push(error)
 	const { DEV_OR_PROD } = await getEnviromentVariables()
 	const errors: string[] = []
 
-	const allChecksPass = await Promise.all([
-		checkAllTopLevelFunctionAreDescribed(), checkAllVueComponentsAreTrackeable(), checkEnviromentVariables(),
-		checkEslintConfigRules(), checkFilesAndFolderStructure(), checkGitIgnore(), checkJsonPackageScripts(),
-		checkTsConfigCompilerOptions(), checkUtilsVersion(), checkVueDevFiles(),
-	])
-
+	const allChecksPass = await allChecks()
 	if (errors.length) { errorHandler('\n\n' + errors.join('\n\n') + '\n\n'); return false }
 	else { successLog('all basicProjectChecks passed'); return allChecksPass }
+
+	/**Promise.all([basic checks]) */
+	async function allChecks() {
+		return await Promise.all([
+			checkAllTopLevelFunctionAreDescribed(), checkAllVueComponentsAreTrackeable(), checkEnviromentVariables(),
+			checkEslintConfigRules(), checkFilesAndFolderStructure(), checkGitIgnore(), checkJsonPackageScripts(),
+			checkTsConfigCompilerOptions(), checkUtilsVersion(), checkVueDevFiles(),
+		])
+	}
 
 	/**Check all the top-level functions in main .ts server files have a description */
 	async function checkAllTopLevelFunctionAreDescribed() {
@@ -758,18 +767,18 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 			const lines = content.split('\n')
 
 			const uncommentedTopLevelFunctions = lines.reduce((acc, line, index) => {
-				const isTopLevelFunction = /^(async|function)/.test(line)
+				const isTopLevelFunction = /^(export ){0,}(async|function)/.test(line)
 				if (!isTopLevelFunction) { return acc }
 
 				const isCommented = /\*\//.test(lines[index - 1] as string)
 				if (isCommented) { return acc }
 
-				acc.push(line.slice(0, line.length - 5).replace(/(async |function |\(.{1,})/g, ''))
+				acc.push(line.slice(0, line.length - 5).replace(/(export ){0,}(async |function |\(.{1,})/g, ''))
 				return acc
 			}, [] as string[])
 
-			if (!uncommentedTopLevelFunctions.length) { return true }
-			addToErrors(`(${file}) Uncommented top-level functions: [${uncommentedTopLevelFunctions.join(', ')}]`)
+			if (!uncommentedTopLevelFunctions.length) { continue }
+			addToErrors(`Uncommented top-level functions     (in ${file}):     [${uncommentedTopLevelFunctions.join(', ')}]`)
 			checkIsPassed = false
 		}
 
