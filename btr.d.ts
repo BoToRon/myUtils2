@@ -70,6 +70,8 @@ export declare const addOrRemoveItem: <T>(arr: T[], item: T) => {
 export declare const addOrReplaceItem: <T>(arr: T[], newItem: T, predicate: arrayPredicate<T>) => void;
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
 export declare const asFormattedList: (arr: (string | number | boolean)[], useAndForTheLastItem: boolean) => string;
+/**Return an array of sub-arrays with the items of the passed array, where each sub-array's max lenght is the passed size*/
+export declare function chunk<T>(arr: T[], chunkSize: number): T[][];
 /**Compare array A to array B and return the details */
 export declare const compareArrays: <T>(baseArray: T[], testArray: T[]) => {
     arraysAreEqual: boolean;
@@ -91,6 +93,8 @@ export declare const getUniqueValues: <T>(arr: T[]) => T[];
 export declare const isLastItem: <T>(arr: T[], item: T) => boolean;
 /**Remove a single item from an array, or all copies of that item if its a primitive value */
 export declare const removeItem: <T>(arr: T[], item: T) => number;
+/**Return the last item of the given array */
+export declare const lastItem: <T>(arr: T[]) => T;
 /**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
 export declare const selfFilter: <T>(arr: T[], predicate: arrayPredicate<T>) => {
     removedItems: T[];
@@ -191,7 +195,16 @@ export declare const deepClone: <T>(x: T) => T;
 /**Generate a Zod Schema from an array/object */
 export declare const getZodSchemaFromData: (data: unknown) => any;
 /**Map an object :D (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
-export declare const mapObject: <F extends (x: never) => ReturnType<F>, O extends object>(object: O, mappingFn: F) => { [key in keyof O]: ReturnType<F>; };
+export declare const mapObject: <F extends (x: O[keyof O]) => ReturnType<F>, O extends object>(object: O, mappingFn: F) => { [key in keyof O]: ReturnType<F>; };
+/**Object.entries but with proper type-inference */
+export declare const objectEntries: <T extends object>(object: T) => {
+    key: keyof T;
+    value: T[keyof T];
+}[];
+/**Object.keys but with proper type-inference */
+export declare const objectKeys: <T extends object>(object: T) => (keyof T)[];
+/**Object.values but with proper type-inference */
+export declare const objectValues: <T extends object>(object: T) => T[keyof T];
 /**Replace the values of an object with those of another that shares the schema*/
 export declare const replaceObject: <T extends object>(originalObject: T, newObject: T) => void;
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods) */

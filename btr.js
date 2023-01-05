@@ -256,6 +256,15 @@ export const asFormattedList = (arr, useAndForTheLastItem) => {
     });
     return string;
 };
+/**Return an array of sub-arrays with the items of the passed array, where each sub-array's max lenght is the passed size*/
+export function chunk(arr, chunkSize) {
+    const results = [[]];
+    arr.forEach(item => {
+        const lastSubArray = lastItem(results);
+        lastSubArray.length < chunkSize ? lastSubArray.push(item) : results.push([item]);
+    });
+    return results.reverse();
+}
 /**Compare array A to array B and return the details */
 export const compareArrays = (baseArray, testArray) => {
     const nonDesiredItems = testArray.filter(x => !baseArray.includes(x));
@@ -275,6 +284,8 @@ export const getUniqueValues = (arr) => [...new Set(arr)];
 export const isLastItem = (arr, item) => arr.indexOf(item) === arr.length - 1;
 /**Remove a single item from an array, or all copies of that item if its a primitive value */
 export const removeItem = (arr, item) => selfFilter(arr, (x) => x !== item).removedCount;
+/**Return the last item of the given array */
+export const lastItem = (arr) => arr[arr.length - 1];
 /**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
 export const selfFilter = (arr, predicate) => {
     let removedCount = 0;
@@ -521,13 +532,9 @@ _; /********** FOR OBJECTS ******************** FOR OBJECTS ********************
 _; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 /**Add all default properties missing in an object*/
 export const addMissingPropsToObjects = (original, defaults) => {
-    Object.keys(defaults).forEach(x => {
-        const key = x;
-        if (Object.prototype.hasOwnProperty.call(original, key)) {
-            return;
-        }
+    objectKeys(defaults).forEach(key => { if (!Object.prototype.hasOwnProperty.call(original, key)) {
         original[key] = defaults[key];
-    });
+    } });
     return original;
 };
 /**Return a copy that can be altered without having to worry about modifying the original */
@@ -551,13 +558,20 @@ export const getZodSchemaFromData = (data) => {
 /**Map an object :D (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
 export const mapObject = (object, mappingFn) => {
     const newObject = {};
-    Object.entries(object).forEach(entry => { const [key, value] = entry; newObject[key] = mappingFn(value); });
+    objectEntries(object).forEach(x => { newObject[x.key] = mappingFn(x.value); });
     return newObject;
 };
+/**Object.entries but with proper type-inference */
+export const objectEntries = (object) => Object.entries(object).
+    map(entry => ({ key: entry[0], value: entry[1] }));
+/**Object.keys but with proper type-inference */
+export const objectKeys = (object) => Object.keys(object);
+/**Object.values but with proper type-inference */
+export const objectValues = (object) => Object.values(object);
 /**Replace the values of an object with those of another that shares the schema*/
 export const replaceObject = (originalObject, newObject) => {
-    Object.keys(originalObject).forEach(key => delete originalObject[key]);
-    Object.keys(newObject).forEach(key => originalObject[key] = newObject[key]);
+    objectKeys(originalObject).forEach(key => delete originalObject[key]);
+    objectKeys(newObject).forEach(key => originalObject[key] = newObject[key]);
 };
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods) */
 export const { stringify } = JSON;

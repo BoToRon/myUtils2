@@ -282,6 +282,15 @@ export const asFormattedList = (arr: (string | number | boolean)[], useAndForThe
 	})
 	return string
 }
+/**Return an array of sub-arrays with the items of the passed array, where each sub-array's max lenght is the passed size*/
+export function chunk<T>(arr: T[], chunkSize: number) {
+	const results: T[][] = [[]]
+	arr.forEach(item => {
+		const lastSubArray = lastItem(results)
+		lastSubArray.length < chunkSize ? lastSubArray.push(item) : results.push([item])
+	})
+	return results.reverse()
+}
 /**Compare array A to array B and return the details */
 export const compareArrays = <T>(baseArray: T[], testArray: T[],) => {
 	const nonDesiredItems = testArray.filter(x => !baseArray.includes(x))
@@ -303,6 +312,8 @@ export const getUniqueValues = <T>(arr: T[]) => [...new Set(arr)]
 export const isLastItem = <T>(arr: T[], item: T) => arr.indexOf(item) === arr.length - 1
 /**Remove a single item from an array, or all copies of that item if its a primitive value */
 export const removeItem = <T>(arr: T[], item: T) => selfFilter(arr, (x: T) => x !== item).removedCount
+/**Return the last item of the given array */
+export const lastItem = <T>(arr: T[]) => arr[arr.length - 1] as T
 /**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
 export const selfFilter = <T>(arr: T[], predicate: arrayPredicate<T>) => {
 	let removedCount = 0
@@ -560,13 +571,7 @@ _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** 
 
 /**Add all default properties missing in an object*/
 export const addMissingPropsToObjects = <T extends object>(original: T, defaults: Required<T>) => {
-
-	Object.keys(defaults).forEach(x => {
-		const key = x as keyof T
-		if (Object.prototype.hasOwnProperty.call(original, key)) { return }
-		original[key] = defaults[key]
-	})
-
+	objectKeys(defaults).forEach(key => { if (!Object.prototype.hasOwnProperty.call(original, key)) { original[key] = defaults[key] } })
 	return original as Required<T>
 }
 /**Return a copy that can be altered without having to worry about modifying the original */
@@ -584,15 +589,22 @@ export const getZodSchemaFromData = (data: unknown) => {
 	return z.object(mapObject(data, toLiteral) as ZodRawShape)
 }
 /**Map an object :D (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
-export const mapObject = <F extends (x: never) => ReturnType<F>, O extends object>(object: O, mappingFn: F) => {
+export const mapObject = <F extends (x: O[keyof O]) => ReturnType<F>, O extends object>(object: O, mappingFn: F) => {
 	const newObject = {} as { [key in keyof O]: ReturnType<F> }
-	Object.entries(object).forEach(entry => { const [key, value] = entry; newObject[key as keyof O] = mappingFn(value as never) })
+	objectEntries(object).forEach(x => { newObject[x.key] = mappingFn(x.value) })
 	return newObject as { [key in keyof O]: ReturnType<F> }
 }
+/**Object.entries but with proper type-inference */
+export const objectEntries = <T extends object>(object: T) => Object.entries(object).
+	map(entry => ({ key: entry[0] as keyof T, value: entry[1] as T[keyof T] }))
+/**Object.keys but with proper type-inference */
+export const objectKeys = <T extends object>(object: T) => Object.keys(object) as unknown as (keyof T)[]
+/**Object.values but with proper type-inference */
+export const objectValues = <T extends object>(object: T) => Object.values(object) as T[keyof T]
 /**Replace the values of an object with those of another that shares the schema*/
 export const replaceObject = <T extends object>(originalObject: T, newObject: T) => {
-	Object.keys(originalObject).forEach(key => delete originalObject[key as keyof T])
-	Object.keys(newObject).forEach(key => originalObject[key as keyof T] = newObject[key as keyof T])
+	objectKeys(originalObject).forEach(key => delete originalObject[key])
+	objectKeys(newObject).forEach(key => originalObject[key as keyof T] = newObject[key])
 }
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods) */
 export const { stringify } = JSON
