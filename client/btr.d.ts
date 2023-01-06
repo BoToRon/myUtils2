@@ -54,12 +54,6 @@ export declare const zodCheck_curry: (errorHandler?: messageHandler, strictModeI
 export declare const trackVueComponent_curry: <T>(zValidVueComponentName: zSchema<T>) => (name: T, componentConstructor: btr_trackedVueComponent, window: {
     vueComponents: btr_trackedVueComponent[];
 }) => btr_trackedVueComponent;
-export declare const divine: {
-    bot: eris.Client;
-    error: (err: string | Error) => Promise<void>;
-    init: Promise<void>;
-    ping: (message: string) => Promise<void>;
-};
 /**Adds an item to an array, or removes it if it already was added. Returns the action applied and the array */
 export declare const addOrRemoveItem: <T>(arr: T[], item: T) => {
     action: "removed" | "added";
@@ -70,7 +64,7 @@ export declare const addOrReplaceItem: <T>(arr: T[], newItem: T, predicate: arra
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
 export declare const asFormattedList: (arr: (string | number | boolean)[], useAndForTheLastItem: boolean) => string;
 /**Return an array of sub-arrays with the items of the passed array, where each sub-array's max lenght is the passed size*/
-export declare function chunk<T>(arr: T[], chunkSize: number): T[][];
+export declare const chunk: <T>(arr: T[], chunkSize: number) => T[][];
 /**Compare array A to array B and return the details */
 export declare const compareArrays: <T>(baseArray: T[], testArray: T[]) => {
     arraysAreEqual: boolean;
@@ -162,7 +156,7 @@ export declare const zPipe: <T>(zSchema: zSchema<T>, strictModeIfObject: boolean
     failedAt: string;
 };
 /**Promise-based delay that BREAKS THE LIMIT OF setTimeOut*/
-export declare function delay(x: number): Promise<unknown>;
+export declare const delay: (x: number) => Promise<unknown>;
 /**
  * @param options.fullYear true (default, 4 digits) or false (2 digits)
  * @param options.hourOnly default: false
@@ -246,7 +240,7 @@ export declare const dataIsEqual: (A: unknown, B: unknown, errorHandler?: messag
 /**For obligatory callbacks */
 export declare const doNothing: (...args: unknown[]) => void;
 /** @returns null as the provided type */
-export declare function nullAs<T>(): T;
+export declare const nullAs: <T>() => T;
 /**Copy to clipboard, objects arrays get stringify'd */
 export declare const copyToClipboard_client: (x: unknown) => void;
 /**Stringifies and downloads the provided data*/

@@ -150,86 +150,6 @@ export const trackVueComponent_curry = <T>(zValidVueComponentName: zSchema<T>) =
 	}
 }
 
-_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-
-export const divine = {
-	bot: <eris.Client>nullAs(),
-	error: async (err: string | Error) => {
-		const message = getTraceableStack(err)
-		const { DEV_OR_PROD } = await getEnviromentVariables()
-		DEV_OR_PROD !== 'PROD' ? killProcess(message) : divine.ping(message)
-	},
-	init: (async () => {
-		delay(1000).then(async () => {
-			if (isNode) { if (command_package || command_project) { return } }
-
-			const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = await getEnviromentVariables()
-			if (DEV_OR_PROD !== 'PROD') { return }
-
-			const divinePrepend = '***DivineBot:***'
-			const bot = eris(ERIS_TOKEN)
-
-			bot.on('messageReactionRemove', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('remove', a, b, c))
-			bot.on('messageReactionAdd', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('add', a, b, c))
-			bot.on('disconnect', () => { colorLog('red', `${divinePrepend}: Disconnected D: ... retrying!`) })
-			bot.on('connect', () => divine.ping(`(${APP_NAME}) - I'm alive bitch >:D`))
-
-			const idOfRoleAssigningMessage = '822523162724925473'
-			await attemptConnection()
-			divine.bot = bot
-
-			function role(action: 'add' | 'remove', message: eris.PossiblyUncachedMessage, emoji: eris.PartialEmoji, reactor: eris.Member) {
-				try {
-					if (message.id !== idOfRoleAssigningMessage) { return }
-
-					const role = [
-						{ app: 'UntCG', emoji: 'cards', id: 'SAMPLEROLEID' },
-						{ app: 'CwCA', emoji: 'chess', id: 'SAMPLEROLEID' },
-						{ app: 'Cool', emoji: 'cool', id: 'SAMPLEROLEID' },
-						{ app: 'Divine', emoji: 'divine', id: 'SAMPLEROLEID' },
-						{ app: 'Bluejay', emoji: 'bluejay', id: 'SAMPLEROLEID' },
-						{ app: 'Cute', emoji: 'cute', id: 'SAMPLEROLEID' },
-					].find(x => x.emoji === emoji.name)
-
-					if (role) { ({ add: reactor.addRole, remove: reactor.removeRole })[action](role.id) }
-				}
-				catch (e) { console.log('divineBot.role.tryCatch.error = ', e) }
-			}
-
-			async function attemptConnection() {
-				try {
-					bot.connect()
-					colorLog('cyan', 'waiting for DivineBot')
-					while (!bot.uptime) { await delay(1000) }
-					successLog('The divine egg has hatched')
-				}
-				catch {
-					colorLog('yellow', `${divinePrepend} Failed to connect.. retrying >:D`)
-					await delay(1000)
-					attemptConnection()
-				}
-			}
-		})
-	})(),
-	ping: async (message: string) => {
-		while (!divine.bot?.ready) { await delay(1000) }
-		const { APP_NAME } = await getEnviromentVariables()
-
-		const theMessage = `<@470322452040515584> - (${APP_NAME}) \n ${message}`
-		const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } }
-		divine.bot.createMessage('1055939528776495206', divineOptions)
-	}
-}
-
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -268,7 +188,7 @@ export const asFormattedList = (arr: (string | number | boolean)[], useAndForThe
 	return string
 }
 /**Return an array of sub-arrays with the items of the passed array, where each sub-array's max lenght is the passed size*/
-export function chunk<T>(arr: T[], chunkSize: number) {
+export const chunk = <T>(arr: T[], chunkSize: number) => {
 	const results: T[][] = [[]]
 	arr.forEach(item => {
 		const lastSubArray = lastItem(results)
@@ -475,21 +395,19 @@ _ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** 
 _ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 
 /**Promise-based delay that BREAKS THE LIMIT OF setTimeOut*/
-export function delay(x: number) {
-	return new Promise(resolve => {
-		const maxTimeOut = 1000 * 60 * 60 * 24
-		const loopsNeeded = Math.floor(x / maxTimeOut)
-		const leftOverTime = x % maxTimeOut
-		interval(loopsNeeded, leftOverTime)
+export const delay = (x: number) => new Promise(resolve => {
+	const maxTimeOut = 1000 * 60 * 60 * 24
+	const loopsNeeded = Math.floor(x / maxTimeOut)
+	const leftOverTime = x % maxTimeOut
+	interval(loopsNeeded, leftOverTime)
 
-		function interval(i: number, miliseconds: number) {
-			setTimeout(() => {
-				if (i) { interval(i - 1, maxTimeOut) }
-				else { resolve(true) }
-			}, miliseconds)
-		}
-	})
-}
+	function interval(i: number, miliseconds: number) {
+		setTimeout(() => {
+			if (i) { interval(i - 1, maxTimeOut) }
+			else { resolve(true) }
+		}, miliseconds)
+	}
+})
 /**
  * @param options.fullYear true (default, 4 digits) or false (2 digits)  
  * @param options.hourOnly default: false
@@ -678,7 +596,7 @@ export const dataIsEqual = (A: unknown, B: unknown, errorHandler = <messageHandl
 /**For obligatory callbacks */
 export const doNothing = (...args: unknown[]) => { args }
 /** @returns null as the provided type */
-export function nullAs<T>() { return null as T }
+export const nullAs = <T>() => null as T
 
 _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
