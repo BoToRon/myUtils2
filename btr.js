@@ -39,8 +39,6 @@ _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-const command_package = process.env['npm_config_command_package'];
-const command_project = process.env['npm_config_command_project'];
 export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark']);
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile']);
@@ -145,8 +143,10 @@ export const divine = {
     },
     init: (async () => {
         delay(1000).then(async () => {
-            if (command_package || command_project) {
-                return;
+            if (isNode) {
+                if (command_package || command_project) {
+                    return;
+                }
             }
             const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = await getEnviromentVariables();
             if (DEV_OR_PROD !== 'PROD') {
@@ -886,11 +886,24 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
         return allVueChecksPass;
         async function readVueFile(clientSlash, mustMatch) {
             const path = './client/' + clientSlash;
+            if (!await fileExists(path)) {
+                return;
+            }
             const file = await fsReadFileAsync(path);
             if (file.includes(mustMatch)) {
                 return true;
             }
             addToErrors(`file     (${path})     must include:    ${mustMatch}`);
+        }
+        async function fileExists(path) {
+            try {
+                await fs.promises.access(path);
+                return true;
+            }
+            catch {
+                addToErrors('Missing file, couldn\'t read: ' + path);
+                return false;
+            }
         }
     }
     /**Get all the file and folders within a folder, stopping at predefined folders */
@@ -1232,6 +1245,8 @@ export async function questionAsPromise(question) {
     readline.close();
     return input;
 }
+const command_package = process.env['npm_config_command_package'];
+const command_project = process.env['npm_config_command_project'];
 if (command_package) {
     zodCheckAndHandle(zValidNpmCommand_package, command_package, npmRun_package, [command_package], console.log);
 }

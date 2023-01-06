@@ -29,8 +29,6 @@ _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ***********
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 
-const command_package = process.env['npm_config_command_package'] as validNpmCommand_package
-const command_project = process.env['npm_config_command_project'] as validNpmCommand_project
 
 export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'])
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
@@ -172,7 +170,7 @@ export const divine = {
 	},
 	init: (async () => {
 		delay(1000).then(async () => {
-			if (command_package || command_project) { return }
+			if (isNode) { if (command_package || command_project) { return } }
 
 			const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = await getEnviromentVariables()
 			if (DEV_OR_PROD !== 'PROD') { return }
@@ -576,7 +574,7 @@ export const getZodSchemaFromData = (data: unknown) => {
 	return z.object(mapObject(data, toLiteral) as ZodRawShape)
 }
 /**Map an object :D (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
-export const mapObject = <F extends (x: O[keyof O]) => ReturnType<F>, O extends object>(object: O, mappingFn: F) => {
+export const mapObject = <F extends (value: O[keyof O]) => ReturnType<F>, O extends object>(object: O, mappingFn: F) => {
 	const newObject = {} as { [key in keyof O]: ReturnType<F> }
 	objectEntries(object).forEach(x => { newObject[x.key] = mappingFn(x.value) })
 	return newObject as { [key in keyof O]: ReturnType<F> }

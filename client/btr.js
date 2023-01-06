@@ -27,8 +27,6 @@ _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-const command_package = process.env['npm_config_command_package'];
-const command_project = process.env['npm_config_command_project'];
 export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark']);
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile']);
@@ -133,8 +131,10 @@ export const divine = {
     },
     init: (async () => {
         delay(1000).then(async () => {
-            if (command_package || command_project) {
-                return;
+            if (isNode) {
+                if (command_package || command_project) {
+                    return;
+                }
             }
             const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = await getEnviromentVariables();
             if (DEV_OR_PROD !== 'PROD') {

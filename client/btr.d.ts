@@ -194,7 +194,7 @@ export declare const deepClone: <T>(x: T) => T;
 /**Generate a Zod Schema from an array/object */
 export declare const getZodSchemaFromData: (data: unknown) => any;
 /**Map an object :D (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
-export declare const mapObject: <F extends (x: O[keyof O]) => ReturnType<F>, O extends object>(object: O, mappingFn: F) => { [key in keyof O]: ReturnType<F>; };
+export declare const mapObject: <F extends (value: O[keyof O]) => ReturnType<F>, O extends object>(object: O, mappingFn: F) => { [key in keyof O]: ReturnType<F>; };
 /**Object.entries but with proper type-inference */
 export declare const objectEntries: <T extends object>(object: T) => {
     key: keyof T;
