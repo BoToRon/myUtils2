@@ -74,6 +74,13 @@ export type btr_intervalWithId = { id: string, interval: NodeJS.Timer }
 export type btr_globalAlert = { message: string, show: boolean }
 export type btr_validVariant = z.infer<typeof zValidVariants>
 export type btr_voidFn = () => void
+export type btr_fieldsForColumnOfTable = string | {
+	key: string
+	label?: string
+	formatter?: (value: unknown, key: string, item: unknown) => unknown
+	sortable: boolean
+	thStyle?: btr_validVariant
+}
 
 type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: btr_validVariant, title: string }
 type validChalkColor = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'white' | 'grey' | 'magentaBright'	//DELETETHISFORCLIENT

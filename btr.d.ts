@@ -22,6 +22,13 @@ export type btr_globalAlert = {
 };
 export type btr_validVariant = z.infer<typeof zValidVariants>;
 export type btr_voidFn = () => void;
+export type btr_fieldsForColumnOfTable = string | {
+    key: string;
+    label?: string;
+    formatter?: (value: unknown, key: string, item: unknown) => unknown;
+    sortable: boolean;
+    thStyle?: btr_validVariant;
+};
 type toastOptions = {
     toaster: string;
     autoHideDelay: number;
