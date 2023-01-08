@@ -412,7 +412,7 @@ export const getFormattedTimestamp = (options) => {
     return x;
 };
 /**Return the time left to make a move in a compacted form and with a variant corresponding to how much of it left */
-export const getTimeLeftForDisplayal = (deadline) => {
+export const getDisplayableTimeLeft = (deadline) => {
     const time = (deadline - Date.now()) / 1000;
     let message = '';
     const twoMinutes = 60 * 2;

@@ -447,7 +447,7 @@ export const getFormattedTimestamp = (options?: {
 	return x
 }
 /**Return the time left to make a move in a compacted form and with a variant corresponding to how much of it left */
-export const getTimeLeftForDisplayal = (deadline: number) => {
+export const getDisplayableTimeLeft = (deadline: number) => {
 
 	const time = (deadline - Date.now()) / 1000
 	let message = ''

@@ -179,7 +179,7 @@ export declare const getFormattedTimestamp: (options?: {
     timestamp?: number;
 }) => string;
 /**Return the time left to make a move in a compacted form and with a variant corresponding to how much of it left */
-export declare const getTimeLeftForDisplayal: (deadline: number) => {
+export declare const getDisplayableTimeLeft: (deadline: number) => {
     time: string;
     variant: z.infer<any>;
 };
