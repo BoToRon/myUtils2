@@ -459,6 +459,33 @@ export const getFormattedTimestamp = (options?: {
 	if (includeHour) { x += ` ${hour}` }
 	return x
 }
+/**Return the time left to make a move in a compacted form and with a variant corresponding to how much of it left */
+export const getDisplayableTimeLeft = (deadline: number) => {
+
+	const time = (deadline - Date.now()) / 1000
+	let message = ''
+
+	const twoMinutes = 60 * 2
+	const twoHours = twoMinutes * 2
+	const twoDays = twoHours * 2
+
+	if (time < twoMinutes) { message = String(time) }
+	else if (time < twoHours) { message = `${Math.round(time / 60)} Minutes` }
+	else if (time < twoDays) { message = `${Math.round(time / 60 / 60)} Hours` }
+	else if (time > twoDays) { message = `${Math.round(time / 60 / 60 / 24)} Days` }
+
+	message = message.replace(/\.[0-9]{0,}/g, '')
+	return { time: message, variant: getVariant() }
+
+	function getVariant() {
+		let variant = <btr_validVariant>nullAs()
+		if (/Minutes|Hours|Days/.test(message)) { variant = 'info' }
+		else if (time > 20) { variant = 'primary' }
+		else if (time < 21) { variant = 'warning' }
+		else { variant = 'danger' }
+		return variant
+	}
+}
 /**Self-explanatory */
 export const isEven = (number: number) => !isOdd(number)
 /**Self-explanatory */

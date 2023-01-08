@@ -179,6 +179,11 @@ export declare const getFormattedTimestamp: (options?: {
     listFirst?: 'MM' | 'DD';
     timestamp?: number;
 }) => string;
+/**Return the time left to make a move in a compacted form and with a variant corresponding to how much of it left */
+export declare const getTimeLeftForDisplayal: (deadline: number) => {
+    time: string;
+    variant: z.infer<any>;
+};
 /**Self-explanatory */
 export declare const isEven: (number: number) => boolean;
 /**Self-explanatory */
