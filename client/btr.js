@@ -112,6 +112,31 @@ export const trackVueComponent_curry = (zValidVueComponentName) => function trac
         colorLog('magenta', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`);
     }
 };
+/**(generates a function that:) Open/close a bootstrap-vue modal with zod validation */
+export const triggerModalWithValidation_curry = ($bvModal, zValidModalIds) => {
+    const body = async (id, action) => {
+        if (!zodCheck_curry(alert)(zValidModalIds, id)) {
+            return;
+        }
+        if (action === 'show') {
+            $bvModal.show(id);
+            for (let i = 0; i < 10; i++) {
+                if (!elementExists()) {
+                    await delay(500);
+                }
+            }
+            if (!elementExists()) {
+                promptError();
+            }
+        }
+        if (action === 'hide') {
+            elementExists() ? $bvModal.hide(id) : promptError();
+        }
+        function elementExists() { return Boolean(document.getElementById(id)); }
+        function promptError() { alert(`Modal with id (${id}) not found. Could not ${action}. Please report it`); }
+    };
+    return body;
+};
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -374,31 +399,6 @@ export const delay = (x) => new Promise(resolve => {
         }, miliseconds);
     }
 });
-/**
- * @param options.fullYear true (default, 4 digits) or false (2 digits)
- * @param options.hourOnly default: false
- * @param options.includeHour default: false
- * @param options.listFirst 'MM' (default) or 'DD'
- * @param options.timestamp default: Date.now()
- */
-export const getFormattedTimestamp = (options) => {
-    const defaults = { timestamp: Date.now(), fullYear: true, hourOnly: false, includeHour: false, listFirst: 'MM' };
-    const { fullYear, hourOnly, includeHour, listFirst, timestamp } = addMissingPropsToObjects(options, defaults);
-    const asDate = new Date(timestamp);
-    const hour = `${asDate}`.slice(16, 24);
-    if (hourOnly) {
-        return hour;
-    }
-    const date = asDate.getDate();
-    const month = asDate.getMonth() + 1;
-    const monthDaysOrdered = { MM: `${month}/${date}`, DD: `${date}/${month}` }[listFirst];
-    const year = fullYear ? asDate.getFullYear() : `${asDate.getFullYear()}`.slice(2);
-    let x = `${monthDaysOrdered}/${year}`;
-    if (includeHour) {
-        x += ` ${hour}`;
-    }
-    return x;
-};
 /**Return the time left to make a move in a compacted form and with a variant corresponding to how much of it left */
 export const getDisplayableTimeLeft = (deadline) => {
     const time = (deadline - Date.now()) / 1000;
@@ -436,6 +436,31 @@ export const getDisplayableTimeLeft = (deadline) => {
         }
         return variant;
     }
+};
+/**
+ * @param options.fullYear true (default, 4 digits) or false (2 digits)
+ * @param options.hourOnly default: false
+ * @param options.includeHour default: false
+ * @param options.listFirst 'MM' (default) or 'DD'
+ * @param options.timestamp default: Date.now()
+ */
+export const getFormattedTimestamp = (options) => {
+    const defaults = { timestamp: Date.now(), fullYear: true, hourOnly: false, includeHour: false, listFirst: 'MM' };
+    const { fullYear, hourOnly, includeHour, listFirst, timestamp } = addMissingPropsToObjects(options, defaults);
+    const asDate = new Date(timestamp);
+    const hour = `${asDate}`.slice(16, 24);
+    if (hourOnly) {
+        return hour;
+    }
+    const date = asDate.getDate();
+    const month = asDate.getMonth() + 1;
+    const monthDaysOrdered = { MM: `${month}/${date}`, DD: `${date}/${month}` }[listFirst];
+    const year = fullYear ? asDate.getFullYear() : `${asDate.getFullYear()}`.slice(2);
+    let x = `${monthDaysOrdered}/${year}`;
+    if (includeHour) {
+        x += ` ${hour}`;
+    }
+    return x;
 };
 /**Self-explanatory */
 export const isEven = (number) => !isOdd(number);

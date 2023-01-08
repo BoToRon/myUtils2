@@ -74,6 +74,7 @@ type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, va
 type zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T>, strict?: () => zSchema<T> }
 type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
+type bvModal = { show: (id: string) => void, hide: (id: string) => void }
 type validNpmCommand_package = z.infer<typeof zValidNpmCommand_package>
 type validNpmCommand_project = z.infer<typeof zValidNpmCommand_project>
 type messageHandler = (message: string) => void
@@ -155,6 +156,28 @@ export const trackVueComponent_curry = <T>(zValidVueComponentName: zSchema<T>) =
 	function logAllComponents() {
 		colorLog('magenta', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`)
 	}
+}
+/**(generates a function that:) Open/close a bootstrap-vue modal with zod validation */
+export const triggerModalWithValidation_curry = ($bvModal: bvModal, zValidModalIds: zSchema<string>) => {
+
+	const body = async (id: string, action: 'show' | 'hide') => {
+
+		if (!zodCheck_curry(alert)(zValidModalIds, id)) { return }
+
+		if (action === 'show') {
+			$bvModal.show(id)
+			for (let i = 0; i < 10; i++) { if (!elementExists()) { await delay(500) } }
+			if (!elementExists()) { promptError() }
+		}
+
+		if (action === 'hide') {
+			elementExists() ? $bvModal.hide(id) : promptError()
+		}
+
+		function elementExists() { return Boolean(document.getElementById(id)) }
+		function promptError() { alert(`Modal with id (${id}) not found. Could not ${action}. Please report it`) }
+	}
+	return body
 }
 
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -415,6 +438,33 @@ export const delay = (x: number) => new Promise(resolve => {
 		}, miliseconds)
 	}
 })
+/**Return the time left to make a move in a compacted form and with a variant corresponding to how much of it left */
+export const getDisplayableTimeLeft = (deadline: number) => {
+
+	const time = (deadline - Date.now()) / 1000
+	let message = ''
+
+	const twoMinutes = 60 * 2
+	const twoHours = twoMinutes * 2
+	const twoDays = twoHours * 2
+
+	if (time < twoMinutes) { message = String(time) }
+	else if (time < twoHours) { message = `${Math.round(time / 60)} Minutes` }
+	else if (time < twoDays) { message = `${Math.round(time / 60 / 60)} Hours` }
+	else if (time > twoDays) { message = `${Math.round(time / 60 / 60 / 24)} Days` }
+
+	message = message.replace(/\.[0-9]{0,}/g, '')
+	return { time: message, variant: getVariant() }
+
+	function getVariant() {
+		let variant = <btr_validVariant>nullAs()
+		if (/Minutes|Hours|Days/.test(message)) { variant = 'info' }
+		else if (time > 20) { variant = 'primary' }
+		else if (time < 21) { variant = 'warning' }
+		else { variant = 'danger' }
+		return variant
+	}
+}
 /**
  * @param options.fullYear true (default, 4 digits) or false (2 digits)  
  * @param options.hourOnly default: false
@@ -445,33 +495,6 @@ export const getFormattedTimestamp = (options?: {
 	let x = `${monthDaysOrdered}/${year}`
 	if (includeHour) { x += ` ${hour}` }
 	return x
-}
-/**Return the time left to make a move in a compacted form and with a variant corresponding to how much of it left */
-export const getDisplayableTimeLeft = (deadline: number) => {
-
-	const time = (deadline - Date.now()) / 1000
-	let message = ''
-
-	const twoMinutes = 60 * 2
-	const twoHours = twoMinutes * 2
-	const twoDays = twoHours * 2
-
-	if (time < twoMinutes) { message = String(time) }
-	else if (time < twoHours) { message = `${Math.round(time / 60)} Minutes` }
-	else if (time < twoDays) { message = `${Math.round(time / 60 / 60)} Hours` }
-	else if (time > twoDays) { message = `${Math.round(time / 60 / 60 / 24)} Days` }
-
-	message = message.replace(/\.[0-9]{0,}/g, '')
-	return { time: message, variant: getVariant() }
-
-	function getVariant() {
-		let variant = <btr_validVariant>nullAs()
-		if (/Minutes|Hours|Days/.test(message)) { variant = 'info' }
-		else if (time > 20) { variant = 'primary' }
-		else if (time < 21) { variant = 'warning' }
-		else { variant = 'danger' }
-		return variant
-	}
 }
 /**Self-explanatory */
 export const isEven = (number: number) => !isOdd(number)

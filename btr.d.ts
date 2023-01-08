@@ -44,6 +44,10 @@ type zSchema<T> = {
 type bvToast = {
     toast: (message: string, toastOptions: toastOptions) => void;
 };
+type bvModal = {
+    show: (id: string) => void;
+    hide: (id: string) => void;
+};
 type messageHandler = (message: string) => void;
 type arrayPredicate<T> = (arg1: T) => boolean;
 type pipe_persistent_type<T> = (arg: T) => T;
@@ -62,6 +66,8 @@ export declare const zodCheck_curry: (errorHandler?: messageHandler, strictModeI
 export declare const trackVueComponent_curry: <T>(zValidVueComponentName: zSchema<T>) => (name: T, componentConstructor: btr_trackedVueComponent, window: {
     vueComponents: btr_trackedVueComponent[];
 }) => btr_trackedVueComponent;
+/**(generates a function that:) Open/close a bootstrap-vue modal with zod validation */
+export declare const triggerModalWithValidation_curry: ($bvModal: bvModal, zValidModalIds: zSchema<string>) => (id: string, action: 'show' | 'hide') => Promise<void>;
 /**Adds an item to an array, or removes it if it already was added. Returns the action applied and the array */
 export declare const addOrRemoveItem: <T>(arr: T[], item: T) => {
     action: "removed" | "added";
@@ -165,6 +171,11 @@ export declare const zPipe: <T>(zSchema: zSchema<T>, strictModeIfObject: boolean
 };
 /**Promise-based delay that BREAKS THE LIMIT OF setTimeOut*/
 export declare const delay: (x: number) => Promise<unknown>;
+/**Return the time left to make a move in a compacted form and with a variant corresponding to how much of it left */
+export declare const getDisplayableTimeLeft: (deadline: number) => {
+    time: string;
+    variant: z.infer<any>;
+};
 /**
  * @param options.fullYear true (default, 4 digits) or false (2 digits)
  * @param options.hourOnly default: false
@@ -179,11 +190,6 @@ export declare const getFormattedTimestamp: (options?: {
     listFirst?: 'MM' | 'DD';
     timestamp?: number;
 }) => string;
-/**Return the time left to make a move in a compacted form and with a variant corresponding to how much of it left */
-export declare const getDisplayableTimeLeft: (deadline: number) => {
-    time: string;
-    variant: z.infer<any>;
-};
 /**Self-explanatory */
 export declare const isEven: (number: number) => boolean;
 /**Self-explanatory */

@@ -87,6 +87,7 @@ type validChalkColor = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' 
 type zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T>, strict?: () => zSchema<T> }
 type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
+type bvModal = { show: (id: string) => void, hide: (id: string) => void }
 type validNpmCommand_package = z.infer<typeof zValidNpmCommand_package>
 type validNpmCommand_project = z.infer<typeof zValidNpmCommand_project>
 type messageHandler = (message: string) => void
@@ -168,6 +169,28 @@ export const trackVueComponent_curry = <T>(zValidVueComponentName: zSchema<T>) =
 	function logAllComponents() {
 		colorLog('magenta', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`)
 	}
+}
+/**(generates a function that:) Opens/close a bootstrap-vue modal with zod validation */
+export const triggerModalWithValidation_curry = ($bvModal: bvModal, zValidModalIds: zSchema<string>) => {
+
+	const body = async (id: string, action: 'show' | 'hide') => {
+
+		if (!zodCheck_curry(alert)(zValidModalIds, id)) { return }
+
+		if (action === 'show') {
+			$bvModal.show(id)
+			for (let i = 0; i < 10; i++) { if (!elementExists()) { await delay(500) } }
+			if (!elementExists()) { promptError() }
+		}
+
+		if (action === 'hide') {
+			elementExists() ? $bvModal.hide(id) : promptError()
+		}
+
+		function elementExists() { return Boolean(document.getElementById(id)) }
+		function promptError() { alert(`Modal with id (${id}) not found. Could not ${action}. Please report it`) }
+	}
+	return body
 }
 
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
