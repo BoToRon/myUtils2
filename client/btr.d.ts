@@ -65,8 +65,8 @@ export declare const zodCheck_curry: (errorHandler?: messageHandler, strictModeI
 export declare const trackVueComponent_curry: <T>(zValidVueComponentName: zSchema<T>) => (name: T, componentConstructor: btr_trackedVueComponent, window: {
     vueComponents: btr_trackedVueComponent[];
 }) => btr_trackedVueComponent;
-/**(generates a function that:) Open/close a bootstrap-vue modal with zod validation */
-export declare const triggerModalWithValidation_curry: ($bvModal: bvModal, zValidModalIds: zSchema<string>) => (id: string, action: 'show' | 'hide') => Promise<void>;
+/**(generates a function that:) Opens/close a bootstrap-vue modal with zod validation */
+export declare const triggerModalWithValidation_curry: <validModalIds extends string>($bvModal: bvModal) => (id: validModalIds, action: 'show' | 'hide') => Promise<void>;
 /**Adds an item to an array, or removes it if it already was added. Returns the action applied and the array */
 export declare const addOrRemoveItem: <T>(arr: T[], item: T) => {
     action: "removed" | "added";
@@ -108,8 +108,8 @@ export declare const selfFilter: <T>(arr: T[], predicate: arrayPredicate<T>) => 
 };
 /**Randomizes the order of the items in the array */
 export declare const shuffle: <T>(arr: T[]) => T[];
-/**Sort an array of objects based on the value a property. A: Ascending, D: Descesding  */
-export declare const sortBy: <T extends object>(arr: T[], key: keyof T, direction: 'A' | 'D') => T[];
+/**Sort an array of objects based on the value a property. A: Ascending, D: Descesding. Chainable */
+export declare const sortBy: <T extends object, pars extends [keyof T, "A" | "D"]>(arr: T[], keyWithDir: pars, ...extraKeysWithDir: pars[]) => T[];
 /**syntactic sugar for selfFilter(arr, predicate).removedItems */
 export declare const spliceIf: <T>(arr: T[], predicate: arrayPredicate<T>) => T[];
 /**Remove X amount of items from the end of an array */

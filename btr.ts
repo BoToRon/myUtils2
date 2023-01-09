@@ -171,11 +171,10 @@ export const trackVueComponent_curry = <T>(zValidVueComponentName: zSchema<T>) =
 	}
 }
 /**(generates a function that:) Opens/close a bootstrap-vue modal with zod validation */
-export const triggerModalWithValidation_curry = ($bvModal: bvModal, zValidModalIds: zSchema<string>) => {
+//TODO: delete this (hard to initialize when bvModal is declared after triggerModalWithValidation in the pinia store)
+export const triggerModalWithValidation_curry = <validModalIds extends string>($bvModal: bvModal) => {
 
-	const body = async (id: string, action: 'show' | 'hide') => {
-
-		if (!zodCheck_curry(alert)(zValidModalIds, id)) { return }
+	const body = async (id: validModalIds, action: 'show' | 'hide') => {
 
 		if (action === 'show') {
 			$bvModal.show(id)
@@ -283,12 +282,18 @@ export const shuffle = <T>(arr: T[]) => {
 	}
 	return arr
 }
-/**Sort an array of objects based on the value a property. A: Ascending, D: Descesding  */
-export const sortBy = <T extends object>(arr: T[], key: keyof T, direction: 'A' | 'D') => {
+/**Sort an array of objects based on the value a property. A: Ascending, D: Descesding. Chainable */
+export const sortBy = <T extends object, pars extends [keyof T, 'A' | 'D']>(arr: T[], keyWithDir: pars, ...extraKeysWithDir: pars[]) => {
 	if (!arr.length) { return arr }
-	if (typeof arr[0] === 'string') { arr.sort((a, b) => (a > b) ? 1 : -1) }
-	else { arr.sort((a, b) => (a[key] > b[key]) ? 1 : -1) }
-	if (direction === 'D') { arr.reverse() }
+
+	[keyWithDir].concat(extraKeysWithDir).forEach(keyDirection => {
+		const [key, direction] = keyDirection
+
+		if (typeof arr[0] === 'string') { arr.sort((a, b) => (a > b) ? 1 : -1) }
+		else { arr.sort((a, b) => (a[key] > b[key]) ? 1 : -1) }
+		if (direction === 'D') { arr.reverse() }
+	})
+
 	return arr
 }
 /**syntactic sugar for selfFilter(arr, predicate).removedItems */

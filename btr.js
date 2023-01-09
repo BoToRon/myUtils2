@@ -124,12 +124,10 @@ export const trackVueComponent_curry = (zValidVueComponentName) => function trac
         colorLog('magenta', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`);
     }
 };
-/**(generates a function that:) Open/close a bootstrap-vue modal with zod validation */
-export const triggerModalWithValidation_curry = ($bvModal, zValidModalIds) => {
+/**(generates a function that:) Opens/close a bootstrap-vue modal with zod validation */
+//TODO: delete this (hard to initialize when bvModal is declared after triggerModalWithValidation in the pinia store)
+export const triggerModalWithValidation_curry = ($bvModal) => {
     const body = async (id, action) => {
-        if (!zodCheck_curry(alert)(zValidModalIds, id)) {
-            return;
-        }
         if (action === 'show') {
             $bvModal.show(id);
             for (let i = 0; i < 10; i++) {
@@ -249,20 +247,23 @@ export const shuffle = (arr) => {
     }
     return arr;
 };
-/**Sort an array of objects based on the value a property. A: Ascending, D: Descesding  */
-export const sortBy = (arr, key, direction) => {
+/**Sort an array of objects based on the value a property. A: Ascending, D: Descesding. Chainable */
+export const sortBy = (arr, keyWithDir, ...extraKeysWithDir) => {
     if (!arr.length) {
         return arr;
     }
-    if (typeof arr[0] === 'string') {
-        arr.sort((a, b) => (a > b) ? 1 : -1);
-    }
-    else {
-        arr.sort((a, b) => (a[key] > b[key]) ? 1 : -1);
-    }
-    if (direction === 'D') {
-        arr.reverse();
-    }
+    [keyWithDir].concat(extraKeysWithDir).forEach(keyDirection => {
+        const [key, direction] = keyDirection;
+        if (typeof arr[0] === 'string') {
+            arr.sort((a, b) => (a > b) ? 1 : -1);
+        }
+        else {
+            arr.sort((a, b) => (a[key] > b[key]) ? 1 : -1);
+        }
+        if (direction === 'D') {
+            arr.reverse();
+        }
+    });
     return arr;
 };
 /**syntactic sugar for selfFilter(arr, predicate).removedItems */
