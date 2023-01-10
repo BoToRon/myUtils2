@@ -235,6 +235,14 @@ export const shuffle = (arr) => {
     }
     return arr;
 };
+/**Sort an array alphabetically, optionally backwards */
+export const sortAlphabetically = (arr, reverseArr) => {
+    arr.sort((a, b) => a > b ? 1 : -1);
+    if (!reverseArr) {
+        arr.reverse();
+    }
+    return arr;
+};
 /**Sort an array of objects based on the value a property. A: Ascending, D: Descesding. Chainable */
 export const sortBy = (arr, keyWithDir, ...extraKeysWithDir) => {
     if (!arr.length) {
@@ -299,7 +307,7 @@ export const pipe_mutableType = (source, ...project) => project.reduce((accumula
  */
 export const retryF = async (fn, args, retriesLeft, defaultReturn, delayBetweenRetries) => {
     try {
-        return { data: await fn(...args), was: 'success' };
+        return { data: fn(...args), was: 'success' };
     }
     catch (error) {
         colorLog('yellow', `retryF > ${fn.name} > ${retriesLeft} retriesLeft. {${error}}`);
@@ -358,6 +366,18 @@ export const zodCheckAndHandle = (zSchema, data, successHandler, args, errorHand
     }
 };
 /**Pipe with schema validation and an basic error tracking */
+/**
+ * Pipe with schema validation and basic error tracking/handling
+ *
+ */
+/**
+ * Pipe with schema validation and basic error tracking/handling
+ * @param zSchema The schema that must persist through the whole pipe
+ * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not *
+ * @param initialValue The value/object that will be piped through the functions
+ * @param fns The functions that will conform the pipe in order
+ * @returns
+ */
 export const zPipe = (zSchema, strictModeIfObject, initialValue, ...fns) => {
     const initialPipeState = { value: initialValue, error: nullAs(), failedAt: nullAs() };
     return fns.reduce((pipeState, fn, index) => {
@@ -549,6 +569,12 @@ export const uniqueId = {
         yield `${i}`;
     } })()
 };
+/**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
+export const getUniqueId = (suffix) => suffix + '_' + getUniqueId_generator.next().value;
+const getUniqueId_generator = (function* () { let i = 0; while (true) {
+    i++;
+    yield `${Date.now() + i}`;
+} })();
 _; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
 _; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
 _; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/

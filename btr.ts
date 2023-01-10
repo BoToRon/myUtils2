@@ -282,6 +282,12 @@ export const shuffle = <T>(arr: T[]) => {
 	}
 	return arr
 }
+/**Sort an array alphabetically, optionally backwards */
+export const sortAlphabetically = (arr: string[], reverseArr?: boolean) => {
+	arr.sort((a, b) => a > b ? 1 : -1)
+	if (!reverseArr) { arr.reverse() }
+	return arr
+}
 /**Sort an array of objects based on the value a property. A: Ascending, D: Descesding. Chainable */
 export const sortBy = <T extends object, pars extends [keyof T, 'A' | 'D']>(arr: T[], keyWithDir: pars, ...extraKeysWithDir: pars[]) => {
 	if (!arr.length) { return arr }
@@ -349,7 +355,7 @@ export const retryF = async <F extends (...args: Parameters<F>) => ReturnType<F>
 	defaultReturn: ReturnType<F>,
 	delayBetweenRetries: number,
 ): Promise<{ data: ReturnType<F>, was: 'success' | 'failure' }> => {
-	try { return { data: await fn(...args), was: 'success' } }
+	try { return { data: fn(...args), was: 'success' } }
 	catch (error) {
 		colorLog('yellow', `retryF > ${fn.name} > ${retriesLeft} retriesLeft. {${error}}`)
 		if (!retriesLeft) { return { data: defaultReturn, was: 'failure' } }
@@ -412,9 +418,23 @@ export const zodCheckAndHandle = <D, SH extends (...args: Parameters<SH>) => Ret
 	if (zResult.success === true && successHandler) { successHandler(...args as Parameters<SH>) }
 }
 /**Pipe with schema validation and an basic error tracking */
+/**
+ * Pipe with schema validation and basic error tracking/handling
+ * 
+ */
+
+/**
+ * Pipe with schema validation and basic error tracking/handling
+ * @param zSchema The schema that must persist through the whole pipe
+ * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not * 
+ * @param initialValue The value/object that will be piped through the functions
+ * @param fns The functions that will conform the pipe in order
+ * @returns 
+ */
 export const zPipe = <T>(zSchema: zSchema<T>, strictModeIfObject: boolean, initialValue: T, ...fns: pipe_persistent_type<T>[]) => {
 
 	const initialPipeState = { value: initialValue, error: <string>nullAs(), failedAt: <string>nullAs() }
+
 	return fns.reduce((pipeState, fn, index) => {
 
 		if (pipeState.error) { return pipeState }
@@ -593,6 +613,10 @@ export const uniqueId = {
 	generator: (function* () { let i = 0; while (true) { i++; yield `${i}` } })()
 }
 
+/**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
+export const getUniqueId = (suffix: string) => suffix + '_' + getUniqueId_generator.next().value
+const getUniqueId_generator = (function* () { let i = 0; while (true) { i++; yield `${Date.now() + i}` } })()
+
 _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
 _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
 _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
@@ -727,7 +751,7 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 	//TODO: make sure all top-level variables are exported
 
 	const addToErrors = (error: string) => errors.push(error)
-	const { DEV_OR_PROD } = await getEnviromentVariables()
+	const { DEV_OR_PROD } = getEnviromentVariables()
 	const errors: string[] = []
 
 	const allChecksPass = await allChecks()
@@ -796,8 +820,8 @@ export const basicProjectChecks = async (errorHandler = divine.error as messageH
 	}
 
 	/**Check if all the desired enviroment keys are defined */
-	async function checkEnviromentVariables() {
-		const env = await getEnviromentVariables()
+	function checkEnviromentVariables() {
+		const env = getEnviromentVariables()
 		return zodCheck_curry(addToErrors, false)(zMyEnv, env)
 	}
 
@@ -986,7 +1010,7 @@ export async function fsWriteFileAsync(filePath: string, content: string) {
 	return file
 }
 /** Get the contents of the project's .env */
-export async function getEnviromentVariables() {
+export function getEnviromentVariables() {
 	const require = createRequire(import.meta.url)
 	require('dotenv').config({ path: './.env' })
 	return process.env as myEnv
@@ -1014,7 +1038,7 @@ export const getLatestPackageJsonFromGithub = async () => {
 }
 /**It's monging time >:D */
 export const getMongoClient = async () => {
-	const { MONGO_URI } = await getEnviromentVariables()
+	const { MONGO_URI } = getEnviromentVariables()
 
 	const mongo = new mongodb.MongoClient(MONGO_URI)
 	let mongoClient: MongoClient = <MongoClient>nullAs()
@@ -1025,8 +1049,8 @@ export const getMongoClient = async () => {
 	return mongoClient
 }
 /**Start and return an http Express server */
-export const getStartedHttpServer = async () => {
-	const { PORT } = await getEnviromentVariables()
+export const getStartedHttpServer = () => {
+	const { PORT } = getEnviromentVariables()
 
 	const app = express()
 	const httpServer = http.createServer(app)
@@ -1131,7 +1155,7 @@ export const npmRun_project = async (npmCommand: validNpmCommand_project) => {
 
 	const defaults = { serverFolder_dist: '../dist', serverFolder_src: './test', fileWithRef: 'ref' }
 	const { serverFolder_dist, serverFolder_src, fileWithRef } = defaults
-	const { APP_NAME } = await getEnviromentVariables()
+	const { APP_NAME } = getEnviromentVariables()
 
 	if (npmCommand === 'git') { prompCommitMessageAndPush(`${APP_NAME}`) }
 	if (['build', 'transpile'].includes(npmCommand)) { canTranspileCheckAndHandle() }
@@ -1282,16 +1306,16 @@ _ /********** DIVINE ******************** DIVINE ******************** DIVINE ***
 
 export const divine = {
 	bot: <eris.Client>nullAs(),
-	error: async (err: string | Error) => {
+	error: (err: string | Error) => {
 		const message = getTraceableStack(err)
-		const { DEV_OR_PROD } = await getEnviromentVariables()
+		const { DEV_OR_PROD } = getEnviromentVariables()
 		DEV_OR_PROD !== 'PROD' ? killProcess(message) : divine.ping(message)
 	},
 	init: (async () => {
 		delay(1000).then(async () => {
 			if (command_package || command_project) { return }
 
-			const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = await getEnviromentVariables()
+			const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = getEnviromentVariables()
 			if (DEV_OR_PROD !== 'PROD') { return }
 
 			const divinePrepend = '***DivineBot:***'
@@ -1341,7 +1365,7 @@ export const divine = {
 	})(),
 	ping: async (message: string) => {
 		while (!divine.bot?.ready) { await delay(1000) }
-		const { APP_NAME } = await getEnviromentVariables()
+		const { APP_NAME } = getEnviromentVariables()
 
 		const theMessage = `<@470322452040515584> - (${APP_NAME}) \n ${message}`
 		const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } }

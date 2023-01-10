@@ -269,6 +269,12 @@ export const shuffle = <T>(arr: T[]) => {
 	}
 	return arr
 }
+/**Sort an array alphabetically, optionally backwards */
+export const sortAlphabetically = (arr: string[], reverseArr?: boolean) => {
+	arr.sort((a, b) => a > b ? 1 : -1)
+	if (!reverseArr) { arr.reverse() }
+	return arr
+}
 /**Sort an array of objects based on the value a property. A: Ascending, D: Descesding. Chainable */
 export const sortBy = <T extends object, pars extends [keyof T, 'A' | 'D']>(arr: T[], keyWithDir: pars, ...extraKeysWithDir: pars[]) => {
 	if (!arr.length) { return arr }
@@ -336,7 +342,7 @@ export const retryF = async <F extends (...args: Parameters<F>) => ReturnType<F>
 	defaultReturn: ReturnType<F>,
 	delayBetweenRetries: number,
 ): Promise<{ data: ReturnType<F>, was: 'success' | 'failure' }> => {
-	try { return { data: await fn(...args), was: 'success' } }
+	try { return { data: fn(...args), was: 'success' } }
 	catch (error) {
 		colorLog('yellow', `retryF > ${fn.name} > ${retriesLeft} retriesLeft. {${error}}`)
 		if (!retriesLeft) { return { data: defaultReturn, was: 'failure' } }
@@ -399,9 +405,23 @@ export const zodCheckAndHandle = <D, SH extends (...args: Parameters<SH>) => Ret
 	if (zResult.success === true && successHandler) { successHandler(...args as Parameters<SH>) }
 }
 /**Pipe with schema validation and an basic error tracking */
+/**
+ * Pipe with schema validation and basic error tracking/handling
+ * 
+ */
+
+/**
+ * Pipe with schema validation and basic error tracking/handling
+ * @param zSchema The schema that must persist through the whole pipe
+ * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not * 
+ * @param initialValue The value/object that will be piped through the functions
+ * @param fns The functions that will conform the pipe in order
+ * @returns 
+ */
 export const zPipe = <T>(zSchema: zSchema<T>, strictModeIfObject: boolean, initialValue: T, ...fns: pipe_persistent_type<T>[]) => {
 
 	const initialPipeState = { value: initialValue, error: <string>nullAs(), failedAt: <string>nullAs() }
+
 	return fns.reduce((pipeState, fn, index) => {
 
 		if (pipeState.error) { return pipeState }
@@ -579,6 +599,10 @@ export const uniqueId = {
 	/**Do NOT use this, use uniqueId.get instead */
 	generator: (function* () { let i = 0; while (true) { i++; yield `${i}` } })()
 }
+
+/**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
+export const getUniqueId = (suffix: string) => suffix + '_' + getUniqueId_generator.next().value
+const getUniqueId_generator = (function* () { let i = 0; while (true) { i++; yield `${Date.now() + i}` } })()
 
 _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
 _ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/

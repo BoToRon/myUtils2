@@ -109,6 +109,8 @@ export declare const selfFilter: <T>(arr: T[], predicate: arrayPredicate<T>) => 
 };
 /**Randomizes the order of the items in the array */
 export declare const shuffle: <T>(arr: T[]) => T[];
+/**Sort an array alphabetically, optionally backwards */
+export declare const sortAlphabetically: (arr: string[], reverseArr?: boolean) => string[];
 /**Sort an array of objects based on the value a property. A: Ascending, D: Descesding. Chainable */
 export declare const sortBy: <T extends object, pars extends [keyof T, "A" | "D"]>(arr: T[], keyWithDir: pars, ...extraKeysWithDir: pars[]) => T[];
 /**syntactic sugar for selfFilter(arr, predicate).removedItems */
@@ -164,6 +166,18 @@ export declare const zGetSafeParseResultAndHandleErrorMessage: <T>(schema: zSche
  */
 export declare const zodCheckAndHandle: <D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(zSchema: zSchema<D>, data: D, successHandler: SH, args: Parameters<SH>, errorHandler?: messageHandler, strictModeIfObject?: boolean) => void;
 /**Pipe with schema validation and an basic error tracking */
+/**
+ * Pipe with schema validation and basic error tracking/handling
+ *
+ */
+/**
+ * Pipe with schema validation and basic error tracking/handling
+ * @param zSchema The schema that must persist through the whole pipe
+ * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not *
+ * @param initialValue The value/object that will be piped through the functions
+ * @param fns The functions that will conform the pipe in order
+ * @returns
+ */
 export declare const zPipe: <T>(zSchema: zSchema<T>, strictModeIfObject: boolean, initialValue: T, ...fns: pipe_persistent_type<T>[]) => {
     value: T;
     error: string;
@@ -230,6 +244,8 @@ export declare const uniqueId: {
     /**Do NOT use this, use uniqueId.get instead */
     generator: Generator<string, never, unknown>;
 };
+/**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
+export declare const getUniqueId: (suffix: string) => string;
 /**start a setInterval and add it to an array */
 export declare const timer_add: (timers: btr_intervalWithId[], id: string, callBack: btr_voidFn, interval: number) => void;
 /**Kill a setInterval and remove it from its belonging array */
@@ -278,7 +294,7 @@ export declare function fsReadFileAsync(filePath: string): Promise<any>;
 /**Wrapper for fsWriteFileAsync that announces the start of the file-writing */
 export declare function fsWriteFileAsync(filePath: string, content: string): Promise<any>;
 /** Get the contents of the project's .env */
-export declare function getEnviromentVariables(): Promise<z.infer<any>>;
+export declare function getEnviromentVariables(): z.infer<any>;
 /**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
 export declare const getSeparatingCommentBlock: (message: string) => string;
 /**fetch the latest package.json of my-utils */
@@ -286,7 +302,7 @@ export declare const getLatestPackageJsonFromGithub: () => Promise<string>;
 /**It's monging time >:D */
 export declare const getMongoClient: () => Promise<MongoClient>;
 /**Start and return an http Express server */
-export declare const getStartedHttpServer: () => Promise<any>;
+export declare const getStartedHttpServer: () => any;
 /**Get the package json of the project with this (utils) package installed */
 export declare function importFileFromProject<T>(filename: string, extension: 'cjs' | 'js' | 'json'): Promise<any>;
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
@@ -301,7 +317,7 @@ export declare function prompCommitMessageAndPush(repoName: string): Promise<voi
 export declare function questionAsPromise(question: string): Promise<string>;
 export declare const divine: {
     bot: eris.Client;
-    error: (err: string | Error) => Promise<void>;
+    error: (err: string | Error) => void;
     init: Promise<void>;
     ping: (message: string) => Promise<void>;
 };
