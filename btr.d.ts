@@ -75,6 +75,8 @@ export declare const addOrRemoveItem: <T>(arr: T[], item: T) => {
 };
 /**Adds an item to an array, or replaces the first one if found. WARNING: make sure the predicate can only find ONE item */
 export declare const addOrReplaceItem: <T>(arr: T[], newItem: T, predicate: arrayPredicate<T>) => void;
+/**Add to arrayA items from array B that it doesn't already have */
+export declare const addUnrepeatedItems: <T>(arr: T[], newItems: T[]) => void;
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
 export declare const asFormattedList: (arr: (string | number | boolean)[], useAndForTheLastItem: boolean) => string;
 /**Return an array of sub-arrays with the items of the passed array, where each sub-array's max lenght is the passed size*/
@@ -110,7 +112,7 @@ export declare const selfFilter: <T>(arr: T[], predicate: arrayPredicate<T>) => 
 /**Randomizes the order of the items in the array */
 export declare const shuffle: <T>(arr: T[]) => T[];
 /**Sort an array alphabetically, optionally backwards */
-export declare const sortAlphabetically: (arr: string[], reverseArr?: boolean) => string[];
+export declare const sortAlphabetically: <T extends string>(arr: T[], reverseArr?: boolean) => T[];
 /**Sort an array of objects based on the value a property. A: Ascending, D: Descesding. Chainable */
 export declare const sortBy: <T extends object, pars extends [keyof T, "A" | "D"]>(arr: T[], keyWithDir: pars, ...extraKeysWithDir: pars[]) => T[];
 /**syntactic sugar for selfFilter(arr, predicate).removedItems */
@@ -237,12 +239,6 @@ export declare const replaceObject: <T extends object>(originalObject: T, newObj
 export declare const stringify: {
     (value: any, replacer?: (this: any, key: string, value: any) => any, space?: string | number): string;
     (value: any, replacer?: (string | number)[], space?: string | number): string;
-};
-/**Generator for unique numbered IDs that accepts a preffix */
-export declare const uniqueId: {
-    get(suffix: string): string;
-    /**Do NOT use this, use uniqueId.get instead */
-    generator: Generator<string, never, unknown>;
 };
 /**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
 export declare const getUniqueId: (suffix: string) => string;

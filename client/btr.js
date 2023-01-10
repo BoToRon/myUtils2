@@ -164,6 +164,10 @@ export const addOrReplaceItem = (arr, newItem, predicate) => {
     const replaceableItem = arr.find(x => predicate(x));
     replaceableItem ? arr[arr.indexOf(replaceableItem)] = newItem : arr.push(newItem);
 };
+/**Add to arrayA items from array B that it doesn't already have */
+export const addUnrepeatedItems = (arr, newItems) => newItems.forEach(x => { if (!arr.includes(x)) {
+    arr.push(x);
+} });
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
 export const asFormattedList = (arr, useAndForTheLastItem) => {
     let string = '';
@@ -560,15 +564,6 @@ export const replaceObject = (originalObject, newObject) => {
 };
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods) */
 export const { stringify } = JSON;
-/**Generator for unique numbered IDs that accepts a preffix */
-export const uniqueId = {
-    get(suffix) { return suffix + '_' + this.generator.next().value; },
-    /**Do NOT use this, use uniqueId.get instead */
-    generator: (function* () { let i = 0; while (true) {
-        i++;
-        yield `${i}`;
-    } })()
-};
 /**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
 export const getUniqueId = (suffix) => suffix + '_' + getUniqueId_generator.next().value;
 const getUniqueId_generator = (function* () { let i = 0; while (true) {

@@ -203,6 +203,8 @@ export const addOrReplaceItem = <T>(arr: T[], newItem: T, predicate: arrayPredic
 	const replaceableItem = arr.find(x => predicate(x))
 	replaceableItem ? arr[arr.indexOf(replaceableItem)] = newItem : arr.push(newItem)
 }
+/**Add to arrayA items from array B that it doesn't already have */
+export const addUnrepeatedItems = <T>(arr: T[], newItems: T[]) => newItems.forEach(x => { if (!arr.includes(x)) { arr.push(x) } })
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
 export const asFormattedList = (arr: (string | number | boolean)[], useAndForTheLastItem: boolean) => {
 	let string = ''
@@ -270,7 +272,7 @@ export const shuffle = <T>(arr: T[]) => {
 	return arr
 }
 /**Sort an array alphabetically, optionally backwards */
-export const sortAlphabetically = (arr: string[], reverseArr?: boolean) => {
+export const sortAlphabetically = <T extends string>(arr: T[], reverseArr?: boolean) => {
 	arr.sort((a, b) => a > b ? 1 : -1)
 	if (!reverseArr) { arr.reverse() }
 	return arr
@@ -593,13 +595,6 @@ export const replaceObject = <T extends object>(originalObject: T, newObject: T)
 }
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods) */
 export const { stringify } = JSON
-/**Generator for unique numbered IDs that accepts a preffix */
-export const uniqueId = {
-	get(suffix: string) { return suffix + '_' + this.generator.next().value },
-	/**Do NOT use this, use uniqueId.get instead */
-	generator: (function* () { let i = 0; while (true) { i++; yield `${i}` } })()
-}
-
 /**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
 export const getUniqueId = (suffix: string) => suffix + '_' + getUniqueId_generator.next().value
 const getUniqueId_generator = (function* () { let i = 0; while (true) { i++; yield `${Date.now() + i}` } })()
