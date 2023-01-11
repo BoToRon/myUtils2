@@ -177,9 +177,12 @@ export const addOrReplaceItem = (arr, newItem, predicate) => {
     replaceableItem ? arr[arr.indexOf(replaceableItem)] = newItem : arr.push(newItem);
 };
 /**Add to arrayA items from array B that it doesn't already have */
-export const addUnrepeatedItems = (arr, newItems) => newItems.forEach(x => { if (!arr.includes(x)) {
-    arr.push(x);
-} });
+export const addUnrepeatedItems = (arr, newItems) => {
+    newItems.forEach(x => { if (!arr.includes(x)) {
+        arr.push(x);
+    } });
+    return arr;
+};
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
 export const asFormattedList = (arr, useAndForTheLastItem) => {
     let string = '';
@@ -504,7 +507,12 @@ export const isEven = (number) => !isOdd(number);
 /**Self-explanatory */
 export const isOdd = (number) => Boolean(Number(number) % 2);
 /**Returns whether a number is either the minimum provided, the maximum provided or any number in-between */
-export const isWithinRange = (number, max, min) => number <= max && number >= min;
+export const isWithinRange = (number, max, min) => {
+    if (min > max) {
+        divine.ping('"min" should not be higher than "max"!');
+    }
+    return number <= max && number >= min;
+};
 /**Returns a number up to (but not included) provided max, eg: roll(1) will ALWAYS return zero */
 export const roll = (maxRoll) => Math.floor(Math.random() * Number(maxRoll));
 /**1 becomes '1st' , 2 becomes '2nd', 3 becomes '3rd' and so on */
@@ -556,6 +564,8 @@ export const getZodSchemaFromData = (data) => {
     }
     return z.object(mapObject(data, toLiteral));
 };
+/**Because ESlint doesn't like Object(x).hasOwnProperty :p */
+export const hasOwnProperty = (x, key) => Object.prototype.hasOwnProperty.call(x, key);
 /**Map an object :D (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
 export const mapObject = (object, mappingFn) => {
     const newObject = {};

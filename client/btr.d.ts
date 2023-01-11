@@ -75,7 +75,7 @@ export declare const addOrRemoveItem: <T>(arr: T[], item: T) => {
 /**Adds an item to an array, or replaces the first one if found. WARNING: make sure the predicate can only find ONE item */
 export declare const addOrReplaceItem: <T>(arr: T[], newItem: T, predicate: arrayPredicate<T>) => void;
 /**Add to arrayA items from array B that it doesn't already have */
-export declare const addUnrepeatedItems: <T>(arr: T[], newItems: T[]) => void;
+export declare const addUnrepeatedItems: <T>(arr: T[], newItems: T[]) => T[];
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
 export declare const asFormattedList: (arr: (string | number | boolean)[], useAndForTheLastItem: boolean) => string;
 /**Return an array of sub-arrays with the items of the passed array, where each sub-array's max lenght is the passed size*/
@@ -221,6 +221,8 @@ export declare const addMissingPropsToObjects: <T extends object>(original: T, d
 export declare const deepClone: <T>(x: T) => T;
 /**Generate a Zod Schema from an array/object */
 export declare const getZodSchemaFromData: (data: unknown) => any;
+/**Because ESlint doesn't like Object(x).hasOwnProperty :p */
+export declare const hasOwnProperty: <T extends object>(x: T, key: keyof T) => any;
 /**Map an object :D (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
 export declare const mapObject: <F extends (value: O[keyof O]) => ReturnType<F>, O extends object>(object: O, mappingFn: F) => { [key in keyof O]: ReturnType<F>; };
 /**Object.entries but with proper type-inference */

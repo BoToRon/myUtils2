@@ -217,7 +217,10 @@ export const addOrReplaceItem = <T>(arr: T[], newItem: T, predicate: arrayPredic
 	replaceableItem ? arr[arr.indexOf(replaceableItem)] = newItem : arr.push(newItem)
 }
 /**Add to arrayA items from array B that it doesn't already have */
-export const addUnrepeatedItems = <T>(arr: T[], newItems: T[]) => newItems.forEach(x => { if (!arr.includes(x)) { arr.push(x) } })
+export const addUnrepeatedItems = <T>(arr: T[], newItems: T[]) => {
+	newItems.forEach(x => { if (!arr.includes(x)) { arr.push(x) } })
+	return arr
+}
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
 export const asFormattedList = (arr: (string | number | boolean)[], useAndForTheLastItem: boolean) => {
 	let string = ''
@@ -541,7 +544,10 @@ export const isEven = (number: number) => !isOdd(number)
 /**Self-explanatory */
 export const isOdd = (number: number) => Boolean(Number(number) % 2)
 /**Returns whether a number is either the minimum provided, the maximum provided or any number in-between */
-export const isWithinRange = (number: number, max: number, min: number) => number <= max && number >= min
+export const isWithinRange = (number: number, max: number, min: number) => {
+	if (min > max) { divine.ping('"min" should not be higher than "max"!') }
+	return number <= max && number >= min
+}
 /**Returns a number up to (but not included) provided max, eg: roll(1) will ALWAYS return zero */
 export const roll = (maxRoll: number) => Math.floor(Math.random() * Number(maxRoll))
 /**1 becomes '1st' , 2 becomes '2nd', 3 becomes '3rd' and so on */
@@ -588,6 +594,8 @@ export const getZodSchemaFromData = (data: unknown) => {
 	if (Array.isArray(data)) { return z.tuple(data.map(toLiteral) as []) }
 	return z.object(mapObject(data, toLiteral) as ZodRawShape)
 }
+/**Because ESlint doesn't like Object(x).hasOwnProperty :p */
+export const hasOwnProperty = <T extends object>(x: T, key: keyof T) => Object.prototype.hasOwnProperty.call(x, key)
 /**Map an object :D (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
 export const mapObject = <F extends (value: O[keyof O]) => ReturnType<F>, O extends object>(object: O, mappingFn: F) => {
 	const newObject = {} as { [key in keyof O]: ReturnType<F> }
