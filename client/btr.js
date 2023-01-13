@@ -234,6 +234,14 @@ export const selfFilter = (arr, predicate) => {
     }
     return { removedItems, removedCount };
 };
+/**Sort an array of numbers either upwards (A-scending) or downwards (D-escending)*/
+export const sortNumbers = (numbers, direction) => {
+    numbers.sort((a, b) => a > b ? 1 : -1);
+    if (direction === 'D') {
+        numbers.reverse();
+    }
+    return numbers;
+};
 /**Randomizes the order of the items in the array */
 export const shuffle = (arr) => {
     for (let i = arr.length - 1; i > 0; i--) {
@@ -245,7 +253,7 @@ export const shuffle = (arr) => {
 /**Sort an array alphabetically, optionally backwards */
 export const sortAlphabetically = (arr, reverseArr) => {
     arr.sort((a, b) => a > b ? 1 : -1);
-    if (!reverseArr) {
+    if (reverseArr) {
         arr.reverse();
     }
     return arr;
@@ -269,6 +277,7 @@ export const sortBy = (arr, keyWithDir, ...extraKeysWithDir) => {
     });
     return arr;
 };
+/** */
 /**syntactic sugar for selfFilter(arr, predicate).removedItems */
 export const spliceIf = (arr, predicate) => selfFilter(arr, predicate).removedItems;
 /**Remove X amount of items from the end of an array */

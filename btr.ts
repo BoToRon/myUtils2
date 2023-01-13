@@ -279,6 +279,12 @@ export const selfFilter = <T>(arr: T[], predicate: arrayPredicate<T>) => {
 	}
 	return { removedItems, removedCount }
 }
+/**Sort an array of numbers either upwards (A-scending) or downwards (D-escending)*/
+export const sortNumbers = (numbers: number[], direction: 'A' | 'D') => {
+	numbers.sort((a, b) => a > b ? 1 : - 1)
+	if (direction === 'D') { numbers.reverse() }
+	return numbers
+}
 /**Randomizes the order of the items in the array */
 export const shuffle = <T>(arr: T[]) => {
 	for (let i = arr.length - 1; i > 0; i--) {
@@ -290,7 +296,7 @@ export const shuffle = <T>(arr: T[]) => {
 /**Sort an array alphabetically, optionally backwards */
 export const sortAlphabetically = <T extends string>(arr: T[], reverseArr?: boolean) => {
 	arr.sort((a, b) => a > b ? 1 : -1)
-	if (!reverseArr) { arr.reverse() }
+	if (reverseArr) { arr.reverse() }
 	return arr
 }
 /**Sort an array of objects based on the value a property. A: Ascending, D: Descesding. Chainable */
@@ -307,6 +313,7 @@ export const sortBy = <T extends object, pars extends [keyof T, 'A' | 'D']>(arr:
 
 	return arr
 }
+/** */
 /**syntactic sugar for selfFilter(arr, predicate).removedItems */
 export const spliceIf = <T>(arr: T[], predicate: arrayPredicate<T>) => selfFilter(arr, predicate).removedItems
 /**Remove X amount of items from the end of an array */

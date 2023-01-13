@@ -109,12 +109,15 @@ export declare const selfFilter: <T>(arr: T[], predicate: arrayPredicate<T>) => 
     removedItems: T[];
     removedCount: number;
 };
+/**Sort an array of numbers either upwards (A-scending) or downwards (D-escending)*/
+export declare const sortNumbers: (numbers: number[], direction: 'A' | 'D') => number[];
 /**Randomizes the order of the items in the array */
 export declare const shuffle: <T>(arr: T[]) => T[];
 /**Sort an array alphabetically, optionally backwards */
 export declare const sortAlphabetically: <T extends string>(arr: T[], reverseArr?: boolean) => T[];
 /**Sort an array of objects based on the value a property. A: Ascending, D: Descesding. Chainable */
 export declare const sortBy: <T extends object, pars extends [keyof T, "A" | "D"]>(arr: T[], keyWithDir: pars, ...extraKeysWithDir: pars[]) => T[];
+/** */
 /**syntactic sugar for selfFilter(arr, predicate).removedItems */
 export declare const spliceIf: <T>(arr: T[], predicate: arrayPredicate<T>) => T[];
 /**Remove X amount of items from the end of an array */
