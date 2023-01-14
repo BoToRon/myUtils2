@@ -68,7 +68,7 @@ export declare const trackVueComponent_curry: <T>(zValidVueComponentName: zSchem
 }) => btr_trackedVueComponent;
 /**(generates a function that:) Opens/close a bootstrap-vue modal with zod validation */
 export declare const triggerModalWithValidation_curry: <validModalIds extends string>($bvModal: bvModal) => (id: validModalIds, action: 'show' | 'hide') => Promise<void>;
-/**Adds an item to an array, or removes it if it already was added. Returns the action applied and the array */
+/**Adds an item to an array, or removes it if it already was added. Returns the array and the action applied */
 export declare const addOrRemoveItem: <T>(arr: T[], item: T) => {
     action: "removed" | "added";
     arr: T[];
@@ -77,6 +77,12 @@ export declare const addOrRemoveItem: <T>(arr: T[], item: T) => {
 export declare const addOrReplaceItem: <T>(arr: T[], newItem: T, predicate: arrayPredicate<T>) => void;
 /**Add to arrayA items from array B that it doesn't already have */
 export declare const addUnrepeatedItems: <T>(arr: T[], newItems: T[]) => T[];
+/**
+ * @param arr The array (tuple) of strings that each will become a key
+ * @param mappingFn The function to determine the value of each entry
+ * @returns An object where each key is an item of "arr" and the value is determined by "mappingFn"
+ */
+export declare const arrayToObject: <T extends readonly string[], F extends (...x: string[]) => ReturnType<F>>(arr: T, mappingFn: F) => Record<T[number], ReturnType<F>>;
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
 export declare const asFormattedList: (arr: (string | number | boolean)[], useAndForTheLastItem: boolean) => string;
 /**Return an array of sub-arrays with the items of the passed array, where each sub-array's max lenght is the passed size*/

@@ -145,7 +145,7 @@ _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** F
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
-/**Adds an item to an array, or removes it if it already was added. Returns the action applied and the array */
+/**Adds an item to an array, or removes it if it already was added. Returns the array and the action applied */
 export const addOrRemoveItem = (arr, item) => {
     let x;
     const isInArray = arr.includes(item);
@@ -170,6 +170,16 @@ export const addUnrepeatedItems = (arr, newItems) => {
         arr.push(x);
     } });
     return arr;
+};
+/**
+ * @param arr The array (tuple) of strings that each will become a key
+ * @param mappingFn The function to determine the value of each entry
+ * @returns An object where each key is an item of "arr" and the value is determined by "mappingFn"
+ */
+export const arrayToObject = (arr, mappingFn) => {
+    const object = {};
+    arr.forEach(x => object[x] = mappingFn(x));
+    return object;
 };
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
 export const asFormattedList = (arr, useAndForTheLastItem) => {

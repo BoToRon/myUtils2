@@ -221,6 +221,17 @@ export const addUnrepeatedItems = <T>(arr: T[], newItems: T[]) => {
 	newItems.forEach(x => { if (!arr.includes(x)) { arr.push(x) } })
 	return arr
 }
+/**
+ * @param arr The array (tuple) of strings that each will become a key
+ * @param mappingFn The function to determine the value of each entry
+ * @returns An object where each key is an item of "arr" and the value is determined by "mappingFn"
+ */
+export const arrayToObject = <T extends Readonly<Array<string>>, F extends (...x: string[]) => ReturnType<F>,>(arr: T, mappingFn: F) => {
+	type K = typeof arr[number]
+	const object = {} as Record<K, ReturnType<F>>
+	arr.forEach(x => object[x as K] = mappingFn(x))
+	return object
+}
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
 export const asFormattedList = (arr: (string | number | boolean)[], useAndForTheLastItem: boolean) => {
 	let string = ''
