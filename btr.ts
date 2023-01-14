@@ -203,7 +203,7 @@ _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FO
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 
-/**Adds an item to an array, or removes it if it already was added. Returns the action applied and the array */
+/**Adds an item to an array, or removes it if it already was added. Returns the array and the action applied */
 export const addOrRemoveItem = <T>(arr: T[], item: T) => {
 	let x: 'added' | 'removed'
 	const isInArray = arr.includes(item)
