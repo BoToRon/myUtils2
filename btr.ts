@@ -226,7 +226,10 @@ export const addUnrepeatedItems = <T>(arr: T[], newItems: T[]) => {
  * @param mappingFn The function to determine the value of each entry
  * @returns An object where each key is an item of "arr" and the value is determined by "mappingFn"
  */
-export const arrayToObject = <T extends Readonly<Array<string>>, F extends (...x: string[]) => ReturnType<F>,>(arr: T, mappingFn: F) => {
+export const arrayToObject = <
+	T extends Readonly<Array<string>>,
+	F extends (...x: (T[number])[]) => ReturnType<F>
+>(arr: T, mappingFn: F) => {
 	type K = typeof arr[number]
 	const object = {} as Record<K, ReturnType<F>>
 	arr.forEach(x => object[x as K] = mappingFn(x))
