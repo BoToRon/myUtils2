@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable func-style */
 let _;
 import fs from 'fs'; //DELETETHISFORCLIENT 
 _;
@@ -41,6 +39,10 @@ _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 export const timers = [];
 export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark']);
+const getUniqueId_generator = (function* () { let i = 0; while (true) {
+    i++;
+    yield `${Date.now() + i}`;
+} })();
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile']);
 const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile']);
@@ -74,8 +76,8 @@ _; /********** CURRIES ******************** CURRIES ******************** CURRIES
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 /**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
-export const newToast_client_curry = ($bvToast) => {
-    const body = (title, message, variant) => {
+export function newToast_client_curry($bvToast) {
+    return function body(title, message, variant) {
         if (!zodCheck_curry(alert)(zValidVariants, variant)) {
             return;
         }
@@ -87,10 +89,9 @@ export const newToast_client_curry = ($bvToast) => {
             title
         });
     };
-    return body;
-};
+}
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
-export const zodCheck_curry = (errorHandler = divine.error, strictModeIfObject = true) => {
+export function zodCheck_curry(errorHandler = divine.error, strictModeIfObject = true) {
     function zodCheck(schema, data) {
         function body(errorHandler, schema, data, strictModeIfObject = true) {
             const result = zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler, strictModeIfObject);
@@ -99,36 +100,38 @@ export const zodCheck_curry = (errorHandler = divine.error, strictModeIfObject =
         return body(errorHandler, schema, data, strictModeIfObject);
     }
     return zodCheck;
-};
+}
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
-export const trackVueComponent_curry = (zValidVueComponentName) => function trackVueComponent(name, componentConstructor, window) {
-    if (!zodCheck_curry(alert)(zValidVueComponentName, name)) {
-        return componentConstructor;
-    }
-    colorLog('blue', `Component '${name}' registered to Vue`);
-    if (!window.vueComponents) {
-        window.vueComponents = [];
-    }
-    return getComponent(name, componentConstructor);
-    function toggleComponent(logger) {
-        const { action } = addOrRemoveItem(window.vueComponents, componentConstructor);
-        logger(`Component '${name}' ${action} to/from window.vueComponents`);
-        logAllComponents();
-    }
-    function getComponent(name, componentConstructor) {
-        componentConstructor.beforeCreate = () => toggleComponent(successLog);
-        componentConstructor.beforeDestroy = () => toggleComponent(errorLog);
-        componentConstructor._name = name;
-        return componentConstructor;
-    }
-    function logAllComponents() {
-        colorLog('magenta', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`);
-    }
-};
+export function trackVueComponent_curry(zValidVueComponentName) {
+    return function trackVueComponent(name, componentConstructor, window) {
+        if (!zodCheck_curry(alert)(zValidVueComponentName, name)) {
+            return componentConstructor;
+        }
+        colorLog('blue', `Component '${name}' registered to Vue`);
+        if (!window.vueComponents) {
+            window.vueComponents = [];
+        }
+        return getComponent(name, componentConstructor);
+        function toggleComponent(logger) {
+            const { action } = addOrRemoveItem(window.vueComponents, componentConstructor);
+            logger(`Component '${name}' ${action} to/from window.vueComponents`);
+            logAllComponents();
+        }
+        function getComponent(name, componentConstructor) {
+            componentConstructor.beforeCreate = () => toggleComponent(successLog);
+            componentConstructor.beforeDestroy = () => toggleComponent(errorLog);
+            componentConstructor._name = name;
+            return componentConstructor;
+        }
+        function logAllComponents() {
+            colorLog('magenta', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`);
+        }
+    };
+}
 /**(generates a function that:) Opens/close a bootstrap-vue modal with zod validation */
 //TODO: delete this (hard to initialize when bvModal is declared after triggerModalWithValidation in the pinia store)
-export const triggerModalWithValidation_curry = ($bvModal) => {
-    const body = async (id, action) => {
+export function triggerModalWithValidation_curry($bvModal) {
+    return async function body(id, action) {
         if (action === 'show') {
             $bvModal.show(id);
             for (let i = 0; i < 10; i++) {
@@ -146,8 +149,7 @@ export const triggerModalWithValidation_curry = ($bvModal) => {
         function elementExists() { return Boolean(document.getElementById(id)); }
         function promptError() { alert(`Modal with id (${id}) not found. Could not ${action}. Please report it`); }
     };
-    return body;
-};
+}
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -159,7 +161,7 @@ _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** F
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 /**Adds an item to an array, or removes it if it already was added. Returns the array and the action applied */
-export const addOrRemoveItem = (arr, item) => {
+export function addOrRemoveItem(arr, item) {
     let x;
     const isInArray = arr.includes(item);
     if (!isInArray) {
@@ -171,31 +173,31 @@ export const addOrRemoveItem = (arr, item) => {
         x = 'removed';
     }
     return { action: x, arr };
-};
+}
 /**Adds an item to an array, or replaces the first one if found. WARNING: make sure the predicate can only find ONE item */
-export const addOrReplaceItem = (arr, newItem, predicate) => {
+export function addOrReplaceItem(arr, newItem, predicate) {
     const replaceableItem = arr.find(x => predicate(x));
     replaceableItem ? arr[arr.indexOf(replaceableItem)] = newItem : arr.push(newItem);
-};
+}
 /**Add to arrayA items from array B that it doesn't already have */
-export const addUnrepeatedItems = (arr, newItems) => {
+export function addUnrepeatedItems(arr, newItems) {
     newItems.forEach(x => { if (!arr.includes(x)) {
         arr.push(x);
     } });
     return arr;
-};
+}
 /**
  * @param arr The array (tuple) of strings that each will become a key
  * @param mappingFn The function to determine the value of each entry
  * @returns An object where each key is an item of "arr" and the value is determined by "mappingFn"
  */
-export const arrayToObject = (arr, mappingFn) => {
+export function arrayToObject(arr, mappingFn) {
     const object = {};
     arr.forEach(x => object[x] = mappingFn(x));
     return object;
-};
+}
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
-export const asFormattedList = (arr, useAndForTheLastItem) => {
+export function asFormattedList(arr, useAndForTheLastItem) {
     let string = '';
     arr.forEach((item, index) => {
         const isLastItem = index === arr.length - 1;
@@ -211,39 +213,39 @@ export const asFormattedList = (arr, useAndForTheLastItem) => {
         }
     });
     return string;
-};
+}
 /**Return an array of sub-arrays with the items of the passed array, where each sub-array's max lenght is the passed size*/
-export const chunk = (arr, chunkSize) => {
+export function chunk(arr, chunkSize) {
     const results = [[]];
     arr.forEach(item => {
         const lastSubArray = lastItem(results);
         lastSubArray.length < chunkSize ? lastSubArray.push(item) : results.push([item]);
     });
     return results.reverse();
-};
+}
 /**Compare array A to array B and return the details */
-export const compareArrays = (baseArray, testArray) => {
+export function compareArrays(baseArray, testArray) {
     const nonDesiredItems = testArray.filter(x => !baseArray.includes(x));
     const missingItems = baseArray.filter(x => !testArray.includes(x));
     const lengthDifference = baseArray.length - testArray.length;
     const arraysHaveTheSameItems = !nonDesiredItems.length && !missingItems.length;
     const arraysAreEqual = arraysHaveTheSameItems && !lengthDifference;
     return { arraysAreEqual, arraysHaveTheSameItems, lengthDifference, missingItems, nonDesiredItems };
-};
+}
 /**syntax sugar for arr[arr.length - 1] */
-export const getLastItem = (arr) => arr[arr.length - 1];
-/**Returns a random item along its index */
-export const getRandomItem = (arr) => { const r = roll(arr.length); return { item: arr[r], index: r }; };
-/**Returns a version of the provided array without repeating items */
-export const getUniqueValues = (arr) => [...new Set(arr)];
-/**Returns whether an item is the last one in an array or not (warning: maybe don't use with primitives) */
-export const isLastItem = (arr, item) => arr.indexOf(item) === arr.length - 1;
+export function getLastItem(arr) { return arr[arr.length - 1]; }
+/**@returns a random item along its index */
+export function getRandomItem(arr) { const r = roll(arr.length); return { item: arr[r], index: r }; }
+/**@returns a version of the provided array without repeating items */
+export function getUniqueValues(arr) { return [...new Set(arr)]; }
+/**@returns whether an item is the last one in an array or not (warning: maybe don't use with primitives) */
+export function isLastItem(arr, item) { return arr.indexOf(item) === arr.length - 1; }
 /*Remove a single item from an array, or all copies of that item if its a primitive value and return the removedCount */
-export const removeItem = (arr, item) => selfFilter(arr, (x) => x !== item).removedCount;
+export function removeItem(arr, item) { return selfFilter(arr, (x) => x !== item).removedCount; }
 /**Return the last item of the given array */
-export const lastItem = (arr) => arr[arr.length - 1];
+export function lastItem(arr) { return arr[arr.length - 1]; }
 /**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
-export const selfFilter = (arr, predicate) => {
+export function selfFilter(arr, predicate) {
     let removedCount = 0;
     const removedItems = [];
     for (let i = 0; i < arr.length; i++) {
@@ -256,33 +258,33 @@ export const selfFilter = (arr, predicate) => {
         i--;
     }
     return { removedItems, removedCount };
-};
+}
 /**Sort an array of numbers either upwards (A-scending) or downwards (D-escending)*/
-export const sortNumbers = (numbers, direction) => {
+export function sortNumbers(numbers, direction) {
     numbers.sort((a, b) => a > b ? 1 : -1);
     if (direction === 'D') {
         numbers.reverse();
     }
     return numbers;
-};
+}
 /**Randomizes the order of the items in the array */
-export const shuffle = (arr) => {
+export function shuffle(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
         const rand = roll(i + 1);
         [arr[i], arr[rand]] = [arr[rand], arr[i]];
     }
     return arr;
-};
+}
 /**Sort an array alphabetically, optionally backwards */
-export const sortAlphabetically = (arr, reverseArr) => {
+export function sortAlphabetically(arr, reverseArr) {
     arr.sort((a, b) => a > b ? 1 : -1);
     if (reverseArr) {
         arr.reverse();
     }
     return arr;
-};
+}
 /**Sort an array of objects based on the value a property. A: Ascending, D: Descesding. Chainable */
-export const sortBy = (arr, keyWithDir, ...extraKeysWithDir) => {
+export function sortBy(arr, keyWithDir, ...extraKeysWithDir) {
     if (!arr.length) {
         return arr;
     }
@@ -299,18 +301,18 @@ export const sortBy = (arr, keyWithDir, ...extraKeysWithDir) => {
         }
     });
     return arr;
-};
+}
 /** */
 /**syntactic sugar for selfFilter(arr, predicate).removedItems */
-export const spliceIf = (arr, predicate) => selfFilter(arr, predicate).removedItems;
+export function spliceIf(arr, predicate) { return selfFilter(arr, predicate).removedItems; }
 /**Remove X amount of items from the end of an array */
-export const spliceLast = (arr, count) => arr.splice(-count);
+export function spliceLast(arr, count) { return arr.splice(-count); }
 /**Transfer items that meet a given condition from one array to another */
-export const transferItems = (origin, destination, predicate) => {
+export function transferItems(origin, destination, predicate) {
     const x = selfFilter(origin, predicate);
     destination.push(...x.removedItems);
     return { transferedCount: x.removedCount };
-};
+}
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
@@ -322,18 +324,30 @@ _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ****************
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 /**Set interval with try-catch and called immediately*/
-export const doAndRepeat = (fn, interval) => {
-    const tryIt = () => tryF(fn, []);
-    setInterval(tryIt, interval);
-    tryIt();
-};
+export function doAndRepeat(fn, interval) { tryF(fn, []); setInterval(() => tryF(fn, []), interval); }
+/**
+ * Filter and map an array in a single loop
+ * @param arr The array to be filterMap'd
+ * @param filter Function that returns the answer and a carryover value for "mapFn" if needed
+ * @param mapFn The function to apply to each item of the array, and possibly to each carryover from "filter"
+ * @returns The provided array, filtered and mapped
+ */
+export function filterMap(arr, filter, mapFn) {
+    return arr.reduce((acc, item) => {
+        const { answer, carryOver } = filter(item);
+        return answer ? acc.concat(mapFn(item, carryOver)) : acc;
+    }, []);
+}
 /**Simple and standard functional programming pipe. Deprecated, use either zPipe (persistenType with zod errors) or pipe_mutableType! */
-export const pipe_persistentType = (initialValue, ...fns) => fns.reduce((result, fn) => fn(result), initialValue);
+export function pipe_persistentType(initialValue, ...fns) {
+    return fns.reduce((result, fn) => fn(result), initialValue);
+}
 /**
 * Pipes a value through a number of functions in the order that they appear.
 * Takes between 1 and 12 arguments. `pipe(x, a, b)` is equivalent to `b(a(x))`.
 * If only one argument is provided (`pipe(x)`), this will produce a type error but JS will run fine (and return `x`).
 */
+// eslint-disable-next-line func-style
 export const pipe_mutableType = (source, ...project) => project.reduce((accumulator, element) => element(accumulator), source);
 /**
  * Retry a function up to X amount of times or until it is executed successfully, mainly for fetching/requesting stuff
@@ -344,7 +358,7 @@ export const pipe_mutableType = (source, ...project) => project.reduce((accumula
  * @param delayBetweenRetries Delay between each retry in milliseconds
  * @returns
  */
-export const retryF = async (fn, args, retriesLeft, defaultReturn, delayBetweenRetries) => {
+export async function retryF(fn, args, retriesLeft, defaultReturn, delayBetweenRetries) {
     try {
         return { data: fn(...args), was: 'success' };
     }
@@ -356,16 +370,16 @@ export const retryF = async (fn, args, retriesLeft, defaultReturn, delayBetweenR
         await delay(delayBetweenRetries);
         return await retryF(fn, args, retriesLeft - 1, defaultReturn, delayBetweenRetries);
     }
-};
+}
 /**tryCatch wrapper for functions with divineError as the default error handler */
-export const tryF = (fn, args, errorHandler = divine.error) => {
+export function tryF(fn, args, errorHandler = divine.error) {
     try {
         return fn(...args);
     }
     catch (err) {
         errorHandler(err);
     }
-};
+}
 /**
  * Test data against an schema with strict-mode (no unspecified keys) for objects set by default and handle the error message if any
  * @param schema The schema to test the data against
@@ -374,7 +388,7 @@ export const tryF = (fn, args, errorHandler = divine.error) => {
  * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not
  * @returns
  */
-export const zGetSafeParseResultAndHandleErrorMessage = (schema, data, errorHandler = nullAs(), strictModeIfObject = true) => {
+export function zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler = nullAs(), strictModeIfObject = true) {
     const result = getResult();
     if (result.success === false && errorHandler) {
         errorHandler(fromZodError(result.error).message);
@@ -388,7 +402,7 @@ export const zGetSafeParseResultAndHandleErrorMessage = (schema, data, errorHand
             return schema.strict().safeParse(data);
         }
     }
-};
+}
 /**
  * Check data against a provided schema, and execute either the success or error handler
  * @param zSchema The zSchema to test data against
@@ -398,12 +412,12 @@ export const zGetSafeParseResultAndHandleErrorMessage = (schema, data, errorHand
  * @param errorHandler The function that will execute if data does NOT fits zSchema
  * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not *
  */
-export const zodCheckAndHandle = (zSchema, data, successHandler, args, errorHandler = divine.error, strictModeIfObject = true) => {
+export function zodCheckAndHandle(zSchema, data, successHandler, args, errorHandler = divine.error, strictModeIfObject = true) {
     const zResult = zGetSafeParseResultAndHandleErrorMessage(zSchema, data, errorHandler, strictModeIfObject);
     if (zResult.success === true && successHandler) {
         successHandler(...args);
     }
-};
+}
 /**Pipe with schema validation and an basic error tracking */
 /**
  * Pipe with schema validation and basic error tracking/handling
@@ -417,7 +431,7 @@ export const zodCheckAndHandle = (zSchema, data, successHandler, args, errorHand
  * @param fns The functions that will conform the pipe in order
  * @returns
  */
-export const zPipe = (zSchema, strictModeIfObject, initialValue, ...fns) => {
+export function zPipe(zSchema, strictModeIfObject, initialValue, ...fns) {
     const initialPipeState = { value: initialValue, error: nullAs(), failedAt: nullAs() };
     return fns.reduce((pipeState, fn, index) => {
         if (pipeState.error) {
@@ -431,7 +445,7 @@ export const zPipe = (zSchema, strictModeIfObject, initialValue, ...fns) => {
             pipeState.error = err;
         }
     }, initialPipeState);
-};
+}
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
@@ -443,15 +457,17 @@ _; /********** FOR NUMBERS ******************** FOR NUMBERS ********************
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 /**Promise-based delay that BREAKS THE LIMIT OF setTimeOut*/
-export const delay = (x) => new Promise(resolve => {
-    const maxTimeOut = 1000 * 60 * 60 * 24;
-    const loopsNeeded = Math.floor(x / maxTimeOut);
-    const leftOverTime = x % maxTimeOut;
-    interval(loopsNeeded, leftOverTime);
-    function interval(i, ms) { setTimeout(() => i ? interval(i - 1, maxTimeOut) : resolve(true), ms); }
-});
+export function delay(x) {
+    return new Promise(resolve => {
+        const maxTimeOut = 1000 * 60 * 60 * 24;
+        const loopsNeeded = Math.floor(x / maxTimeOut);
+        const leftOverTime = x % maxTimeOut;
+        interval(loopsNeeded, leftOverTime);
+        function interval(i, ms) { setTimeout(() => i ? interval(i - 1, maxTimeOut) : resolve(true), ms); }
+    });
+}
 /**Return the time left to make a move in a compacted form and with a variant corresponding to how much of it left */
-export const getDisplayableTimeLeft = (deadline) => {
+export function getDisplayableTimeLeft(deadline) {
     const time = (deadline - Date.now()) / 1000;
     let message = '';
     const twoMinutes = 60 * 2;
@@ -487,9 +503,9 @@ export const getDisplayableTimeLeft = (deadline) => {
         }
         return variant;
     }
-};
+}
 /**Formate a timestamp with Intl.DateTimeFormt. Options: short/medium/long (add +hour to include Hour) or hOnly (hour only) */
-export const formatDate = (timestamp, language, type) => {
+export function formatDate(timestamp, language, type) {
     return new Intl.DateTimeFormat(language, getOptions()).format(timestamp);
     function getOptions() {
         switch (type) {
@@ -503,22 +519,22 @@ export const formatDate = (timestamp, language, type) => {
             case 'long+hour': return { dateStyle: 'long', timeStyle: 'short' };
         }
     }
-};
+}
 /**Self-explanatory */
-export const isEven = (number) => !isOdd(number);
+export function isEven(number) { return !isOdd(number); }
 /**Self-explanatory */
-export const isOdd = (number) => Boolean(Number(number) % 2);
-/**Returns whether a number is either the minimum provided, the maximum provided or any number in-between */
-export const isWithinRange = (number, max, min) => {
+export function isOdd(number) { return Boolean(Number(number) % 2); }
+/**@returns whether a number is either the minimum provided, the maximum provided or any number in-between */
+export function isWithinRange(number, max, min) {
     if (min > max) {
         divine.ping('"min" should not be higher than "max"!');
     }
     return number <= max && number >= min;
-};
-/**Returns a number up to (but not included) provided max, eg: roll(1) will ALWAYS return zero */
-export const roll = (maxRoll) => Math.floor(Math.random() * Number(maxRoll));
+}
+/**@returns a number up to (but not included) provided max, eg: roll(1) will ALWAYS return zero */
+export function roll(maxRoll) { return Math.floor(Math.random() * Number(maxRoll)); }
 /**1 becomes '1st' , 2 becomes '2nd', 3 becomes '3rd' and so on */
-export const toOrdinal = (number) => {
+export function toOrdinal(number) {
     const asString = String(number);
     const lastDigit = asString[asString.length - 1];
     if ([11, 12, 13].includes(Number(number))) {
@@ -530,7 +546,7 @@ export const toOrdinal = (number) => {
         case '3': return `${number}rd`;
         default: return `${number}th`;
     }
-};
+}
 _; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 _; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 _; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
@@ -542,14 +558,14 @@ _; /********** FOR OBJECTS ******************** FOR OBJECTS ********************
 _; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 _; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 /**Add all default properties missing in an object*/
-export const addMissingPropsToObjects = (original, defaults) => {
+export function addMissingPropsToObjects(original, defaults) {
     objectKeys(defaults).forEach(key => { if (!Object.prototype.hasOwnProperty.call(original, key)) {
         original[key] = defaults[key];
     } });
     return original;
-};
+}
 /**Return a copy that can be altered without having to worry about modifying the original */
-export const deepClone = (originalObject) => {
+export function deepClone(originalObject) {
     const copy = JSON.parse(JSON.stringify(originalObject));
     ifObject_copyRebindedMethods();
     return copy;
@@ -565,12 +581,14 @@ export const deepClone = (originalObject) => {
             copy[key] = value.bind(copy);
         });
     }
-};
+}
 /**Generate a Zod Schema from an array/object */
-export const getZodSchemaFromData = (data) => {
-    const toLiteral = (x) => typeof x === 'object' ?
-        getZodSchemaFromData(x) :
-        z.literal(x);
+export function getZodSchemaFromData(data) {
+    function toLiteral(x) {
+        return typeof x === 'object' ?
+            getZodSchemaFromData(x) :
+            z.literal(x);
+    }
     if (!data) {
         return z.nullable(nullAs());
     }
@@ -581,24 +599,25 @@ export const getZodSchemaFromData = (data) => {
         return z.tuple(data.map(toLiteral));
     }
     return z.object(mapObject(data, toLiteral));
-};
+}
 /**Because ESlint doesn't like Object(x).hasOwnProperty :p */
-export const hasOwnProperty = (x, key) => Object.prototype.hasOwnProperty.call(x, key);
-/**Map an object :D (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
-export const mapObject = (object, mappingFn) => {
+export function hasOwnProperty(x, key) { return Object.prototype.hasOwnProperty.call(x, key); }
+/**Map an object! (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
+export function mapObject(object, mappingFn) {
     const newObject = {};
     objectEntries(object).forEach(x => { newObject[x.key] = mappingFn(x.value); });
     return newObject;
-};
+}
 /**Object.entries but with proper type-inference */
-export const objectEntries = (object) => Object.entries(object).
-    map(entry => ({ key: entry[0], value: entry[1] }));
+export function objectEntries(object) {
+    return Object.entries(object).map(entry => ({ key: entry[0], value: entry[1] }));
+}
 /**Object.keys but with proper type-inference */
-export const objectKeys = (object) => Object.keys(object);
+export function objectKeys(object) { return Object.keys(object); }
 /**Object.values but with proper type-inference */
-export const objectValues = (object) => Object.values(object);
+export function objectValues(object) { return Object.values(object); }
 /**Create an object with only the specified properties of another base object (references are kept) */
-export const pick = (theObject, properties) => {
+export function pick(theObject, properties) {
     const thePartial = {};
     objectEntries(theObject).forEach(entry => {
         const { key, value } = entry;
@@ -608,20 +627,16 @@ export const pick = (theObject, properties) => {
         }
     });
     return thePartial;
-};
+}
 /**Replace the values of an object with those of another that shares the schema*/
-export const replaceObject = (originalObject, newObject) => {
+export function replaceObject(originalObject, newObject) {
     objectKeys(originalObject).forEach(key => delete originalObject[key]);
     objectKeys(newObject).forEach(key => originalObject[key] = newObject[key]);
-};
+}
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods, see deepClone) */
 export const { stringify } = JSON;
 /**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
-export const getUniqueId = (suffix) => suffix + '_' + getUniqueId_generator.next().value;
-const getUniqueId_generator = (function* () { let i = 0; while (true) {
-    i++;
-    yield `${Date.now() + i}`;
-} })();
+export function getUniqueId(suffix) { return suffix + '_' + getUniqueId_generator.next().value; }
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
@@ -641,7 +656,7 @@ _; /********** FOR TIMERS ******************** FOR TIMERS ******************** F
  * @param onCancel The function that should run if the timer was cancelled via killTimer
  * @returns the return of "onComplete"
  */
-export const initializeTimer = (id, runAt, onComplete, onCancel) => {
+export function initializeTimer(id, runAt, onComplete, onCancel) {
     const timer = { id, runAt, onComplete, onCancel, startedAt: Date.now(), isCancelled: false, cancelledAt: 0, cancelledMessage: '' };
     timers.push(timer);
     return interval();
@@ -670,9 +685,9 @@ export const initializeTimer = (id, runAt, onComplete, onCancel) => {
             }
         });
     }
-};
+}
 /**Kill a timer created with initializeTimer, the reason provided will become a divine stack */
-export const killTimer = async (timerId, reason) => {
+export async function killTimer(timerId, reason) {
     const theTimer = timers.find(x => x.id === timerId);
     if (!theTimer) {
         divine.error('Unable to cancel, no timer was found with this id: ' + timerId);
@@ -683,7 +698,7 @@ export const killTimer = async (timerId, reason) => {
     theTimer.cancelledAt = Date.now();
     theTimer.isCancelled = true;
     return await theTimer.onCancel();
-};
+}
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
@@ -695,22 +710,22 @@ _; /********** FOR STRINGS ******************** FOR STRINGS ********************
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 /**console.log... WITH COLORS :D */
-export const colorLog = (color, message) => console.log(chalk[color].bold(message)); //DELETETHISFORCLIENT
+export function colorLog(color, message) { return console.log(chalk[color].bold(message)); } //DELETETHISFORCLIENT
 /** Copy to clipboard using the corresponding function for the running enviroment (node/client)*/
-export const copyToClipboard = (x) => { isNode ? copyToClipboard_server(x) : copyToClipboard_client(x); };
+export function copyToClipboard(x) { isNode ? copyToClipboard_server(x) : copyToClipboard_client(x); }
 /**(Message) 💀 */
-export const errorLog = (message) => colorLog('red', message + ' 💀');
+export function errorLog(message) { return colorLog('red', message + ' 💀'); }
 /**TODO: describe me */
-export const getTraceableStack = (error) => {
+export function getTraceableStack(error) {
     const { stack } = (typeof error === 'string' ? new Error(error) : error);
     return `${stack}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '');
-};
-/**Returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
-export const isGuest = (username) => /Guest[0-9]{13}/i.test(`${username}`);
+}
+/**@returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
+export function isGuest(username) { return /Guest[0-9]{13}/i.test(`${username}`); }
 /**(Message) ✔️ */
-export const successLog = (message) => colorLog('green', message + ' ✔️');
-/**Returns an string with its linebreaks converted into simple one-char spaces */
-export const toSingleLine = (sentence) => `${sentence}`.replace(/ {0,}\n {0,}/g, ' ');
+export function successLog(message) { return colorLog('green', message + ' ✔️'); }
+/**@returns an string with its linebreaks converted into simple one-char spaces */
+export function toSingleLine(sentence) { return `${sentence}`.replace(/ {0,}\n {0,}/g, ' '); }
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
@@ -729,14 +744,14 @@ _; /********** MISC ******************** MISC ******************** MISC ********
  * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not
  * @returns
  */
-export const dataIsEqual = (A, B, errorHandler = nullAs(), strictModeIfObject = true) => {
+export function dataIsEqual(A, B, errorHandler = nullAs(), strictModeIfObject = true) {
     const zodSchema = getZodSchemaFromData(A);
     return zGetSafeParseResultAndHandleErrorMessage(zodSchema, B, errorHandler, strictModeIfObject);
-};
+}
 /**For obligatory callbacks */
-export const doNothing = (...args) => { args; };
+export function doNothing(...args) { args; }
 /** @returns null as the provided type */
-export const nullAs = () => null;
+export function nullAs() { return null; }
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
@@ -748,7 +763,7 @@ _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ************
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 /**Copy to clipboard, objects arrays get stringify'd */
-export const copyToClipboard_client = (x) => {
+export function copyToClipboard_client(x) {
     const text = stringify(x);
     const a = document.createElement('textarea');
     a.innerHTML = text;
@@ -756,9 +771,9 @@ export const copyToClipboard_client = (x) => {
     a.select();
     document.execCommand('copy');
     document.body.removeChild(a);
-};
+}
 /**Stringifies and downloads the provided data*/
-export const downloadFile_client = (filename, fileFormat, data) => {
+export function downloadFile_client(filename, fileFormat, data) {
     if (isNode) {
         bigConsoleError('downloadFile_client can only be run clientside!');
         return;
@@ -767,7 +782,34 @@ export const downloadFile_client = (filename, fileFormat, data) => {
     a.href = window.URL.createObjectURL(new Blob([data], { type: 'text/plain' }));
     a.download = `${filename}${fileFormat}`;
     a.click();
-};
+}
+_; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
+_; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
+_; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
+_; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
+_; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
+_; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
+_; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
+_; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
+_; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
+_; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
+/**@deprecated use "formatDate instead" */
+export function getFormattedTimestamp() { doNothing; }
+/**
+ * Create multiple array.maps for a single array
+ * @param arr The array that shall be multiMap'd
+ * @param fns An object of fns, to be objectMap'd
+ * @returns An object with the same keys as "fns", but the values are mapped to each have processed "arr"
+ * @deprecated Not really, but is a work in press, see "issues"
+ * @issues The mapped properties return "any[]" instead of the return type of that method
+ */
+// ! work in progress
+function multiMap(arr, fns) {
+    return mapObject(fns, fn => arr.map(item => fn(item)));
+}
+{
+    multiMap;
+}
 // ! DELETEEVERYTHINGBELOW, as it is only meant for server-side use
 _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
@@ -780,13 +822,13 @@ _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ************
 _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 /** Check the version of @botoron/utils, the enviroment variables and various config files */
-export const basicProjectChecks = async (errorHandler = divine.error) => {
+export async function basicProjectChecks(errorHandler = divine.error) {
     //TODO: make sure io.ts exports { initializedIo } so that the code in the file is ran by only calling init.ts?
     //TODO: an schema for ref's esqueleton? (temp, debug, debugLog, devOrProd, socket)
     //TODO: check "ref.ts" matches (getDebugOptions, mongoCollection)
     //TODO: check all exports are exported in-line ("export function sampleFunction.." instead of "export { fn1, fn2, etc }" )
     //TODO: make sure all top-level variables are exported
-    const addToErrors = (error) => errors.push(error);
+    function addToErrors(error) { return errors.push(error); }
     const { DEV_OR_PROD } = getEnviromentVariables();
     const errors = [];
     const allChecksPass = await allChecks();
@@ -997,21 +1039,21 @@ export const basicProjectChecks = async (errorHandler = divine.error) => {
         });
         return extension ? results.filter(filename => filename.includes(extension)) : results;
     }
-};
+}
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
-export const bigConsoleError = (message) => {
-    const log = (message) => colorLog('red', message);
-    const logAsterisks = (lines) => { for (let i = 0; i < lines; i++) {
+export function bigConsoleError(message) {
+    function logAsterisks(lines) { for (let i = 0; i < lines; i++) {
         log('*'.repeat(150));
-    } };
+    } }
+    function log(message) { return colorLog('red', message); }
     logAsterisks(3);
     log(message);
     logAsterisks(3);
-};
+}
 /**Copy to clipboard while running node */
-export const copyToClipboard_server = (x) => clipboard.write(JSON.stringify(x));
+export function copyToClipboard_server(x) { return clipboard.write(JSON.stringify(x)); }
 /**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
-export const downloadFile_node = async (filename, fileFormat, data, killProcessAfterwards) => {
+export async function downloadFile_node(filename, fileFormat, data, killProcessAfterwards) {
     const formatted = stringify(data);
     const dateForFilename = formatDate(Date.now(), 'es', 'short').replace(/\/| |:/g, '_');
     const completeFilename = filename + '_' + dateForFilename + fileFormat;
@@ -1025,7 +1067,7 @@ export const downloadFile_node = async (filename, fileFormat, data, killProcessA
         return;
     }
     process.exit();
-};
+}
 /**Wrapper for fs.promise.readFile that announces the start of the file-reading */
 export async function fsReadFileAsync(filePath) {
     console.log(`reading '${filePath}'..`);
@@ -1045,7 +1087,7 @@ export function getEnviromentVariables() {
     return process.env;
 }
 /**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
-export const getSeparatingCommentBlock = (message) => {
+export function getSeparatingCommentBlock(message) {
     let line = '';
     const asterisks = '*'.repeat(10);
     while (line.length < 100) {
@@ -1054,18 +1096,18 @@ export const getSeparatingCommentBlock = (message) => {
     const theBlock = `_ /${line}/\n`.repeat(5);
     console.log(theBlock);
     return theBlock;
-};
+}
 /**fetch the latest package.json of my-utils */
-export const getLatestPackageJsonFromGithub = async () => {
+export async function getLatestPackageJsonFromGithub() {
     const response = await new Promise((resolve) => {
         fetch('https://api.github.com/repos/botoron/utils/contents/package.json', { method: 'GET' }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ).then((res) => res.json().then((packageJson) => resolve(packageJson)));
     });
     return Buffer.from(response.content, 'base64').toString('utf8');
-};
+}
 /**It's monging time >:D */
-export const getMongoClient = async () => {
+export async function getMongoClient() {
     const { MONGO_URI } = getEnviromentVariables();
     const mongo = new mongodb.MongoClient(MONGO_URI);
     let mongoClient = nullAs();
@@ -1078,9 +1120,9 @@ export const getMongoClient = async () => {
     }
     successLog('It\'s Monging time >:D');
     return mongoClient;
-};
+}
 /**Start and return an http Express server */
-export const getStartedHttpServer = () => {
+export function getStartedHttpServer() {
     const { PORT } = getEnviromentVariables();
     const app = express();
     const httpServer = http.createServer(app);
@@ -1088,7 +1130,7 @@ export const getStartedHttpServer = () => {
     app.get('/', (_request, response) => response.sendFile(path.resolve() + '/public/index.html'));
     httpServer.listen(PORT, () => delay(1500).then(() => console.log(`server up at: http://localhost:${PORT}/`)));
     return httpServer;
-};
+}
 /**Get the package json of the project with this (utils) package installed */
 export async function importFileFromProject(filename, extension) {
     try {
@@ -1102,9 +1144,9 @@ export async function importFileFromProject(filename, extension) {
     }
 }
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
-export const killProcess = (message) => { bigConsoleError(message); process.exit(); };
+export function killProcess(message) { bigConsoleError(message); process.exit(); }
 /**Easily run the scripts of this (utils) repo's package.json */
-export const npmRun_package = async (npmCommand) => {
+export async function npmRun_package(npmCommand) {
     const utilsRepoName = 'Utils 🛠️';
     if (npmCommand === 'arrowsToDeclarations') {
         convertArrowFunctionsToDeclarations();
@@ -1167,9 +1209,9 @@ export const npmRun_package = async (npmCommand) => {
             });
         });
     }
-};
+}
 /**Run convenient scripts for and from a project's root folder */
-export const npmRun_project = async (npmCommand) => {
+export async function npmRun_project(npmCommand) {
     //async (options: { serverFolder_dist?: string, serverFolder_src?: string, fileWithRef?: string })
     //if (!options) { options = defaults }
     //const { serverFolder_dist, serverFolder_src, fileWithRef } = addMissingPropsToObjects(options!, defaults)
@@ -1274,7 +1316,7 @@ export const npmRun_project = async (npmCommand) => {
             });
         }
     }
-};
+}
 /**Prompt to submit a git commit message and then push */
 export async function prompCommitMessageAndPush(repoName) {
     //order matters with these 3
