@@ -242,9 +242,11 @@ export declare const objectEntries: <T extends object>(object: T) => {
 export declare const objectKeys: <T extends object>(object: T) => (keyof T)[];
 /**Object.values but with proper type-inference */
 export declare const objectValues: <T extends object>(object: T) => T[keyof T];
+/**Create an object with only the specified properties of another base object (references are kept) */
+export declare const pick: <T extends object, K extends keyof T>(theObject: T, properties: readonly K[]) => Pick<T, K>;
 /**Replace the values of an object with those of another that shares the schema*/
 export declare const replaceObject: <T extends object>(originalObject: T, newObject: T) => void;
-/**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods) */
+/**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods, see deepClone) */
 export declare const stringify: {
     (value: any, replacer?: (this: any, key: string, value: any) => any, space?: string | number): string;
     (value: any, replacer?: (string | number)[], space?: string | number): string;

@@ -588,6 +588,7 @@ _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** 
 _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 
+
 /**Add all default properties missing in an object*/
 export const addMissingPropsToObjects = <T extends object>(original: T, defaults: Required<T>) => {
 	objectKeys(defaults).forEach(key => { if (!Object.prototype.hasOwnProperty.call(original, key)) { original[key] = defaults[key] } })
@@ -635,12 +636,24 @@ export const objectEntries = <T extends object>(object: T) => Object.entries(obj
 export const objectKeys = <T extends object>(object: T) => Object.keys(object) as unknown as (keyof T)[]
 /**Object.values but with proper type-inference */
 export const objectValues = <T extends object>(object: T) => Object.values(object) as T[keyof T]
+/**Create an object with only the specified properties of another base object (references are kept) */
+export const pick = <T extends object, K extends keyof T>(theObject: T, properties: ReadonlyArray<K>) => {
+	const thePartial = {} as Pick<T, K>
+	objectEntries(theObject).forEach(entry => {
+		const { key, value } = entry
+		if (properties.includes(key as K)) {
+			//@ts-expect-error because object/key types are weird, but it workds
+			thePartial[key] = value
+		}
+	})
+	return thePartial
+}
 /**Replace the values of an object with those of another that shares the schema*/
 export const replaceObject = <T extends object>(originalObject: T, newObject: T) => {
 	objectKeys(originalObject).forEach(key => delete originalObject[key])
 	objectKeys(newObject).forEach(key => originalObject[key as keyof T] = newObject[key])
 }
-/**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods) */
+/**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods, see deepClone) */
 export const { stringify } = JSON
 /**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
 export const getUniqueId = (suffix: string) => suffix + '_' + getUniqueId_generator.next().value

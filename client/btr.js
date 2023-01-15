@@ -585,12 +585,24 @@ export const objectEntries = (object) => Object.entries(object).
 export const objectKeys = (object) => Object.keys(object);
 /**Object.values but with proper type-inference */
 export const objectValues = (object) => Object.values(object);
+/**Create an object with only the specified properties of another base object (references are kept) */
+export const pick = (theObject, properties) => {
+    const thePartial = {};
+    objectEntries(theObject).forEach(entry => {
+        const { key, value } = entry;
+        if (properties.includes(key)) {
+            //@ts-expect-error because object/key types are weird, but it workds
+            thePartial[key] = value;
+        }
+    });
+    return thePartial;
+};
 /**Replace the values of an object with those of another that shares the schema*/
 export const replaceObject = (originalObject, newObject) => {
     objectKeys(originalObject).forEach(key => delete originalObject[key]);
     objectKeys(newObject).forEach(key => originalObject[key] = newObject[key]);
 };
-/**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods) */
+/**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods, see deepClone) */
 export const { stringify } = JSON;
 /**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
 export const getUniqueId = (suffix) => suffix + '_' + getUniqueId_generator.next().value;
