@@ -226,10 +226,7 @@ export const addUnrepeatedItems = <T>(arr: T[], newItems: T[]) => {
  * @param mappingFn The function to determine the value of each entry
  * @returns An object where each key is an item of "arr" and the value is determined by "mappingFn"
  */
-export const arrayToObject = <
-	T extends Readonly<Array<string>>,
-	F extends (...x: (T[number])[]) => ReturnType<F>
->(arr: T, mappingFn: F) => {
+export const arrayToObject = <T extends Readonly<Array<string>>, F extends (...x: (T[number])[]) => ReturnType<F>>(arr: T, mappingFn: F) => {
 	type K = typeof arr[number]
 	const object = {} as Record<K, ReturnType<F>>
 	arr.forEach(x => object[x as K] = mappingFn(x))
@@ -276,7 +273,7 @@ export const getRandomItem = <T>(arr: T[]) => { const r = roll(arr.length); retu
 export const getUniqueValues = <T>(arr: T[]) => [...new Set(arr)]
 /**Returns whether an item is the last one in an array or not (warning: maybe don't use with primitives) */
 export const isLastItem = <T>(arr: T[], item: T) => arr.indexOf(item) === arr.length - 1
-/**Remove a single item from an array, or all copies of that item if its a primitive value */
+/*Remove a single item from an array, or all copies of that item if its a primitive value and return the removedCount */
 export const removeItem = <T>(arr: T[], item: T) => selfFilter(arr, (x: T) => x !== item).removedCount
 /**Return the last item of the given array */
 export const lastItem = <T>(arr: T[]) => arr[arr.length - 1] as T
@@ -495,12 +492,7 @@ export const delay = (x: number) => new Promise(resolve => {
 	const leftOverTime = x % maxTimeOut
 	interval(loopsNeeded, leftOverTime)
 
-	function interval(i: number, miliseconds: number) {
-		setTimeout(() => {
-			if (i) { interval(i - 1, maxTimeOut) }
-			else { resolve(true) }
-		}, miliseconds)
-	}
+	function interval(i: number, ms: number) { setTimeout(() => i ? interval(i - 1, maxTimeOut) : resolve(true), ms) }
 })
 /**Return the time left to make a move in a compacted form and with a variant corresponding to how much of it left */
 export const getDisplayableTimeLeft = (deadline: number) => {
@@ -602,7 +594,20 @@ export const addMissingPropsToObjects = <T extends object>(original: T, defaults
 	return original as Required<T>
 }
 /**Return a copy that can be altered without having to worry about modifying the original */
-export const deepClone = <T>(x: T) => JSON.parse(JSON.stringify(x)) as T
+export const deepClone = <T>(originalObject: T) => {
+	const copy = JSON.parse(JSON.stringify(originalObject)) as T
+	ifObject_copyRebindedMethods()
+	return copy
+
+	function ifObject_copyRebindedMethods() {
+		if (Array.isArray(originalObject)) { return }
+		objectEntries(originalObject as object).forEach(entry => {
+			const { key, value } = entry
+			if (typeof value !== 'function') { return }
+			copy[key] = (value as () => never).bind(copy) as never
+		})
+	}
+}
 /**Generate a Zod Schema from an array/object */
 export const getZodSchemaFromData = (data: unknown) => {
 
@@ -1399,3 +1404,66 @@ export const divine = {
 
 
 
+//TODO: see what to do with this
+async function setIntervalWithCondition(callback: () => void, totalMs: number, keepAliveChecker: () => boolean, msBetweenChecks: number) {
+	console.log({ totalMs, msBetweenChecks })
+
+	return new Promise(resolve => {
+		if (totalMs > msBetweenChecks) {
+			setTimeout(() => {
+				if (!keepAliveChecker()) { resolve('interval cancelled') }
+				resolve(setIntervalWithCondition(callback, totalMs - msBetweenChecks, keepAliveChecker, msBetweenChecks))
+			}, msBetweenChecks)
+		}
+		else { callback(); resolve('interval ') }
+	})
+}
+
+//TODO: see what to do with this
+export const delayWithCondition = (x: number, checkToKeepDelayAlive: () => boolean) => new Promise(resolve => {
+	const maxTimeOut = 1000 * 60 * 60 * 24
+	const loopsNeeded = Math.floor(x / maxTimeOut)
+	const leftOverTime = x % maxTimeOut
+	interval(loopsNeeded, leftOverTime)
+
+	function interval(i: number, ms: number) {
+		setTimeout(() => {
+			if (checkToKeepDelayAlive()) { interval(loopsNeeded, leftOverTime) }
+			i ? interval(i - 1, maxTimeOut) : resolve(true)
+		}, ms)
+	}
+})
+
+//TODO: see what to do with this (is the better/most complete  of the 3)
+type timer = { id: string, keepGoing: boolean, onKill: <F extends (...args: Parameters<F>) => ReturnType<F>> () => unknown }
+function initializeTimerWithIntermittentChecks(
+	parent: timer[],
+	id: string,
+	callback: () => void,
+	runInterval: number,
+	keepGoingChecker: () => boolean,
+	checkInterval: number,
+	onKill: timer['onKill']
+) {
+
+	return new Promise(resolve => {
+		function callTheCallback() { callback() }
+		function checkKeepGoing() { timer.keepGoing = keepGoingChecker() }
+		function removeTimerAndCallOnKill() { removeItem(parent, timer); resolve(onKill()) }
+
+		const timer: timer = { id, keepGoing: true, onKill }
+
+		intervalize(callTheCallback, removeTimerAndCallOnKill, runInterval)
+		intervalize(checkKeepGoing, doNothing, checkInterval)
+		parent.push(timer)
+
+		async function intervalize(keepGoingHandler: () => void, dontKeepGoingHandler: () => void, interval: number) {
+			await delay(interval)
+			if (!timer.keepGoing) { dontKeepGoingHandler(); return }
+			console.log({ interval })
+
+			intervalize(keepGoingHandler, dontKeepGoingHandler, interval)
+			keepGoingHandler()
+		}
+	})
+}
