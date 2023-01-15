@@ -521,43 +521,25 @@ export const getDisplayableTimeLeft = (deadline: number) => {
 		return variant
 	}
 }
-/**
- * @param options.fullYear true (default, 4 digits) or false (2 digits)  
- * @param options.hourOnly default: false
- * @param options.includeHour default: false
- * @param options.listFirst 'MM' (default) or 'DD'
- * @param options.timestamp default: Date.now()
- */
-export const getFormattedTimestamp = (timestamp: number | 'now', options?: {
-	fullYear?: boolean,
-	hourOnly?: boolean,
-	includeHour?: boolean,
-	listFirst?: 'MM' | 'DD',
-	includeTimestamp: boolean
-}) => {
+/**Formate a timestamp with Intl.DateTimeFormt. Options: short/medium/long (add +hour to include Hour) or hOnly (hour only) */
+export const formatDate = (
+	timestamp: number,
+	language: 'es' | 'en',
+	type: 'hourOnly' | 'short' | 'short+hour' | 'medium' | 'medium+hour' | 'long' | 'long+hour'
+) => {
+	return new Intl.DateTimeFormat(language, getOptions()).format(timestamp)
 
-	const defaults: typeof options = {
-		fullYear: true,
-		hourOnly: false,
-		includeHour: false,
-		listFirst: 'MM' as 'DD' | 'MM'
+	function getOptions(): Parameters<typeof Intl['DateTimeFormat']>[1] {
+		switch (type) {
+			default: case 'short': return { dateStyle: 'short' }
+			case 'medium': return { dateStyle: 'medium' }
+			case 'long': return { dateStyle: 'long' }
+			case 'hourOnly': return { timeStyle: 'short' }
+			case 'medium+hour': return { dateStyle: 'medium', timeStyle: 'short' }
+			case 'short+hour': return { dateStyle: 'short', timeStyle: 'short' }
+			case 'long+hour': return { dateStyle: 'long', timeStyle: 'short' }
+		}
 	}
-
-	const { fullYear, hourOnly, includeHour, listFirst } = addMissingPropsToObjects(options!, defaults)
-
-	if (typeof timestamp !== 'number') { timestamp = Date.now() }
-	const asDate = new Date(timestamp)
-	const hour = `${asDate}`.slice(16, 24)
-	if (hourOnly) { return hour }
-
-	const date = asDate.getDate()
-	const month = asDate.getMonth() + 1
-	const monthDaysOrdered = { MM: `${month}/${date}`, DD: `${date}/${month}` }[listFirst!]
-	const year = fullYear ? asDate.getFullYear() : `${asDate.getFullYear()}`.slice(2)
-
-	let x = `${monthDaysOrdered}/${year}`
-	if (includeHour) { x += ` ${hour}` }
-	return x
 }
 /**Self-explanatory */
 export const isEven = (number: number) => !isOdd(number)
