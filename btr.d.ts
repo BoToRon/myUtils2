@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { type SafeParseReturnType, z } from 'zod';
 export declare const timers: timer[];
 export declare const zValidVariants: any;
@@ -15,10 +14,6 @@ export type btr_socketEventInfo = {
     event: string;
     timestamp: number;
     data: unknown;
-};
-export type btr_intervalWithId = {
-    id: string;
-    interval: NodeJS.Timer;
 };
 export type btr_globalAlert = {
     message: string;
@@ -125,6 +120,11 @@ export declare function isLastItem<T>(arr: T[], item: T): boolean;
 export declare function removeItem<T>(arr: T[], item: T): number;
 /**Return the last item of the given array */
 export declare function lastItem<T>(arr: T[]): T;
+/**
+ * Map an array, and filter-out the items that weren't fit
+ * see filterMap for a faster (single rather than double loop) but more complex version)
+ */
+export declare function safeMap<T, F extends (x: T) => ReturnType<F>>(arr: T[], mapFn: F): T[];
 /**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
 export declare function selfFilter<T>(arr: T[], predicate: arrayPredicate<T>): {
     removedItems: T[];

@@ -71,7 +71,6 @@ export type btr_trackedVueComponent = { _name: string, beforeCreate?: btr_voidFn
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void
 export type btr_nonVoidFn = <F extends (...args: Parameters<F>) => ReturnType<F>> () => unknown
 export type btr_socketEventInfo = { event: string, timestamp: number, data: unknown }
-export type btr_intervalWithId = { id: string, interval: NodeJS.Timer }
 export type btr_globalAlert = { message: string, show: boolean }
 export type btr_validVariant = z.infer<typeof zValidVariants>
 export type btr_voidFn = () => void
@@ -286,6 +285,13 @@ export function isLastItem<T>(arr: T[], item: T) { return arr.indexOf(item) === 
 export function removeItem<T>(arr: T[], item: T) { return selfFilter(arr, (x: T) => x !== item).removedCount }
 /**Return the last item of the given array */
 export function lastItem<T>(arr: T[]) { return arr[arr.length - 1] as T }
+/**
+ * Map an array, and filter-out the items that weren't fit
+ * see filterMap for a faster (single rather than double loop) but more complex version)
+ */
+export function safeMap<T, F extends (x: T) => ReturnType<F>>(arr: T[], mapFn: F) {
+	return arr.map(x => mapFn(x)).filter(x => x) as T[]
+}
 /**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
 export function selfFilter<T>(arr: T[], predicate: arrayPredicate<T>) {
 	let removedCount = 0

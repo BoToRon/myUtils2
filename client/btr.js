@@ -232,6 +232,13 @@ export function isLastItem(arr, item) { return arr.indexOf(item) === arr.length 
 export function removeItem(arr, item) { return selfFilter(arr, (x) => x !== item).removedCount; }
 /**Return the last item of the given array */
 export function lastItem(arr) { return arr[arr.length - 1]; }
+/**
+ * Map an array, and filter-out the items that weren't fit
+ * see filterMap for a faster (single rather than double loop) but more complex version)
+ */
+export function safeMap(arr, mapFn) {
+    return arr.map(x => mapFn(x)).filter(x => x);
+}
 /**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
 export function selfFilter(arr, predicate) {
     let removedCount = 0;
