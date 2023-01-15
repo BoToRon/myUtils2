@@ -23,7 +23,7 @@ import { exec } from 'child_process'	//DELETETHISFORCLIENT
 _
 import { createRequire } from 'module'	//DELETETHISFORCLIENT
 _
-import mongodb, { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
+import mongodb, { MongoClient, Timestamp } from 'mongodb'	//DELETETHISFORCLIENT
 _
 import { type Primitive, type SafeParseReturnType, z, type ZodRawShape, type ZodTypeAny, string } from 'zod'
 _
@@ -528,17 +528,24 @@ export const getDisplayableTimeLeft = (deadline: number) => {
  * @param options.listFirst 'MM' (default) or 'DD'
  * @param options.timestamp default: Date.now()
  */
-export const getFormattedTimestamp = (options?: {
+export const getFormattedTimestamp = (timestamp: number | 'now', options?: {
 	fullYear?: boolean,
 	hourOnly?: boolean,
 	includeHour?: boolean,
 	listFirst?: 'MM' | 'DD',
-	timestamp?: number
+	includeTimestamp: boolean
 }) => {
 
-	const defaults = { timestamp: Date.now(), fullYear: true, hourOnly: false, includeHour: false, listFirst: 'MM' as 'DD' | 'MM' }
-	const { fullYear, hourOnly, includeHour, listFirst, timestamp } = addMissingPropsToObjects(options!, defaults)
+	const defaults: typeof options = {
+		fullYear: true,
+		hourOnly: false,
+		includeHour: false,
+		listFirst: 'MM' as 'DD' | 'MM'
+	}
 
+	const { fullYear, hourOnly, includeHour, listFirst } = addMissingPropsToObjects(options!, defaults)
+
+	if (typeof timestamp !== 'number') { timestamp = Date.now() }
 	const asDate = new Date(timestamp)
 	const hour = `${asDate}`.slice(16, 24)
 	if (hourOnly) { return hour }
