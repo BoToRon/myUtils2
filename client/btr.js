@@ -27,6 +27,7 @@ _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
+export const timers = [];
 export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark']);
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile']);
@@ -225,7 +226,7 @@ export const getRandomItem = (arr) => { const r = roll(arr.length); return { ite
 export const getUniqueValues = (arr) => [...new Set(arr)];
 /**Returns whether an item is the last one in an array or not (warning: maybe don't use with primitives) */
 export const isLastItem = (arr, item) => arr.indexOf(item) === arr.length - 1;
-/**Remove a single item from an array, or all copies of that item if its a primitive value */
+/*Remove a single item from an array, or all copies of that item if its a primitive value and return the removedCount */
 export const removeItem = (arr, item) => selfFilter(arr, (x) => x !== item).removedCount;
 /**Return the last item of the given array */
 export const lastItem = (arr) => arr[arr.length - 1];
@@ -435,16 +436,7 @@ export const delay = (x) => new Promise(resolve => {
     const loopsNeeded = Math.floor(x / maxTimeOut);
     const leftOverTime = x % maxTimeOut;
     interval(loopsNeeded, leftOverTime);
-    function interval(i, miliseconds) {
-        setTimeout(() => {
-            if (i) {
-                interval(i - 1, maxTimeOut);
-            }
-            else {
-                resolve(true);
-            }
-        }, miliseconds);
-    }
+    function interval(i, ms) { setTimeout(() => i ? interval(i - 1, maxTimeOut) : resolve(true), ms); }
 });
 /**Return the time left to make a move in a compacted form and with a variant corresponding to how much of it left */
 export const getDisplayableTimeLeft = (deadline) => {
@@ -484,30 +476,21 @@ export const getDisplayableTimeLeft = (deadline) => {
         return variant;
     }
 };
-/**
- * @param options.fullYear true (default, 4 digits) or false (2 digits)
- * @param options.hourOnly default: false
- * @param options.includeHour default: false
- * @param options.listFirst 'MM' (default) or 'DD'
- * @param options.timestamp default: Date.now()
- */
-export const getFormattedTimestamp = (options) => {
-    const defaults = { timestamp: Date.now(), fullYear: true, hourOnly: false, includeHour: false, listFirst: 'MM' };
-    const { fullYear, hourOnly, includeHour, listFirst, timestamp } = addMissingPropsToObjects(options, defaults);
-    const asDate = new Date(timestamp);
-    const hour = `${asDate}`.slice(16, 24);
-    if (hourOnly) {
-        return hour;
+/**Formate a timestamp with Intl.DateTimeFormt. Options: short/medium/long (add +hour to include Hour) or hOnly (hour only) */
+export const formatDate = (timestamp, language, type) => {
+    return new Intl.DateTimeFormat(language, getOptions()).format(timestamp);
+    function getOptions() {
+        switch (type) {
+            default:
+            case 'short': return { dateStyle: 'short' };
+            case 'medium': return { dateStyle: 'medium' };
+            case 'long': return { dateStyle: 'long' };
+            case 'hourOnly': return { timeStyle: 'short' };
+            case 'medium+hour': return { dateStyle: 'medium', timeStyle: 'short' };
+            case 'short+hour': return { dateStyle: 'short', timeStyle: 'short' };
+            case 'long+hour': return { dateStyle: 'long', timeStyle: 'short' };
+        }
     }
-    const date = asDate.getDate();
-    const month = asDate.getMonth() + 1;
-    const monthDaysOrdered = { MM: `${month}/${date}`, DD: `${date}/${month}` }[listFirst];
-    const year = fullYear ? asDate.getFullYear() : `${asDate.getFullYear()}`.slice(2);
-    let x = `${monthDaysOrdered}/${year}`;
-    if (includeHour) {
-        x += ` ${hour}`;
-    }
-    return x;
 };
 /**Self-explanatory */
 export const isEven = (number) => !isOdd(number);
@@ -554,7 +537,23 @@ export const addMissingPropsToObjects = (original, defaults) => {
     return original;
 };
 /**Return a copy that can be altered without having to worry about modifying the original */
-export const deepClone = (x) => JSON.parse(JSON.stringify(x));
+export const deepClone = (originalObject) => {
+    const copy = JSON.parse(JSON.stringify(originalObject));
+    ifObject_copyRebindedMethods();
+    return copy;
+    function ifObject_copyRebindedMethods() {
+        if (Array.isArray(originalObject)) {
+            return;
+        }
+        objectEntries(originalObject).forEach(entry => {
+            const { key, value } = entry;
+            if (typeof value !== 'function') {
+                return;
+            }
+            copy[key] = value.bind(copy);
+        });
+    }
+};
 /**Generate a Zod Schema from an array/object */
 export const getZodSchemaFromData = (data) => {
     const toLiteral = (x) => typeof x === 'object' ?
@@ -599,29 +598,67 @@ const getUniqueId_generator = (function* () { let i = 0; while (true) {
     i++;
     yield `${Date.now() + i}`;
 } })();
-_; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_; /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-/**start a setInterval and add it to an array */
-export const timer_add = (timers, id, callBack, interval) => {
-    const theTimer = setInterval(callBack, interval);
-    timers.push({ id, interval: theTimer });
+_; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+/**
+ * Create a cancellable timer and add it to btr.timers
+ * @param id The id of the timer, so that btr.killTimer can find it
+ * @param runAt The date (timestamp) at which "onComplete" should run
+ * @param onComplete The function that should run if the timer wasn't cancelled
+ * @param onCancel The function that should run if the timer was cancelled via killTimer
+ * @returns the return of "onComplete"
+ */
+export const initializeTimer = (id, runAt, onComplete, onCancel) => {
+    const timer = { id, runAt, onComplete, onCancel, startedAt: Date.now(), isCancelled: false, cancelledAt: 0, cancelledMessage: '' };
+    timers.push(timer);
+    return interval();
+    function interval() {
+        return new Promise(resolve => {
+            const maxInterval = 1000;
+            const timeLeft = Math.max(runAt - Date.now(), 0);
+            if (timeLeft > maxInterval) {
+                setTimeout(() => resolveOrCancel(onComplete), timeLeft);
+            }
+            else {
+                setTimeout(() => { removeItem(timers, timer); resolveOrCancel(interval); }, maxInterval);
+            }
+            function resolveOrCancel(fn) {
+                const { id, startedAt, runAt, onComplete, onCancel, isCancelled, cancelledAt } = timer;
+                resolve(isCancelled ? ({
+                    timerId: id,
+                    startedAt: formatDate(startedAt, 'es', 'medium+hour'),
+                    intendedRunAt: formatDate(runAt, 'es', 'medium+hour'),
+                    cancelledAt: formatDate(cancelledAt, 'es', 'medium+hour'),
+                    timeElapsedBeforeCancelation: `${(cancelledAt - startedAt) / 1000} seconds`,
+                    timeLeftBeforeCancelation: `${(runAt - timer.cancelledAt) / 1000} seconds`,
+                    onComplete: onComplete.name,
+                    onCancel: onCancel.name,
+                }) : tryF(fn, []));
+            }
+        });
+    }
 };
-/**Kill a setInterval and remove it from its belonging array */
-export const timer_kill = (timers, id) => {
-    const theTimer = timers.find(x => x.id === id);
+/**Kill a timer created with initializeTimer, the reason provided will become a divine stack */
+export const killTimer = async (timerId, reason) => {
+    const theTimer = timers.find(x => x.id === timerId);
     if (!theTimer) {
+        divine.error('Unable to cancel, no timer was found with this id: ' + timerId);
         return;
     }
-    clearInterval(theTimer.interval);
     removeItem(timers, theTimer);
+    theTimer.cancelledMessage = getTraceableStack(reason);
+    theTimer.cancelledAt = Date.now();
+    theTimer.isCancelled = true;
+    return await theTimer.onCancel();
 };
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/

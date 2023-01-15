@@ -23,7 +23,7 @@ import { exec } from 'child_process'	//DELETETHISFORCLIENT
 _
 import { createRequire } from 'module'	//DELETETHISFORCLIENT
 _
-import mongodb, { MongoClient, Timestamp } from 'mongodb'	//DELETETHISFORCLIENT
+import mongodb, { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
 _
 import { type Primitive, type SafeParseReturnType, z, type ZodRawShape, type ZodTypeAny, string } from 'zod'
 _
@@ -41,8 +41,9 @@ _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ***********
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 
-
+export const timers: timer[] = []
 export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'])
+
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
 const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile'])
 const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile'])
@@ -69,6 +70,7 @@ _ /********** TYPES ******************** TYPES ******************** TYPES ******
 
 export type btr_trackedVueComponent = { _name: string, beforeCreate?: btr_voidFn, beforeDestroy?: btr_voidFn }
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void
+export type btr_nonVoidFn = <F extends (...args: Parameters<F>) => ReturnType<F>> () => unknown
 export type btr_socketEventInfo = { event: string, timestamp: number, data: unknown }
 export type btr_intervalWithId = { id: string, interval: NodeJS.Timer }
 export type btr_globalAlert = { message: string, show: boolean }
@@ -103,7 +105,16 @@ type pipe_mutable_type = {
 	<T, A, B, C, D, E>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D, e: (value: D) => E): E
 	//can always make it longer 😉
 }
-
+type timer = {
+	id: string,
+	runAt: number,
+	startedAt: number,
+	onComplete: btr_nonVoidFn,
+	onCancel: btr_nonVoidFn,
+	cancelledMessage: string,
+	cancelledAt: number,
+	isCancelled: boolean
+}
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
@@ -635,28 +646,69 @@ export const { stringify } = JSON
 export const getUniqueId = (suffix: string) => suffix + '_' + getUniqueId_generator.next().value
 const getUniqueId_generator = (function* () { let i = 0; while (true) { i++; yield `${Date.now() + i}` } })()
 
-_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 
-/**start a setInterval and add it to an array */
-export const timer_add = (timers: btr_intervalWithId[], id: string, callBack: btr_voidFn, interval: number) => {
-	const theTimer: ReturnType<typeof setInterval> = setInterval(callBack, interval)
-	timers.push({ id, interval: theTimer })
+/**
+ * Create a cancellable timer and add it to btr.timers
+ * @param id The id of the timer, so that btr.killTimer can find it
+ * @param runAt The date (timestamp) at which "onComplete" should run
+ * @param onComplete The function that should run if the timer wasn't cancelled 
+ * @param onCancel The function that should run if the timer was cancelled via killTimer
+ * @returns the return of "onComplete"
+ */
+export const initializeTimer = (id: string, runAt: number, onComplete: btr_nonVoidFn, onCancel: btr_nonVoidFn) => {
+
+	const timer: timer = { id, runAt, onComplete, onCancel, startedAt: Date.now(), isCancelled: false, cancelledAt: 0, cancelledMessage: '' }
+	timers.push(timer)
+	return interval()
+
+	function interval() {
+		return new Promise(resolve => {
+			const maxInterval = 1000
+			const timeLeft = Math.max(runAt - Date.now(), 0)
+
+			if (timeLeft > maxInterval) { setTimeout(() => resolveOrCancel(onComplete), timeLeft) }
+			else { setTimeout(() => { removeItem(timers, timer); resolveOrCancel(interval) }, maxInterval) }
+
+			function resolveOrCancel(fn: btr_nonVoidFn) {
+				const { id, startedAt, runAt, onComplete, onCancel, isCancelled, cancelledAt } = timer
+
+				resolve(isCancelled ? ({
+					timerId: id,
+					startedAt: formatDate(startedAt, 'es', 'medium+hour'),
+					intendedRunAt: formatDate(runAt, 'es', 'medium+hour'),
+					cancelledAt: formatDate(cancelledAt, 'es', 'medium+hour'),
+					timeElapsedBeforeCancelation: `${(cancelledAt - startedAt) / 1000} seconds`,
+					timeLeftBeforeCancelation: `${(runAt - timer.cancelledAt) / 1000} seconds`,
+					onComplete: onComplete.name,
+					onCancel: onCancel.name,
+				}) : tryF(fn, []))
+			}
+		})
+	}
 }
-/**Kill a setInterval and remove it from its belonging array */
-export const timer_kill = (timers: btr_intervalWithId[], id: string) => {
-	const theTimer = timers.find(x => x.id === id)
-	if (!theTimer) { return }
-	clearInterval(theTimer.interval)
+
+/**Kill a timer created with initializeTimer, the reason provided will become a divine stack */
+export const killTimer = async (timerId: string, reason: string) => {
+	const theTimer = timers.find(x => x.id === timerId)
+	if (!theTimer) { divine.error('Unable to cancel, no timer was found with this id: ' + timerId); return }
+
 	removeItem(timers, theTimer)
+	theTimer.cancelledMessage = getTraceableStack(reason)
+	theTimer.cancelledAt = Date.now()
+	theTimer.isCancelled = true
+
+	return await theTimer.onCancel()
 }
 
 _ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
@@ -1004,7 +1056,7 @@ export const copyToClipboard_server = (x: unknown) => clipboard.write(JSON.strin
 /**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
 export const downloadFile_node = async (filename: string, fileFormat: '.txt' | '.json', data: unknown, killProcessAfterwards: boolean) => {
 	const formatted = stringify(data as object)
-	const dateForFilename = getFormattedTimestamp().replace(/\/| |:/g, '_')
+	const dateForFilename = formatDate(Date.now(), 'es', 'short').replace(/\/| |:/g, '_')
 	const completeFilename = filename + '_' + dateForFilename + fileFormat
 
 	colorLog('cyan', `Downloading ${completeFilename}..`)
@@ -1104,7 +1156,7 @@ export const npmRun_package = async (npmCommand: validNpmCommand_package) => {
 		const found = content.match(/const \w{1,} = (<.{1,}>){0,}\(.{1,}\) => {/g)
 		found!.forEach(match => { content = content.replace(match, convert(match)) })
 
-		const hour = getFormattedTimestamp({ hourOnly: true })
+		const hour = formatDate(Date.now(), 'es', 'hourOnly')
 		await fsWriteFileAsync('./arrowFns/output.ts', content)
 		colorLog('yellow', `[${hour}]: ${found!.length} arrow functions converted to funtion declarations (check arrowFns/output.td)`)
 
@@ -1391,68 +1443,3 @@ export const divine = {
 	}
 }
 
-
-
-//TODO: see what to do with this
-async function setIntervalWithCondition(callback: () => void, totalMs: number, keepAliveChecker: () => boolean, msBetweenChecks: number) {
-	console.log({ totalMs, msBetweenChecks })
-
-	return new Promise(resolve => {
-		if (totalMs > msBetweenChecks) {
-			setTimeout(() => {
-				if (!keepAliveChecker()) { resolve('interval cancelled') }
-				resolve(setIntervalWithCondition(callback, totalMs - msBetweenChecks, keepAliveChecker, msBetweenChecks))
-			}, msBetweenChecks)
-		}
-		else { callback(); resolve('interval ') }
-	})
-}
-
-//TODO: see what to do with this
-export const delayWithCondition = (x: number, checkToKeepDelayAlive: () => boolean) => new Promise(resolve => {
-	const maxTimeOut = 1000 * 60 * 60 * 24
-	const loopsNeeded = Math.floor(x / maxTimeOut)
-	const leftOverTime = x % maxTimeOut
-	interval(loopsNeeded, leftOverTime)
-
-	function interval(i: number, ms: number) {
-		setTimeout(() => {
-			if (checkToKeepDelayAlive()) { interval(loopsNeeded, leftOverTime) }
-			i ? interval(i - 1, maxTimeOut) : resolve(true)
-		}, ms)
-	}
-})
-
-//TODO: see what to do with this (is the better/most complete  of the 3)
-type timer = { id: string, keepGoing: boolean, onKill: <F extends (...args: Parameters<F>) => ReturnType<F>> () => unknown }
-function initializeTimerWithIntermittentChecks(
-	parent: timer[],
-	id: string,
-	callback: () => void,
-	runInterval: number,
-	keepGoingChecker: () => boolean,
-	checkInterval: number,
-	onKill: timer['onKill']
-) {
-
-	return new Promise(resolve => {
-		function callTheCallback() { callback() }
-		function checkKeepGoing() { timer.keepGoing = keepGoingChecker() }
-		function removeTimerAndCallOnKill() { removeItem(parent, timer); resolve(onKill()) }
-
-		const timer: timer = { id, keepGoing: true, onKill }
-
-		intervalize(callTheCallback, removeTimerAndCallOnKill, runInterval)
-		intervalize(checkKeepGoing, doNothing, checkInterval)
-		parent.push(timer)
-
-		async function intervalize(keepGoingHandler: () => void, dontKeepGoingHandler: () => void, interval: number) {
-			await delay(interval)
-			if (!timer.keepGoing) { dontKeepGoingHandler(); return }
-			console.log({ interval })
-
-			intervalize(keepGoingHandler, dontKeepGoingHandler, interval)
-			keepGoingHandler()
-		}
-	})
-}

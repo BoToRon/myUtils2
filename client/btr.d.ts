@@ -1,5 +1,6 @@
 /// <reference types="node" />
 import { type SafeParseReturnType, z } from 'zod';
+export declare const timers: timer[];
 export declare const zValidVariants: any;
 export type btr_trackedVueComponent = {
     _name: string;
@@ -7,6 +8,7 @@ export type btr_trackedVueComponent = {
     beforeDestroy?: btr_voidFn;
 };
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void;
+export type btr_nonVoidFn = <F extends (...args: Parameters<F>) => ReturnType<F>>() => unknown;
 export type btr_socketEventInfo = {
     event: string;
     timestamp: number;
@@ -57,6 +59,16 @@ type pipe_mutable_type = {
     <T, A, B, C, D>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D): D;
     <T, A, B, C, D, E>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D, e: (value: D) => E): E;
 };
+type timer = {
+    id: string;
+    runAt: number;
+    startedAt: number;
+    onComplete: btr_nonVoidFn;
+    onCancel: btr_nonVoidFn;
+    cancelledMessage: string;
+    cancelledAt: number;
+    isCancelled: boolean;
+};
 /**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
 export declare const newToast_client_curry: ($bvToast: bvToast) => btr_newToastFn;
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
@@ -81,7 +93,7 @@ export declare const addUnrepeatedItems: <T>(arr: T[], newItems: T[]) => T[];
  * @param mappingFn The function to determine the value of each entry
  * @returns An object where each key is an item of "arr" and the value is determined by "mappingFn"
  */
-export declare const arrayToObject: <T extends readonly string[], F extends (...x: string[]) => ReturnType<F>>(arr: T, mappingFn: F) => Record<T[number], ReturnType<F>>;
+export declare const arrayToObject: <T extends readonly string[], F extends (...x: T[number][]) => ReturnType<F>>(arr: T, mappingFn: F) => Record<T[number], ReturnType<F>>;
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
 export declare const asFormattedList: (arr: (string | number | boolean)[], useAndForTheLastItem: boolean) => string;
 /**Return an array of sub-arrays with the items of the passed array, where each sub-array's max lenght is the passed size*/
@@ -105,7 +117,6 @@ export declare const getRandomItem: <T>(arr: T[]) => {
 export declare const getUniqueValues: <T>(arr: T[]) => T[];
 /**Returns whether an item is the last one in an array or not (warning: maybe don't use with primitives) */
 export declare const isLastItem: <T>(arr: T[], item: T) => boolean;
-/**Remove a single item from an array, or all copies of that item if its a primitive value */
 export declare const removeItem: <T>(arr: T[], item: T) => number;
 /**Return the last item of the given array */
 export declare const lastItem: <T>(arr: T[]) => T;
@@ -200,20 +211,8 @@ export declare const getDisplayableTimeLeft: (deadline: number) => {
     time: string;
     variant: z.infer<any>;
 };
-/**
- * @param options.fullYear true (default, 4 digits) or false (2 digits)
- * @param options.hourOnly default: false
- * @param options.includeHour default: false
- * @param options.listFirst 'MM' (default) or 'DD'
- * @param options.timestamp default: Date.now()
- */
-export declare const getFormattedTimestamp: (options?: {
-    fullYear?: boolean;
-    hourOnly?: boolean;
-    includeHour?: boolean;
-    listFirst?: 'MM' | 'DD';
-    timestamp?: number;
-}) => string;
+/**Formate a timestamp with Intl.DateTimeFormt. Options: short/medium/long (add +hour to include Hour) or hOnly (hour only) */
+export declare const formatDate: (timestamp: number, language: 'es' | 'en', type: 'hourOnly' | 'short' | 'short+hour' | 'medium' | 'medium+hour' | 'long' | 'long+hour') => string;
 /**Self-explanatory */
 export declare const isEven: (number: number) => boolean;
 /**Self-explanatory */
@@ -227,7 +226,7 @@ export declare const toOrdinal: (number: number) => string;
 /**Add all default properties missing in an object*/
 export declare const addMissingPropsToObjects: <T extends object>(original: T, defaults: Required<T>) => Required<T>;
 /**Return a copy that can be altered without having to worry about modifying the original */
-export declare const deepClone: <T>(x: T) => T;
+export declare const deepClone: <T>(originalObject: T) => T;
 /**Generate a Zod Schema from an array/object */
 export declare const getZodSchemaFromData: (data: unknown) => any;
 /**Because ESlint doesn't like Object(x).hasOwnProperty :p */
@@ -252,10 +251,17 @@ export declare const stringify: {
 };
 /**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
 export declare const getUniqueId: (suffix: string) => string;
-/**start a setInterval and add it to an array */
-export declare const timer_add: (timers: btr_intervalWithId[], id: string, callBack: btr_voidFn, interval: number) => void;
-/**Kill a setInterval and remove it from its belonging array */
-export declare const timer_kill: (timers: btr_intervalWithId[], id: string) => void;
+/**
+ * Create a cancellable timer and add it to btr.timers
+ * @param id The id of the timer, so that btr.killTimer can find it
+ * @param runAt The date (timestamp) at which "onComplete" should run
+ * @param onComplete The function that should run if the timer wasn't cancelled
+ * @param onCancel The function that should run if the timer was cancelled via killTimer
+ * @returns the return of "onComplete"
+ */
+export declare const initializeTimer: (id: string, runAt: number, onComplete: btr_nonVoidFn, onCancel: btr_nonVoidFn) => Promise<unknown>;
+/**Kill a timer created with initializeTimer, the reason provided will become a divine stack */
+export declare const killTimer: (timerId: string, reason: string) => Promise<unknown>;
 /**console.log... WITH COLORS :D */
 /** Copy to clipboard using the corresponding function for the running enviroment (node/client)*/
 export declare const copyToClipboard: (x: unknown) => void;

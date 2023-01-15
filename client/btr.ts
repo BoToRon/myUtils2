@@ -29,8 +29,9 @@ _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ***********
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 
-
+export const timers: timer[] = []
 export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'])
+
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
 const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile'])
 const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile'])
@@ -57,6 +58,7 @@ _ /********** TYPES ******************** TYPES ******************** TYPES ******
 
 export type btr_trackedVueComponent = { _name: string, beforeCreate?: btr_voidFn, beforeDestroy?: btr_voidFn }
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void
+export type btr_nonVoidFn = <F extends (...args: Parameters<F>) => ReturnType<F>> () => unknown
 export type btr_socketEventInfo = { event: string, timestamp: number, data: unknown }
 export type btr_intervalWithId = { id: string, interval: NodeJS.Timer }
 export type btr_globalAlert = { message: string, show: boolean }
@@ -90,7 +92,16 @@ type pipe_mutable_type = {
 	<T, A, B, C, D, E>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D, e: (value: D) => E): E
 	//can always make it longer 😉
 }
-
+type timer = {
+	id: string,
+	runAt: number,
+	startedAt: number,
+	onComplete: btr_nonVoidFn,
+	onCancel: btr_nonVoidFn,
+	cancelledMessage: string,
+	cancelledAt: number,
+	isCancelled: boolean
+}
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
@@ -213,7 +224,7 @@ export const addUnrepeatedItems = <T>(arr: T[], newItems: T[]) => {
  * @param mappingFn The function to determine the value of each entry
  * @returns An object where each key is an item of "arr" and the value is determined by "mappingFn"
  */
-export const arrayToObject = <T extends Readonly<Array<string>>, F extends (...x: string[]) => ReturnType<F>,>(arr: T, mappingFn: F) => {
+export const arrayToObject = <T extends Readonly<Array<string>>, F extends (...x: (T[number])[]) => ReturnType<F>>(arr: T, mappingFn: F) => {
 	type K = typeof arr[number]
 	const object = {} as Record<K, ReturnType<F>>
 	arr.forEach(x => object[x as K] = mappingFn(x))
@@ -260,7 +271,7 @@ export const getRandomItem = <T>(arr: T[]) => { const r = roll(arr.length); retu
 export const getUniqueValues = <T>(arr: T[]) => [...new Set(arr)]
 /**Returns whether an item is the last one in an array or not (warning: maybe don't use with primitives) */
 export const isLastItem = <T>(arr: T[], item: T) => arr.indexOf(item) === arr.length - 1
-/**Remove a single item from an array, or all copies of that item if its a primitive value */
+/*Remove a single item from an array, or all copies of that item if its a primitive value and return the removedCount */
 export const removeItem = <T>(arr: T[], item: T) => selfFilter(arr, (x: T) => x !== item).removedCount
 /**Return the last item of the given array */
 export const lastItem = <T>(arr: T[]) => arr[arr.length - 1] as T
@@ -479,12 +490,7 @@ export const delay = (x: number) => new Promise(resolve => {
 	const leftOverTime = x % maxTimeOut
 	interval(loopsNeeded, leftOverTime)
 
-	function interval(i: number, miliseconds: number) {
-		setTimeout(() => {
-			if (i) { interval(i - 1, maxTimeOut) }
-			else { resolve(true) }
-		}, miliseconds)
-	}
+	function interval(i: number, ms: number) { setTimeout(() => i ? interval(i - 1, maxTimeOut) : resolve(true), ms) }
 })
 /**Return the time left to make a move in a compacted form and with a variant corresponding to how much of it left */
 export const getDisplayableTimeLeft = (deadline: number) => {
@@ -513,36 +519,25 @@ export const getDisplayableTimeLeft = (deadline: number) => {
 		return variant
 	}
 }
-/**
- * @param options.fullYear true (default, 4 digits) or false (2 digits)  
- * @param options.hourOnly default: false
- * @param options.includeHour default: false
- * @param options.listFirst 'MM' (default) or 'DD'
- * @param options.timestamp default: Date.now()
- */
-export const getFormattedTimestamp = (options?: {
-	fullYear?: boolean,
-	hourOnly?: boolean,
-	includeHour?: boolean,
-	listFirst?: 'MM' | 'DD',
-	timestamp?: number
-}) => {
+/**Formate a timestamp with Intl.DateTimeFormt. Options: short/medium/long (add +hour to include Hour) or hOnly (hour only) */
+export const formatDate = (
+	timestamp: number,
+	language: 'es' | 'en',
+	type: 'hourOnly' | 'short' | 'short+hour' | 'medium' | 'medium+hour' | 'long' | 'long+hour'
+) => {
+	return new Intl.DateTimeFormat(language, getOptions()).format(timestamp)
 
-	const defaults = { timestamp: Date.now(), fullYear: true, hourOnly: false, includeHour: false, listFirst: 'MM' as 'DD' | 'MM' }
-	const { fullYear, hourOnly, includeHour, listFirst, timestamp } = addMissingPropsToObjects(options!, defaults)
-
-	const asDate = new Date(timestamp)
-	const hour = `${asDate}`.slice(16, 24)
-	if (hourOnly) { return hour }
-
-	const date = asDate.getDate()
-	const month = asDate.getMonth() + 1
-	const monthDaysOrdered = { MM: `${month}/${date}`, DD: `${date}/${month}` }[listFirst!]
-	const year = fullYear ? asDate.getFullYear() : `${asDate.getFullYear()}`.slice(2)
-
-	let x = `${monthDaysOrdered}/${year}`
-	if (includeHour) { x += ` ${hour}` }
-	return x
+	function getOptions(): Parameters<typeof Intl['DateTimeFormat']>[1] {
+		switch (type) {
+			default: case 'short': return { dateStyle: 'short' }
+			case 'medium': return { dateStyle: 'medium' }
+			case 'long': return { dateStyle: 'long' }
+			case 'hourOnly': return { timeStyle: 'short' }
+			case 'medium+hour': return { dateStyle: 'medium', timeStyle: 'short' }
+			case 'short+hour': return { dateStyle: 'short', timeStyle: 'short' }
+			case 'long+hour': return { dateStyle: 'long', timeStyle: 'short' }
+		}
+	}
 }
 /**Self-explanatory */
 export const isEven = (number: number) => !isOdd(number)
@@ -586,7 +581,20 @@ export const addMissingPropsToObjects = <T extends object>(original: T, defaults
 	return original as Required<T>
 }
 /**Return a copy that can be altered without having to worry about modifying the original */
-export const deepClone = <T>(x: T) => JSON.parse(JSON.stringify(x)) as T
+export const deepClone = <T>(originalObject: T) => {
+	const copy = JSON.parse(JSON.stringify(originalObject)) as T
+	ifObject_copyRebindedMethods()
+	return copy
+
+	function ifObject_copyRebindedMethods() {
+		if (Array.isArray(originalObject)) { return }
+		objectEntries(originalObject as object).forEach(entry => {
+			const { key, value } = entry
+			if (typeof value !== 'function') { return }
+			copy[key] = (value as () => never).bind(copy) as never
+		})
+	}
+}
 /**Generate a Zod Schema from an array/object */
 export const getZodSchemaFromData = (data: unknown) => {
 
@@ -625,28 +633,69 @@ export const { stringify } = JSON
 export const getUniqueId = (suffix: string) => suffix + '_' + getUniqueId_generator.next().value
 const getUniqueId_generator = (function* () { let i = 0; while (true) { i++; yield `${Date.now() + i}` } })()
 
-_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
-_ /********** FOR SET INTERVALS ******************** FOR SET INTERVALS ******************** FOR SET INTERVALS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
+_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 
-/**start a setInterval and add it to an array */
-export const timer_add = (timers: btr_intervalWithId[], id: string, callBack: btr_voidFn, interval: number) => {
-	const theTimer: ReturnType<typeof setInterval> = setInterval(callBack, interval)
-	timers.push({ id, interval: theTimer })
+/**
+ * Create a cancellable timer and add it to btr.timers
+ * @param id The id of the timer, so that btr.killTimer can find it
+ * @param runAt The date (timestamp) at which "onComplete" should run
+ * @param onComplete The function that should run if the timer wasn't cancelled 
+ * @param onCancel The function that should run if the timer was cancelled via killTimer
+ * @returns the return of "onComplete"
+ */
+export const initializeTimer = (id: string, runAt: number, onComplete: btr_nonVoidFn, onCancel: btr_nonVoidFn) => {
+
+	const timer: timer = { id, runAt, onComplete, onCancel, startedAt: Date.now(), isCancelled: false, cancelledAt: 0, cancelledMessage: '' }
+	timers.push(timer)
+	return interval()
+
+	function interval() {
+		return new Promise(resolve => {
+			const maxInterval = 1000
+			const timeLeft = Math.max(runAt - Date.now(), 0)
+
+			if (timeLeft > maxInterval) { setTimeout(() => resolveOrCancel(onComplete), timeLeft) }
+			else { setTimeout(() => { removeItem(timers, timer); resolveOrCancel(interval) }, maxInterval) }
+
+			function resolveOrCancel(fn: btr_nonVoidFn) {
+				const { id, startedAt, runAt, onComplete, onCancel, isCancelled, cancelledAt } = timer
+
+				resolve(isCancelled ? ({
+					timerId: id,
+					startedAt: formatDate(startedAt, 'es', 'medium+hour'),
+					intendedRunAt: formatDate(runAt, 'es', 'medium+hour'),
+					cancelledAt: formatDate(cancelledAt, 'es', 'medium+hour'),
+					timeElapsedBeforeCancelation: `${(cancelledAt - startedAt) / 1000} seconds`,
+					timeLeftBeforeCancelation: `${(runAt - timer.cancelledAt) / 1000} seconds`,
+					onComplete: onComplete.name,
+					onCancel: onCancel.name,
+				}) : tryF(fn, []))
+			}
+		})
+	}
 }
-/**Kill a setInterval and remove it from its belonging array */
-export const timer_kill = (timers: btr_intervalWithId[], id: string) => {
-	const theTimer = timers.find(x => x.id === id)
-	if (!theTimer) { return }
-	clearInterval(theTimer.interval)
+
+/**Kill a timer created with initializeTimer, the reason provided will become a divine stack */
+export const killTimer = async (timerId: string, reason: string) => {
+	const theTimer = timers.find(x => x.id === timerId)
+	if (!theTimer) { divine.error('Unable to cancel, no timer was found with this id: ' + timerId); return }
+
 	removeItem(timers, theTimer)
+	theTimer.cancelledMessage = getTraceableStack(reason)
+	theTimer.cancelledAt = Date.now()
+	theTimer.isCancelled = true
+
+	return await theTimer.onCancel()
 }
 
 _ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
