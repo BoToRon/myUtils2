@@ -1,10 +1,18 @@
 import { type SafeParseReturnType, z } from 'zod';
 export declare const timers: timer[];
 export declare const zValidVariants: any;
+/**Generic to get the type of an object/interface while preserving key-value typing */
+export type btr_objectEntries<T, amount extends 'plural' | 'single'> = {
+    [K in keyof T]: [K, amount extends 'plural' ? T[K][] : T[K]];
+}[keyof T];
 export type btr_trackedVueComponent = {
     _name: string;
     beforeCreate?: btr_voidFn;
     beforeDestroy?: btr_voidFn;
+};
+export type btr_zSchema<T> = {
+    safeParse: (x: T) => SafeParseReturnType<T, T>;
+    strict?: () => btr_zSchema<T>;
 };
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void;
 export type btr_nonVoidFn = <F extends (...args: Parameters<F>) => ReturnType<F>>() => unknown;
@@ -32,10 +40,6 @@ type toastOptions = {
     solid: boolean;
     variant: btr_validVariant;
     title: string;
-};
-type zSchema<T> = {
-    safeParse: (x: T) => SafeParseReturnType<T, T>;
-    strict?: () => zSchema<T>;
 };
 type bvToast = {
     toast: (message: string, toastOptions: toastOptions) => void;
@@ -67,9 +71,9 @@ type timer = {
 /**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
 export declare function newToast_client_curry($bvToast: bvToast): (title: string, message: string, variant: z.infer<any>) => void;
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
-export declare function zodCheck_curry(errorHandler?: messageHandler, strictModeIfObject?: boolean): <T>(schema: zSchema<T>, data: T) => boolean;
+export declare function zodCheck_curry(errorHandler?: messageHandler, strictModeIfObject?: boolean): <T>(schema: btr_zSchema<T>, data: T) => boolean;
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
-export declare function trackVueComponent_curry<T>(zValidVueComponentName: zSchema<T>): (name: T, componentConstructor: btr_trackedVueComponent, window: {
+export declare function trackVueComponent_curry<T>(zValidVueComponentName: btr_zSchema<T>): (name: T, componentConstructor: btr_trackedVueComponent, window: {
     vueComponents: btr_trackedVueComponent[];
 }) => btr_trackedVueComponent;
 /**(generates a function that:) Opens/close a bootstrap-vue modal with zod validation */
@@ -186,7 +190,7 @@ export declare function tryF<T extends (...args: Parameters<T>) => ReturnType<T>
  * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not
  * @returns
  */
-export declare function zGetSafeParseResultAndHandleErrorMessage<T>(schema: zSchema<T>, data: T, errorHandler?: messageHandler, strictModeIfObject?: boolean): SafeParseReturnType<T_1, T_1>;
+export declare function zGetSafeParseResultAndHandleErrorMessage<T>(schema: btr_zSchema<T>, data: T, errorHandler?: messageHandler, strictModeIfObject?: boolean): SafeParseReturnType<T_1, T_1>;
 /**
  * Check data against a provided schema, and execute either the success or error handler
  * @param zSchema The zSchema to test data against
@@ -196,7 +200,7 @@ export declare function zGetSafeParseResultAndHandleErrorMessage<T>(schema: zSch
  * @param errorHandler The function that will execute if data does NOT fits zSchema
  * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not *
  */
-export declare function zodCheckAndHandle<D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(zSchema: zSchema<D>, data: D, successHandler: SH, args: Parameters<SH>, errorHandler?: messageHandler, strictModeIfObject?: boolean): void;
+export declare function zodCheckAndHandle<D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(zSchema: btr_zSchema<D>, data: D, successHandler: SH, args: Parameters<SH>, errorHandler?: messageHandler, strictModeIfObject?: boolean): void;
 /**Pipe with schema validation and an basic error tracking */
 /**
  * Pipe with schema validation and basic error tracking/handling
@@ -210,7 +214,7 @@ export declare function zodCheckAndHandle<D, SH extends (...args: Parameters<SH>
  * @param fns The functions that will conform the pipe in order
  * @returns
  */
-export declare function zPipe<T>(zSchema: zSchema<T>, strictModeIfObject: boolean, initialValue: T, ...fns: pipe_persistent_type<T>[]): {
+export declare function zPipe<T>(zSchema: btr_zSchema<T>, strictModeIfObject: boolean, initialValue: T, ...fns: pipe_persistent_type<T>[]): {
     value: T;
     error: string;
     failedAt: string;

@@ -70,6 +70,7 @@ _ /********** TYPES ******************** TYPES ******************** TYPES ******
 /**Generic to get the type of an object/interface while preserving key-value typing */
 export type btr_objectEntries<T, amount extends 'plural' | 'single'> = { [K in keyof T]: [K, amount extends 'plural' ? T[K][] : T[K]] }[keyof T]
 export type btr_trackedVueComponent = { _name: string, beforeCreate?: btr_voidFn, beforeDestroy?: btr_voidFn }
+export type btr_zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T>, strict?: () => btr_zSchema<T> }
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void
 export type btr_nonVoidFn = <F extends (...args: Parameters<F>) => ReturnType<F>> () => unknown
 export type btr_socketEventInfo = { event: string, timestamp: number, data: unknown }
@@ -86,7 +87,6 @@ export type btr_fieldsForColumnOfTable = string | {
 
 type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: btr_validVariant, title: string }
 type validChalkColor = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'white' | 'grey' | 'magentaBright'	//DELETETHISFORCLIENT
-type zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T>, strict?: () => zSchema<T> }
 type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
 type bvModal = { show: (id: string) => void, hide: (id: string) => void }
@@ -141,8 +141,8 @@ export function newToast_client_curry($bvToast: bvToast) {
 }
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
 export function zodCheck_curry(errorHandler = divine.error as messageHandler, strictModeIfObject = true) {
-	function zodCheck<T>(schema: zSchema<T>, data: T) {
-		function body<T>(errorHandler: messageHandler, schema: zSchema<T>, data: T, strictModeIfObject = true) {
+	function zodCheck<T>(schema: btr_zSchema<T>, data: T) {
+		function body<T>(errorHandler: messageHandler, schema: btr_zSchema<T>, data: T, strictModeIfObject = true) {
 			const result = zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler, strictModeIfObject)
 			return result.success as boolean
 		}
@@ -151,7 +151,7 @@ export function zodCheck_curry(errorHandler = divine.error as messageHandler, st
 	return zodCheck
 }
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
-export function trackVueComponent_curry<T>(zValidVueComponentName: zSchema<T>) {
+export function trackVueComponent_curry<T>(zValidVueComponentName: btr_zSchema<T>) {
 	return function trackVueComponent(
 		name: T,
 		componentConstructor: btr_trackedVueComponent,
@@ -431,7 +431,7 @@ export function tryF<T extends (...args: Parameters<T>) => ReturnType<T>>(
  * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not
  * @returns 
  */
-export function zGetSafeParseResultAndHandleErrorMessage<T>(schema: zSchema<T>,
+export function zGetSafeParseResultAndHandleErrorMessage<T>(schema: btr_zSchema<T>,
 	data: T,
 	errorHandler = <messageHandler>nullAs(),
 	strictModeIfObject = true) {
@@ -454,7 +454,7 @@ export function zGetSafeParseResultAndHandleErrorMessage<T>(schema: zSchema<T>,
  * @param errorHandler The function that will execute if data does NOT fits zSchema
  * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not * 
  */
-export function zodCheckAndHandle<D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(zSchema: zSchema<D>,
+export function zodCheckAndHandle<D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(zSchema: btr_zSchema<D>,
 	data: D,
 	successHandler: SH,
 	args: Parameters<SH>,
@@ -477,7 +477,7 @@ export function zodCheckAndHandle<D, SH extends (...args: Parameters<SH>) => Ret
  * @param fns The functions that will conform the pipe in order
  * @returns 
  */
-export function zPipe<T>(zSchema: zSchema<T>, strictModeIfObject: boolean, initialValue: T, ...fns: pipe_persistent_type<T>[]) {
+export function zPipe<T>(zSchema: btr_zSchema<T>, strictModeIfObject: boolean, initialValue: T, ...fns: pipe_persistent_type<T>[]) {
 
 	const initialPipeState = { value: initialValue, error: <string>nullAs(), failedAt: <string>nullAs() }
 
