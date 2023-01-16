@@ -67,6 +67,8 @@ _ /********** TYPES ******************** TYPES ******************** TYPES ******
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 
+/**Generic to get the type of an object/interface while preserving key-value typing */
+export type btr_objectEntries<T, amount extends 'plural' | 'single'> = { [K in keyof T]: [K, amount extends 'plural' ? T[K][] : T[K]] }[keyof T]
 export type btr_trackedVueComponent = { _name: string, beforeCreate?: btr_voidFn, beforeDestroy?: btr_voidFn }
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void
 export type btr_nonVoidFn = <F extends (...args: Parameters<F>) => ReturnType<F>> () => unknown
@@ -414,7 +416,8 @@ export async function retryF<F extends (...args: Parameters<F>) => ReturnType<F>
 	}
 }
 /**tryCatch wrapper for functions with divineError as the default error handler */
-export function tryF<T extends (...args: Parameters<T>) => ReturnType<T>>(fn: T,
+export function tryF<T extends (...args: Parameters<T>) => ReturnType<T>>(
+	fn: T,
 	args: Parameters<T>,
 	errorHandler = divine.error as messageHandler) {
 	try { return fn(...args) }
