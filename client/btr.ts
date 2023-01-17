@@ -778,6 +778,21 @@ export function dataIsEqual(A: unknown, B: unknown, errorHandler = <messageHandl
 export function doNothing(...args: unknown[]) { args }
 /** @returns null as the provided type */
 export function nullAs<T>() { return null as T }
+/**
+ * Return the regex given with possibly an error indicating it wasn't matched.
+ * MUST BE USED AS A SPREAD ARGUMENT, eg: zString.regex( ...zRegexGenerator(/hi/, false) )
+ * @param regex The regex to get the error message from
+ * @param exactPhrase If true, it will return an error if there's anything before or after the match
+ * @returns Arguments for zod's regex string method (theRegex, theErrorMesssage)
+ */
+export function zRegexGenerator(regex: RegExp, exactPhrase: boolean) {
+	if (exactPhrase) {
+		let asString = String(regex)
+		asString = asString.slice(1, asString.length - 1)
+		regex = new RegExp('^' + asString + '$')
+	}
+	return [regex, 'Regex not matched: ' + regex] as [RegExp, string]
+}
 
 _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/

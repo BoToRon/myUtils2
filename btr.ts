@@ -792,6 +792,21 @@ export function dataIsEqual(A: unknown, B: unknown, errorHandler = <messageHandl
 export function doNothing(...args: unknown[]) { args }
 /** @returns null as the provided type */
 export function nullAs<T>() { return null as T }
+/**
+ * Return the regex given with possibly an error indicating it wasn't matched.
+ * MUST BE USED AS A SPREAD ARGUMENT, eg: zString.regex( ...zRegexGenerator(/hi/, false) )
+ * @param regex The regex to get the error message from
+ * @param exactPhrase If true, it will return an error if there's anything before or after the match
+ * @returns Arguments for zod's regex string method (theRegex, theErrorMesssage)
+ */
+export function zRegexGenerator(regex: RegExp, exactPhrase: boolean) {
+	if (exactPhrase) {
+		let asString = String(regex)
+		asString = asString.slice(1, asString.length - 1)
+		regex = new RegExp('^' + asString + '$')
+	}
+	return [regex, 'Regex not matched: ' + regex] as [RegExp, string]
+}
 
 _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
@@ -962,7 +977,7 @@ export async function basicProjectChecks(errorHandler = divine.error as messageH
 	async function allChecks() {
 		return await Promise.all([
 			checkAllTopLevelFunctionAreDescribed(), checkAllVueComponentsAreTrackeable(), checkEnviromentVariables(),
-			checkEslintConfigRules(), checkFilesAndFolderStructure(), checkGitIgnore(), checkJsonPackageScripts(),
+			checkEslintConfigRules(), checkFilesAndFolderStructure(), checkGitIgnore(), checkPackageJson(),
 			checkTsConfigCompilerOptions(), checkUtilsVersion(), checkVsCodeSettings(), checkVueDevFiles(),
 		])
 	}
@@ -1068,10 +1083,52 @@ export async function basicProjectChecks(errorHandler = divine.error as messageH
 	}
 
 	/**Check the scripts in a project's package json all fit the established schema */
-	async function checkJsonPackageScripts() {
-		const currentPackageJsonScripts = (<packageJson>await importFileFromProject('package', 'json')).scripts
-		const desiredPackageJsonScripts = (await import('./scripts.json', { assert: { type: 'json' } })).default.scripts
-		return zodCheck_curry(addToErrors)(getZodSchemaFromData(desiredPackageJsonScripts), currentPackageJsonScripts)
+	async function checkPackageJson() {
+		const packageJsonOfProject = (<packageJson>await importFileFromProject('package', 'json')).scripts
+
+		const desiredPackageJsonSchema = z.object({
+			name: z.string().regex(...zRegexGenerator(/-(src|dist)$/, false)),
+			author: z.literal('BoToRon'),
+			description: z.string().min(10),
+			license: z.literal('ISC'),
+			main: z.literal('test/server/init.js'),
+			type: z.literal('module'),
+			version: z.string(),
+			engines: z.literal('>=18.0.0'),
+			scripts: z.object({
+				btr: z.literal('npm i @botoron/utils'),
+				'btr-u': z.literal('npm uninstall @botoron/utils'),
+				'build-server': z.literal('npm run npmScript --command_project=build'),
+				'build-client': z.literal('cd client & npm run build-only'),
+				'build-all': z.literal('tsc --target esnext server/init.ts --outDir ../dist & cd client & npm run build-only && cd ..'),
+				check: z.literal('npm run npmScript --command_project=check'),
+				localtunnel: z.literal('lt --port 3000'),
+				nodemon: z.literal('nodemon test/server/init.js'),
+				npmScript: z.literal('node node_modules/@botoron/utils/btr.js'),
+				start: z.literal('node test/server/init.js'),
+				test: z.literal('ts-node-esm test.ts'),
+				transpile: z.literal('npm run npmScript --command_project=transpile'),
+				vue: z.literal('cd client & npm run dev'),
+				git: z.literal('npm run npmScript --command_project=git')
+			}).strict(),
+			dependencies: z.object({
+				'@botoron/utils': z.string(),
+				'socket.io': z.string(),
+				'socket.io-client': z.string(),
+				'zod-validation-error': z.string()
+			}),
+			devDependencies: z.object({
+				'@types/express': z.string(),
+				'@typescript-eslint/eslint-plugin': z.string(),
+				'@typescript-eslint/parser': z.string(),
+				dotenv: z.string(),
+				eslint: z.string(),
+				'eslint-plugin-vue': z.string(),
+				nodemon: z.string(),
+			})
+		})
+
+		return zodCheck_curry(addToErrors)(desiredPackageJsonSchema, packageJsonOfProject)
 	}
 
 	/**Check the rules in a project's ts config file all fit the established schema */
@@ -1397,7 +1454,7 @@ export async function npmRun_project(npmCommand: validNpmCommand_project) {
 			await transpileTypesFile()
 			await copyFileToDis('.env')
 			await copyFileToDis('.gitignore')
-			await copyFileToDis('package.json')
+			await copyFileToDis('package.json') //TODO: make it so the "-src" in the name is replaced with "-dist"
 			await copyFileToDis('types.js')
 
 			exec(`tsc --target esnext server/init.ts server/io.ts --outDir ${serverFolder_dist}`, async () => {
@@ -1503,6 +1560,19 @@ const command_package = process.env['npm_config_command_package'] as validNpmCom
 const command_project = process.env['npm_config_command_project'] as validNpmCommand_project
 if (command_package) { zodCheckAndHandle(zValidNpmCommand_package, command_package, npmRun_package, [command_package], console.log) }
 if (command_project) { zodCheckAndHandle(zValidNpmCommand_project, command_project, npmRun_project, [command_project], console.log) }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

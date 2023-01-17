@@ -311,6 +311,14 @@ export declare function dataIsEqual(A: unknown, B: unknown, errorHandler?: messa
 export declare function doNothing(...args: unknown[]): void;
 /** @returns null as the provided type */
 export declare function nullAs<T>(): T;
+/**
+ * Return the regex given with possibly an error indicating it wasn't matched.
+ * MUST BE USED AS A SPREAD ARGUMENT, eg: zString.regex( ...zRegexGenerator(/hi/, false) )
+ * @param regex The regex to get the error message from
+ * @param exactPhrase If true, it will return an error if there's anything before or after the match
+ * @returns Arguments for zod's regex string method (theRegex, theErrorMesssage)
+ */
+export declare function zRegexGenerator(regex: RegExp, exactPhrase: boolean): [RegExp, string];
 /**Copy to clipboard, objects arrays get stringify'd */
 export declare function copyToClipboard_client(x: unknown): void;
 /**Stringifies and downloads the provided data*/
