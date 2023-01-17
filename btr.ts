@@ -1122,13 +1122,13 @@ export async function basicProjectChecks(errorHandler = divine.error as messageH
 	async function checkVsCodeSettings() {
 		const vsSettingsOfProject = await importFileFromProject('.vscode/settings', 'json')
 		const desiredVsSettings = z.object({
-			'workbench.colorCustomizations': z.object({}),
-			'peacock.color': z.string(),
 			'dotenv.enableAutocloaking': z.literal(true),
-			'typelens.unusedcolor': z.literal('#f44')
+			'peacock.color': z.string(),
+			'typelens.unusedcolor': z.literal('#f44'),
+			'workbench.colorCustomizations': z.object({}),
 		})
 
-		return zodCheck_curry(addToErrors)(getZodSchemaFromData(desiredVsSettings), vsSettingsOfProject)
+		return zodCheck_curry(addToErrors)(desiredVsSettings, vsSettingsOfProject)
 	}
 
 	/**Turn off that damn skipLibCheck that comes on by default */
