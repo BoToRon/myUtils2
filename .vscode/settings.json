@@ -18,5 +18,7 @@
 		"titleBar.inactiveBackground": "#cc383899",
 		"titleBar.inactiveForeground": "#e7e7e799"
 	},
-	"peacock.color": "#cc3838"
+	"peacock.color": "#cc3838",
+	"dotenv.enableAutocloaking": true,
+	"typelens.unusedcolor": "#f44"
 }
