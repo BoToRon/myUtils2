@@ -818,6 +818,89 @@ function multiMap(arr, fns) {
     multiMap;
 }
 // ! DELETEEVERYTHINGBELOW, as it is only meant for server-side use
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+export const divine = {
+    bot: nullAs(),
+    error: (err) => {
+        const message = getTraceableStack(err);
+        const { DEV_OR_PROD } = getEnviromentVariables();
+        DEV_OR_PROD !== 'PROD' ? killProcess(message) : divine.ping(message);
+    },
+    init: (async () => {
+        delay(1000).then(async () => {
+            if (command_package || command_project) {
+                return;
+            }
+            const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = getEnviromentVariables();
+            if (DEV_OR_PROD !== 'PROD') {
+                return;
+            }
+            const divinePrepend = '***DivineBot:***';
+            const bot = eris(ERIS_TOKEN);
+            bot.on('messageReactionRemove', (a, b, c) => role('remove', a, b, c));
+            bot.on('messageReactionAdd', (a, b, c) => role('add', a, b, c));
+            bot.on('disconnect', () => { colorLog('red', `${divinePrepend}: Disconnected D: ... retrying!`); });
+            bot.on('connect', () => divine.ping(`(${APP_NAME}) - I'm alive bitch >:D`));
+            const idOfRoleAssigningMessage = '822523162724925473';
+            await attemptConnection();
+            divine.bot = bot;
+            function role(action, message, emoji, reactor) {
+                try {
+                    if (message.id !== idOfRoleAssigningMessage) {
+                        return;
+                    }
+                    const role = [
+                        { app: 'UntCG', emoji: 'cards', id: 'SAMPLEROLEID' },
+                        { app: 'CwCA', emoji: 'chess', id: 'SAMPLEROLEID' },
+                        { app: 'Cool', emoji: 'cool', id: 'SAMPLEROLEID' },
+                        { app: 'Divine', emoji: 'divine', id: 'SAMPLEROLEID' },
+                        { app: 'Bluejay', emoji: 'bluejay', id: 'SAMPLEROLEID' },
+                        { app: 'Cute', emoji: 'cute', id: 'SAMPLEROLEID' },
+                    ].find(x => x.emoji === emoji.name);
+                    if (role) {
+                        ({ add: reactor.addRole, remove: reactor.removeRole })[action](role.id);
+                    }
+                }
+                catch (e) {
+                    console.log('divineBot.role.tryCatch.error = ', e);
+                }
+            }
+            async function attemptConnection() {
+                try {
+                    bot.connect();
+                    colorLog('cyan', 'waiting for DivineBot');
+                    while (!bot.uptime) {
+                        await delay(1000);
+                    }
+                    successLog('The divine egg has hatched');
+                }
+                catch {
+                    colorLog('yellow', `${divinePrepend} Failed to connect.. retrying >:D`);
+                    await delay(1000);
+                    attemptConnection();
+                }
+            }
+        });
+    })(),
+    ping: async (message) => {
+        while (!divine.bot?.ready) {
+            await delay(1000);
+        }
+        const { APP_NAME } = getEnviromentVariables();
+        const theMessage = `<@470322452040515584> - (${APP_NAME}) \n ${message}`;
+        const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } };
+        divine.bot.createMessage('1055939528776495206', divineOptions);
+    }
+};
 _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
@@ -1387,86 +1470,3 @@ if (command_package) {
 if (command_project) {
     zodCheckAndHandle(zValidNpmCommand_project, command_project, npmRun_project, [command_project], console.log);
 }
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-export const divine = {
-    bot: nullAs(),
-    error: (err) => {
-        const message = getTraceableStack(err);
-        const { DEV_OR_PROD } = getEnviromentVariables();
-        DEV_OR_PROD !== 'PROD' ? killProcess(message) : divine.ping(message);
-    },
-    init: (async () => {
-        delay(1000).then(async () => {
-            if (command_package || command_project) {
-                return;
-            }
-            const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = getEnviromentVariables();
-            if (DEV_OR_PROD !== 'PROD') {
-                return;
-            }
-            const divinePrepend = '***DivineBot:***';
-            const bot = eris(ERIS_TOKEN);
-            bot.on('messageReactionRemove', (a, b, c) => role('remove', a, b, c));
-            bot.on('messageReactionAdd', (a, b, c) => role('add', a, b, c));
-            bot.on('disconnect', () => { colorLog('red', `${divinePrepend}: Disconnected D: ... retrying!`); });
-            bot.on('connect', () => divine.ping(`(${APP_NAME}) - I'm alive bitch >:D`));
-            const idOfRoleAssigningMessage = '822523162724925473';
-            await attemptConnection();
-            divine.bot = bot;
-            function role(action, message, emoji, reactor) {
-                try {
-                    if (message.id !== idOfRoleAssigningMessage) {
-                        return;
-                    }
-                    const role = [
-                        { app: 'UntCG', emoji: 'cards', id: 'SAMPLEROLEID' },
-                        { app: 'CwCA', emoji: 'chess', id: 'SAMPLEROLEID' },
-                        { app: 'Cool', emoji: 'cool', id: 'SAMPLEROLEID' },
-                        { app: 'Divine', emoji: 'divine', id: 'SAMPLEROLEID' },
-                        { app: 'Bluejay', emoji: 'bluejay', id: 'SAMPLEROLEID' },
-                        { app: 'Cute', emoji: 'cute', id: 'SAMPLEROLEID' },
-                    ].find(x => x.emoji === emoji.name);
-                    if (role) {
-                        ({ add: reactor.addRole, remove: reactor.removeRole })[action](role.id);
-                    }
-                }
-                catch (e) {
-                    console.log('divineBot.role.tryCatch.error = ', e);
-                }
-            }
-            async function attemptConnection() {
-                try {
-                    bot.connect();
-                    colorLog('cyan', 'waiting for DivineBot');
-                    while (!bot.uptime) {
-                        await delay(1000);
-                    }
-                    successLog('The divine egg has hatched');
-                }
-                catch {
-                    colorLog('yellow', `${divinePrepend} Failed to connect.. retrying >:D`);
-                    await delay(1000);
-                    attemptConnection();
-                }
-            }
-        });
-    })(),
-    ping: async (message) => {
-        while (!divine.bot?.ready) {
-            await delay(1000);
-        }
-        const { APP_NAME } = getEnviromentVariables();
-        const theMessage = `<@470322452040515584> - (${APP_NAME}) \n ${message}`;
-        const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } };
-        divine.bot.createMessage('1055939528776495206', divineOptions);
-    }
-};

@@ -317,6 +317,12 @@ export declare function copyToClipboard_client(x: unknown): void;
 export declare function downloadFile_client(filename: string, fileFormat: '.txt' | '.json', data: unknown): void;
 /**@deprecated use "formatDate instead" */
 export declare function getFormattedTimestamp(): void;
+export declare const divine: {
+    bot: eris.Client;
+    error: (err: string | Error) => void;
+    init: Promise<void>;
+    ping: (message: string) => Promise<void>;
+};
 /** Check the version of @botoron/utils, the enviroment variables and various config files */
 export declare function basicProjectChecks(errorHandler?: messageHandler): Promise<false | [boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, true | [boolean, boolean, boolean, boolean, boolean]]>;
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
@@ -351,10 +357,4 @@ export declare function npmRun_project(npmCommand: validNpmCommand_project): Pro
 export declare function prompCommitMessageAndPush(repoName: string): Promise<void>;
 /**Prompts a question in the terminal, awaits for the input and returns it */
 export declare function questionAsPromise(question: string): Promise<string>;
-export declare const divine: {
-    bot: eris.Client;
-    error: (err: string | Error) => void;
-    init: Promise<void>;
-    ping: (message: string) => Promise<void>;
-};
 export {};
