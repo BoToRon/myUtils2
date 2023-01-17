@@ -318,7 +318,7 @@ export declare function downloadFile_client(filename: string, fileFormat: '.txt'
 /**@deprecated use "formatDate instead" */
 export declare function getFormattedTimestamp(): void;
 /** Check the version of @botoron/utils, the enviroment variables and various config files */
-export declare function basicProjectChecks(errorHandler?: messageHandler): Promise<false | [boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, true | [boolean, boolean, boolean, boolean, boolean]]>;
+export declare function basicProjectChecks(errorHandler?: messageHandler): Promise<false | [boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, true | [boolean, boolean, boolean, boolean, boolean]]>;
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
 export declare function bigConsoleError(message: string): void;
 /**Copy to clipboard while running node */
@@ -339,7 +339,7 @@ export declare function getLatestPackageJsonFromGithub(): Promise<string>;
 export declare function getMongoClient(): Promise<MongoClient>;
 /**Start and return an http Express server */
 export declare function getStartedHttpServer(): any;
-/**Get the package json of the project with this (utils) package installed */
+/**Import modules or jsons */
 export declare function importFileFromProject<T>(filename: string, extension: 'cjs' | 'js' | 'json'): Promise<any>;
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export declare function killProcess(message: string): void;

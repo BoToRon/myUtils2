@@ -883,7 +883,7 @@ export async function basicProjectChecks(errorHandler = divine.error as messageH
 		return await Promise.all([
 			checkAllTopLevelFunctionAreDescribed(), checkAllVueComponentsAreTrackeable(), checkEnviromentVariables(),
 			checkEslintConfigRules(), checkFilesAndFolderStructure(), checkGitIgnore(), checkJsonPackageScripts(),
-			checkTsConfigCompilerOptions(), checkUtilsVersion(), checkVueDevFiles(),
+			checkTsConfigCompilerOptions(), checkUtilsVersion(), checkVsCodeSettings(), checkVueDevFiles(),
 		])
 	}
 
@@ -969,8 +969,7 @@ export async function basicProjectChecks(errorHandler = divine.error as messageH
 			'./client/env.d.ts', './client/index.html', './client/node_modules', './client/package-lock.json', './client/package.json',
 			'./client/tsconfig.config.json', './client/tsconfig.json', './client/vite.config.ts', './client/vue.config.js',
 
-			'./client/src/App.vue', './client/src/assets', './client/src/index.ts',
-			'./client/src/main.ts', './client/src/socket.ts', './client/src/store.ts',
+			'./client/src/App.vue', './client/src/assets', './client/src/index.ts', './client/src/socket.ts', './client/src/store.ts',
 		]
 
 		const missingItems = compareArrays(desiredFilesAndFolders, currentFilesAndFolders).missingItems
@@ -1038,6 +1037,18 @@ export async function basicProjectChecks(errorHandler = divine.error as messageH
 			}))
 			return response.objects[0].package.version
 		}
+	}
+
+	async function checkVsCodeSettings() {
+		const vsSettingsOfProject = await importFileFromProject('.vscode/settings', 'json')
+		const desiredVsSettings = z.object({
+			'workbench.colorCustomizations': z.object({}),
+			'peacock.color': z.string(),
+			'dotenv.enableAutocloaking': z.literal(true),
+			'typelens.unusedcolor': z.literal('#f44')
+		})
+
+		return zodCheck_curry(addToErrors)(getZodSchemaFromData(desiredVsSettings), vsSettingsOfProject)
 	}
 
 	/**Turn off that damn skipLibCheck that comes on by default */
@@ -1180,7 +1191,7 @@ export function getStartedHttpServer() {
 	httpServer.listen(PORT, () => delay(1500).then(() => console.log(`server up at: http://localhost:${PORT}/`)))
 	return httpServer
 }
-/**Get the package json of the project with this (utils) package installed */
+/**Import modules or jsons */
 export async function importFileFromProject<T>(filename: string, extension: 'cjs' | 'js' | 'json') {
 	try {
 		const path = `../../../${filename}.${extension}`

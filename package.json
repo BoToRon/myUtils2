@@ -5,7 +5,8 @@
 	"description": "Utilities of me for me",
 	"main": "btr.js",
 	"scripts": {
-		"test": "ts-node-esm test.ts",
+		"test": "ts-node-esm --transpileOnly test/test.ts",
+		"zTest": "ts-node-esm --transpileOnly test/zTest.ts",
 		"npmScript": "ts-node-esm --transpileOnly btr.ts",
 		"__________________________________________________": "__________________________________________________",
 		"all": "npm run npmScript --command_package=all & npm publish",
