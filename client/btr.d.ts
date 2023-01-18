@@ -26,6 +26,7 @@ export type btr_globalAlert = {
     show: boolean;
 };
 export type btr_validVariant = z.infer<typeof zValidVariants>;
+export type btr_language = 'English' | 'Spanish';
 export type btr_voidFn = () => void;
 export type btr_fieldsForColumnOfTable = string | {
     key: string;

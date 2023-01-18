@@ -949,7 +949,7 @@ export async function basicProjectChecks(errorHandler = divine.error) {
     async function allChecks() {
         return await Promise.all([
             checkAllTopLevelFunctionAreDescribed(), checkAllVueComponentsAreTrackeable(), checkEnviromentVariables(),
-            checkEslintConfigRules(), checkFilesAndFolderStructure(), checkGitIgnore(), checkPackageJson(),
+            checkEslintConfigRules(), checkFilesAndFolderStructure(), checkGitIgnore(), checkPackageJson(), checkSocketEvents(),
             checkTsConfigCompilerOptions(), checkUtilsVersion(), checkVsCodeSettings(), checkVueDevFiles(),
         ]);
     }
@@ -1046,7 +1046,7 @@ export async function basicProjectChecks(errorHandler = divine.error) {
     }
     /**Check the scripts in a project's package json all fit the established schema */
     async function checkPackageJson() {
-        const packageJsonOfProject = (await importFileFromProject('package', 'json')).scripts;
+        const packageJsonOfProject = await importFileFromProject('package', 'json');
         const desiredPackageJsonSchema = z.object({
             name: z.string().regex(...zRegexGenerator(/-(src|dist)$/, false)),
             author: z.literal('BoToRon'),
@@ -1055,7 +1055,7 @@ export async function basicProjectChecks(errorHandler = divine.error) {
             main: z.literal('test/server/init.js'),
             type: z.literal('module'),
             version: z.string(),
-            engines: z.literal('>=18.0.0'),
+            engines: z.object({ node: z.literal('>=18.0.0') }).strict(),
             scripts: z.object({
                 btr: z.literal('npm i @botoron/utils'),
                 'btr-u': z.literal('npm uninstall @botoron/utils'),
@@ -1089,6 +1089,36 @@ export async function basicProjectChecks(errorHandler = divine.error) {
             })
         });
         return zodCheck_curry(addToErrors)(desiredPackageJsonSchema, packageJsonOfProject);
+    }
+    /**Check all socket events are handled aka socket.on(<EVENTNAME>) */
+    async function checkSocketEvents() {
+        const linesInTypes_io = (await fsReadFileAsync('../../../types_io.ts')).split('\n');
+        await checkSocketOnOfInterface('ServerToClientEvents', './client/src/socket.ts');
+        await checkSocketOnOfInterface('ClientToServerEvents', './server/io.ts');
+        async function checkSocketOnOfInterface(nameOfInterface, pathToHandlingFile) {
+            const handlingFile = await fsReadFileAsync(pathToHandlingFile);
+            let isKeyOfWantedInterface = false;
+            linesInTypes_io.forEach(line => {
+                if (line.includes(`export interface ${nameOfInterface}`)) {
+                    isKeyOfWantedInterface = true;
+                    return;
+                }
+                if (/^\}/.test(line)) {
+                    isKeyOfWantedInterface = false;
+                } //"{"" <-- here so it doesn't mess with the color of brackets
+                if (!isKeyOfWantedInterface) {
+                    return;
+                }
+                if (!/^\t\w/.test(line)) {
+                    return;
+                }
+                const event = (line.match(/(?<=\t)\w{1,}/) || [''])[0];
+                if (handlingFile.includes(`socket.on('${event}'`)) {
+                    return;
+                }
+                addToErrors(`${nameOfInterface}.${event} is declared but not handled in ${pathToHandlingFile}`);
+            });
+        }
     }
     /**Check the rules in a project's ts config file all fit the established schema */
     async function checkTsConfigCompilerOptions() {

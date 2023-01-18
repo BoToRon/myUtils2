@@ -28,6 +28,7 @@ export type btr_globalAlert = {
     show: boolean;
 };
 export type btr_validVariant = z.infer<typeof zValidVariants>;
+export type btr_language = 'English' | 'Spanish';
 export type btr_voidFn = () => void;
 export type btr_fieldsForColumnOfTable = string | {
     key: string;
@@ -332,7 +333,7 @@ export declare const divine: {
     ping: (message: string) => Promise<void>;
 };
 /** Check the version of @botoron/utils, the enviroment variables and various config files */
-export declare function basicProjectChecks(errorHandler?: messageHandler): Promise<false | [boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, true | [boolean, boolean, boolean, boolean, boolean]]>;
+export declare function basicProjectChecks(errorHandler?: messageHandler): Promise<false | [boolean, boolean, boolean, boolean, boolean, boolean, boolean, void, boolean, boolean, boolean, true | [boolean, boolean, boolean, boolean, boolean]]>;
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
 export declare function bigConsoleError(message: string): void;
 /**Copy to clipboard while running node */
