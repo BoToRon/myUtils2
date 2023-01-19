@@ -644,12 +644,12 @@ _; /********** FOR TIMERS ******************** FOR TIMERS ******************** F
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 /**
- * Create a cancellable timer and add it to btr.timers
+ * Set a cancellable timer that runs at the specified time
  * @param id The id of the timer, so that btr.killTimer can find it
  * @param runAt The date (timestamp) at which "onComplete" should run
  * @param onComplete The function that should run if the timer wasn't cancelled
  * @param onCancel The function that should run if the timer was cancelled via killTimer
- * @returns the return of "onComplete"
+ * @returns the return of "onComplete" if it was completed, or all info revelant to cancellation along with the value of "onCancel"
  */
 export function initializeTimer(id, runAt, onComplete, onCancel) {
     const timer = { id, runAt, onComplete, onCancel, startedAt: Date.now(), isCancelled: false, cancelledAt: 0, cancelledMessage: '' };
@@ -659,16 +659,18 @@ export function initializeTimer(id, runAt, onComplete, onCancel) {
         return new Promise(resolve => {
             const maxInterval = 1000;
             const timeLeft = Math.max(runAt - Date.now(), 0);
-            if (timeLeft > maxInterval) {
-                setTimeout(() => resolveOrCancel(onComplete), timeLeft);
+            const isTheLastInterval = maxInterval >= timeLeft;
+            if (!isTheLastInterval) {
+                setTimeout(() => resolveOrCancel(interval), maxInterval);
             }
             else {
-                setTimeout(() => { removeItem(timers, timer); resolveOrCancel(interval); }, maxInterval);
+                setTimeout(() => { removeItem(timers, timer); resolveOrCancel(onComplete); }, timeLeft);
             }
-            function resolveOrCancel(fn) {
-                const { id, startedAt, runAt, onComplete, onCancel, isCancelled, cancelledAt } = timer;
+            async function resolveOrCancel(fn) {
+                const { id, startedAt, runAt, onComplete, onCancel, isCancelled, cancelledAt, cancelledMessage } = timer;
                 resolve(isCancelled ? ({
                     timerId: id,
+                    value: await onCancel(),
                     startedAt: formatDate(startedAt, 'es', 'medium+hour'),
                     intendedRunAt: formatDate(runAt, 'es', 'medium+hour'),
                     cancelledAt: formatDate(cancelledAt, 'es', 'medium+hour'),
@@ -676,6 +678,7 @@ export function initializeTimer(id, runAt, onComplete, onCancel) {
                     timeLeftBeforeCancelation: `${(runAt - timer.cancelledAt) / 1000} seconds`,
                     onComplete: onComplete.name,
                     onCancel: onCancel.name,
+                    cancelledMessage,
                 }) : tryF(fn, []));
             }
         });

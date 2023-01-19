@@ -56,9 +56,15 @@ _ /********** TYPES ******************** TYPES ******************** TYPES ******
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 
 /**Generic to get the type of an object/interface while preserving key-value typing */
-export type btr_objectEntries<T, amount extends 'plural' | 'single'> = { [K in keyof T]: [K, amount extends 'plural' ? T[K][] : T[K]] }[keyof T]
+export type objectEntries<T, amount extends 'plural' | 'single'> = { [K in keyof T]: [K, amount extends 'plural' ? T[K][] : T[K]] }[keyof T]
+/**Generic to get the type of an object/interface while preserving key-value typing */
+export type zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T>, strict?: () => zSchema<T> }
+/**Syntaxic-sugar */
+export type nullable<T> = T | null
+
+//^^ GENERICS ABOVE ^^ vv TYPES BELOW vv
+
 export type btr_trackedVueComponent = { _name: string, beforeCreate?: btr_voidFn, beforeDestroy?: btr_voidFn }
-export type btr_zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T>, strict?: () => btr_zSchema<T> }
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void
 export type btr_nonVoidFn = <F extends (...args: Parameters<F>) => ReturnType<F>> () => unknown
 export type btr_socketEventInfo = { event: string, timestamp: number, data: unknown }
@@ -130,8 +136,8 @@ export function newToast_client_curry($bvToast: bvToast) {
 }
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
 export function zodCheck_curry(errorHandler = divine.error as messageHandler, strictModeIfObject = true) {
-	function zodCheck<T>(schema: btr_zSchema<T>, data: T) {
-		function body<T>(errorHandler: messageHandler, schema: btr_zSchema<T>, data: T, strictModeIfObject = true) {
+	function zodCheck<T>(schema: zSchema<T>, data: T) {
+		function body<T>(errorHandler: messageHandler, schema: zSchema<T>, data: T, strictModeIfObject = true) {
 			const result = zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler, strictModeIfObject)
 			return result.success as boolean
 		}
@@ -140,7 +146,7 @@ export function zodCheck_curry(errorHandler = divine.error as messageHandler, st
 	return zodCheck
 }
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
-export function trackVueComponent_curry<T>(zValidVueComponentName: btr_zSchema<T>) {
+export function trackVueComponent_curry<T>(zValidVueComponentName: zSchema<T>) {
 	return function trackVueComponent(
 		name: T,
 		componentConstructor: btr_trackedVueComponent,
@@ -420,7 +426,7 @@ export function tryF<T extends (...args: Parameters<T>) => ReturnType<T>>(
  * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not
  * @returns 
  */
-export function zGetSafeParseResultAndHandleErrorMessage<T>(schema: btr_zSchema<T>,
+export function zGetSafeParseResultAndHandleErrorMessage<T>(schema: zSchema<T>,
 	data: T,
 	errorHandler = <messageHandler>nullAs(),
 	strictModeIfObject = true) {
@@ -443,7 +449,7 @@ export function zGetSafeParseResultAndHandleErrorMessage<T>(schema: btr_zSchema<
  * @param errorHandler The function that will execute if data does NOT fits zSchema
  * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not * 
  */
-export function zodCheckAndHandle<D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(zSchema: btr_zSchema<D>,
+export function zodCheckAndHandle<D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(zSchema: zSchema<D>,
 	data: D,
 	successHandler: SH,
 	args: Parameters<SH>,
@@ -466,7 +472,7 @@ export function zodCheckAndHandle<D, SH extends (...args: Parameters<SH>) => Ret
  * @param fns The functions that will conform the pipe in order
  * @returns 
  */
-export function zPipe<T>(zSchema: btr_zSchema<T>, strictModeIfObject: boolean, initialValue: T, ...fns: pipe_persistent_type<T>[]) {
+export function zPipe<T>(zSchema: zSchema<T>, strictModeIfObject: boolean, initialValue: T, ...fns: pipe_persistent_type<T>[]) {
 
 	const initialPipeState = { value: initialValue, error: <string>nullAs(), failedAt: <string>nullAs() }
 
@@ -675,12 +681,12 @@ _ /********** FOR TIMERS ******************** FOR TIMERS ******************** FO
 _ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 
 /**
- * Create a cancellable timer and add it to btr.timers
+ * Set a cancellable timer that runs at the specified time
  * @param id The id of the timer, so that btr.killTimer can find it
  * @param runAt The date (timestamp) at which "onComplete" should run
  * @param onComplete The function that should run if the timer wasn't cancelled 
  * @param onCancel The function that should run if the timer was cancelled via killTimer
- * @returns the return of "onComplete"
+ * @returns the return of "onComplete" if it was completed, or all info revelant to cancellation along with the value of "onCancel"
  */
 export function initializeTimer(id: string, runAt: number, onComplete: btr_nonVoidFn, onCancel: btr_nonVoidFn) {
 	const timer: timer = { id, runAt, onComplete, onCancel, startedAt: Date.now(), isCancelled: false, cancelledAt: 0, cancelledMessage: '' }
@@ -691,15 +697,17 @@ export function initializeTimer(id: string, runAt: number, onComplete: btr_nonVo
 		return new Promise(resolve => {
 			const maxInterval = 1000
 			const timeLeft = Math.max(runAt - Date.now(), 0)
+			const isTheLastInterval = maxInterval >= timeLeft
 
-			if (timeLeft > maxInterval) { setTimeout(() => resolveOrCancel(onComplete), timeLeft) }
-			else { setTimeout(() => { removeItem(timers, timer); resolveOrCancel(interval) }, maxInterval) }
+			if (!isTheLastInterval) { setTimeout(() => resolveOrCancel(interval), maxInterval) }
+			else { setTimeout(() => { removeItem(timers, timer); resolveOrCancel(onComplete) }, timeLeft) }
 
-			function resolveOrCancel(fn: btr_nonVoidFn) {
-				const { id, startedAt, runAt, onComplete, onCancel, isCancelled, cancelledAt } = timer
-
+			async function resolveOrCancel(fn: btr_nonVoidFn) {
+				const { id, startedAt, runAt, onComplete, onCancel, isCancelled, cancelledAt, cancelledMessage } = timer
 				resolve(isCancelled ? ({
 					timerId: id,
+					value: await onCancel(),
+
 					startedAt: formatDate(startedAt, 'es', 'medium+hour'),
 					intendedRunAt: formatDate(runAt, 'es', 'medium+hour'),
 					cancelledAt: formatDate(cancelledAt, 'es', 'medium+hour'),
@@ -707,6 +715,7 @@ export function initializeTimer(id: string, runAt: number, onComplete: btr_nonVo
 					timeLeftBeforeCancelation: `${(runAt - timer.cancelledAt) / 1000} seconds`,
 					onComplete: onComplete.name,
 					onCancel: onCancel.name,
+					cancelledMessage,
 				}) : tryF(fn, []))
 			}
 		})

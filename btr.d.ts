@@ -4,17 +4,20 @@ export declare const zValidVariants: any;
 declare const zValidNpmCommand_package: any;
 declare const zValidNpmCommand_project: any;
 /**Generic to get the type of an object/interface while preserving key-value typing */
-export type btr_objectEntries<T, amount extends 'plural' | 'single'> = {
+export type objectEntries<T, amount extends 'plural' | 'single'> = {
     [K in keyof T]: [K, amount extends 'plural' ? T[K][] : T[K]];
 }[keyof T];
+/**Generic to get the type of an object/interface while preserving key-value typing */
+export type zSchema<T> = {
+    safeParse: (x: T) => SafeParseReturnType<T, T>;
+    strict?: () => zSchema<T>;
+};
+/**Syntaxic-sugar */
+export type nullable<T> = T | null;
 export type btr_trackedVueComponent = {
     _name: string;
     beforeCreate?: btr_voidFn;
     beforeDestroy?: btr_voidFn;
-};
-export type btr_zSchema<T> = {
-    safeParse: (x: T) => SafeParseReturnType<T, T>;
-    strict?: () => btr_zSchema<T>;
 };
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void;
 export type btr_nonVoidFn = <F extends (...args: Parameters<F>) => ReturnType<F>>() => unknown;
@@ -77,9 +80,9 @@ type timer = {
 /**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
 export declare function newToast_client_curry($bvToast: bvToast): (title: string, message: string, variant: z.infer<any>) => void;
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
-export declare function zodCheck_curry(errorHandler?: messageHandler, strictModeIfObject?: boolean): <T>(schema: btr_zSchema<T>, data: T) => boolean;
+export declare function zodCheck_curry(errorHandler?: messageHandler, strictModeIfObject?: boolean): <T>(schema: zSchema<T>, data: T) => boolean;
 /**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
-export declare function trackVueComponent_curry<T>(zValidVueComponentName: btr_zSchema<T>): (name: T, componentConstructor: btr_trackedVueComponent, window: {
+export declare function trackVueComponent_curry<T>(zValidVueComponentName: zSchema<T>): (name: T, componentConstructor: btr_trackedVueComponent, window: {
     vueComponents: btr_trackedVueComponent[];
 }) => btr_trackedVueComponent;
 /**(generates a function that:) Opens/close a bootstrap-vue modal with zod validation */
@@ -196,7 +199,7 @@ export declare function tryF<T extends (...args: Parameters<T>) => ReturnType<T>
  * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not
  * @returns
  */
-export declare function zGetSafeParseResultAndHandleErrorMessage<T>(schema: btr_zSchema<T>, data: T, errorHandler?: messageHandler, strictModeIfObject?: boolean): SafeParseReturnType<T_1, T_1>;
+export declare function zGetSafeParseResultAndHandleErrorMessage<T>(schema: zSchema<T>, data: T, errorHandler?: messageHandler, strictModeIfObject?: boolean): SafeParseReturnType<T_1, T_1>;
 /**
  * Check data against a provided schema, and execute either the success or error handler
  * @param zSchema The zSchema to test data against
@@ -206,7 +209,7 @@ export declare function zGetSafeParseResultAndHandleErrorMessage<T>(schema: btr_
  * @param errorHandler The function that will execute if data does NOT fits zSchema
  * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not *
  */
-export declare function zodCheckAndHandle<D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(zSchema: btr_zSchema<D>, data: D, successHandler: SH, args: Parameters<SH>, errorHandler?: messageHandler, strictModeIfObject?: boolean): void;
+export declare function zodCheckAndHandle<D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(zSchema: zSchema<D>, data: D, successHandler: SH, args: Parameters<SH>, errorHandler?: messageHandler, strictModeIfObject?: boolean): void;
 /**Pipe with schema validation and an basic error tracking */
 /**
  * Pipe with schema validation and basic error tracking/handling
@@ -220,7 +223,7 @@ export declare function zodCheckAndHandle<D, SH extends (...args: Parameters<SH>
  * @param fns The functions that will conform the pipe in order
  * @returns
  */
-export declare function zPipe<T>(zSchema: btr_zSchema<T>, strictModeIfObject: boolean, initialValue: T, ...fns: pipe_persistent_type<T>[]): {
+export declare function zPipe<T>(zSchema: zSchema<T>, strictModeIfObject: boolean, initialValue: T, ...fns: pipe_persistent_type<T>[]): {
     value: T;
     error: string;
     failedAt: string;
@@ -275,12 +278,12 @@ export declare const stringify: {
 /**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
 export declare function getUniqueId(suffix: string): string;
 /**
- * Create a cancellable timer and add it to btr.timers
+ * Set a cancellable timer that runs at the specified time
  * @param id The id of the timer, so that btr.killTimer can find it
  * @param runAt The date (timestamp) at which "onComplete" should run
  * @param onComplete The function that should run if the timer wasn't cancelled
  * @param onCancel The function that should run if the timer was cancelled via killTimer
- * @returns the return of "onComplete"
+ * @returns the return of "onComplete" if it was completed, or all info revelant to cancellation along with the value of "onCancel"
  */
 export declare function initializeTimer(id: string, runAt: number, onComplete: btr_nonVoidFn, onCancel: btr_nonVoidFn): Promise<unknown>;
 /**Kill a timer created with initializeTimer, the reason provided will become a divine stack */
