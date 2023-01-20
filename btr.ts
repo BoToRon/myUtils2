@@ -119,9 +119,9 @@ type timer = {
 	startedAt: number,
 	onComplete: btr_nonVoidFn,
 	onCancel: btr_nonVoidFn,
-	cancelledMessage: string,
+	cancelStack: string,
 	cancelledAt: number,
-	isCancelled: boolean
+	wasCancelled: boolean
 }
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
@@ -694,6 +694,38 @@ _ /********** FOR TIMERS ******************** FOR TIMERS ******************** FO
 _ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 
 /**
+ * Set a cancellable interval that is automatically killed when the stay-alive-checker fails but can also be manuall cancelled with killTimer
+ * @param id The id of the timer, so that btr.killTimer can find it
+ * @param intervalInMs How often onEach will run
+ * @param stayAliveChecker Predicate that automatically kills the interval on failure
+ * @param onEach The function that runs with each cycle of the interval
+ * @param onKill The function that killTimer will run when killing the interval
+ * @param timesRanSucessfully The amount of times the interval ran before its dismise
+ * @returns The return of onKill
+ */
+export async function initializeInterval<eachF extends () => ReturnType<eachF>, cancelF extends () => ReturnType<cancelF>>(
+	id: string,
+	intervalInMs: number,
+	stayAliveChecker: () => boolean,
+	onEach: eachF,
+	onKill: cancelF,
+	timesRanSucessfully: number
+) {
+	type resolveInfo = Awaited<ReturnType<typeof initializeTimer<eachF, cancelF>>>
+
+	const result: resolveInfo = await new Promise(resolve => {
+		initializeTimer(id, Date.now() + intervalInMs, onEach, onKill).then(result => {
+			if (result.wasCancelled) { return resolve(result) }
+			initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1).then(result => resolve(result))
+		})
+
+		//TODO: figure out a way to run this before initializing the timer (doesn't work yet because it is deleted between intervals)
+		if (!stayAliveChecker()) { killTimer(id, '! stayAliveChecker()') }
+	})
+
+	return { timesRanSucessfully, ...result } as resolveInfo & { timesRanSucessfully: number, wasCancelled: true }
+}
+/**
  * Set a cancellable timer that runs at the specified time
  * @param id The id of the timer, so that btr.killTimer can find it
  * @param runAt The date (timestamp) at which "onComplete" should run
@@ -701,35 +733,52 @@ _ /********** FOR TIMERS ******************** FOR TIMERS ******************** FO
  * @param onCancel The function that should run if the timer was cancelled via killTimer
  * @returns the return of "onComplete" if it was completed, or all info revelant to cancellation along with the value of "onCancel"
  */
-export function initializeTimer(id: string, runAt: number, onComplete: btr_nonVoidFn, onCancel: btr_nonVoidFn) {
-	const timer: timer = { id, runAt, onComplete, onCancel, startedAt: Date.now(), isCancelled: false, cancelledAt: 0, cancelledMessage: '' }
-	timers.push(timer)
-	return interval()
+export async function initializeTimer<completeF extends () => ReturnType<completeF>, cancelF extends () => ReturnType<cancelF>>(
+	id: string,
+	runAt: number,
+	onComplete: completeF,
+	onCancel: cancelF
+) {
 
-	function interval() {
-		return new Promise(resolve => {
+	const timer: timer = { id, runAt, onComplete, onCancel, startedAt: Date.now(), wasCancelled: false, cancelledAt: 0, cancelStack: '' }
+	timers.push(timer)
+	return await interval()
+
+	async function getTimerResolveInfo<completeF extends () => ReturnType<completeF>, cancelF extends () => ReturnType<cancelF>>(
+		timer: timer,
+		fn: completeF | cancelF
+	) {
+		const { id, startedAt, runAt, onComplete, onCancel, cancelledAt, cancelStack, wasCancelled } = timer
+
+		const value = tryF(fn, [] as Parameters<typeof fn>)
+
+		const template = {
+			timerId: id,
+			startedAt: formatDate(startedAt, 'es', 'medium+hour'),
+			intendedRunAt: formatDate(runAt, 'es', 'medium+hour'),
+			cancelledAt: wasCancelled ? formatDate(cancelledAt, 'es', 'medium+hour') : null,
+			timeElapsedBeforeCancelation: wasCancelled ? `${(cancelledAt - startedAt) / 1000} seconds` : null,
+			timeLeftBeforeCancelation: wasCancelled ? `${(runAt - timer.cancelledAt) / 1000} seconds` : null,
+			onCompleteFn: onComplete.name,
+			onCancelFn: onCancel.name,
+			cancelStack,
+		}
+
+		if (wasCancelled) { return { value_onCancel: value as ReturnType<cancelF>, wasCancelled: true as const, ...template } }
+		else { return { value_onComplete: value as ReturnType<completeF>, wasCancelled: false as const, ...template } }
+	}
+
+	async function interval(): Promise<ReturnType<typeof getTimerResolveInfo>> {
+		return await new Promise(resolve => {
 			const maxInterval = 1000
 			const timeLeft = Math.max(runAt - Date.now(), 0)
 			const isTheLastInterval = maxInterval >= timeLeft
 
-			if (!isTheLastInterval) { setTimeout(() => resolveOrCancel(interval), maxInterval) }
-			else { setTimeout(() => { removeItem(timers, timer); resolveOrCancel(onComplete) }, timeLeft) }
+			if (!isTheLastInterval) { setTimeout(() => resolveOrCancel(interval, true), maxInterval) }
+			else { setTimeout(() => { removeItem(timers, timer); resolveOrCancel(onComplete, false) }, timeLeft) }
 
-			async function resolveOrCancel(fn: btr_nonVoidFn) {
-				const { id, startedAt, runAt, onComplete, onCancel, isCancelled, cancelledAt, cancelledMessage } = timer
-				resolve(isCancelled ? ({
-					timerId: id,
-					value: await onCancel(),
-
-					startedAt: formatDate(startedAt, 'es', 'medium+hour'),
-					intendedRunAt: formatDate(runAt, 'es', 'medium+hour'),
-					cancelledAt: formatDate(cancelledAt, 'es', 'medium+hour'),
-					timeElapsedBeforeCancelation: `${(cancelledAt - startedAt) / 1000} seconds`,
-					timeLeftBeforeCancelation: `${(runAt - timer.cancelledAt) / 1000} seconds`,
-					onComplete: onComplete.name,
-					onCancel: onCancel.name,
-					cancelledMessage,
-				}) : tryF(fn, []))
+			async function resolveOrCancel(fn: typeof interval | completeF, isInterval: boolean) {
+				resolve(isInterval ? await fn() as Awaited<ReturnType<typeof interval>> : await getTimerResolveInfo(timer, fn as completeF))
 			}
 		})
 	}
@@ -740,9 +789,9 @@ export async function killTimer(timerId: string, reason: string) {
 	if (!theTimer) { divine.error('Unable to cancel, no timer was found with this id: ' + timerId); return }
 
 	removeItem(timers, theTimer)
-	theTimer.cancelledMessage = getTraceableStack(reason)
+	theTimer.cancelStack = getTraceableStack(reason)
 	theTimer.cancelledAt = Date.now()
-	theTimer.isCancelled = true
+	theTimer.wasCancelled = true
 
 	return await theTimer.onCancel()
 }

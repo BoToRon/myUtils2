@@ -68,9 +68,9 @@ type timer = {
     startedAt: number;
     onComplete: btr_nonVoidFn;
     onCancel: btr_nonVoidFn;
-    cancelledMessage: string;
+    cancelStack: string;
     cancelledAt: number;
-    isCancelled: boolean;
+    wasCancelled: boolean;
 };
 /**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
 export declare function newToast_client_curry($bvToast: bvToast): (title: string, message: string, variant: z.infer<any>) => void;
@@ -273,6 +273,32 @@ export declare const stringify: {
 /**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
 export declare function getUniqueId(suffix: string): string;
 /**
+ * Set a cancellable interval that is automatically killed when the stay-alive-checker fails but can also be manuall cancelled with killTimer
+ * @param id The id of the timer, so that btr.killTimer can find it
+ * @param intervalInMs How often onEach will run
+ * @param stayAliveChecker Predicate that automatically kills the interval on failure
+ * @param onEach The function that runs with each cycle of the interval
+ * @param onKill The function that killTimer will run when killing the interval
+ * @param timesRanSucessfully The amount of times the interval ran before its dismise
+ * @returns The return of onKill
+ */
+export declare function initializeInterval<eachF extends () => ReturnType<eachF>, cancelF extends () => ReturnType<cancelF>>(id: string, intervalInMs: number, stayAliveChecker: () => boolean, onEach: eachF, onKill: cancelF, timesRanSucessfully: number): Promise<{
+    timerId: string;
+    startedAt: string;
+    intendedRunAt: string;
+    cancelledAt: string;
+    timeElapsedBeforeCancelation: string;
+    timeLeftBeforeCancelation: string;
+    onCompleteFn: string;
+    onCancelFn: string;
+    cancelStack: string;
+    value_onCancel: any;
+    wasCancelled: true;
+} & {
+    timesRanSucessfully: number;
+    wasCancelled: true;
+}>;
+/**
  * Set a cancellable timer that runs at the specified time
  * @param id The id of the timer, so that btr.killTimer can find it
  * @param runAt The date (timestamp) at which "onComplete" should run
@@ -280,7 +306,31 @@ export declare function getUniqueId(suffix: string): string;
  * @param onCancel The function that should run if the timer was cancelled via killTimer
  * @returns the return of "onComplete" if it was completed, or all info revelant to cancellation along with the value of "onCancel"
  */
-export declare function initializeTimer(id: string, runAt: number, onComplete: btr_nonVoidFn, onCancel: btr_nonVoidFn): Promise<unknown>;
+export declare function initializeTimer<completeF extends () => ReturnType<completeF>, cancelF extends () => ReturnType<cancelF>>(id: string, runAt: number, onComplete: completeF, onCancel: cancelF): Promise<{
+    timerId: string;
+    startedAt: string;
+    intendedRunAt: string;
+    cancelledAt: string;
+    timeElapsedBeforeCancelation: string;
+    timeLeftBeforeCancelation: string;
+    onCompleteFn: string;
+    onCancelFn: string;
+    cancelStack: string;
+    value_onCancel: any;
+    wasCancelled: true;
+} | {
+    timerId: string;
+    startedAt: string;
+    intendedRunAt: string;
+    cancelledAt: string;
+    timeElapsedBeforeCancelation: string;
+    timeLeftBeforeCancelation: string;
+    onCompleteFn: string;
+    onCancelFn: string;
+    cancelStack: string;
+    value_onComplete: any;
+    wasCancelled: false;
+}>;
 /**Kill a timer created with initializeTimer, the reason provided will become a divine stack */
 export declare function killTimer(timerId: string, reason: string): Promise<unknown>;
 /**console.log... WITH COLORS :D */

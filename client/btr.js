@@ -644,6 +644,31 @@ _; /********** FOR TIMERS ******************** FOR TIMERS ******************** F
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 /**
+ * Set a cancellable interval that is automatically killed when the stay-alive-checker fails but can also be manuall cancelled with killTimer
+ * @param id The id of the timer, so that btr.killTimer can find it
+ * @param intervalInMs How often onEach will run
+ * @param stayAliveChecker Predicate that automatically kills the interval on failure
+ * @param onEach The function that runs with each cycle of the interval
+ * @param onKill The function that killTimer will run when killing the interval
+ * @param timesRanSucessfully The amount of times the interval ran before its dismise
+ * @returns The return of onKill
+ */
+export async function initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully) {
+    const result = await new Promise(resolve => {
+        initializeTimer(id, Date.now() + intervalInMs, onEach, onKill).then(result => {
+            if (result.wasCancelled) {
+                return resolve(result);
+            }
+            initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1).then(result => resolve(result));
+        });
+        //TODO: figure out a way to run this before initializing the timer (doesn't work yet because it is deleted between intervals)
+        if (!stayAliveChecker()) {
+            killTimer(id, '! stayAliveChecker()');
+        }
+    });
+    return { timesRanSucessfully, ...result };
+}
+/**
  * Set a cancellable timer that runs at the specified time
  * @param id The id of the timer, so that btr.killTimer can find it
  * @param runAt The date (timestamp) at which "onComplete" should run
@@ -651,35 +676,44 @@ _; /********** FOR TIMERS ******************** FOR TIMERS ******************** F
  * @param onCancel The function that should run if the timer was cancelled via killTimer
  * @returns the return of "onComplete" if it was completed, or all info revelant to cancellation along with the value of "onCancel"
  */
-export function initializeTimer(id, runAt, onComplete, onCancel) {
-    const timer = { id, runAt, onComplete, onCancel, startedAt: Date.now(), isCancelled: false, cancelledAt: 0, cancelledMessage: '' };
+export async function initializeTimer(id, runAt, onComplete, onCancel) {
+    const timer = { id, runAt, onComplete, onCancel, startedAt: Date.now(), wasCancelled: false, cancelledAt: 0, cancelStack: '' };
     timers.push(timer);
-    return interval();
-    function interval() {
-        return new Promise(resolve => {
+    return await interval();
+    async function getTimerResolveInfo(timer, fn) {
+        const { id, startedAt, runAt, onComplete, onCancel, cancelledAt, cancelStack, wasCancelled } = timer;
+        const value = tryF(fn, []);
+        const template = {
+            timerId: id,
+            startedAt: formatDate(startedAt, 'es', 'medium+hour'),
+            intendedRunAt: formatDate(runAt, 'es', 'medium+hour'),
+            cancelledAt: wasCancelled ? formatDate(cancelledAt, 'es', 'medium+hour') : null,
+            timeElapsedBeforeCancelation: wasCancelled ? `${(cancelledAt - startedAt) / 1000} seconds` : null,
+            timeLeftBeforeCancelation: wasCancelled ? `${(runAt - timer.cancelledAt) / 1000} seconds` : null,
+            onCompleteFn: onComplete.name,
+            onCancelFn: onCancel.name,
+            cancelStack,
+        };
+        if (wasCancelled) {
+            return { value_onCancel: value, wasCancelled: true, ...template };
+        }
+        else {
+            return { value_onComplete: value, wasCancelled: false, ...template };
+        }
+    }
+    async function interval() {
+        return await new Promise(resolve => {
             const maxInterval = 1000;
             const timeLeft = Math.max(runAt - Date.now(), 0);
             const isTheLastInterval = maxInterval >= timeLeft;
             if (!isTheLastInterval) {
-                setTimeout(() => resolveOrCancel(interval), maxInterval);
+                setTimeout(() => resolveOrCancel(interval, true), maxInterval);
             }
             else {
-                setTimeout(() => { removeItem(timers, timer); resolveOrCancel(onComplete); }, timeLeft);
+                setTimeout(() => { removeItem(timers, timer); resolveOrCancel(onComplete, false); }, timeLeft);
             }
-            async function resolveOrCancel(fn) {
-                const { id, startedAt, runAt, onComplete, onCancel, isCancelled, cancelledAt, cancelledMessage } = timer;
-                resolve(isCancelled ? ({
-                    timerId: id,
-                    value: await onCancel(),
-                    startedAt: formatDate(startedAt, 'es', 'medium+hour'),
-                    intendedRunAt: formatDate(runAt, 'es', 'medium+hour'),
-                    cancelledAt: formatDate(cancelledAt, 'es', 'medium+hour'),
-                    timeElapsedBeforeCancelation: `${(cancelledAt - startedAt) / 1000} seconds`,
-                    timeLeftBeforeCancelation: `${(runAt - timer.cancelledAt) / 1000} seconds`,
-                    onComplete: onComplete.name,
-                    onCancel: onCancel.name,
-                    cancelledMessage,
-                }) : tryF(fn, []));
+            async function resolveOrCancel(fn, isInterval) {
+                resolve(isInterval ? await fn() : await getTimerResolveInfo(timer, fn));
             }
         });
     }
@@ -692,9 +726,9 @@ export async function killTimer(timerId, reason) {
         return;
     }
     removeItem(timers, theTimer);
-    theTimer.cancelledMessage = getTraceableStack(reason);
+    theTimer.cancelStack = getTraceableStack(reason);
     theTimer.cancelledAt = Date.now();
-    theTimer.isCancelled = true;
+    theTimer.wasCancelled = true;
     return await theTimer.onCancel();
 }
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
