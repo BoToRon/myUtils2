@@ -11,9 +11,11 @@ module.exports = {
 	rules: {
 		//'jsdoc/require-jsdoc': 1,
 		'arrow-body-style': ['error', 'as-needed'],
+		'max-lines-per-function': ['error', 100],
 		'func-style': ['error', 'declaration'],
 		'quote-props': ['error', 'as-needed'],
 		quotes: ['error', 'single'],
+		'require-await': 'error',
 		semi: ['error', 'never'],
 		'no-undef': 'off',
 	},

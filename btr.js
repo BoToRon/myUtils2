@@ -23,6 +23,8 @@ import { createRequire } from 'module'; //DELETETHISFORCLIENT
 _;
 import mongodb from 'mongodb'; //DELETETHISFORCLIENT
 _;
+import { basicProjectChecks } from './basicProjectChecks.js';
+_;
 import { z, string } from 'zod';
 _;
 import { fromZodError } from 'zod-validation-error';
@@ -47,7 +49,7 @@ const isNode = typeof process !== 'undefined' && process.versions != null && pro
 const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile']);
 const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile']);
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch']);
-const zMyEnv = z.object({
+export const zMyEnv = z.object({
     DEV_OR_PROD: z.enum(['DEV', 'PROD']),
     ADMIN_PASSWORD: string(),
     ERIS_TOKEN: string(),
@@ -240,10 +242,28 @@ export function getRandomItem(arr) { const r = roll(arr.length); return { item: 
 export function getUniqueValues(arr) { return [...new Set(arr)]; }
 /**@returns whether an item is the last one in an array or not (warning: maybe don't use with primitives) */
 export function isLastItem(arr, item) { return arr.indexOf(item) === arr.length - 1; }
-/*Remove a single item from an array, or all copies of that item if its a primitive value and return the removedCount */
-export function removeItem(arr, item) { return selfFilter(arr, (x) => x !== item).removedCount; }
 /**Return the last item of the given array */
 export function lastItem(arr) { return arr[arr.length - 1]; }
+/**Apply multiple mapping functions to a single array at once and return an object with all the result */
+export function multiMap(arr, f1, f2, f3 = doNothing, f4 = doNothing, f5 = doNothing) {
+    const maps = arr.reduce((acc, item) => {
+        acc.map1.push(f1(item));
+        acc.map2.push(f2(item));
+        acc.map3.push(f3(item));
+        acc.map4.push(f4(item));
+        acc.map5.push(f5(item));
+        return acc;
+    }, {
+        map1: [],
+        map2: [],
+        map3: [],
+        map4: [],
+        map5: [],
+    });
+    return maps;
+}
+/*Remove a single item from an array, or all copies of that item if its a primitive value and return the removedCount */
+export function removeItem(arr, item) { return selfFilter(arr, (x) => x !== item).removedCount; }
 /**
  * Map an array, and filter-out the items that weren't fit
  * see filterMap for a faster (single rather than double loop) but more complex version)
@@ -656,14 +676,14 @@ _; /********** FOR TIMERS ******************** FOR TIMERS ******************** F
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 /**
- * Set a cancellable interval that is automatically killed when the stay-alive-checker fails but can also be manuall cancelled with killTimer
+ * Set an interval that is automatically killed when the stay-alive-checker fails but can also be manually killed with killTimer
  * @param id The id of the timer, so that btr.killTimer can find it
  * @param intervalInMs How often onEach will run
  * @param stayAliveChecker Predicate that automatically kills the interval on failure
  * @param onEach The function that runs with each cycle of the interval
  * @param onKill The function that killTimer will run when killing the interval
  * @param timesRanSucessfully The amount of times the interval ran before its dismise
- * @returns The return of onKill
+ * @returns initializeTimer's resolveInfo with the return of onKill as the value (since onEach never resolves, just keeps going)
  */
 export async function initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully) {
     const result = await new Promise(resolve => {
@@ -673,9 +693,8 @@ export async function initializeInterval(id, intervalInMs, stayAliveChecker, onE
             }
             initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1).then(result => resolve(result));
         });
-        //TODO: figure out a way to run this before initializing the timer (doesn't work yet because it is deleted between intervals)
         if (!stayAliveChecker()) {
-            killTimer(id, '! stayAliveChecker()');
+            killTimer(id, `stayAliveChecker (${stayAliveChecker.name}) = false`);
         }
     });
     return { timesRanSucessfully, ...result };
@@ -692,7 +711,7 @@ export async function initializeTimer(id, runAt, onComplete, onCancel) {
     const timer = { id, runAt, onComplete, onCancel, startedAt: Date.now(), wasCancelled: false, cancelledAt: 0, cancelStack: '' };
     timers.push(timer);
     return await interval();
-    async function getTimerResolveInfo(timer, fn) {
+    function getTimerResolveInfo(timer, fn) {
         const { id, startedAt, runAt, onComplete, onCancel, cancelledAt, cancelStack, wasCancelled } = timer;
         const value = tryF(fn, []);
         const template = {
@@ -766,6 +785,8 @@ export function getTraceableStack(error) {
 }
 /**@returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export function isGuest(username) { return /Guest[0-9]{13}/i.test(`${username}`); }
+/**To know when files are fired and in what order  */
+export function logInitialization(filename) { colorLog('cyan', '*'.repeat(20) + ' ' + filename); }
 /**(Message) ✔️ */
 export function successLog(message) { return colorLog('green', message + ' ✔️'); }
 /**@returns an string with its linebreaks converted into simple one-char spaces */
@@ -854,21 +875,6 @@ _; /********** DEPRECATED ******************** DEPRECATED ******************** D
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 /**@deprecated use "formatDate instead" */
 export function getFormattedTimestamp() { doNothing; }
-/**
- * Create multiple array.maps for a single array
- * @param arr The array that shall be multiMap'd
- * @param fns An object of fns, to be objectMap'd
- * @returns An object with the same keys as "fns", but the values are mapped to each have processed "arr"
- * @deprecated Not really, but is a work in press, see "issues"
- * @issues The mapped properties return "any[]" instead of the return type of that method
- */
-// ! work in progress
-function multiMap(arr, fns) {
-    return mapObject(fns, fn => arr.map(item => fn(item)));
-}
-{
-    multiMap;
-}
 // ! DELETEEVERYTHINGBELOW, as it is only meant for server-side use
 _; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
 _; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
@@ -887,7 +893,7 @@ export const divine = {
         const { DEV_OR_PROD } = getEnviromentVariables();
         DEV_OR_PROD !== 'PROD' ? killProcess(message) : divine.ping(message);
     },
-    init: (async () => {
+    init: (() => {
         delay(1000).then(async () => {
             if (command_package || command_project) {
                 return;
@@ -963,304 +969,6 @@ _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ************
 _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-/** Check the version of @botoron/utils, the enviroment variables and various config files */
-export async function basicProjectChecks(errorHandler = divine.error) {
-    //TODO: make sure io.ts exports { initializedIo } so that the code in the file is ran by only calling init.ts?
-    //TODO: an schema for ref's esqueleton? (temp, debug, debugLog, devOrProd, socket)
-    //TODO: check "ref.ts" matches (getDebugOptions, mongoCollection)
-    //TODO: check all exports are exported in-line ("export function sampleFunction.." instead of "export { fn1, fn2, etc }" )
-    //TODO: make sure all top-level variables are exported
-    function addToErrors(error) { return errors.push(error); }
-    const { DEV_OR_PROD } = getEnviromentVariables();
-    const errors = [];
-    const allChecksPass = await allChecks();
-    if (errors.length) {
-        errorHandler('\n\n' + errors.join('\n\n') + '\n\n');
-        return false;
-    }
-    else {
-        successLog('all basicProjectChecks passed');
-        return allChecksPass;
-    }
-    /**Promise.all([basic checks]) */
-    async function allChecks() {
-        return await Promise.all([
-            checkAllTopLevelFunctionAreDescribed(), checkAllVueComponentsAreTrackeable(), checkEnviromentVariables(),
-            checkEslintConfigRules(), checkFilesAndFolderStructure(), checkGitIgnore(), checkPackageJson(), checkSocketEvents(),
-            checkTsConfigCompilerOptions(), checkUtilsVersion(), checkVsCodeSettings(), checkVueDevFiles(),
-        ]);
-    }
-    /**Check all the top-level functions in main .ts server files have a description */
-    async function checkAllTopLevelFunctionAreDescribed() {
-        if (DEV_OR_PROD !== 'DEV') {
-            return true;
-        }
-        let checkIsPassed = true;
-        const path = './server';
-        const serverTsFiles = getFilesAndFolders(path, '.ts');
-        for await (const file of serverTsFiles) {
-            const content = await fsReadFileAsync(file);
-            const lines = content.split('\n');
-            const uncommentedTopLevelFunctions = lines.reduce((acc, line, index) => {
-                const isTopLevelFunction = /^export (async|function)/.test(line);
-                if (!isTopLevelFunction) {
-                    return acc;
-                }
-                const isCommented = /\*\//.test(lines[index - 1]);
-                if (isCommented) {
-                    return acc;
-                }
-                acc.push(line.slice(0, line.length - 5).replace(/(export ){0,}(async |function |\(.{1,})/g, ''));
-                return acc;
-            }, []);
-            if (!uncommentedTopLevelFunctions.length) {
-                continue;
-            }
-            addToErrors(`Uncommented exported functions     (in ${file}):     [${uncommentedTopLevelFunctions.join(', ')}]`);
-            checkIsPassed = false;
-        }
-        return checkIsPassed;
-    }
-    /**Check all the vue components are trackable by the window */
-    async function checkAllVueComponentsAreTrackeable() {
-        if (DEV_OR_PROD !== 'DEV') {
-            return true;
-        }
-        let checkIsPassed = true;
-        const path = './client/src';
-        const dotVueFiles = getFilesAndFolders(path, '.vue');
-        for await (const file of dotVueFiles) {
-            const wantedMatch = 'window.trackVueComponent';
-            const vueFile = await fsReadFileAsync(file);
-            if (vueFile.includes(wantedMatch)) {
-                continue;
-            }
-            addToErrors(`${file} must include "${wantedMatch}"`);
-            checkIsPassed = false;
-        }
-        return checkIsPassed;
-    }
-    /**Check if all the desired enviroment keys are defined */
-    function checkEnviromentVariables() {
-        const env = getEnviromentVariables();
-        return zodCheck_curry(addToErrors, false)(zMyEnv, env);
-    }
-    /**Check the rules in a project's eslint config file all fit the established schema */
-    async function checkEslintConfigRules() {
-        const pathToUtilsEslint = './.eslintrc.cjs';
-        const desiredEslintConfig = (await import(pathToUtilsEslint)).default;
-        const eslintConfingOfProject = await importFileFromProject('.eslintrc', 'cjs');
-        return zodCheck_curry(addToErrors)(getZodSchemaFromData(desiredEslintConfig), eslintConfingOfProject);
-    }
-    /**Check the structure of the project */
-    function checkFilesAndFolderStructure() {
-        const currentFilesAndFolders = getFilesAndFolders('.', null);
-        const desiredFilesAndFolders = [
-            './.env', './.eslintrc.cjs', './.git', './.gitignore',
-            './node_modules', './package-lock.json', './package.json', './README.md',
-            './test', './TODO.MD',
-            './tsconfig.json', './types.d.ts', './types_io.ts', './types_z.ts',
-            './server/fns.ts', './server/init.ts', './server/io.ts', './server/ref.ts',
-            './client/env.d.ts', './client/index.html', './client/node_modules', './client/package-lock.json', './client/package.json',
-            './client/tsconfig.config.json', './client/tsconfig.json', './client/vite.config.ts', './client/vue.config.js',
-            './client/src/App.vue', './client/src/assets', './client/src/index.ts', './client/src/socket.ts', './client/src/store.ts',
-        ];
-        const missingItems = compareArrays(desiredFilesAndFolders, currentFilesAndFolders).missingItems;
-        if (missingItems.length) {
-            addToErrors(`The following files/directories are missing: [${missingItems.join(', ')}]`);
-        }
-        return missingItems.length === 0;
-    }
-    /**Check all files/folders that should be ignored by default are so */
-    async function checkGitIgnore() {
-        const desiredIgnores = ['.env', 'client/node_modules', 'node_modules', 'test/*'];
-        const currentIgnores = (await fsReadFileAsync('./.gitignore')).split('\r\n');
-        const missingItems = compareArrays(desiredIgnores, currentIgnores).missingItems;
-        if (missingItems.length) {
-            addToErrors(`.gitignore must include the following: [${missingItems.join(', ')}]`);
-        }
-        return missingItems.length === 0;
-    }
-    /**Check the scripts in a project's package json all fit the established schema */
-    async function checkPackageJson() {
-        const packageJsonOfProject = await importFileFromProject('package', 'json');
-        const desiredPackageJsonSchema = z.object({
-            name: z.string().regex(...zRegexGenerator(/-(src|dist)$/, false)),
-            author: z.literal('BoToRon'),
-            description: z.string().min(10),
-            license: z.literal('ISC'),
-            main: z.literal('test/server/init.js'),
-            type: z.literal('module'),
-            version: z.string(),
-            engines: z.object({ node: z.literal('>=18.0.0') }).strict(),
-            scripts: z.object({
-                btr: z.literal('npm i @botoron/utils'),
-                'btr-u': z.literal('npm uninstall @botoron/utils'),
-                'build-server': z.literal('npm run npmScript --command_project=build'),
-                'build-client': z.literal('cd client & npm run build-only'),
-                'build-all': z.literal('tsc --target esnext server/init.ts --outDir ../dist & cd client & npm run build-only && cd ..'),
-                check: z.literal('npm run npmScript --command_project=check'),
-                localtunnel: z.literal('lt --port 3000'),
-                nodemon: z.literal('nodemon test/server/init.js'),
-                npmScript: z.literal('node node_modules/@botoron/utils/btr.js'),
-                start: z.literal('node test/server/init.js'),
-                test: z.literal('ts-node-esm test.ts'),
-                transpile: z.literal('npm run npmScript --command_project=transpile'),
-                vue: z.literal('cd client & npm run dev'),
-                git: z.literal('npm run npmScript --command_project=git')
-            }).strict(),
-            dependencies: z.object({
-                '@botoron/utils': z.string(),
-                'socket.io': z.string(),
-                'socket.io-client': z.string(),
-                'zod-validation-error': z.string()
-            }),
-            devDependencies: z.object({
-                '@types/express': z.string(),
-                '@typescript-eslint/eslint-plugin': z.string(),
-                '@typescript-eslint/parser': z.string(),
-                dotenv: z.string(),
-                eslint: z.string(),
-                'eslint-plugin-vue': z.string(),
-                nodemon: z.string(),
-            })
-        });
-        return zodCheck_curry(addToErrors)(desiredPackageJsonSchema, packageJsonOfProject);
-    }
-    /**Check all socket events are handled aka socket.on(<EVENTNAME>) */
-    async function checkSocketEvents() {
-        const linesInTypes_io = (await fsReadFileAsync('./types_io.ts')).split('\n');
-        await checkSocketOnOfInterface('ServerToClientEvents', './client/src/socket.ts');
-        await checkSocketOnOfInterface('ClientToServerEvents', './server/io.ts');
-        async function checkSocketOnOfInterface(nameOfInterface, pathToHandlingFile) {
-            const handlingFile = await fsReadFileAsync(pathToHandlingFile);
-            let isKeyOfWantedInterface = false;
-            linesInTypes_io.forEach(line => {
-                if (line.includes(`export interface ${nameOfInterface}`)) {
-                    isKeyOfWantedInterface = true;
-                    return;
-                }
-                if (/^\}/.test(line)) {
-                    isKeyOfWantedInterface = false;
-                } //"{"" <-- here so it doesn't mess with the color of brackets
-                if (!isKeyOfWantedInterface) {
-                    return;
-                }
-                if (!/^\t\w/.test(line)) {
-                    return;
-                }
-                const event = (line.match(/(?<=\t)\w{1,}/) || [''])[0];
-                if (handlingFile.includes(`socket.on('${event}'`)) {
-                    return;
-                }
-                addToErrors(`${nameOfInterface}.${event} is declared but not handled in ${pathToHandlingFile}`);
-            });
-        }
-    }
-    /**Check the rules in a project's ts config file all fit the established schema */
-    async function checkTsConfigCompilerOptions() {
-        const desiredTsConfig = await getTsConfigJson('./node_modules/@botoron/utils/tsconfig.json');
-        const usedTsConfig = await getTsConfigJson('./tsconfig.json');
-        const zSchema = getZodSchemaFromData(desiredTsConfig);
-        return zodCheck_curry(addToErrors)(zSchema, usedTsConfig);
-        /**Get the ts config file of the main project */
-        async function getTsConfigJson(filepath) {
-            try {
-                return JSON.parse((await fsReadFileAsync(filepath)).
-                    replace(/\/(\/|\*).{1,}/g, '').
-                    replace(/(\n|\r|\t)/g, '').
-                    replace(', }', ' }') //{ { <-- commented here to keep the colour of brackets the same
-                );
-            }
-            catch (e) {
-                return e;
-            }
-        }
-    }
-    /**Check if the project is using the latest version of "myUtils" */
-    async function checkUtilsVersion() {
-        const latestVersion = await getLatestVersion();
-        const installedVersion = (await import('./package.json', { assert: { type: 'json' } })).default.version;
-        const isUpToDate = installedVersion === latestVersion;
-        if (!isUpToDate) {
-            errorHandler(`Outdated "utils" package. (${installedVersion} vs ${latestVersion}) PLEASE UPDATE: npm run btr`);
-        }
-        return isUpToDate;
-        /**Check if the project is using the latest version of "@botoron/utils" */
-        async function getLatestVersion() {
-            const response = (await new Promise((resolve) => {
-                try {
-                    fetch('http://registry.npmjs.com/-/v1/search?text=@botoron/utils&size=1').
-                        then(res => res.json().then((x) => resolve(x)));
-                }
-                catch {
-                    return { objects: [{ package: { version: '0' } }] };
-                }
-            }));
-            return response.objects[0].package.version;
-        }
-    }
-    async function checkVsCodeSettings() {
-        const vsSettingsOfProject = await importFileFromProject('.vscode/settings', 'json');
-        const desiredVsSettings = z.object({
-            'dotenv.enableAutocloaking': z.literal(true),
-            'peacock.color': z.string(),
-            'typelens.unusedcolor': z.literal('#f44'),
-            'workbench.colorCustomizations': z.object({}),
-        });
-        return zodCheck_curry(addToErrors)(desiredVsSettings, vsSettingsOfProject);
-    }
-    /**Turn off that damn skipLibCheck that comes on by default */
-    async function checkVueDevFiles() {
-        if (DEV_OR_PROD !== 'DEV') {
-            return true;
-        }
-        const allVueChecksPass = await Promise.all([
-            readVueFile('vue.config.js', 'export const devServer = { proxy: \'http://localhost:\' + process.env.port }'),
-            readVueFile('vite.config.ts', 'optimizeDeps: { exclude: [\'node_modules/@botoron/utils\'], },'),
-            readVueFile('vue.config.js', 'export const assetsDir = resolve(__dirname, \'../assets\')'),
-            readVueFile('node_modules/@vue/tsconfig/tsconfig.json', '"skipLibCheck": false'),
-            readVueFile('env.d.ts', '/// <reference types="../types" />'),
-        ]);
-        return allVueChecksPass;
-        async function readVueFile(clientSlash, mustMatch) {
-            const path = './client/' + clientSlash;
-            if (!await fileExists(path)) {
-                return;
-            }
-            const file = await fsReadFileAsync(path);
-            if (file.includes(mustMatch)) {
-                return true;
-            }
-            addToErrors(`file     (${path})     must include:    ${mustMatch}`);
-        }
-        async function fileExists(path) {
-            try {
-                await fs.promises.access(path);
-                return true;
-            }
-            catch {
-                addToErrors('Missing file, couldn\'t read: ' + path);
-                return false;
-            }
-        }
-    }
-    /**Get all the file and folders within a folder, stopping at predefined folders */
-    function getFilesAndFolders(directory, extension) {
-        const results = [];
-        fs.readdirSync(directory).forEach((file) => {
-            file = directory + '/' + file;
-            const stat = fs.statSync(file);
-            const stopHere = /node_modules|git|test|assets/.test(file);
-            if (stat && stat.isDirectory() && !stopHere) {
-                results.push(...getFilesAndFolders(file, null));
-            }
-            else
-                results.push(file);
-        });
-        return extension ? results.filter(filename => filename.includes(extension)) : results;
-    }
-}
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
 export function bigConsoleError(message) {
     function logAsterisks(lines) { for (let i = 0; i < lines; i++) {
@@ -1367,7 +1075,7 @@ export async function importFileFromProject(filename, extension) {
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export function killProcess(message) { bigConsoleError(message); process.exit(); }
 /**Easily run the scripts of this (utils) repo's package.json */
-export async function npmRun_package(npmCommand) {
+export function npmRun_package(npmCommand) {
     const utilsRepoName = 'Utils 🛠️';
     if (npmCommand === 'arrowsToDeclarations') {
         convertArrowFunctionsToDeclarations();
