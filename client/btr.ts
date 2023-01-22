@@ -11,6 +11,7 @@ _
 _
 _
 _
+_
 import { type Primitive, type SafeParseReturnType, z, type ZodRawShape, type ZodTypeAny, string } from 'zod'
 _
 import { fromZodError } from 'zod-validation-error'
@@ -32,10 +33,10 @@ export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warnin
 const getUniqueId_generator = (function* () { let i = 0; while (true) { i++; yield `${Date.now() + i}` } })()
 
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
-const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile'])
-const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile'])
+export const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile'])
+export const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile'])
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch'])
-const zMyEnv = z.object({
+export const zMyEnv = z.object({
 	DEV_OR_PROD: z.enum(['DEV', 'PROD']),
 	ADMIN_PASSWORD: string(),
 	ERIS_TOKEN: string(),
@@ -82,16 +83,14 @@ export type btr_fieldsForColumnOfTable = string | {
 }
 
 type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: btr_validVariant, title: string }
-type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
 type bvModal = { show: (id: string) => void, hide: (id: string) => void }
 type validNpmCommand_package = z.infer<typeof zValidNpmCommand_package>
 type validNpmCommand_project = z.infer<typeof zValidNpmCommand_project>
-type messageHandler = (message: string) => void
+export type messageHandler = (message: string) => void
 type arrayPredicate<T> = (arg1: T) => boolean
 type pipe_persistent_type<T> = (arg: T) => T
-type tsConfig = { compilerOptions: object }
-type myEnv = z.infer<typeof zMyEnv>
+export type myEnv = z.infer<typeof zMyEnv>
 type pipe_mutable_type = {
 	<T, A>(source: T, a: (value: T) => A): A
 	<T, A, B>(source: T, a: (value: T) => A, b: (value: A) => B): B
@@ -278,10 +277,35 @@ export function getRandomItem<T>(arr: T[]) { const r = roll(arr.length); return 
 export function getUniqueValues<T>(arr: T[]) { return [...new Set(arr)] }
 /**@returns whether an item is the last one in an array or not (warning: maybe don't use with primitives) */
 export function isLastItem<T>(arr: T[], item: T) { return arr.indexOf(item) === arr.length - 1 }
-/*Remove a single item from an array, or all copies of that item if its a primitive value and return the removedCount */
-export function removeItem<T>(arr: T[], item: T) { return selfFilter(arr, (x: T) => x !== item).removedCount }
 /**Return the last item of the given array */
 export function lastItem<T>(arr: T[]) { return arr[arr.length - 1] as T }
+/**Apply multiple mapping functions to a single array at once and return an object with all the result */
+export function multiMap<
+	T,
+	F1 extends (x: T) => ReturnType<F1>,
+	F2 extends (x: T) => ReturnType<F2>,
+	F3 extends (x: T) => ReturnType<F3>,
+	F4 extends (x: T) => ReturnType<F4>,
+	F5 extends (x: T) => ReturnType<F5>,
+>(arr: T[], f1: F1, f2: F2, f3 = doNothing as F3, f4 = doNothing as F4, f5 = doNothing as F5) {
+	const maps = arr.reduce((acc, item) => {
+		acc.map1.push(f1(item))
+		acc.map2.push(f2(item))
+		acc.map3.push(f3(item))
+		acc.map4.push(f4(item))
+		acc.map5.push(f5(item))
+		return acc
+	}, {
+		map1: [] as ReturnType<F1>[],
+		map2: [] as ReturnType<F2>[],
+		map3: [] as ReturnType<F3>[],
+		map4: [] as ReturnType<F4>[],
+		map5: [] as ReturnType<F5>[],
+	})
+	return maps
+}
+/*Remove a single item from an array, or all copies of that item if its a primitive value and return the removedCount */
+export function removeItem<T>(arr: T[], item: T) { return selfFilter(arr, (x: T) => x !== item).removedCount }
 /**
  * Map an array, and filter-out the items that weren't fit
  * see filterMap for a faster (single rather than double loop) but more complex version)
@@ -681,14 +705,14 @@ _ /********** FOR TIMERS ******************** FOR TIMERS ******************** FO
 _ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 
 /**
- * Set a cancellable interval that is automatically killed when the stay-alive-checker fails but can also be manuall cancelled with killTimer
+ * Set an interval that is automatically killed when the stay-alive-checker fails but can also be manually killed with killTimer
  * @param id The id of the timer, so that btr.killTimer can find it
  * @param intervalInMs How often onEach will run
  * @param stayAliveChecker Predicate that automatically kills the interval on failure
  * @param onEach The function that runs with each cycle of the interval
  * @param onKill The function that killTimer will run when killing the interval
  * @param timesRanSucessfully The amount of times the interval ran before its dismise
- * @returns The return of onKill
+ * @returns initializeTimer's resolveInfo with the return of onKill as the value (since onEach never resolves, just keeps going)
  */
 export async function initializeInterval<eachF extends () => ReturnType<eachF>, cancelF extends () => ReturnType<cancelF>>(
 	id: string,
@@ -706,8 +730,7 @@ export async function initializeInterval<eachF extends () => ReturnType<eachF>, 
 			initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1).then(result => resolve(result))
 		})
 
-		//TODO: figure out a way to run this before initializing the timer (doesn't work yet because it is deleted between intervals)
-		if (!stayAliveChecker()) { killTimer(id, '! stayAliveChecker()') }
+		if (!stayAliveChecker()) { killTimer(id, `stayAliveChecker (${stayAliveChecker.name}) = false`) }
 	})
 
 	return { timesRanSucessfully, ...result } as resolveInfo & { timesRanSucessfully: number, wasCancelled: true }
@@ -731,7 +754,7 @@ export async function initializeTimer<completeF extends () => ReturnType<complet
 	timers.push(timer)
 	return await interval()
 
-	async function getTimerResolveInfo<completeF extends () => ReturnType<completeF>, cancelF extends () => ReturnType<cancelF>>(
+	function getTimerResolveInfo<completeF extends () => ReturnType<completeF>, cancelF extends () => ReturnType<cancelF>>(
 		timer: timer,
 		fn: completeF | cancelF
 	) {
@@ -806,6 +829,8 @@ export function getTraceableStack(error: string | Error) {
 }
 /**@returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export function isGuest(username: string) { return /Guest[0-9]{13}/i.test(`${username}`) }
+/**To know when files are fired and in what order  */
+export function logInitialization(filename: string) { colorLog('cyan', '*'.repeat(20) + ' ' + filename) }
 /**(Message) ✔️ */
 export function successLog(message: string) { return colorLog('green', message + ' ✔️') }
 /**@returns an string with its linebreaks converted into simple one-char spaces */
@@ -897,17 +922,4 @@ _ /********** DEPRECATED ******************** DEPRECATED ******************** DE
 
 /**@deprecated use "formatDate instead" */
 export function getFormattedTimestamp() { doNothing }
-/**
- * Create multiple array.maps for a single array
- * @param arr The array that shall be multiMap'd
- * @param fns An object of fns, to be objectMap'd
- * @returns An object with the same keys as "fns", but the values are mapped to each have processed "arr"  
- * @deprecated Not really, but is a work in press, see "issues"
- * @issues The mapped properties return "any[]" instead of the return type of that method
- */
-// ! work in progress
-function multiMap<item, fn extends (arg: item) => ReturnType<fn>, fns extends Record<string, fn>>(arr: item[], fns: Readonly<fns>) {
-	return mapObject(fns, fn => arr.map(item => fn(item)))
-} { multiMap }
-
 const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)

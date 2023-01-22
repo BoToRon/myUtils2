@@ -11,6 +11,7 @@ _;
 _;
 _;
 _;
+_;
 import { z, string } from 'zod';
 _;
 import { fromZodError } from 'zod-validation-error';
@@ -32,10 +33,10 @@ const getUniqueId_generator = (function* () { let i = 0; while (true) {
     yield `${Date.now() + i}`;
 } })();
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
-const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile']);
-const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile']);
+export const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile']);
+export const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile']);
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch']);
-const zMyEnv = z.object({
+export const zMyEnv = z.object({
     DEV_OR_PROD: z.enum(['DEV', 'PROD']),
     ADMIN_PASSWORD: string(),
     ERIS_TOKEN: string(),
@@ -228,10 +229,28 @@ export function getRandomItem(arr) { const r = roll(arr.length); return { item: 
 export function getUniqueValues(arr) { return [...new Set(arr)]; }
 /**@returns whether an item is the last one in an array or not (warning: maybe don't use with primitives) */
 export function isLastItem(arr, item) { return arr.indexOf(item) === arr.length - 1; }
-/*Remove a single item from an array, or all copies of that item if its a primitive value and return the removedCount */
-export function removeItem(arr, item) { return selfFilter(arr, (x) => x !== item).removedCount; }
 /**Return the last item of the given array */
 export function lastItem(arr) { return arr[arr.length - 1]; }
+/**Apply multiple mapping functions to a single array at once and return an object with all the result */
+export function multiMap(arr, f1, f2, f3 = doNothing, f4 = doNothing, f5 = doNothing) {
+    const maps = arr.reduce((acc, item) => {
+        acc.map1.push(f1(item));
+        acc.map2.push(f2(item));
+        acc.map3.push(f3(item));
+        acc.map4.push(f4(item));
+        acc.map5.push(f5(item));
+        return acc;
+    }, {
+        map1: [],
+        map2: [],
+        map3: [],
+        map4: [],
+        map5: [],
+    });
+    return maps;
+}
+/*Remove a single item from an array, or all copies of that item if its a primitive value and return the removedCount */
+export function removeItem(arr, item) { return selfFilter(arr, (x) => x !== item).removedCount; }
 /**
  * Map an array, and filter-out the items that weren't fit
  * see filterMap for a faster (single rather than double loop) but more complex version)
@@ -644,14 +663,14 @@ _; /********** FOR TIMERS ******************** FOR TIMERS ******************** F
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 /**
- * Set a cancellable interval that is automatically killed when the stay-alive-checker fails but can also be manuall cancelled with killTimer
+ * Set an interval that is automatically killed when the stay-alive-checker fails but can also be manually killed with killTimer
  * @param id The id of the timer, so that btr.killTimer can find it
  * @param intervalInMs How often onEach will run
  * @param stayAliveChecker Predicate that automatically kills the interval on failure
  * @param onEach The function that runs with each cycle of the interval
  * @param onKill The function that killTimer will run when killing the interval
  * @param timesRanSucessfully The amount of times the interval ran before its dismise
- * @returns The return of onKill
+ * @returns initializeTimer's resolveInfo with the return of onKill as the value (since onEach never resolves, just keeps going)
  */
 export async function initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully) {
     const result = await new Promise(resolve => {
@@ -661,9 +680,8 @@ export async function initializeInterval(id, intervalInMs, stayAliveChecker, onE
             }
             initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1).then(result => resolve(result));
         });
-        //TODO: figure out a way to run this before initializing the timer (doesn't work yet because it is deleted between intervals)
         if (!stayAliveChecker()) {
-            killTimer(id, '! stayAliveChecker()');
+            killTimer(id, `stayAliveChecker (${stayAliveChecker.name}) = false`);
         }
     });
     return { timesRanSucessfully, ...result };
@@ -680,7 +698,7 @@ export async function initializeTimer(id, runAt, onComplete, onCancel) {
     const timer = { id, runAt, onComplete, onCancel, startedAt: Date.now(), wasCancelled: false, cancelledAt: 0, cancelStack: '' };
     timers.push(timer);
     return await interval();
-    async function getTimerResolveInfo(timer, fn) {
+    function getTimerResolveInfo(timer, fn) {
         const { id, startedAt, runAt, onComplete, onCancel, cancelledAt, cancelStack, wasCancelled } = timer;
         const value = tryF(fn, []);
         const template = {
@@ -753,6 +771,8 @@ export function getTraceableStack(error) {
 }
 /**@returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export function isGuest(username) { return /Guest[0-9]{13}/i.test(`${username}`); }
+/**To know when files are fired and in what order  */
+export function logInitialization(filename) { colorLog('cyan', '*'.repeat(20) + ' ' + filename); }
 /**(Message) ✔️ */
 export function successLog(message) { return colorLog('green', message + ' ✔️'); }
 /**@returns an string with its linebreaks converted into simple one-char spaces */
@@ -841,19 +861,4 @@ _; /********** DEPRECATED ******************** DEPRECATED ******************** D
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 /**@deprecated use "formatDate instead" */
 export function getFormattedTimestamp() { doNothing; }
-/**
- * Create multiple array.maps for a single array
- * @param arr The array that shall be multiMap'd
- * @param fns An object of fns, to be objectMap'd
- * @returns An object with the same keys as "fns", but the values are mapped to each have processed "arr"
- * @deprecated Not really, but is a work in press, see "issues"
- * @issues The mapped properties return "any[]" instead of the return type of that method
- */
-// ! work in progress
-function multiMap(arr, fns) {
-    return mapObject(fns, fn => arr.map(item => fn(item)));
-}
-{
-    multiMap;
-}
 const colorLog = (color, message) => console.log(`%c${message}`, `color: ${color};`);

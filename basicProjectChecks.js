@@ -3,19 +3,21 @@ import fs from 'fs';
 _;
 import { z } from 'zod';
 _;
-import { compareArrays, divine, fsReadFileAsync, getEnviromentVariables, getZodSchemaFromData, importFileFromProject, successLog, zMyEnv, zodCheck_curry, zRegexGenerator } from './btr.js';
+import { compareArrays, fsReadFileAsync, getEnviromentVariables, getZodSchemaFromData, importFileFromProject, nullAs, successLog, zMyEnv, zodCheck_curry, zRegexGenerator } from './btr.js';
 _;
-const zodCheck_toErrors = zodCheck_curry(addToErrors);
-const errorHandler = divine.error;
-const { DEV_OR_PROD } = getEnviromentVariables();
-const cachedFiles = await getCachedFiles();
 const errors = [];
+const cachedFiles = [];
+let errorHandler = nullAs();
+let DEV_OR_PROD = nullAs();
+const zodCheck_toErrors = zodCheck_curry(addToErrors);
 _; //TODO: make sure io.ts exports { initializedIo } so that the code in the file is ran by only calling init.ts?
 _; //TODO: an schema for ref's esqueleton? (temp, debug, debugLog, devOrProd, socket)
 _; //TODO: check "ref.ts" matches (getDebugOptions, mongoCollection)
 /** Check the version of @botoron/utils, the enviroment variables and various config files */
-export async function basicProjectChecks() {
-    const errors = [];
+export async function basicProjectChecks(errHandler) {
+    errorHandler = errHandler;
+    DEV_OR_PROD = getEnviromentVariables().DEV_OR_PROD;
+    cachedFiles.push(...await getCachedFiles());
     await Promise.all([
         checkAllExportedFunctionsAreDescribed(),
         checkAllVueComponentsAreTrackeable(),
@@ -32,7 +34,7 @@ export async function basicProjectChecks() {
         checkVsCodeSettings(),
         checkVueDevFiles(),
     ]);
-    errors.length ? successLog('all basicProjectChecks passed') : errorHandler('\n\n' + errors.join('\n\n') + '\n\n');
+    errors.length ? errorHandler('\n\n' + errors.join('\n\n') + '\n\n') : successLog('all basicProjectChecks passed');
     return !errors.length;
 }
 function addToErrors(error) {
@@ -80,7 +82,7 @@ function checkClientFilesDontReferenceLocalStorageDirectly() {
     const clientTsFiles = getFromCachedFiles(['./client/src', '.ts']);
     [clientTsFiles, clientVueFiles].flat(1).forEach(file => {
         const { filename, content } = file;
-        if (content.includes('localStorage')) {
+        if (content.includes('localStorage.')) {
             addToErrors(`use localStorageGet/Set instead of referencing it directly, at ${filename}`);
         }
     });
@@ -221,8 +223,9 @@ function checkServerAndClientFilesLogTheirInitialization() {
     const serverTsFiles = getFromCachedFiles(['./server', '.ts']);
     [serverTsFiles, clientTsFiles, clientVueFiles].flat(1).forEach(file => {
         const { filename, content } = file;
-        if (!content.includes(`logInitialization(${filename})`)) {
-            addToErrors(`Initialization of '${filename}' should be logged`);
+        const wantedMatch = `logInitialization('${filename}')`;
+        if (!content.includes(wantedMatch)) {
+            addToErrors(`"${wantedMatch}" is missing`);
         }
     });
 }
@@ -283,7 +286,7 @@ async function getCachedFiles() {
     const filesRead = [];
     const cachedFiles = [];
     const vueDevFiles = ['env.d.ts', 'node_modules/@vue/tsconfig/tsconfig.json', 'vite.config.ts', 'vue.config.js'].map(x => './client/' + x);
-    const tsConfigs = ['/node_modules/@botoron/utils/tsconfig.json', './tsconfig.json'];
+    const tsConfigs = ['./node_modules/@botoron/utils/tsconfig.json', './tsconfig.json'];
     const clientVueFiles = getFilesAndFoldersNames('./client/src', '.vue');
     const clientTsFiles = getFilesAndFoldersNames('./client/src', '.ts');
     const serverTsFiles = getFilesAndFoldersNames('./server', '.ts');

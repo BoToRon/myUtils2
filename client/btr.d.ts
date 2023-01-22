@@ -1,6 +1,9 @@
 import { type SafeParseReturnType, z } from 'zod';
 export declare const timers: timer[];
 export declare const zValidVariants: any;
+export declare const zValidNpmCommand_package: any;
+export declare const zValidNpmCommand_project: any;
+export declare const zMyEnv: any;
 /**Generic to get the type of an object/interface while preserving key-value typing */
 export type objectEntries<T, amount extends 'plural' | 'single'> = {
     [K in keyof T]: [K, amount extends 'plural' ? T[K][] : T[K]];
@@ -52,9 +55,10 @@ type bvModal = {
     show: (id: string) => void;
     hide: (id: string) => void;
 };
-type messageHandler = (message: string) => void;
+export type messageHandler = (message: string) => void;
 type arrayPredicate<T> = (arg1: T) => boolean;
 type pipe_persistent_type<T> = (arg: T) => T;
+export type myEnv = z.infer<typeof zMyEnv>;
 type pipe_mutable_type = {
     <T, A>(source: T, a: (value: T) => A): A;
     <T, A, B>(source: T, a: (value: T) => A, b: (value: A) => B): B;
@@ -120,9 +124,17 @@ export declare function getRandomItem<T>(arr: T[]): {
 export declare function getUniqueValues<T>(arr: T[]): T[];
 /**@returns whether an item is the last one in an array or not (warning: maybe don't use with primitives) */
 export declare function isLastItem<T>(arr: T[], item: T): boolean;
-export declare function removeItem<T>(arr: T[], item: T): number;
 /**Return the last item of the given array */
 export declare function lastItem<T>(arr: T[]): T;
+/**Apply multiple mapping functions to a single array at once and return an object with all the result */
+export declare function multiMap<T, F1 extends (x: T) => ReturnType<F1>, F2 extends (x: T) => ReturnType<F2>, F3 extends (x: T) => ReturnType<F3>, F4 extends (x: T) => ReturnType<F4>, F5 extends (x: T) => ReturnType<F5>>(arr: T[], f1: F1, f2: F2, f3?: F3, f4?: F4, f5?: F5): {
+    map1: ReturnType<F1>[];
+    map2: ReturnType<F2>[];
+    map3: ReturnType<F3>[];
+    map4: ReturnType<F4>[];
+    map5: ReturnType<F5>[];
+};
+export declare function removeItem<T>(arr: T[], item: T): number;
 /**
  * Map an array, and filter-out the items that weren't fit
  * see filterMap for a faster (single rather than double loop) but more complex version)
@@ -273,14 +285,14 @@ export declare const stringify: {
 /**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
 export declare function getUniqueId(suffix: string): string;
 /**
- * Set a cancellable interval that is automatically killed when the stay-alive-checker fails but can also be manuall cancelled with killTimer
+ * Set an interval that is automatically killed when the stay-alive-checker fails but can also be manually killed with killTimer
  * @param id The id of the timer, so that btr.killTimer can find it
  * @param intervalInMs How often onEach will run
  * @param stayAliveChecker Predicate that automatically kills the interval on failure
  * @param onEach The function that runs with each cycle of the interval
  * @param onKill The function that killTimer will run when killing the interval
  * @param timesRanSucessfully The amount of times the interval ran before its dismise
- * @returns The return of onKill
+ * @returns initializeTimer's resolveInfo with the return of onKill as the value (since onEach never resolves, just keeps going)
  */
 export declare function initializeInterval<eachF extends () => ReturnType<eachF>, cancelF extends () => ReturnType<cancelF>>(id: string, intervalInMs: number, stayAliveChecker: () => boolean, onEach: eachF, onKill: cancelF, timesRanSucessfully: number): Promise<{
     timerId: string;
@@ -342,6 +354,8 @@ export declare function errorLog(message: string): void;
 export declare function getTraceableStack(error: string | Error): string;
 /**@returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export declare function isGuest(username: string): boolean;
+/**To know when files are fired and in what order  */
+export declare function logInitialization(filename: string): void;
 /**(Message) ✔️ */
 export declare function successLog(message: string): void;
 /**@returns an string with its linebreaks converted into simple one-char spaces */

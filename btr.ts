@@ -23,7 +23,7 @@ import { createRequire } from 'module'	//DELETETHISFORCLIENT
 _
 import mongodb, { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
 _
-import { basicProjectChecks } from './basicProjectChecks.js'
+import { basicProjectChecks } from './basicProjectChecks.js' //DELETETHISFORCLIENT
 _
 import { type Primitive, type SafeParseReturnType, z, type ZodRawShape, type ZodTypeAny, string } from 'zod'
 _
@@ -46,8 +46,8 @@ export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warnin
 const getUniqueId_generator = (function* () { let i = 0; while (true) { i++; yield `${Date.now() + i}` } })()
 
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
-const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile'])
-const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile'])
+export const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile'])
+export const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile'])
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch'])
 export const zMyEnv = z.object({
 	DEV_OR_PROD: z.enum(['DEV', 'PROD']),
@@ -1132,6 +1132,7 @@ export function killProcess(message: string) { bigConsoleError(message); process
 /**Easily run the scripts of this (utils) repo's package.json */
 export function npmRun_package(npmCommand: validNpmCommand_package) {
 
+	console.log({ npmCommand })
 	const utilsRepoName = 'Utils 🛠️'
 
 	if (npmCommand === 'arrowsToDeclarations') { convertArrowFunctionsToDeclarations() }
@@ -1207,7 +1208,7 @@ export async function npmRun_project(npmCommand: validNpmCommand_project) {
 	//if (!options) { options = defaults }
 	//const { serverFolder_dist, serverFolder_src, fileWithRef } = addMissingPropsToObjects(options!, defaults)
 
-	await basicProjectChecks()
+	await basicProjectChecks(divine.error)
 	if (npmCommand === 'check') { return }
 
 	const defaults = { serverFolder_dist: '../dist', serverFolder_src: './test', fileWithRef: 'ref' }
@@ -1345,24 +1346,5 @@ export async function questionAsPromise(question: string) {
 	return input
 }
 
-const command_package = process.env['npm_config_command_package'] as validNpmCommand_package
-const command_project = process.env['npm_config_command_project'] as validNpmCommand_project
-if (command_package) { zodCheckAndHandle(zValidNpmCommand_package, command_package, npmRun_package, [command_package], console.log) }
-if (command_project) { zodCheckAndHandle(zValidNpmCommand_project, command_project, npmRun_project, [command_project], console.log) }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export const command_package = process.env['npm_config_command_package'] as validNpmCommand_package
+export const command_project = process.env['npm_config_command_project'] as validNpmCommand_project

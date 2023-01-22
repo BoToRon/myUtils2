@@ -7,7 +7,7 @@
 	"scripts": {
 		"test": "ts-node-esm --transpileOnly test/test.ts",
 		"zTest": "ts-node-esm --transpileOnly test/zTest.ts",
-		"npmScript": "ts-node-esm --transpileOnly btr.ts",
+		"npmScript": "ts-node-esm --transpileOnly npmRun.ts",
 		"__________________________________________________": "__________________________________________________",
 		"all": "npm run npmScript --command_package=all & npm publish",
 		"transpile": "npm run npmScript --command_package=transpile",

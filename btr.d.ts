@@ -1,8 +1,8 @@
 import { type SafeParseReturnType, z } from 'zod';
 export declare const timers: timer[];
 export declare const zValidVariants: any;
-declare const zValidNpmCommand_package: any;
-declare const zValidNpmCommand_project: any;
+export declare const zValidNpmCommand_package: any;
+export declare const zValidNpmCommand_project: any;
 export declare const zMyEnv: any;
 /**Generic to get the type of an object/interface while preserving key-value typing */
 export type objectEntries<T, amount extends 'plural' | 'single'> = {
@@ -429,4 +429,6 @@ export declare function npmRun_project(npmCommand: validNpmCommand_project): Pro
 export declare function prompCommitMessageAndPush(repoName: string): Promise<void>;
 /**Prompts a question in the terminal, awaits for the input and returns it */
 export declare function questionAsPromise(question: string): Promise<string>;
+export declare const command_package: z.infer<any>;
+export declare const command_project: z.infer<any>;
 export {};
