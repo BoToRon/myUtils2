@@ -152,7 +152,10 @@ function checkLocalImportsHaveJsExtention() {
         const { filename, content } = file;
         const localImports = content.match(/from '\..{1,}/g);
         localImports.forEach(match => {
-            if (!match.includes('.js\'')) {
+            if (match.includes('.js\'')) {
+                return;
+            }
+            if (match.includes('.vue\'')) {
                 return;
             }
             addToErrors(`Local import (${match}) is missing .js at the end, at: ${filename}`);
@@ -180,7 +183,7 @@ async function checkPackageJson() {
             check: z.literal('npm run npmScript --command_project=check'),
             localtunnel: z.literal('lt --port 3000'),
             nodemon: z.literal('nodemon test/server/init.js'),
-            npmScript: z.literal('node node_modules/@botoron/utils/btr.js'),
+            npmScript: z.literal('node node_modules/@botoron/utils/npmRun.js'),
             start: z.literal('node test/server/init.js'),
             test: z.literal('ts-node-esm test.ts'),
             transpile: z.literal('npm run npmScript --command_project=transpile'),
@@ -256,7 +259,7 @@ function checkServerAndClientFilesLogTheirInitialization() {
         const { filename, content } = file;
         const wantedMatch = `logInitialization('${filename}')`;
         if (!content.includes(wantedMatch)) {
-            addToErrors(`"${wantedMatch}" is missing`);
+            addToErrors(`"          ${wantedMatch}          " is missing`);
         }
     });
 }

@@ -172,7 +172,8 @@ function checkLocalImportsHaveJsExtention() {
 		const localImports = content.match(/from '\..{1,}/g) as RegExpMatchArray
 
 		localImports.forEach(match => {
-			if (!match.includes('.js\'')) { return }
+			if (match.includes('.js\'')) { return }
+			if (match.includes('.vue\'')) { return }
 			addToErrors(`Local import (${match}) is missing .js at the end, at: ${filename}`)
 		})
 	})
@@ -200,7 +201,7 @@ async function checkPackageJson() {
 			check: z.literal('npm run npmScript --command_project=check'),
 			localtunnel: z.literal('lt --port 3000'),
 			nodemon: z.literal('nodemon test/server/init.js'),
-			npmScript: z.literal('node node_modules/@botoron/utils/btr.js'),
+			npmScript: z.literal('node node_modules/@botoron/utils/npmRun.js'),
 			start: z.literal('node test/server/init.js'),
 			test: z.literal('ts-node-esm test.ts'),
 			transpile: z.literal('npm run npmScript --command_project=transpile'),
@@ -228,10 +229,10 @@ async function checkPackageJson() {
 }
 
 /**Check all socket events are handled aka socket.on(<EVENTNAME>) */
-async function checkSocketEvents() {
+function checkSocketEvents() {
 	const linesInTypes_io = (getFromCachedFiles(['./types_io.ts'])[0] as cachedFile).content.split('\n')
-	await checkSocketOnOfInterface('ServerToClientEvents', './client/src/socket.ts')
-	await checkSocketOnOfInterface('ClientToServerEvents', './server/io.ts')
+	checkSocketOnOfInterface('ServerToClientEvents', './client/src/socket.ts')
+	checkSocketOnOfInterface('ClientToServerEvents', './server/io.ts')
 
 	function checkSocketOnOfInterface(nameOfInterface: string, pathToHandlingFile: string) {
 
@@ -276,7 +277,7 @@ function checkServerAndClientFilesLogTheirInitialization() {
 	[serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
 		const { filename, content } = file
 		const wantedMatch = `logInitialization('${filename}')`
-		if (!content.includes(wantedMatch)) { addToErrors(`"${wantedMatch}" is missing`) }
+		if (!content.includes(wantedMatch)) { addToErrors(`"          ${wantedMatch}          " is missing`) }
 	})
 }
 
