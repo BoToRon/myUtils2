@@ -15,8 +15,11 @@ type packageJson = { name: string, version: string, scripts: { [key: string]: st
 
 const errors: string[] = []
 const cachedFiles: cachedFile[] = []
-let errorHandler = <messageHandler>nullAs()
 let DEV_OR_PROD = <'DEV' | 'PROD'>nullAs()
+let errorHandler = <messageHandler>nullAs()
+const clientVueFiles: cachedFile[] = []
+const clientTsFiles: cachedFile[] = []
+const serverTsFiles: cachedFile[] = []
 
 const zodCheck_toErrors = zodCheck_curry(addToErrors)
 
@@ -30,6 +33,10 @@ export async function basicProjectChecks(errHandler: messageHandler) {
 	DEV_OR_PROD = getEnviromentVariables().DEV_OR_PROD
 	cachedFiles.push(...await getCachedFiles())
 
+	clientVueFiles.push(...getFromCachedFiles(['./client/src', '.vue']))
+	clientTsFiles.push(...getFromCachedFiles(['./client/src', '.ts']))
+	serverTsFiles.push(...getFromCachedFiles(['./server', '.ts']))
+
 	await Promise.all([
 		checkAllExportedFunctionsAreDescribed(),
 		checkAllVueComponentsAreTrackeable(),
@@ -38,6 +45,8 @@ export async function basicProjectChecks(errHandler: messageHandler) {
 		checkEslintConfigRules(),
 		checkFilesAndFolderStructure(),
 		checkGitIgnore(),
+		checkImportsAreFromTheRightBtrFile(),
+		checkLocalImportsHaveJsExtention(),
 		checkPackageJson(),
 		checkSocketEvents(),
 		checkTsConfigCompilerOptions(),
@@ -88,10 +97,7 @@ function checkAllVueComponentsAreTrackeable() {
 }
 
 function checkClientFilesDontReferenceLocalStorageDirectly() {
-	const clientVueFiles = getFromCachedFiles(['./client/src', '.vue'])
-	const clientTsFiles = getFromCachedFiles(['./client/src', '.ts']);
-
-	[clientTsFiles, clientVueFiles].flat(1).forEach(file => {
+	[clientTsFiles, clientVueFiles].flat().forEach(file => {
 		const { filename, content } = file
 		if (content.includes('localStorage.')) { addToErrors(`use localStorageGet/Set instead of referencing it directly, at ${filename}`) }
 	})
@@ -140,6 +146,36 @@ function checkGitIgnore() {
 	const missingItems = compareArrays(desiredIgnores, currentIgnores).missingItems
 
 	if (missingItems.length) { addToErrors(`.gitignore must include the following: [${missingItems.join(', ')}]`) }
+}
+
+function checkImportsAreFromTheRightBtrFile() {
+	[clientTsFiles, clientVueFiles].flat().forEach(file => doCheck('client', file))
+	serverTsFiles.forEach(file => doCheck('server', file))
+
+	function doCheck(filetype: 'server' | 'client', file: cachedFile) {
+		const { filename, content } = file
+		if (!content.includes('@botoron/utils')) { return }
+
+		if (filetype === 'server' && content.includes('@botoron/utils/client')) {
+			return addToErrors('Server file should not be exporting from @botoron/utils/client, at: ' + filename)
+		}
+
+		if (filetype === 'client' && !content.includes('@botoron/utils/client/btr.js')) {
+			return addToErrors('Client file should be exporting from @botoron/utils/client/btr.js at: ' + filename)
+		}
+	}
+}
+
+function checkLocalImportsHaveJsExtention() {
+	[serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
+		const { filename, content } = file
+		const localImports = content.match(/from '\..{1,}/g) as RegExpMatchArray
+
+		localImports.forEach(match => {
+			if (!match.includes('.js\'')) { return }
+			addToErrors(`Local import (${match}) is missing .js at the end, at: ${filename}`)
+		})
+	})
 }
 
 /**Check the scripts in a project's package json all fit the established schema */
@@ -237,11 +273,7 @@ function checkTsConfigCompilerOptions() {
 }
 
 function checkServerAndClientFilesLogTheirInitialization() {
-	const clientVueFiles = getFromCachedFiles(['./client/src', '.vue'])
-	const clientTsFiles = getFromCachedFiles(['./client/src', '.ts'])
-	const serverTsFiles = getFromCachedFiles(['./server', '.ts']);
-
-	[serverTsFiles, clientTsFiles, clientVueFiles].flat(1).forEach(file => {
+	[serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
 		const { filename, content } = file
 		const wantedMatch = `logInitialization('${filename}')`
 		if (!content.includes(wantedMatch)) { addToErrors(`"${wantedMatch}" is missing`) }
@@ -315,7 +347,7 @@ async function getCachedFiles() {
 	const gitIgnore = './.gitignore'
 	const typesIo = './types_io.ts'
 
-	const allFilenames = [clientTsFiles, clientVueFiles, gitIgnore, serverTsFiles, tsConfigs, typesIo, vueDevFiles].flat(1)
+	const allFilenames = [clientTsFiles, clientVueFiles, gitIgnore, serverTsFiles, tsConfigs, typesIo, vueDevFiles].flat(3)
 
 	for await (const filename of allFilenames) {
 		if (!fileExists(filename)) { continue }
@@ -354,5 +386,7 @@ function getFilesAndFoldersNames(directory: string, extension: '.ts' | '.vue' | 
 function getFromCachedFiles(obligatoryMatches: string[]) {
 	return cachedFiles.filter(file => obligatoryMatches.every(match => file.filename.includes(match)))
 }
+
+
 
 
