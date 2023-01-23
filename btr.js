@@ -1122,7 +1122,7 @@ export function npmRun_package(npmCommand) {
         });
     }
     function transpileFiles(followUp) {
-        const filename = 'btr.ts';
+        const filename = 'npmRun.ts'; //<-- btr.ts and basicProjectCheck are dependencies so they get transpiled too
         exec('tsc --declaration --target esnext ' + filename, async () => {
             successLog(filename + ' transpiled');
             const indexTs = await fsReadFileAsync(filename);
