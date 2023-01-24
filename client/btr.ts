@@ -644,8 +644,8 @@ export function addMissingPropsToObjects<T extends object>(original: T, defaults
 	return original as Required<T>
 }
 /**Return a copy that can be altered without having to worry about modifying the original */
-export function deepClone<T>(originalObject: T) {
-	const copy = JSON.parse(JSON.stringify(originalObject)) as T
+export function deepClone<T extends object>(originalObject: T) {
+	const copy = JSON.parse(stringify(originalObject)) as T
 	ifObject_copyRebindedMethods()
 	return copy
 
@@ -706,7 +706,16 @@ export function replaceObject<T extends object>(originalObject: T, newObject: T)
 	objectKeys(newObject).forEach(key => originalObject[key as keyof T] = newObject[key])
 }
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods, see deepClone) */
-export const { stringify } = JSON
+export function stringify<T extends object>(object: T) {
+	return JSON.stringify(object, (_key: string, value: object | null) => {
+		const seen = new WeakSet()
+		if (typeof value === 'object' && value !== null) {
+			if (seen.has(value)) { return '< Circular >' }
+			seen.add(value)
+		}
+		return value
+	}, '  ')
+}
 /**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
 export function getUniqueId(suffix: string) { return suffix + '_' + getUniqueId_generator.next().value }
 
@@ -817,7 +826,7 @@ export async function killTimer(timerId: string, reason: string) {
 	if (!theTimer) { divine.error('Unable to cancel, no timer was found with this id: ' + timerId); return }
 
 	removeItem(timers, theTimer)
-	theTimer.cancelStack = getTraceableStack(reason)
+	theTimer.cancelStack = getTraceableStack(reason, 'killTimer')
 	theTimer.cancelledAt = Date.now()
 	theTimer.wasCancelled = true
 
@@ -841,9 +850,9 @@ export function copyToClipboard(x: unknown) { isNode ? copyToClipboard_server(x)
 /**(Message) 💀 */
 export function errorLog(message: string) { return colorLog('red', message + ' 💀') }
 /**TODO: describe me */
-export function getTraceableStack(error: string | Error) {
+export function getTraceableStack(error: string | Error, type: string) {
 	const { stack } = (typeof error === 'string' ? new Error(error) : error)
-	return `${stack}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '')
+	return `${stack}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '').replace(/^Error:/, type)
 }
 /**@returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export function isGuest(username: string) { return /Guest[0-9]{13}/i.test(`${username}`) }
@@ -910,7 +919,7 @@ _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY *************
 
 /**Copy to clipboard, objects arrays get stringify'd */
 export function copyToClipboard_client(x: unknown) {
-	const text = stringify(x)
+	const text = stringify(x as object)
 	const a = document.createElement('textarea')
 	a.innerHTML = text
 	document.body.appendChild(a)

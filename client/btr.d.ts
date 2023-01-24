@@ -259,7 +259,7 @@ export declare function toOrdinal(number: number): string;
 /**Add all default properties missing in an object*/
 export declare function addMissingPropsToObjects<T extends object>(original: T, defaults: Required<T>): Required<T>;
 /**Return a copy that can be altered without having to worry about modifying the original */
-export declare function deepClone<T>(originalObject: T): T;
+export declare function deepClone<T extends object>(originalObject: T): T;
 /**Generate a Zod Schema from an array/object */
 export declare function getZodSchemaFromData(data: unknown): any;
 /**Because ESlint doesn't like Object(x).hasOwnProperty :p */
@@ -280,10 +280,7 @@ export declare function pick<T extends object, K extends keyof T>(theObject: T, 
 /**Replace the values of an object with those of another that shares the schema*/
 export declare function replaceObject<T extends object>(originalObject: T, newObject: T): void;
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods, see deepClone) */
-export declare const stringify: {
-    (value: any, replacer?: (this: any, key: string, value: any) => any, space?: string | number): string;
-    (value: any, replacer?: (string | number)[], space?: string | number): string;
-};
+export declare function stringify<T extends object>(object: T): string;
 /**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
 export declare function getUniqueId(suffix: string): string;
 /**
@@ -353,7 +350,7 @@ export declare function copyToClipboard(x: unknown): void;
 /**(Message) 💀 */
 export declare function errorLog(message: string): void;
 /**TODO: describe me */
-export declare function getTraceableStack(error: string | Error): string;
+export declare function getTraceableStack(error: string | Error, type: string): string;
 /**@returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export declare function isGuest(username: string): boolean;
 /**To know when files are fired and in what order  */

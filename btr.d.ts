@@ -262,7 +262,7 @@ export declare function toOrdinal(number: number): string;
 /**Add all default properties missing in an object*/
 export declare function addMissingPropsToObjects<T extends object>(original: T, defaults: Required<T>): Required<T>;
 /**Return a copy that can be altered without having to worry about modifying the original */
-export declare function deepClone<T>(originalObject: T): T;
+export declare function deepClone<T extends object>(originalObject: T): T;
 /**Generate a Zod Schema from an array/object */
 export declare function getZodSchemaFromData(data: unknown): any;
 /**Because ESlint doesn't like Object(x).hasOwnProperty :p */
@@ -283,10 +283,7 @@ export declare function pick<T extends object, K extends keyof T>(theObject: T, 
 /**Replace the values of an object with those of another that shares the schema*/
 export declare function replaceObject<T extends object>(originalObject: T, newObject: T): void;
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods, see deepClone) */
-export declare const stringify: {
-    (value: any, replacer?: (this: any, key: string, value: any) => any, space?: string | number): string;
-    (value: any, replacer?: (string | number)[], space?: string | number): string;
-};
+export declare function stringify<T extends object>(object: T): string;
 /**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
 export declare function getUniqueId(suffix: string): string;
 /**
@@ -357,7 +354,7 @@ export declare function copyToClipboard(x: unknown): void;
 /**(Message) 💀 */
 export declare function errorLog(message: string): void;
 /**TODO: describe me */
-export declare function getTraceableStack(error: string | Error): string;
+export declare function getTraceableStack(error: string | Error, type: string): string;
 /**@returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export declare function isGuest(username: string): boolean;
 /**To know when files are fired and in what order  */
@@ -409,6 +406,11 @@ export declare function downloadFile_node(filename: string, fileFormat: '.txt' |
 export declare function fsReadFileAsync(filePath: string): Promise<any>;
 /**Wrapper for fsWriteFileAsync that announces the start of the file-writing */
 export declare function fsWriteFileAsync(filePath: string, content: string): Promise<any>;
+/**For a project's debugging purposes */
+export declare function getDebugOptionsAndLog<K extends string>(devOrProd: 'dev' | 'prod', options: Record<K, [boolean, boolean]>): {
+    debugOptions: Record<K, [boolean, boolean]> extends infer T extends object ? { [key in keyof T]: boolean; } : never;
+    debugLog: <T_1 extends object>(debugKey: K, error: T_1) => void;
+};
 /** Get the contents of the project's .env */
 export declare function getEnviromentVariables(): z.infer<any>;
 /**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */

@@ -612,7 +612,7 @@ export function addMissingPropsToObjects(original, defaults) {
 }
 /**Return a copy that can be altered without having to worry about modifying the original */
 export function deepClone(originalObject) {
-    const copy = JSON.parse(JSON.stringify(originalObject));
+    const copy = JSON.parse(stringify(originalObject));
     ifObject_copyRebindedMethods();
     return copy;
     function ifObject_copyRebindedMethods() {
@@ -680,7 +680,18 @@ export function replaceObject(originalObject, newObject) {
     objectKeys(newObject).forEach(key => originalObject[key] = newObject[key]);
 }
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods, see deepClone) */
-export const { stringify } = JSON;
+export function stringify(object) {
+    return JSON.stringify(object, (_key, value) => {
+        const seen = new WeakSet();
+        if (typeof value === 'object' && value !== null) {
+            if (seen.has(value)) {
+                return '< Circular >';
+            }
+            seen.add(value);
+        }
+        return value;
+    }, '  ');
+}
 /**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
 export function getUniqueId(suffix) { return suffix + '_' + getUniqueId_generator.next().value; }
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
@@ -776,7 +787,7 @@ export async function killTimer(timerId, reason) {
         return;
     }
     removeItem(timers, theTimer);
-    theTimer.cancelStack = getTraceableStack(reason);
+    theTimer.cancelStack = getTraceableStack(reason, 'killTimer');
     theTimer.cancelledAt = Date.now();
     theTimer.wasCancelled = true;
     return await theTimer.onCancel();
@@ -798,9 +809,9 @@ export function copyToClipboard(x) { isNode ? copyToClipboard_server(x) : copyTo
 /**(Message) 💀 */
 export function errorLog(message) { return colorLog('red', message + ' 💀'); }
 /**TODO: describe me */
-export function getTraceableStack(error) {
+export function getTraceableStack(error, type) {
     const { stack } = (typeof error === 'string' ? new Error(error) : error);
-    return `${stack}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '');
+    return `${stack}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '').replace(/^Error:/, type);
 }
 /**@returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export function isGuest(username) { return /Guest[0-9]{13}/i.test(`${username}`); }
@@ -908,7 +919,7 @@ _; /********** DIVINE ******************** DIVINE ******************** DIVINE **
 export const divine = {
     bot: nullAs(),
     error: (err) => {
-        const message = getTraceableStack(err);
+        const message = getTraceableStack(err, 'divineError');
         const { DEV_OR_PROD } = getEnviromentVariables();
         DEV_OR_PROD !== 'PROD' ? killProcess(message) : divine.ping(message);
     },
@@ -999,7 +1010,7 @@ export function bigConsoleError(message) {
     logAsterisks(3);
 }
 /**Copy to clipboard while running node */
-export function copyToClipboard_server(x) { return clipboard.write(JSON.stringify(x)); }
+export function copyToClipboard_server(x) { return clipboard.write(stringify(x)); }
 /**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
 export async function downloadFile_node(filename, fileFormat, data, killProcessAfterwards) {
     const formatted = stringify(data);
@@ -1027,6 +1038,21 @@ export async function fsWriteFileAsync(filePath, content) {
     console.log(`writing to '${filePath}'..`);
     const file = await fs.promises.writeFile(filePath, content);
     return file;
+}
+/**For a project's debugging purposes */
+export function getDebugOptionsAndLog(devOrProd, options) {
+    function forDevForProd(forDev, forProd) { return { dev: forDev, prod: forProd }[devOrProd]; }
+    return {
+        debugOptions: mapObject(options, (x) => forDevForProd(x[0], x[1])),
+        debugLog: (debugKey, error) => {
+            if (!options[debugKey]) {
+                return;
+            }
+            colorLog('cyan', `debugLog. ${debugKey} :`);
+            colorLog('magenta', getTraceableStack(stringify(error), 'debugLog'));
+            console.log('');
+        }
+    };
 }
 /** Get the contents of the project's .env */
 export function getEnviromentVariables() {
@@ -1141,7 +1167,7 @@ export function npmRun_package(npmCommand) {
         });
     }
     function transpileFiles(followUp) {
-        exec('tsc -declaration --target esnext npmRun.ts', () => {
+        exec('tsc --declaration --target esnext npmRun.ts', () => {
             const filename = 'btr.ts';
             exec('tsc --declaration --target esnext ' + filename, async () => {
                 successLog(filename + ' transpiled');

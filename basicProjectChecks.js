@@ -151,6 +151,9 @@ function checkLocalImportsHaveJsExtention() {
     [serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
         const { filename, content } = file;
         const localImports = content.match(/from '\..{1,}/g);
+        if (!localImports) {
+            return;
+        }
         localImports.forEach(match => {
             if (match.includes('.js\'')) {
                 return;
