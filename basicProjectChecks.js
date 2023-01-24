@@ -209,10 +209,10 @@ async function checkPackageJson() {
     zodCheck_toErrors(desiredPackageJsonSchema, packageJsonOfProject);
 }
 /**Check all socket events are handled aka socket.on(<EVENTNAME>) */
-async function checkSocketEvents() {
+function checkSocketEvents() {
     const linesInTypes_io = getFromCachedFiles(['./types_io.ts'])[0].content.split('\n');
-    await checkSocketOnOfInterface('ServerToClientEvents', './client/src/socket.ts');
-    await checkSocketOnOfInterface('ClientToServerEvents', './server/io.ts');
+    checkSocketOnOfInterface('ServerToClientEvents', './client/src/socket.ts');
+    checkSocketOnOfInterface('ClientToServerEvents', './server/io.ts');
     function checkSocketOnOfInterface(nameOfInterface, pathToHandlingFile) {
         const handlingFile = getFromCachedFiles([pathToHandlingFile])[0].content;
         let isKeyOfWantedInterface = false;
