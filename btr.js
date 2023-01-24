@@ -1141,20 +1141,22 @@ export function npmRun_package(npmCommand) {
         });
     }
     function transpileFiles(followUp) {
-        const filename = 'npmRun.ts'; //<-- btr.ts and basicProjectCheck are dependencies so they get transpiled too
-        exec('tsc --declaration --target esnext ' + filename, async () => {
-            successLog(filename + ' transpiled');
-            const indexTs = await fsReadFileAsync(filename);
-            const lines = indexTs.replaceAll('bigConsoleError', 'colorLog').split('\n');
-            selfFilter(lines, (line) => !/DELETETHISFORCLIENT/.test(line));
-            const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x));
-            lines.splice(cutPoint, lines.length);
-            lines.push('const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)');
-            await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'));
-            exec('tsc --declaration --target esnext client/btr.ts ', async () => {
-                successLog('browser versions emitted');
-                await delay(500);
-                followUp();
+        exec('tsc -declaration --target esnext npmRun.ts', () => {
+            const filename = 'btr.ts';
+            exec('tsc --declaration --target esnext ' + filename, async () => {
+                successLog(filename + ' transpiled');
+                const indexTs = await fsReadFileAsync(filename);
+                const lines = indexTs.replaceAll('bigConsoleError', 'colorLog').split('\n');
+                selfFilter(lines, (line) => !/DELETETHISFORCLIENT/.test(line));
+                const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x));
+                lines.splice(cutPoint, lines.length);
+                lines.push('const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)');
+                await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'));
+                exec('tsc --declaration --target esnext client/btr.ts ', async () => {
+                    successLog('browser versions emitted');
+                    await delay(500);
+                    followUp();
+                });
             });
         });
     }

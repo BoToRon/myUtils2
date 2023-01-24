@@ -547,6 +547,25 @@ export function isWithinRange(number, max, min) {
 }
 /**@returns a number up to (but not included) provided max, eg: roll(1) will ALWAYS return zero */
 export function roll(maxRoll) { return Math.floor(Math.random() * Number(maxRoll)); }
+/**Convert duration as a timestamp to clock format (xx:xx:xx.xxx) with selectable amount of decimals */
+export function toClockDuration(timestamp, decimalAfterSeconds) {
+    const second = 1000;
+    const minute = second * 60;
+    const hour = minute * 60;
+    return `${getClockField(hour)}:${getClockField(minute)}:${getClockField(second)}${getDecimals()}`;
+    function getClockField(timeUnit) {
+        let x = 0;
+        while (timestamp >= timeUnit) {
+            timestamp -= timeUnit;
+            x++;
+        }
+        const asString = `${x}`;
+        return asString.length === 1 ? `0${asString}` : asString;
+    }
+    function getDecimals() {
+        return decimalAfterSeconds ? `.${getClockField(1).slice(0, decimalAfterSeconds)}` : '';
+    }
+}
 /**1 becomes '1st' , 2 becomes '2nd', 3 becomes '3rd' and so on */
 export function toOrdinal(number) {
     const asString = String(number);

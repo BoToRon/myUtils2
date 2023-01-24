@@ -252,6 +252,8 @@ export declare function isOdd(number: number): boolean;
 export declare function isWithinRange(number: number, max: number, min: number): boolean;
 /**@returns a number up to (but not included) provided max, eg: roll(1) will ALWAYS return zero */
 export declare function roll(maxRoll: number): number;
+/**Convert duration as a timestamp to clock format (xx:xx:xx.xxx) with selectable amount of decimals */
+export declare function toClockDuration(timestamp: number, decimalAfterSeconds: 0 | 1 | 2 | 3): string;
 /**1 becomes '1st' , 2 becomes '2nd', 3 becomes '3rd' and so on */
 export declare function toOrdinal(number: number): string;
 /**Add all default properties missing in an object*/
