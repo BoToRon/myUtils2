@@ -387,7 +387,3 @@ function getFilesAndFoldersNames(directory: string, extension: '.ts' | '.vue' | 
 function getFromCachedFiles(obligatoryMatches: string[]) {
 	return cachedFiles.filter(file => obligatoryMatches.every(match => file.filename.includes(match)))
 }
-
-
-
-
