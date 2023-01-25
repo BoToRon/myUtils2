@@ -1180,36 +1180,9 @@ export function npmRun_package(npmCommand: validNpmCommand_package) {
 	console.log({ npmCommand })
 	const utilsRepoName = 'Utils 🛠️'
 
-	if (npmCommand === 'arrowsToDeclarations') { convertArrowFunctionsToDeclarations() }
 	if (npmCommand === 'transpile') { transpileFiles(() => colorLog('magenta', 'Process over')) }
 	if (npmCommand === 'git') { prompCommitMessageAndPush(utilsRepoName) }
 	if (npmCommand === 'all') { transpileFiles(promptVersioning) }
-
-	async function convertArrowFunctionsToDeclarations() {
-		let content = await fsReadFileAsync('./arrowFns/input.ts')
-		const found = content.match(/const \w{1,} = (<.{1,}>){0,}\(.{1,}\) => {/g)
-		found!.forEach(match => { content = content.replace(match, convert(match)) })
-
-		const hour = formatDate(Date.now(), 'es', 'hourOnly')
-		await fsWriteFileAsync('./arrowFns/output.ts', content)
-		colorLog('yellow', `[${hour}]: ${found!.length} arrow functions converted to funtion declarations (check arrowFns/output.td)`)
-
-		function convert(arrowFn: string) {
-
-			const typesRegex = /(<T>){1,}/
-			const nameRegex = /(?<=const )\w{1,}/
-			const paramsRegex = /(?<=const \w{1,} = (<.{1,}>){0,})\(.{1,}(?= => {)/
-
-			const fnName = arrowFn.match(nameRegex)![0]
-			const params = arrowFn.match(paramsRegex)![0]
-			const types = (arrowFn.match(typesRegex) || [])[0] || ''
-
-			console.log('..converting ' + fnName)
-
-			const renamed = `function ${fnName}${types}${params} {`
-			return renamed
-		}
-	}
 
 	async function promptVersioning() {
 		function tryAgain(error: string) { colorLog('yellow', error); promptVersioning() }
