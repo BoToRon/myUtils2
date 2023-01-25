@@ -408,13 +408,13 @@ async function getCachedFiles() {
 	const clientVueFiles = getFilesAndFoldersNames('./client/src', '.vue')
 	const clientTsFiles = getFilesAndFoldersNames('./client/src', '.ts')
 	const serverTsFiles = getFilesAndFoldersNames('./server', '.ts')
+	const typeFiles = getFilesAndFoldersNames('./types', '.ts')
 	const gitIgnore = './.gitignore'
-	const typesIo = './types_io.ts'
 
-	const allFilenames = [clientTsFiles, clientVueFiles, gitIgnore, serverTsFiles, tsConfigs, typesIo, vueDevFiles].flat(3)
+	const allFilenames = [clientTsFiles, clientVueFiles, gitIgnore, serverTsFiles, tsConfigs, typeFiles, vueDevFiles].flat(3)
 
 	for await (const filename of allFilenames) {
-		if (!fileExists(filename)) { continue }
+		if (!fileExists(filename)) { addToErrors(`File not found at '${filename}'`); continue }
 		cachedFiles.push({ filename, content: await fsReadFileAsyncAndCheckIfRepeat(filename) })
 	}
 
@@ -447,6 +447,9 @@ function getFilesAndFoldersNames(directory: string, extension: '.ts' | '.vue' | 
 	return extension ? results.filter(filename => filename.includes(extension)) : results
 }
 
-function getFromCachedFiles(obligatoryMatches: string[]) {
-	return cachedFiles.filter(file => obligatoryMatches.every(match => file.filename.includes(match)))
+function getFromCachedFiles(obligatoryMatches: string[]): cachedFile[] {
+	const foundFiles = cachedFiles.filter(file => obligatoryMatches.every(match => file.filename.includes(match)))
+	if (foundFiles.length) { return foundFiles }
+	addToErrors(`No file cached with the requested obligatory matches (${obligatoryMatches}) was found`)
+	return [{ filename: 'FAILSAFE', content: 'failsafe' }]
 }
