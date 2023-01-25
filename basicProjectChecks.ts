@@ -20,10 +20,10 @@ let errorHandler = <messageHandler>nullAs()
 const clientVueFiles: cachedFile[] = []
 const clientTsFiles: cachedFile[] = []
 const serverTsFiles: cachedFile[] = []
+const typeFiles: cachedFile[] = []
 
 const zodCheck_toErrors = zodCheck_curry(addToErrors)
 
-_//TODO: make sure io.ts exports { initializedIo } so that the code in the file is ran by only calling init.ts?
 _//TODO: an schema for ref's esqueleton? (temp, debug, debugLog, devOrProd, socket)
 _//TODO: check "ref.ts" matches (getDebugOptions, mongoCollection)
 
@@ -36,21 +36,27 @@ export async function basicProjectChecks(errHandler: messageHandler) {
 	clientVueFiles.push(...getFromCachedFiles(['./client/src', '.vue']))
 	clientTsFiles.push(...getFromCachedFiles(['./client/src', '.ts']))
 	serverTsFiles.push(...getFromCachedFiles(['./server', '.ts']))
+	typeFiles.push(...getFromCachedFiles(['./types', '.ts']))
 
 	await Promise.all([
 		checkAllExportedFunctionsAreDescribed(),
 		checkAllVueComponentsAreTrackeable(),
+		checkBasicValidAdminCommands(),
 		checkClientFilesDontReferenceLocalStorageDirectly(),
+		checkConsistentReadonlyTypeSyntax(),
 		checkEnviromentVariables(),
 		checkEslintConfigRules(),
 		checkFilesAndFolderStructure(),
 		checkGitIgnore(),
 		checkImportsAreFromTheRightBtrFile(),
+		checkInitTsCallsRefTsAndIoTs(),
 		checkLocalImportsHaveJsExtention(),
 		checkPackageJson(),
 		checkSocketEvents(),
 		checkTsConfigCompilerOptions(),
 		checkServerAndClientFilesLogTheirInitialization(),
+		checkSpecificMatchesInTypes_ioTs(),
+		checkSpecificMatchesInTypesTs(),
 		checkUtilsVersion(),
 		checkVsCodeSettings(),
 		checkVueDevFiles(),
@@ -62,6 +68,10 @@ export async function basicProjectChecks(errHandler: messageHandler) {
 
 function addToErrors(error: string) {
 	errors.push(error)
+}
+
+function checkBasicValidAdminCommands() {
+	checkMatchInSpecificFile('./types_z.ts', 'export const zValidAdminCommands = z.enum([\'getSockets\', \'help\', \'ref\'')
 }
 
 /**Check all the top-level functions in main .ts server files have a description */
@@ -91,7 +101,7 @@ function checkAllExportedFunctionsAreDescribed() {
 function checkAllVueComponentsAreTrackeable() {
 	if (DEV_OR_PROD !== 'DEV') { return true }
 	getFromCachedFiles(['./client/src', '.vue']).forEach(file => {
-		const wantedMatch = 'window.trackVueComponent'
+		const wantedMatch = 'trackVueComponent(' //) <--here to not mess with the colour of parentheses
 		if (!file.content.includes(wantedMatch)) { addToErrors(`${file} must include "${wantedMatch}"`) }
 	})
 }
@@ -100,6 +110,14 @@ function checkClientFilesDontReferenceLocalStorageDirectly() {
 	[clientTsFiles, clientVueFiles].flat().forEach(file => {
 		const { filename, content } = file
 		if (content.includes('localStorage.')) { addToErrors(`use localStorageGet/Set instead of referencing it directly, at ${filename}`) }
+	})
+}
+
+function checkConsistentReadonlyTypeSyntax() {
+	[serverTsFiles, typeFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
+		const { filename, content } = file
+		if (!/Readonly<|ReadonlyArray</.test(content)) { return }
+		addToErrors(`Use the "readonly" keyword instead of the 'Readonly'/'ReadonlyArray' generics, at (${filename})`)
 	})
 }
 
@@ -126,7 +144,8 @@ function checkFilesAndFolderStructure() {
 		'./node_modules', './package-lock.json', './package.json', './README.md',
 		'./test', './TODO.MD',
 
-		'./tsconfig.json', './types.d.ts', './types_io.ts', './types_z.ts',
+		'./tsconfig.json',
+		'./types.d.ts', './types_constants.ts', './types_io.ts', './types_z.ts',
 		'./server/fns.ts', './server/init.ts', './server/io.ts', './server/ref.ts',
 
 		'./client/env.d.ts', './client/index.html', './client/node_modules', './client/package-lock.json', './client/package.json',
@@ -166,6 +185,10 @@ function checkImportsAreFromTheRightBtrFile() {
 	}
 }
 
+function checkInitTsCallsRefTsAndIoTs() {
+	checkMatchInSpecificFile('./server/init.ts', 'successLog(stringify({ refInitialized: true, ioInitialized }))')
+}
+
 function checkLocalImportsHaveJsExtention() {
 	[serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
 		const { filename, content } = file
@@ -178,6 +201,11 @@ function checkLocalImportsHaveJsExtention() {
 			addToErrors(`Local import (${match}) is missing .js at the end, at: ${filename}`)
 		})
 	})
+}
+
+function checkMatchInSpecificFile(file: string, wantedMatch: string) {
+	const { content } = (getFromCachedFiles([file])[0] as cachedFile)
+	if (!content.includes(wantedMatch)) { addToErrors(`"          ${wantedMatch}          " is missing, at (${file})`) }
 }
 
 /**Check the scripts in a project's package json all fit the established schema */
@@ -231,7 +259,8 @@ async function checkPackageJson() {
 
 /**Check all socket events are handled aka socket.on(<EVENTNAME>) */
 function checkSocketEvents() {
-	const linesInTypes_io = (getFromCachedFiles(['./types_io.ts'])[0] as cachedFile).content.split('\n')
+	const filename = './types_io.ts'
+	const linesInTypes_io = (getFromCachedFiles([filename])[0] as cachedFile).content.split('\n')
 	checkSocketOnOfInterface('ServerToClientEvents', './client/src/socket.ts')
 	checkSocketOnOfInterface('ClientToServerEvents', './server/io.ts')
 
@@ -280,6 +309,39 @@ function checkServerAndClientFilesLogTheirInitialization() {
 		const wantedMatch = `logInitialization('${filename}')`
 		if (!content.includes(wantedMatch)) { addToErrors(`"          ${wantedMatch}          " is missing`) }
 	})
+}
+
+function checkSpecificMatchesInTypes_ioTs() {
+	[
+		'export type socket_c2s_event = keyof ClientToServerEvents',
+		'admin: (adminKey: string, command: string) => void',
+		'commandResult: (commandUsed: string, result: unknown) => void',
+		'export type socket_s2c_event = keyof ServerToClientEvents',
+		`export type clientSocket = socket_client<ServerToClientEvents, ClientToServerEvents>
+export const io = new Server<ClientToServerEvents, ServerToClientEvents>(getStartedHttpServer(), { cors: { origin: '*' } })
+export interface serverSocket extends socket_server<ClientToServerEvents, ServerToClientEvents`
+	].forEach(event => checkMatchInSpecificFile('./types_io.ts', event))
+}
+
+function checkSpecificMatchesInTypesTs() {
+	[
+		`/**imported from utils */
+declare global {
+	type fieldsForColumnOfTable = btr_fieldsForColumnOfTable
+	type globalAlert = btr_globalAlert
+	type language = btr_language
+	type newToastFn = btr_newToastFn
+	type socketEventInfo = btr_socketEventInfo
+	type trackedVueComponent = btr_trackedVueComponent
+	type validVariant = btr_validVariant
+}`,
+		`/**infered from zod */
+declare global`,
+		'type validAdminCommands = z.infer<typeof zValidAdminCommands>',
+		`/**exclusive to this project */
+declare global`,
+		'type mongoMisc = { adminKey: string, pageVisits: number',
+	].forEach(x => checkMatchInSpecificFile('./types.d.ts', x))
 }
 
 /**Check if the project is using the latest version of "myUtils" */

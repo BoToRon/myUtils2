@@ -27,12 +27,12 @@ _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 _; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 export const timers = [];
-export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark']);
+const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 const getUniqueId_generator = (function* () { let i = 0; while (true) {
     i++;
-    yield `${Date.now() + i}`;
+    yield isNode ? `${Date.now() + i}` : i;
 } })();
-const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
+export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark']);
 export const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile']);
 export const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile']);
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch']);
@@ -785,6 +785,8 @@ _; /********** FOR STRINGS ******************** FOR STRINGS ********************
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
+/**Add an "S" to the end of a noun if talking about them in plural based on the amount passed */
+export function asSingularOrPlural(noun, amount) { return noun + `${amount === 1 ? '' : 's'}`; }
 /**console.log... WITH COLORS :D */
 /** Copy to clipboard using the corresponding function for the running enviroment (node/client)*/
 export function copyToClipboard(x) { isNode ? copyToClipboard_server(x) : copyToClipboard_client(x); }
@@ -801,7 +803,7 @@ export function getTraceableStack(error, type) {
 /**@returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export function isGuest(username) { return /Guest[0-9]{13}/i.test(`${username}`); }
 /**To know when files are fired and in what order  */
-export function logInitialization(filename) { colorLog('cyan', '*'.repeat(20) + ' ' + filename); }
+export function logInitialization(filename) { colorLog(isNode ? 'cyan' : 'magenta', '*'.repeat(20) + ' ' + filename); }
 /**(Message) ✔️ */
 export function successLog(message) { return colorLog('green', message + ' ✔️'); }
 /**@returns an string with its linebreaks converted into simple one-char spaces */

@@ -20,7 +20,7 @@ export type btr_nonVoidFn = <F extends (...args: Parameters<F>) => ReturnType<F>
 export type btr_trackedVueComponent = {
     id: string;
     name: string;
-    beforeDestroy?: btr_voidFn;
+    beforeDestroy?: () => void;
 };
 export type btr_socketEventInfo = {
     event: string;
@@ -33,7 +33,6 @@ export type btr_globalAlert = {
 };
 export type btr_validVariant = z.infer<typeof zValidVariants>;
 export type btr_language = 'English' | 'Spanish';
-export type btr_voidFn = () => void;
 export type btr_fieldsForColumnOfTable = string | {
     key: string;
     label?: string;
@@ -167,7 +166,7 @@ export declare function transferItems<T>(origin: T[], destination: T[], predicat
     transferedCount: number;
 };
 /**Set interval with try-catch and called immediately*/
-export declare function doAndRepeat(fn: btr_voidFn, interval: number): void;
+export declare function doAndRepeat(fn: () => void, interval: number): void;
 /**
  * Filter and map an array in a single loop
  * @param arr The array to be filterMap'd
@@ -276,7 +275,7 @@ export declare function objectEntries<T extends object>(object: T): {
     value: T[keyof T];
 }[];
 /**Object.keys but with proper type-inference */
-export declare function objectKeys<K extends keyof T, T extends Record<K, unknown>>(object: T): K[];
+export declare function objectKeys<K extends string, T extends Record<K, unknown>>(object: T): (keyof T)[];
 /**Object.values but with proper type-inference */
 export declare function objectValues<T extends object>(object: T): T[keyof T];
 /**Create an object with only the specified properties of another base object (references are kept) */
@@ -348,6 +347,8 @@ export declare function initializeTimer<completeF extends () => ReturnType<compl
 }>;
 /**Kill a timer created with initializeTimer, the reason provided will become a divine stack */
 export declare function killTimer(timerId: string, reason: string): Promise<unknown>;
+/**Add an "S" to the end of a noun if talking about them in plural based on the amount passed */
+export declare function asSingularOrPlural(noun: string, amount: number): string;
 /**console.log... WITH COLORS :D */
 export declare function colorLog(color: validChalkColor, message: string): void;
 /** Copy to clipboard using the corresponding function for the running enviroment (node/client)*/

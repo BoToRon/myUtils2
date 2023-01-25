@@ -29,10 +29,10 @@ _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ***********
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 
 export const timers: timer[] = []
-export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'])
-const getUniqueId_generator = (function* () { let i = 0; while (true) { i++; yield `${Date.now() + i}` } })()
-
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
+const getUniqueId_generator = (function* () { let i = 0; while (true) { i++; yield isNode ? `${Date.now() + i}` : i } })()
+
+export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'])
 export const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile'])
 export const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile'])
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch'])
@@ -67,12 +67,11 @@ export type nullable<T> = T | null
 
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void
 export type btr_nonVoidFn = <F extends (...args: Parameters<F>) => ReturnType<F>> () => unknown
-export type btr_trackedVueComponent = { id: string, name: string, beforeDestroy?: btr_voidFn }
+export type btr_trackedVueComponent = { id: string, name: string, beforeDestroy?: () => void }
 export type btr_socketEventInfo = { event: string, timestamp: number, data: unknown }
 export type btr_globalAlert = { message: string, show: boolean }
 export type btr_validVariant = z.infer<typeof zValidVariants>
 export type btr_language = 'English' | 'Spanish'
-export type btr_voidFn = () => void
 
 export type btr_fieldsForColumnOfTable = string | {
 	key: string
@@ -381,7 +380,7 @@ _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS *****************
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 
 /**Set interval with try-catch and called immediately*/
-export function doAndRepeat(fn: btr_voidFn, interval: number) { tryF(fn, []); setInterval(() => tryF(fn, []), interval) }
+export function doAndRepeat(fn: () => void, interval: number) { tryF(fn, []); setInterval(() => tryF(fn, []), interval) }
 /**
  * Filter and map an array in a single loop
  * @param arr The array to be filterMap'd
@@ -683,7 +682,7 @@ export function objectEntries<T extends object>(object: T) {
 	return Object.entries(object).map(entry => ({ key: entry[0] as keyof T, value: entry[1] as T[keyof T] }))
 }
 /**Object.keys but with proper type-inference */
-export function objectKeys<K extends keyof T, T extends Record<K, unknown>>(object: T) { return Object.keys(object) as K[] }
+export function objectKeys<K extends string, T extends Record<K, unknown>>(object: T) { return Object.keys(object) as (keyof T)[] }
 /**Object.values but with proper type-inference */
 export function objectValues<T extends object>(object: T) { return Object.values(object) as T[keyof T] }
 /**Create an object with only the specified properties of another base object (references are kept) */
@@ -842,6 +841,8 @@ _ /********** FOR STRINGS ******************** FOR STRINGS ******************** 
 _ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 _ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 
+/**Add an "S" to the end of a noun if talking about them in plural based on the amount passed */
+export function asSingularOrPlural(noun: string, amount: number) { return noun + `${amount === 1 ? '' : 's'}` }
 /**console.log... WITH COLORS :D */
 /** Copy to clipboard using the corresponding function for the running enviroment (node/client)*/
 export function copyToClipboard(x: unknown) { isNode ? copyToClipboard_server(x) : copyToClipboard_client(x) }
@@ -858,7 +859,7 @@ export function getTraceableStack(error: string | Error, type: string) {
 /**@returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export function isGuest(username: string) { return /Guest[0-9]{13}/i.test(`${username}`) }
 /**To know when files are fired and in what order  */
-export function logInitialization(filename: string) { colorLog('cyan', '*'.repeat(20) + ' ' + filename) }
+export function logInitialization(filename: string) { colorLog(isNode ? 'cyan' : 'magenta', '*'.repeat(20) + ' ' + filename) }
 /**(Message) ✔️ */
 export function successLog(message: string) { return colorLog('green', message + ' ✔️') }
 /**@returns an string with its linebreaks converted into simple one-char spaces */
