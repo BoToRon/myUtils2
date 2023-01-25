@@ -5,7 +5,7 @@ export declare const zValidNpmCommand_package: any;
 export declare const zValidNpmCommand_project: any;
 export declare const zMyEnv: any;
 /**Generic to get the type of an object/interface while preserving key-value typing */
-export type objectEntries<T, amount extends 'plural' | 'single'> = {
+export type objectEntriesT<T, amount extends 'plural' | 'single'> = {
     [K in keyof T]: [K, amount extends 'plural' ? T[K][] : T[K]];
 }[keyof T];
 /**Generic to get the type of an object/interface while preserving key-value typing */
@@ -15,13 +15,13 @@ export type zSchema<T> = {
 };
 /**Syntaxic-sugar */
 export type nullable<T> = T | null;
-export type btr_trackedVueComponent = {
-    _name: string;
-    beforeCreate?: btr_voidFn;
-    beforeDestroy?: btr_voidFn;
-};
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void;
 export type btr_nonVoidFn = <F extends (...args: Parameters<F>) => ReturnType<F>>() => unknown;
+export type btr_trackedVueComponent = {
+    id: string;
+    name: string;
+    beforeDestroy?: btr_voidFn;
+};
 export type btr_socketEventInfo = {
     event: string;
     timestamp: number;
@@ -48,6 +48,7 @@ type toastOptions = {
     variant: btr_validVariant;
     title: string;
 };
+type vueComponentsTracker<T extends string> = Record<T, btr_trackedVueComponent[]>;
 type bvToast = {
     toast: (message: string, toastOptions: toastOptions) => void;
 };
@@ -80,12 +81,12 @@ type timer = {
 export declare function newToast_client_curry($bvToast: bvToast): (title: string, message: string, variant: z.infer<any>) => void;
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
 export declare function zodCheck_curry(errorHandler?: messageHandler, strictModeIfObject?: boolean): <T>(schema: zSchema<T>, data: T) => boolean;
-/**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
-export declare function trackVueComponent_curry<T>(zValidVueComponentName: zSchema<T>): (name: T, componentConstructor: btr_trackedVueComponent, window: {
-    vueComponents: btr_trackedVueComponent[];
-}) => btr_trackedVueComponent;
 /**(generates a function that:) Opens/close a bootstrap-vue modal with zod validation */
 export declare function triggerModalWithValidation_curry<validModalIds extends string>($bvModal: bvModal): (id: validModalIds, action: 'show' | 'hide') => Promise<void>;
+/**Add/remove a vue component to the window for easy access/debugging */
+export declare function trackVueComponent<T extends string>(name: T, component: btr_trackedVueComponent, window: {
+    vueComponents: vueComponentsTracker<T>;
+}): void;
 /**Adds an item to an array, or removes it if it already was added. Returns the array and the action applied */
 export declare function addOrRemoveItem<T>(arr: T[], item: T): {
     action: "removed" | "added";
@@ -272,13 +273,13 @@ export declare function objectEntries<T extends object>(object: T): {
     value: T[keyof T];
 }[];
 /**Object.keys but with proper type-inference */
-export declare function objectKeys<T extends object>(object: T): (keyof T)[];
+export declare function objectKeys<K extends keyof T, T extends Record<K, unknown>>(object: T): K[];
 /**Object.values but with proper type-inference */
 export declare function objectValues<T extends object>(object: T): T[keyof T];
 /**Create an object with only the specified properties of another base object (references are kept) */
 export declare function pick<T extends object, K extends keyof T>(theObject: T, properties: ReadonlyArray<K>): Pick<T, K>;
 /**Replace the values of an object with those of another that shares the schema*/
-export declare function replaceObject<T extends object>(originalObject: T, newObject: T): void;
+export declare function replaceObject<K extends keyof T, T extends Record<K, unknown>>(originalObject: T, newObject: T): void;
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods, see deepClone) */
 export declare function stringify<T extends object>(object: T): string;
 /**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
@@ -384,6 +385,8 @@ export declare function zRegexGenerator(regex: RegExp, exactPhrase: boolean): [R
 export declare function copyToClipboard_client(x: unknown): void;
 /**Stringifies and downloads the provided data*/
 export declare function downloadFile_client(filename: string, fileFormat: '.txt' | '.json', data: unknown): void;
-/**@deprecated use "formatDate instead" */
+/**@deprecated use "formatDate" instead */
 export declare function getFormattedTimestamp(): void;
+/**@deprecated use "trackVueComponent" instead */
+export declare function trackVueComponent_curry(): void;
 export {};

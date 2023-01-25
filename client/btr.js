@@ -90,33 +90,6 @@ export function zodCheck_curry(errorHandler = divine.error, strictModeIfObject =
     }
     return zodCheck;
 }
-/**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
-export function trackVueComponent_curry(zValidVueComponentName) {
-    return function trackVueComponent(name, componentConstructor, window) {
-        if (!zodCheck_curry(alert)(zValidVueComponentName, name)) {
-            return componentConstructor;
-        }
-        colorLog('blue', `Component '${name}' registered to Vue`);
-        if (!window.vueComponents) {
-            window.vueComponents = [];
-        }
-        return getComponent(name, componentConstructor);
-        function toggleComponent(logger) {
-            const { action } = addOrRemoveItem(window.vueComponents, componentConstructor);
-            logger(`Component '${name}' ${action} to/from window.vueComponents`);
-            logAllComponents();
-        }
-        function getComponent(name, componentConstructor) {
-            componentConstructor.beforeCreate = () => toggleComponent(successLog);
-            componentConstructor.beforeDestroy = () => toggleComponent(errorLog);
-            componentConstructor._name = name;
-            return componentConstructor;
-        }
-        function logAllComponents() {
-            colorLog('magenta', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`);
-        }
-    };
-}
 /**(generates a function that:) Opens/close a bootstrap-vue modal with zod validation */
 //TODO: delete this (hard to initialize when bvModal is declared after triggerModalWithValidation in the pinia store)
 export function triggerModalWithValidation_curry($bvModal) {
@@ -138,6 +111,29 @@ export function triggerModalWithValidation_curry($bvModal) {
         function elementExists() { return Boolean(document.getElementById(id)); }
         function promptError() { alert(`Modal with id (${id}) not found. Could not ${action}. Please report it`); }
     };
+}
+/**Add/remove a vue component to the window for easy access/debugging */
+export function trackVueComponent(name, component, window) {
+    component.name = name;
+    component.id = getUniqueId(name);
+    component.beforeDestroy = onDestroy;
+    if (!window.vueComponents) {
+        window.vueComponents = {};
+    }
+    if (!window.vueComponents[name]) {
+        window.vueComponents[name] = [];
+    }
+    successLog(`Component '${name}' added to window.vueComponents [${window.vueComponents[name].length}]`);
+    window.vueComponents[name].push(component);
+    logAllComponents();
+    function logAllComponents() {
+        colorLog('blue', `window.vueComponents: ${stringify(mapObject(window.vueComponents, value => value.length))}`);
+    }
+    function onDestroy() {
+        errorLog(`Component '${name}' (id: ${component.id}) removed from window.vueComponents`);
+        removeItem(window.vueComponents[name], component);
+        logAllComponents();
+    }
 }
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -668,8 +664,8 @@ export function replaceObject(originalObject, newObject) {
 }
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods, see deepClone) */
 export function stringify(object) {
+    const seen = new WeakSet();
     return JSON.stringify(object, (_key, value) => {
-        const seen = new WeakSet();
         if (typeof value === 'object' && value !== null) {
             if (seen.has(value)) {
                 return '< Circular >';
@@ -797,7 +793,10 @@ export function errorLog(message) { return colorLog('red', message + ' 💀'); }
 /**TODO: describe me */
 export function getTraceableStack(error, type) {
     const { stack } = (typeof error === 'string' ? new Error(error) : error);
-    return `${stack}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '').replace(/^Error:/, type);
+    return `${stack}`.
+        replace(/\(node:3864\).{0,}\n.{0,}exit code./, '').
+        replace(/\n {4}at/g, `\n ${' * '.repeat(5)} at`).
+        replace(/^Error/, type + ':');
 }
 /**@returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export function isGuest(username) { return /Guest[0-9]{13}/i.test(`${username}`); }
@@ -889,6 +888,8 @@ _; /********** DEPRECATED ******************** DEPRECATED ******************** D
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
-/**@deprecated use "formatDate instead" */
+/**@deprecated use "formatDate" instead */
 export function getFormattedTimestamp() { doNothing; }
+/**@deprecated use "trackVueComponent" instead */
+export function trackVueComponent_curry() { doNothing; }
 const colorLog = (color, message) => console.log(`%c${message}`, `color: ${color};`);

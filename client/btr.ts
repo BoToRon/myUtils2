@@ -57,7 +57,7 @@ _ /********** TYPES ******************** TYPES ******************** TYPES ******
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 
 /**Generic to get the type of an object/interface while preserving key-value typing */
-export type objectEntries<T, amount extends 'plural' | 'single'> = { [K in keyof T]: [K, amount extends 'plural' ? T[K][] : T[K]] }[keyof T]
+export type objectEntriesT<T, amount extends 'plural' | 'single'> = { [K in keyof T]: [K, amount extends 'plural' ? T[K][] : T[K]] }[keyof T]
 /**Generic to get the type of an object/interface while preserving key-value typing */
 export type zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T>, strict?: () => zSchema<T> }
 /**Syntaxic-sugar */
@@ -65,9 +65,9 @@ export type nullable<T> = T | null
 
 //^^ GENERICS ABOVE ^^ vv TYPES BELOW vv
 
-export type btr_trackedVueComponent = { _name: string, beforeCreate?: btr_voidFn, beforeDestroy?: btr_voidFn }
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void
 export type btr_nonVoidFn = <F extends (...args: Parameters<F>) => ReturnType<F>> () => unknown
+export type btr_trackedVueComponent = { id: string, name: string, beforeDestroy?: btr_voidFn }
 export type btr_socketEventInfo = { event: string, timestamp: number, data: unknown }
 export type btr_globalAlert = { message: string, show: boolean }
 export type btr_validVariant = z.infer<typeof zValidVariants>
@@ -83,6 +83,7 @@ export type btr_fieldsForColumnOfTable = string | {
 }
 
 type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: btr_validVariant, title: string }
+type vueComponentsTracker<T extends string> = Record<T, btr_trackedVueComponent[]>
 type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
 type bvModal = { show: (id: string) => void, hide: (id: string) => void }
 type validNpmCommand_package = z.infer<typeof zValidNpmCommand_package>
@@ -144,38 +145,6 @@ export function zodCheck_curry(errorHandler = divine.error as messageHandler, st
 	}
 	return zodCheck
 }
-/**(generates a function that:) Adds/removes a vue component into the window for easy access/debugging */
-export function trackVueComponent_curry<T>(zValidVueComponentName: zSchema<T>) {
-	return function trackVueComponent(
-		name: T,
-		componentConstructor: btr_trackedVueComponent,
-		window: { vueComponents: btr_trackedVueComponent[] }
-	) {
-
-		if (!zodCheck_curry(alert)(zValidVueComponentName, name)) { return componentConstructor }
-		colorLog('blue', `Component '${name}' registered to Vue`)
-		if (!window.vueComponents) { window.vueComponents = [] }
-
-		return getComponent(name, componentConstructor)
-
-		function toggleComponent(logger: messageHandler) {
-			const { action } = addOrRemoveItem(window.vueComponents, componentConstructor)
-			logger(`Component '${name}' ${action} to/from window.vueComponents`)
-			logAllComponents()
-		}
-
-		function getComponent(name: T, componentConstructor: btr_trackedVueComponent) {
-			componentConstructor.beforeCreate = () => toggleComponent(successLog)
-			componentConstructor.beforeDestroy = () => toggleComponent(errorLog)
-			componentConstructor._name = name as string
-			return componentConstructor
-		}
-
-		function logAllComponents() {
-			colorLog('magenta', `window.vueComponents: ${window.vueComponents.map(x => x._name)}`)
-		}
-	}
-}
 /**(generates a function that:) Opens/close a bootstrap-vue modal with zod validation */
 //TODO: delete this (hard to initialize when bvModal is declared after triggerModalWithValidation in the pinia store)
 export function triggerModalWithValidation_curry<validModalIds extends string>($bvModal: bvModal) {
@@ -193,6 +162,35 @@ export function triggerModalWithValidation_curry<validModalIds extends string>($
 
 		function elementExists() { return Boolean(document.getElementById(id)) }
 		function promptError() { alert(`Modal with id (${id}) not found. Could not ${action}. Please report it`) }
+	}
+}
+
+/**Add/remove a vue component to the window for easy access/debugging */
+export function trackVueComponent<T extends string>(
+	name: T,
+	component: btr_trackedVueComponent,
+	window: { vueComponents: vueComponentsTracker<T> }
+) {
+
+	component.name = name
+	component.id = getUniqueId(name)
+	component.beforeDestroy = onDestroy
+
+	if (!window.vueComponents) { window.vueComponents = {} as vueComponentsTracker<T> }
+	if (!window.vueComponents[name]) { window.vueComponents[name] = [] }
+
+	successLog(`Component '${name}' added to window.vueComponents [${window.vueComponents[name].length}]`)
+	window.vueComponents[name].push(component)
+	logAllComponents()
+
+	function logAllComponents() {
+		colorLog('blue', `window.vueComponents: ${stringify(mapObject(window.vueComponents, value => value.length))}`)
+	}
+
+	function onDestroy() {
+		errorLog(`Component '${name}' (id: ${component.id}) removed from window.vueComponents`)
+		removeItem(window.vueComponents[name], component)
+		logAllComponents()
 	}
 }
 
@@ -685,7 +683,7 @@ export function objectEntries<T extends object>(object: T) {
 	return Object.entries(object).map(entry => ({ key: entry[0] as keyof T, value: entry[1] as T[keyof T] }))
 }
 /**Object.keys but with proper type-inference */
-export function objectKeys<T extends object>(object: T) { return Object.keys(object) as unknown as (keyof T)[] }
+export function objectKeys<K extends keyof T, T extends Record<K, unknown>>(object: T) { return Object.keys(object) as K[] }
 /**Object.values but with proper type-inference */
 export function objectValues<T extends object>(object: T) { return Object.values(object) as T[keyof T] }
 /**Create an object with only the specified properties of another base object (references are kept) */
@@ -701,14 +699,14 @@ export function pick<T extends object, K extends keyof T>(theObject: T, properti
 	return thePartial
 }
 /**Replace the values of an object with those of another that shares the schema*/
-export function replaceObject<T extends object>(originalObject: T, newObject: T) {
+export function replaceObject<K extends keyof T, T extends Record<K, unknown>>(originalObject: T, newObject: T) {
 	objectKeys(originalObject).forEach(key => delete originalObject[key])
 	objectKeys(newObject).forEach(key => originalObject[key as keyof T] = newObject[key])
 }
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods, see deepClone) */
 export function stringify<T extends object>(object: T) {
+	const seen = new WeakSet()
 	return JSON.stringify(object, (_key: string, value: object | null) => {
-		const seen = new WeakSet()
 		if (typeof value === 'object' && value !== null) {
 			if (seen.has(value)) { return '< Circular >' }
 			seen.add(value)
@@ -852,7 +850,10 @@ export function errorLog(message: string) { return colorLog('red', message + ' ð
 /**TODO: describe me */
 export function getTraceableStack(error: string | Error, type: string) {
 	const { stack } = (typeof error === 'string' ? new Error(error) : error)
-	return `${stack}`.replace(/\(node:3864\).{0,}\n.{0,}exit code./, '').replace(/^Error:/, type)
+	return `${stack}`.
+		replace(/\(node:3864\).{0,}\n.{0,}exit code./, '').
+		replace(/\n {4}at/g, `\n ${' * '.repeat(5)} at`).
+		replace(/^Error/, type + ':')
 }
 /**@returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export function isGuest(username: string) { return /Guest[0-9]{13}/i.test(`${username}`) }
@@ -947,6 +948,9 @@ _ /********** DEPRECATED ******************** DEPRECATED ******************** DE
 _ /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 _ /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 
-/**@deprecated use "formatDate instead" */
+/**@deprecated use "formatDate" instead */
 export function getFormattedTimestamp() { doNothing }
+/**@deprecated use "trackVueComponent" instead */
+export function trackVueComponent_curry() { doNothing }
+
 const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)
