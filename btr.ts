@@ -15,6 +15,8 @@ import fetch from 'node-fetch'	//DELETETHISFORCLIENT
 _
 import clipboard from 'clipboardy'	//DELETETHISFORCLIENT
 _
+import { Socket } from 'socket.io'	//DELETETHISFORCLIENT
+_
 import getReadLine from 'readline'	//DELETETHISFORCLIENT
 _
 import { exec } from 'child_process'	//DELETETHISFORCLIENT
@@ -72,7 +74,7 @@ _ /********** TYPES ******************** TYPES ******************** TYPES ******
 /**Generic to get the type of an object/interface while preserving key-value typing */
 export type objectEntriesT<T, amount extends 'plural' | 'single'> = { [K in keyof T]: [K, amount extends 'plural' ? T[K][] : T[K]] }[keyof T]
 /**Generic to get the type of an object/interface while preserving key-value typing */
-export type zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T>, strict?: () => zSchema<T> }
+export type zSchema<T> = { _def: object, safeParse: (x: T) => SafeParseReturnType<T, T>, strict?: () => zSchema<T> }
 /**Syntaxic-sugar */
 export type nullable<T> = T | null
 
@@ -1365,6 +1367,13 @@ export async function questionAsPromise(question: string) {
 	const input = await new Promise(res => { readline.question(chalk.magenta(question) + '\n', res) }) as string
 	readline.close()
 	return input
+}
+
+/**Check the user input in socket.on functions and send error toasts if the validation fails */
+export function zodCheck_socket<T>(socket: Socket, schema: zSchema<T>, data: T) {
+	const caller = ((getTraceableStack('', 'z').split('\n') || [])[3]?.match(/at \w{1,}/) || ['at <unable to identify function caller>'])[0]
+	function errorHandler(error: string) { socket.emit('toast', '💀', `${error} - - - (${caller}, ${{ ...schema._def }})`, 'danger') }
+	return zodCheck_curry(errorHandler)(schema, data)
 }
 
 export const command_package = process.env['npm_config_command_package'] as validNpmCommand_package

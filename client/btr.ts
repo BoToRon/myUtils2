@@ -12,6 +12,7 @@ _
 _
 _
 _
+_
 import { type Primitive, type SafeParseReturnType, z, type ZodRawShape, type ZodTypeAny, string } from 'zod'
 _
 import { fromZodError } from 'zod-validation-error'
@@ -59,7 +60,7 @@ _ /********** TYPES ******************** TYPES ******************** TYPES ******
 /**Generic to get the type of an object/interface while preserving key-value typing */
 export type objectEntriesT<T, amount extends 'plural' | 'single'> = { [K in keyof T]: [K, amount extends 'plural' ? T[K][] : T[K]] }[keyof T]
 /**Generic to get the type of an object/interface while preserving key-value typing */
-export type zSchema<T> = { safeParse: (x: T) => SafeParseReturnType<T, T>, strict?: () => zSchema<T> }
+export type zSchema<T> = { _def: object, safeParse: (x: T) => SafeParseReturnType<T, T>, strict?: () => zSchema<T> }
 /**Syntaxic-sugar */
 export type nullable<T> = T | null
 

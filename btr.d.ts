@@ -1,3 +1,4 @@
+import { Socket } from 'socket.io';
 import { type SafeParseReturnType, z } from 'zod';
 export declare const timers: timer[];
 export declare const zValidVariants: any;
@@ -10,6 +11,7 @@ export type objectEntriesT<T, amount extends 'plural' | 'single'> = {
 }[keyof T];
 /**Generic to get the type of an object/interface while preserving key-value typing */
 export type zSchema<T> = {
+    _def: object;
     safeParse: (x: T) => SafeParseReturnType<T, T>;
     strict?: () => zSchema<T>;
 };
@@ -437,6 +439,8 @@ export declare function npmRun_project(npmCommand: validNpmCommand_project): Pro
 export declare function prompCommitMessageAndPush(repoName: string): Promise<void>;
 /**Prompts a question in the terminal, awaits for the input and returns it */
 export declare function questionAsPromise(question: string): Promise<string>;
+/**Check the user input in socket.on functions and send error toasts if the validation fails */
+export declare function zodCheck_socket<T>(socket: Socket, schema: zSchema<T>, data: T): boolean;
 export declare const command_package: z.infer<any>;
 export declare const command_project: z.infer<any>;
 export {};

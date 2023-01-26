@@ -10,6 +10,7 @@ export type objectEntriesT<T, amount extends 'plural' | 'single'> = {
 }[keyof T];
 /**Generic to get the type of an object/interface while preserving key-value typing */
 export type zSchema<T> = {
+    _def: object;
     safeParse: (x: T) => SafeParseReturnType<T, T>;
     strict?: () => zSchema<T>;
 };

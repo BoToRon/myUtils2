@@ -388,7 +388,7 @@ async function getCachedFiles() {
     const clientVueFiles = getFilesAndFoldersNames('./client/src', '.vue');
     const clientTsFiles = getFilesAndFoldersNames('./client/src', '.ts');
     const serverTsFiles = getFilesAndFoldersNames('./server', '.ts');
-    const typeFiles = getFilesAndFoldersNames('./types', '.ts');
+    const typeFiles = getFilesAndFoldersNames('.', '.ts');
     const gitIgnore = './.gitignore';
     const allFilenames = [clientTsFiles, clientVueFiles, gitIgnore, serverTsFiles, tsConfigs, typeFiles, vueDevFiles].flat(3);
     for await (const filename of allFilenames) {
