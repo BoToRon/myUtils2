@@ -3,18 +3,16 @@ import fs from 'fs'
 _
 import { z } from 'zod'
 _
+import { cachedFile, messageHandler, packageJson, tsConfig } from './types/types.js'
+_
 import {
-	colorLog, compareArrays, fsReadFileAsync, getEnviromentVariables, getZodSchemaFromData,
-	importFileFromProject, messageHandler, nullAs, successLog, zMyEnv, zodCheck_curry, zRegexGenerator
+	checkCodeThatCouldBeUpdated, colorLog, compareArrays, fsReadFileAsync, getEnviromentVariables, getZodSchemaFromData,
+	importFileFromProject, nullAs, successLog, warnings, withSpaceMargins, zMyEnv, zodCheck_curry, zRegexGenerator
 } from './btr.js'
 _
 
-type tsConfig = { compilerOptions: object }
-type cachedFile = { filepath: string, content: string }
-type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 
 const errors: string[] = []
-const warnings: string[] = []
 const cachedFiles: cachedFile[] = []
 let DEV_OR_PROD = <'DEV' | 'PROD'>nullAs()
 let errorHandler = <messageHandler>nullAs()
@@ -44,7 +42,7 @@ export async function basicProjectChecks(errHandler: messageHandler) {
 		checkAllVueComponentsAreTrackeable(),
 		checkBasicValidAdminCommands(),
 		checkClientFilesDontReferenceLocalStorageDirectly(),
-		checkCodeThatCouldBeUpdated(),
+		checkCodeThatCouldBeUpdated([serverTsFiles, clientTsFiles, clientVueFiles].flat()),
 		checkEnviromentVariables(),
 		checkEslintConfigRules(),
 		checkFilesAndFolderStructure(),
@@ -56,7 +54,7 @@ export async function basicProjectChecks(errHandler: messageHandler) {
 		checkSocketEvents(),
 		checkTsConfigCompilerOptions(),
 		checkServerAndClientFilesLogTheirInitialization(),
-		checkSpecificMatchesInTypes_ioTs(),
+		checkSpecificMatchesInTypesIoTs(),
 		checkSpecificMatchesInTypesTs(),
 		checkUtilsVersion(),
 		checkVsCodeSettings(),
@@ -77,8 +75,8 @@ function asConsecutiveLines(lines: string[]) {
 }
 
 function checkBasicValidAdminCommands() {
-	checkMatchInSpecificFile('./types_constants.ts', 'export const adminCommands = [\'getSockets\', \'help\', \'ref\',')
-	checkMatchInSpecificFile('./types_z.ts', 'export const zValidAdminCommands = z.enum(adminCommands)')
+	checkMatchInSpecificFile('./types/constants.ts', 'export const adminCommands = [\'getSockets\', \'help\', \'ref\',')
+	checkMatchInSpecificFile('./types/z.ts', 'export const zValidAdminCommands = z.enum(adminCommands)')
 }
 
 /**Check all the top-level functions in main .ts server files have a description */
@@ -100,7 +98,7 @@ function checkAllExportedFunctionsAreDescribed() {
 		}, [] as string[])
 
 		if (!uncommentedTopLevelFunctions.length) { return }
-		addToErrors(`Uncommented exported function ${withSpaceMargins(`(in (${file})`)} [${uncommentedTopLevelFunctions.join(', ')}]`)
+		addToErrors(`Uncommented exported function ${withSpaceMargins(`(in (${file})`, 10)} [${uncommentedTopLevelFunctions.join(', ')}]`)
 	})
 }
 
@@ -117,28 +115,6 @@ function checkClientFilesDontReferenceLocalStorageDirectly() {
 	[clientTsFiles, clientVueFiles].flat().forEach(file => {
 		const { filepath, content } = file
 		if (content.includes('localStorage.')) { addToErrors(`use localStorageGet / Set instead of referencing it directly, at ${filepath}`) }
-	})
-}
-
-function checkCodeThatCouldBeUpdated() {
-	[serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
-
-		const { filepath, content } = file
-
-		checkReplaceableCode('ReadonlyArray<', 'readonly ')
-		checkReplaceableCode('Object.keys', 'objectKeys')
-		checkReplaceableCode('Readonly<', 'readonly ')
-		checkReplaceableCode('null as', 'nullAs')
-
-		function checkReplaceableCode(replaceableCode: string, suggestedReplacement: string) {
-			if (!content.includes(replaceableCode)) { return }
-
-			const replaceableWithMargin = withSpaceMargins(replaceableCode)
-			const suggestionWithMargin = withSpaceMargins(suggestedReplacement)
-			const filepathWithMargin = withSpaceMargins(filepath)
-
-			warnings.push('Replace:' + replaceableWithMargin + '=>' + suggestionWithMargin + 'at' + filepathWithMargin)
-		}
 	})
 }
 
@@ -165,8 +141,7 @@ function checkFilesAndFolderStructure() {
 		'./node_modules', './package-lock.json', './package.json', './README.md',
 		'./test', './TODO.MD',
 
-		'./tsconfig.json',
-		'./types.d.ts', './types_constants.ts', './types_io.ts', './types_z.ts',
+		'./tsconfig.json', './types/types.d.ts', './types/constants.ts', './types/io.ts', './types/z.ts',
 		'./server/fns.ts', './server/init.ts', './server/io.ts', './server/ref.ts',
 
 		'./client/env.d.ts', './client/index.html', './client/node_modules', './client/package-lock.json', './client/package.json',
@@ -226,7 +201,7 @@ function checkLocalImportsHaveJsExtention() {
 
 function checkMatchInSpecificFile(file: string, wantedMatch: string) {
 	const { content } = (getFromCachedFiles([file])[0] as cachedFile)
-	if (!content.includes(wantedMatch)) { addToErrors(`"${withSpaceMargins(wantedMatch)}" is missing, at(${file})`) }
+	if (!content.includes(wantedMatch)) { addToErrors(`"${withSpaceMargins(wantedMatch, 10)}" is missing, at(${file})`) }
 }
 
 /**Check the scripts in a project's package json all fit the established schema */
@@ -280,8 +255,8 @@ async function checkPackageJson() {
 
 /**Check all socket events are handled aka socket.on(<EVENTNAME>) */
 function checkSocketEvents() {
-	const filepath = './types_io.ts'
-	const linesInTypes_io = (getFromCachedFiles([filepath])[0] as cachedFile).content.split('\n')
+	const filepath = './types/io.ts'
+	const linesInTypesIo = (getFromCachedFiles([filepath])[0] as cachedFile).content.split('\n')
 	checkSocketOnOfInterface('ServerToClientEvents', './client/src/socket.ts')
 	checkSocketOnOfInterface('ClientToServerEvents', './server/io.ts')
 
@@ -290,7 +265,7 @@ function checkSocketEvents() {
 		const handlingFile = (getFromCachedFiles([pathToHandlingFile])[0] as cachedFile).content
 		let isKeyOfWantedInterface = false
 
-		linesInTypes_io.forEach(line => {
+		linesInTypesIo.forEach(line => {
 			if (line.includes(`export interface ${nameOfInterface}`)) { isKeyOfWantedInterface = true; return }
 			if (/^\}/.test(line)) { isKeyOfWantedInterface = false } //"{"" <-- here so it doesn't mess with the color of brackets
 			if (!isKeyOfWantedInterface) { return }
@@ -328,11 +303,11 @@ function checkServerAndClientFilesLogTheirInitialization() {
 	[serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
 		const { filepath, content } = file
 		const wantedMatch = `logInitialization('${filepath}')`
-		if (!content.includes(wantedMatch)) { addToErrors(`"${withSpaceMargins(wantedMatch)}" is missing`) }
+		if (!content.includes(wantedMatch)) { addToErrors(`"${withSpaceMargins(wantedMatch, 10)}" is missing`) }
 	})
 }
 
-function checkSpecificMatchesInTypes_ioTs() {
+function checkSpecificMatchesInTypesIoTs() {
 	[
 		'export type socket_c2s_event = keyof ClientToServerEvents',
 		'admin: (adminKey: string, command: string) => void',
@@ -343,7 +318,7 @@ function checkSpecificMatchesInTypes_ioTs() {
 			'export const io = new Server<ClientToServerEvents, ServerToClientEvents>(getStartedHttpServer(), { cors: { origin: \'*\' } })',
 			'export interface serverSocket extends socket_server<ClientToServerEvents, ServerToClientEvents'
 		])
-	].forEach(event => checkMatchInSpecificFile('./types_io.ts', event))
+	].forEach(event => checkMatchInSpecificFile('./types/io.ts', event))
 }
 
 function checkSpecificMatchesInTypesTs() {
@@ -470,10 +445,5 @@ function getFromCachedFiles(obligatoryMatches: string[]): cachedFile[] {
 	if (foundFiles.length) { return foundFiles }
 	addToErrors(`No file cached with the requested obligatory matches(${obligatoryMatches}) was found`)
 	return [{ filepath: 'FAILSAFE', content: '' }]
-}
-
-function withSpaceMargins(string: string) {
-	const margin = ' '.repeat(10)
-	return margin + string + margin
 }
 

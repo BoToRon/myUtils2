@@ -27,7 +27,11 @@ import mongodb, { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
 _
 import { basicProjectChecks } from './basicProjectChecks.js' //DELETETHISFORCLIENT
 _
-import { type Primitive, type SafeParseReturnType, z, type ZodRawShape, type ZodTypeAny, string } from 'zod'
+import {
+	arrayPredicate, btr_validVariant, btr_trackedVueComponent, bvModal, bvToast, cachedFile, messageHandler, myEnv, pipe_mutable_type, pipe_persistent_type, timer, validChalkColor, validNpmCommand_package, validNpmCommand_project, vueComponentsTracker, zSchema
+} from './types/types.js'
+_
+import { type Primitive, z, type ZodRawShape, type ZodTypeAny } from 'zod'
 _
 import { fromZodError } from 'zod-validation-error'
 _
@@ -44,6 +48,7 @@ _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ***********
 _ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
 
 export const timers: timer[] = []
+export const warnings: string[] = []
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
 const getUniqueId_generator = (function* () { let i = 0; while (true) { i++; yield isNode ? `${Date.now() + i}` : i } })()
 
@@ -53,11 +58,11 @@ export const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transp
 const zValidVersionIncrement = z.enum(['major', 'minor', 'patch'])
 export const zMyEnv = z.object({
 	DEV_OR_PROD: z.enum(['DEV', 'PROD']),
-	ADMIN_PASSWORD: string(),
-	ERIS_TOKEN: string(),
-	MONGO_URI: string(),
-	APP_NAME: string(),
-	PORT: string(),
+	ADMIN_PASSWORD: z.string(),
+	ERIS_TOKEN: z.string(),
+	MONGO_URI: z.string(),
+	APP_NAME: z.string(),
+	PORT: z.string(),
 })
 
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
@@ -71,60 +76,6 @@ _ /********** TYPES ******************** TYPES ******************** TYPES ******
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 
-/**Generic to get the type of an object/interface while preserving key-value typing */
-export type objectEntriesT<T, amount extends 'plural' | 'single'> = { [K in keyof T]: [K, amount extends 'plural' ? T[K][] : T[K]] }[keyof T]
-/**Generic to get the type of an object/interface while preserving key-value typing */
-export type zSchema<T> = { _def: object, safeParse: (x: T) => SafeParseReturnType<T, T>, strict?: () => zSchema<T> }
-/**Syntaxic-sugar */
-export type nullable<T> = T | null
-
-//^^ GENERICS ABOVE ^^ vv TYPES BELOW vv
-
-export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void
-export type btr_nonVoidFn = <F extends (...args: Parameters<F>) => ReturnType<F>> () => unknown
-export type btr_trackedVueComponent = { id: string, name: string, beforeDestroy?: () => void }
-export type btr_socketEventInfo = { event: string, timestamp: number, data: unknown }
-export type btr_globalAlert = { message: string, show: boolean }
-export type btr_validVariant = z.infer<typeof zValidVariants>
-export type btr_language = 'English' | 'Spanish'
-
-export type btr_fieldsForColumnOfTable = string | {
-	key: string
-	label?: string
-	formatter?: (value: unknown, key: string, item: unknown) => unknown
-	sortable: boolean
-	thStyle?: btr_validVariant
-}
-
-type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: btr_validVariant, title: string }
-type validChalkColor = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'white' | 'grey' | 'magentaBright'	//DELETETHISFORCLIENT
-type vueComponentsTracker<T extends string> = Record<T, btr_trackedVueComponent[]>
-type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
-type bvModal = { show: (id: string) => void, hide: (id: string) => void }
-type validNpmCommand_package = z.infer<typeof zValidNpmCommand_package>
-type validNpmCommand_project = z.infer<typeof zValidNpmCommand_project>
-export type messageHandler = (message: string) => void
-type arrayPredicate<T> = (arg1: T) => boolean
-type pipe_persistent_type<T> = (arg: T) => T
-export type myEnv = z.infer<typeof zMyEnv>
-type pipe_mutable_type = {
-	<T, A>(source: T, a: (value: T) => A): A
-	<T, A, B>(source: T, a: (value: T) => A, b: (value: A) => B): B
-	<T, A, B, C>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C): C
-	<T, A, B, C, D>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D): D
-	<T, A, B, C, D, E>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D, e: (value: D) => E): E
-	//can always make it longer 😉
-}
-type timer = {
-	id: string,
-	runAt: number,
-	startedAt: number,
-	onComplete: btr_nonVoidFn,
-	onCancel: btr_nonVoidFn,
-	cancelStack: string,
-	cancelledAt: number,
-	wasCancelled: boolean
-}
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
@@ -881,6 +832,8 @@ export function logInitialization(filename: string) { colorLog(isNode ? 'cyan' :
 export function successLog(message: string) { return colorLog('green', message + ' ✔️') }
 /**@returns an string with its linebreaks converted into simple one-char spaces */
 export function toSingleLine(sentence: string) { return `${sentence}`.replace(/ {0,}\n {0,}/g, ' ') }
+/**Return an string with X amount of spaces as margin per side */
+export function withSpaceMargins(string: string, spaces: number) { const margin = ' '.repeat(spaces); return margin + string + margin }
 
 _ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
@@ -1072,6 +1025,27 @@ export function bigConsoleError(message: string) {
 	logAsterisks(3)
 	log(message)
 	logAsterisks(3)
+}
+/**Basically custom ESlint warnings */
+export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[]) {
+	cachedFiles.forEach(file => {
+		const { filepath, content } = file
+
+		checkReplaceableCode('ReadonlyArray<', 'readonly ')
+		checkReplaceableCode('Object.keys', 'objectKeys')
+		checkReplaceableCode('Readonly<', 'readonly ')
+		checkReplaceableCode('null as', 'nullAs')
+
+		function checkReplaceableCode(replaceableCode: string, suggestedReplacement: string) {
+			if (!content.includes(replaceableCode)) { return }
+
+			const suggestionWithMargin = withSpaceMargins(suggestedReplacement, 10)
+			const replaceableWithMargin = withSpaceMargins(replaceableCode, 10)
+			const filepathWithMargin = withSpaceMargins(filepath, 10)
+
+			warnings.push('Replace:' + replaceableWithMargin + '=>' + suggestionWithMargin + 'at' + filepathWithMargin)
+		}
+	})
 }
 /**Copy to clipboard while running node */
 export function copyToClipboard_server(x: unknown) { return clipboard.write(stringify(x as object)) }
