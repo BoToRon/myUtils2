@@ -3,9 +3,10 @@ import fs from 'fs';
 _;
 import { z } from 'zod';
 _;
-import { compareArrays, fsReadFileAsync, getEnviromentVariables, getZodSchemaFromData, importFileFromProject, nullAs, successLog, zMyEnv, zodCheck_curry, zRegexGenerator } from './btr.js';
+import { colorLog, compareArrays, fsReadFileAsync, getEnviromentVariables, getZodSchemaFromData, importFileFromProject, nullAs, successLog, zMyEnv, zodCheck_curry, zRegexGenerator } from './btr.js';
 _;
 const errors = [];
+const warnings = [];
 const cachedFiles = [];
 let DEV_OR_PROD = nullAs();
 let errorHandler = nullAs();
@@ -30,6 +31,7 @@ export async function basicProjectChecks(errHandler) {
         checkAllVueComponentsAreTrackeable(),
         checkBasicValidAdminCommands(),
         checkClientFilesDontReferenceLocalStorageDirectly(),
+        checkCodeThatCouldBeUpdated(),
         checkConsistentReadonlyTypeSyntax(),
         checkEnviromentVariables(),
         checkEslintConfigRules(),
@@ -49,6 +51,7 @@ export async function basicProjectChecks(errHandler) {
         checkVueDevFiles(),
     ]);
     errors.length ? errorHandler('\n\n' + errors.join('\n\n') + '\n\n') : successLog('all basicProjectChecks passed');
+    warnings.forEach(warning => colorLog('yellow', warning));
     return !errors.length;
 }
 function addToErrors(error) {
@@ -80,7 +83,7 @@ function checkAllExportedFunctionsAreDescribed() {
         if (!uncommentedTopLevelFunctions.length) {
             return;
         }
-        addToErrors(`Uncommented exported functions     (in ${file}):     [${uncommentedTopLevelFunctions.join(', ')}]`);
+        addToErrors(`Uncommented exported function ${withSpaceMargins(`(in (${file})`)} [${uncommentedTopLevelFunctions.join(', ')}]`);
     });
 }
 /**Check all the vue components are trackable by the window */
@@ -99,7 +102,20 @@ function checkClientFilesDontReferenceLocalStorageDirectly() {
     [clientTsFiles, clientVueFiles].flat().forEach(file => {
         const { filename, content } = file;
         if (content.includes('localStorage.')) {
-            addToErrors(`use localStorageGet/Set instead of referencing it directly, at ${filename}`);
+            addToErrors(`use localStorageGet / Set instead of referencing it directly, at ${filename}`);
+        }
+    });
+}
+function checkCodeThatCouldBeUpdated() {
+    [serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
+        const { filename, content } = file;
+        checkReplaceableCode('null as', 'nullAs');
+        checkReplaceableCode('Object.keys', 'objectKeys');
+        function checkReplaceableCode(replaceableCode, suggestion) {
+            if (!content.includes(replaceableCode)) {
+                return;
+            }
+            warnings.push(`Replaceable code ( ${replaceableCode} ${withSpaceMargins('=>')} ${suggestion} ), ${withSpaceMargins('at' + filename)}`);
         }
     });
 }
@@ -109,7 +125,7 @@ function checkConsistentReadonlyTypeSyntax() {
         if (!/Readonly<|ReadonlyArray</.test(content)) {
             return;
         }
-        addToErrors(`Use the "readonly" keyword instead of the 'Readonly'/'ReadonlyArray' generics, at (${filename})`);
+        addToErrors(`Use the "readonly" keyword instead of the 'Readonly' / 'ReadonlyArray' generics, at(${filename})`);
     });
 }
 /**Check if all the desired enviroment keys are defined */
@@ -139,7 +155,7 @@ function checkFilesAndFolderStructure() {
     ];
     const missingItems = compareArrays(desiredFilesAndFolders, currentFilesAndFolders).missingItems;
     if (missingItems.length) {
-        addToErrors(`The following files/directories are missing: [${missingItems.join(', ')}]`);
+        addToErrors(`The following files / directories are missing: [${missingItems.join(', ')}]`);
     }
 }
 /**Check all files/folders that should be ignored by default are so */
@@ -184,14 +200,14 @@ function checkLocalImportsHaveJsExtention() {
             if (match.includes('.vue\'')) {
                 return;
             }
-            addToErrors(`Local import (${match}) is missing .js at the end, at: ${filename}`);
+            addToErrors(`Local import(${match}) is missing.js at the end, at: ${filename}`);
         });
     });
 }
 function checkMatchInSpecificFile(file, wantedMatch) {
     const { content } = getFromCachedFiles([file])[0];
     if (!content.includes(wantedMatch)) {
-        addToErrors(`"          ${wantedMatch}          " is missing, at (${file})`);
+        addToErrors(`"${withSpaceMargins(wantedMatch)}" is missing, at(${file})`);
     }
 }
 /**Check the scripts in a project's package json all fit the established schema */
@@ -292,7 +308,7 @@ function checkServerAndClientFilesLogTheirInitialization() {
         const { filename, content } = file;
         const wantedMatch = `logInitialization('${filename}')`;
         if (!content.includes(wantedMatch)) {
-            addToErrors(`"          ${wantedMatch}          " is missing`);
+            addToErrors(`"${withSpaceMargins(wantedMatch)}" is missing`);
         }
     });
 }
@@ -303,22 +319,23 @@ function checkSpecificMatchesInTypes_ioTs() {
         'commandResult: (commandUsed: string, result: unknown) => void',
         'export type socket_s2c_event = keyof ServerToClientEvents',
         `export type clientSocket = socket_client<ServerToClientEvents, ClientToServerEvents>\r
-export const io = new Server<ClientToServerEvents, ServerToClientEvents>(getStartedHttpServer(), { cors: { origin: '*' } })\r
-export interface serverSocket extends socket_server<ClientToServerEvents, ServerToClientEvents`
+		export const io = new Server<ClientToServerEvents, ServerToClientEvents>(getStartedHttpServer(), { cors: { origin: '*' } }) \r
+		export interface serverSocket extends socket_server<ClientToServerEvents, ServerToClientEvents`
     ].forEach(event => checkMatchInSpecificFile('./types_io.ts', event));
 }
 function checkSpecificMatchesInTypesTs() {
     [
         `/**imported from utils */\r
-declare global {\r
+declare global {
+			\r
 	type fieldsForColumnOfTable = btr_fieldsForColumnOfTable\r
-	type globalAlert = btr_globalAlert\r
-	type language = btr_language\r
-	type newToastFn = btr_newToastFn\r
-	type socketEventInfo = btr_socketEventInfo\r
-	type trackedVueComponent = btr_trackedVueComponent\r
-	type validVariant = btr_validVariant\r
-}`,
+		type globalAlert = btr_globalAlert\r
+		type language = btr_language\r
+		type newToastFn = btr_newToastFn\r
+		type socketEventInfo = btr_socketEventInfo\r
+		type trackedVueComponent = btr_trackedVueComponent\r
+		type validVariant = btr_validVariant\r
+	}`,
         `/**infered from zod */\r
 declare global`,
         'type validAdminCommands = z.infer<typeof zValidAdminCommands>',
@@ -377,7 +394,7 @@ async function checkVueDevFiles() {
         if (file.content.includes(mustMatch)) {
             return true;
         }
-        addToErrors(`file     (${path})     must include:    ${mustMatch}`);
+        addToErrors(`file(${path})     must include: ${mustMatch}`);
     }
 }
 async function getCachedFiles() {
@@ -411,7 +428,7 @@ async function getCachedFiles() {
     }
     async function fsReadFileAsyncAndCheckIfRepeat(filepath) {
         if (filesRead.includes(filepath)) {
-            addToErrors(`File readed more than once by fsReadFileAsync: >>>(${filepath})<<<`);
+            addToErrors(`File readed more than once by fsReadFileAsync: >>> (${filepath}) << <`);
         }
         return await fsReadFileAsync(filepath);
     }
@@ -437,6 +454,10 @@ function getFromCachedFiles(obligatoryMatches) {
     if (foundFiles.length) {
         return foundFiles;
     }
-    addToErrors(`No file cached with the requested obligatory matches (${obligatoryMatches}) was found`);
+    addToErrors(`No file cached with the requested obligatory matches(${obligatoryMatches}) was found`);
     return [{ filename: 'FAILSAFE', content: 'failsafe' }];
+}
+function withSpaceMargins(string) {
+    const margin = ' '.repeat(10);
+    return margin + string + margin;
 }

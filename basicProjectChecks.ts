@@ -4,6 +4,7 @@ _
 import { z } from 'zod'
 _
 import {
+	colorLog,
 	compareArrays, fsReadFileAsync, getEnviromentVariables, getZodSchemaFromData,
 	importFileFromProject, messageHandler, nullAs, successLog, zMyEnv, zodCheck_curry, zRegexGenerator
 } from './btr.js'
@@ -14,6 +15,7 @@ type cachedFile = { filename: string, content: string }
 type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 
 const errors: string[] = []
+const warnings: string[] = []
 const cachedFiles: cachedFile[] = []
 let DEV_OR_PROD = <'DEV' | 'PROD'>nullAs()
 let errorHandler = <messageHandler>nullAs()
@@ -43,6 +45,7 @@ export async function basicProjectChecks(errHandler: messageHandler) {
 		checkAllVueComponentsAreTrackeable(),
 		checkBasicValidAdminCommands(),
 		checkClientFilesDontReferenceLocalStorageDirectly(),
+		checkCodeThatCouldBeUpdated(),
 		checkConsistentReadonlyTypeSyntax(),
 		checkEnviromentVariables(),
 		checkEslintConfigRules(),
@@ -63,6 +66,7 @@ export async function basicProjectChecks(errHandler: messageHandler) {
 	])
 
 	errors.length ? errorHandler('\n\n' + errors.join('\n\n') + '\n\n') : successLog('all basicProjectChecks passed')
+	warnings.forEach(warning => colorLog('yellow', warning))
 	return !errors.length
 }
 
@@ -94,7 +98,7 @@ function checkAllExportedFunctionsAreDescribed() {
 		}, [] as string[])
 
 		if (!uncommentedTopLevelFunctions.length) { return }
-		addToErrors(`Uncommented exported functions     (in ${file}):     [${uncommentedTopLevelFunctions.join(', ')}]`)
+		addToErrors(`Uncommented exported function ${withSpaceMargins(`(in (${file})`)} [${uncommentedTopLevelFunctions.join(', ')}]`)
 	})
 }
 
@@ -110,7 +114,21 @@ function checkAllVueComponentsAreTrackeable() {
 function checkClientFilesDontReferenceLocalStorageDirectly() {
 	[clientTsFiles, clientVueFiles].flat().forEach(file => {
 		const { filename, content } = file
-		if (content.includes('localStorage.')) { addToErrors(`use localStorageGet/Set instead of referencing it directly, at ${filename}`) }
+		if (content.includes('localStorage.')) { addToErrors(`use localStorageGet / Set instead of referencing it directly, at ${filename}`) }
+	})
+}
+
+function checkCodeThatCouldBeUpdated() {
+	[serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
+
+		const { filename, content } = file
+		checkReplaceableCode('null as', 'nullAs')
+		checkReplaceableCode('Object.keys', 'objectKeys')
+
+		function checkReplaceableCode(replaceableCode: string, suggestion: string) {
+			if (!content.includes(replaceableCode)) { return }
+			warnings.push(`Replaceable code ( ${replaceableCode} ${withSpaceMargins('=>')} ${suggestion} ), ${withSpaceMargins('at' + filename)}`)
+		}
 	})
 }
 
@@ -118,7 +136,7 @@ function checkConsistentReadonlyTypeSyntax() {
 	[serverTsFiles, typeFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
 		const { filename, content } = file
 		if (!/Readonly<|ReadonlyArray</.test(content)) { return }
-		addToErrors(`Use the "readonly" keyword instead of the 'Readonly'/'ReadonlyArray' generics, at (${filename})`)
+		addToErrors(`Use the "readonly" keyword instead of the 'Readonly' / 'ReadonlyArray' generics, at(${filename})`)
 	})
 }
 
@@ -156,7 +174,7 @@ function checkFilesAndFolderStructure() {
 	]
 
 	const missingItems = compareArrays(desiredFilesAndFolders, currentFilesAndFolders).missingItems
-	if (missingItems.length) { addToErrors(`The following files/directories are missing: [${missingItems.join(', ')}]`) }
+	if (missingItems.length) { addToErrors(`The following files / directories are missing: [${missingItems.join(', ')}]`) }
 }
 
 /**Check all files/folders that should be ignored by default are so */
@@ -199,14 +217,14 @@ function checkLocalImportsHaveJsExtention() {
 		localImports.forEach(match => {
 			if (match.includes('.js\'')) { return }
 			if (match.includes('.vue\'')) { return }
-			addToErrors(`Local import (${match}) is missing .js at the end, at: ${filename}`)
+			addToErrors(`Local import(${match}) is missing.js at the end, at: ${filename}`)
 		})
 	})
 }
 
 function checkMatchInSpecificFile(file: string, wantedMatch: string) {
 	const { content } = (getFromCachedFiles([file])[0] as cachedFile)
-	if (!content.includes(wantedMatch)) { addToErrors(`"          ${wantedMatch}          " is missing, at (${file})`) }
+	if (!content.includes(wantedMatch)) { addToErrors(`"${withSpaceMargins(wantedMatch)}" is missing, at(${file})`) }
 }
 
 /**Check the scripts in a project's package json all fit the established schema */
@@ -308,7 +326,7 @@ function checkServerAndClientFilesLogTheirInitialization() {
 	[serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
 		const { filename, content } = file
 		const wantedMatch = `logInitialization('${filename}')`
-		if (!content.includes(wantedMatch)) { addToErrors(`"          ${wantedMatch}          " is missing`) }
+		if (!content.includes(wantedMatch)) { addToErrors(`"${withSpaceMargins(wantedMatch)}" is missing`) }
 	})
 }
 
@@ -319,23 +337,24 @@ function checkSpecificMatchesInTypes_ioTs() {
 		'commandResult: (commandUsed: string, result: unknown) => void',
 		'export type socket_s2c_event = keyof ServerToClientEvents',
 		`export type clientSocket = socket_client<ServerToClientEvents, ClientToServerEvents>\r
-export const io = new Server<ClientToServerEvents, ServerToClientEvents>(getStartedHttpServer(), { cors: { origin: '*' } })\r
-export interface serverSocket extends socket_server<ClientToServerEvents, ServerToClientEvents`
+		export const io = new Server<ClientToServerEvents, ServerToClientEvents>(getStartedHttpServer(), { cors: { origin: '*' } }) \r
+		export interface serverSocket extends socket_server<ClientToServerEvents, ServerToClientEvents`
 	].forEach(event => checkMatchInSpecificFile('./types_io.ts', event))
 }
 
 function checkSpecificMatchesInTypesTs() {
 	[
 		`/**imported from utils */\r
-declare global {\r
+declare global {
+			\r
 	type fieldsForColumnOfTable = btr_fieldsForColumnOfTable\r
-	type globalAlert = btr_globalAlert\r
-	type language = btr_language\r
-	type newToastFn = btr_newToastFn\r
-	type socketEventInfo = btr_socketEventInfo\r
-	type trackedVueComponent = btr_trackedVueComponent\r
-	type validVariant = btr_validVariant\r
-}`,
+		type globalAlert = btr_globalAlert\r
+		type language = btr_language\r
+		type newToastFn = btr_newToastFn\r
+		type socketEventInfo = btr_socketEventInfo\r
+		type trackedVueComponent = btr_trackedVueComponent\r
+		type validVariant = btr_validVariant\r
+	}`,
 		`/**infered from zod */\r
 declare global`,
 		'type validAdminCommands = z.infer<typeof zValidAdminCommands>',
@@ -396,7 +415,7 @@ async function checkVueDevFiles() {
 		const file = getFromCachedFiles([path])[0] as cachedFile
 
 		if (file.content.includes(mustMatch)) { return true }
-		addToErrors(`file     (${path})     must include:    ${mustMatch}`)
+		addToErrors(`file(${path})     must include: ${mustMatch}`)
 	}
 }
 
@@ -427,7 +446,7 @@ async function getCachedFiles() {
 	}
 
 	async function fsReadFileAsyncAndCheckIfRepeat(filepath: string) {
-		if (filesRead.includes(filepath)) { addToErrors(`File readed more than once by fsReadFileAsync: >>>(${filepath})<<<`) }
+		if (filesRead.includes(filepath)) { addToErrors(`File readed more than once by fsReadFileAsync: >>> (${filepath}) << <`) }
 		return await fsReadFileAsync(filepath)
 	}
 }
@@ -451,6 +470,11 @@ function getFilesAndFoldersNames(directory: string, extension: '.ts' | '.vue' | 
 function getFromCachedFiles(obligatoryMatches: string[]): cachedFile[] {
 	const foundFiles = cachedFiles.filter(file => obligatoryMatches.every(match => file.filename.includes(match)))
 	if (foundFiles.length) { return foundFiles }
-	addToErrors(`No file cached with the requested obligatory matches (${obligatoryMatches}) was found`)
+	addToErrors(`No file cached with the requested obligatory matches(${obligatoryMatches}) was found`)
 	return [{ filename: 'FAILSAFE', content: 'failsafe' }]
+}
+
+function withSpaceMargins(string: string) {
+	const margin = ' '.repeat(10)
+	return margin + string + margin
 }
