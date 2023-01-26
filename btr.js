@@ -27,12 +27,15 @@ _;
 import { basicProjectChecks } from './basicProjectChecks.js'; //DELETETHISFORCLIENT
 _;
 _;
-import { cachedFiles, errors, getUniqueId_generator, isNode, timers, utilsRepoName, warnings, zValidVariants, zValidVersionIncrement } from './types/constants.js';
+import { getUniqueId_generator, isNode, utilsRepoName, zValidVariants, zValidVersionIncrement } from './types/constants.js';
 _;
 import { z } from 'zod';
 _;
 import { fromZodError } from 'zod-validation-error';
 _;
+export const timers = [];
+const warnings = [];
+const errors = [];
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
@@ -971,7 +974,8 @@ _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ************
 _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 /**Batch-load files for checking purposes */
-export async function addToCachedFiles(filepaths) {
+export async function getCachedFiles(filepaths) {
+    const cachedFiles = [];
     for await (const filepath of filepaths) {
         if (!fileExists(filepath)) {
             addToErrors(`File not found at '${filepath}'`);
@@ -981,6 +985,10 @@ export async function addToCachedFiles(filepaths) {
             addToErrors(`File readed more than once by fsReadFileAsync: >>> (${filepath}) << <`);
         }
         cachedFiles.push({ filepath, content: await fsReadFileAsync(filepath) });
+    }
+    return cachedFiles;
+    function addToErrors(error) {
+        errors.push(error);
     }
     async function fileExists(path) {
         try {
@@ -993,8 +1001,6 @@ export async function addToCachedFiles(filepaths) {
         }
     }
 }
-//TODO: describe me
-export function addToErrors(error) { errors.push(error); }
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
 export function bigConsoleError(message) {
     function logAsterisks(lines) { for (let i = 0; i < lines; i++) {
@@ -1154,8 +1160,7 @@ export function npmRun_package(npmCommand) {
         cachePackageFilesAndCheckThem();
     }
     async function cachePackageFilesAndCheckThem() {
-        await addToCachedFiles(['./basicProjectChecks.ts', './btr.ts', './npmRun.ts']);
-        checkCodeThatCouldBeUpdated(cachedFiles);
+        checkCodeThatCouldBeUpdated(await getCachedFiles(['./basicProjectChecks.ts', './btr.ts', './npmRun.ts']));
         warnings.length ? warnings.forEach(warning => colorLog('yellow', warning)) : successLog('No errors or warnings :D');
     }
     function printProcessOver() {

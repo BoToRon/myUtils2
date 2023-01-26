@@ -4,11 +4,15 @@ _
 import { cachedFile, timer } from './types.js'
 _
 
-export const timers: timer[] = []
-export const errors: string[] = []
-export const warnings: string[] = []
+
+export const ref = {
+	timers: [] as timer[],
+	errors: [] as string[],
+	warnings: [] as string[],
+	cachedFiles: [] as cachedFile[]
+}
+
 export const utilsRepoName = 'Utils 🛠️'
-export const cachedFiles: cachedFile[] = []
 export const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
 export const getUniqueId_generator = (function* () { let i = 0; while (true) { i++; yield isNode ? `${Date.now() + i}` : i } })()
 

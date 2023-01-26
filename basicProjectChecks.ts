@@ -3,17 +3,18 @@ import fs from 'fs'
 _
 import { z } from 'zod'
 _
-import { warnings, zMyEnv } from './types/constants.js'
+import { zMyEnv } from './types/constants.js'
 _
 import { cachedFile, messageHandler, packageJson, tsConfig } from './types/types.js'
 _
 import {
-	addToCachedFiles, addToErrors, checkCodeThatCouldBeUpdated, colorLog, compareArrays, getEnviromentVariables,
-	getZodSchemaFromData, importFileFromProject, nullAs, successLog, withSpaceMargins, zodCheck_curry, zRegexGenerator
+	getCachedFiles, checkCodeThatCouldBeUpdated, colorLog, compareArrays, getEnviromentVariables, getZodSchemaFromData,
+	importFileFromProject, nullAs, successLog, withSpaceMargins, zodCheck_curry, zRegexGenerator
 } from './btr.js'
 _
 
 const errors: string[] = []
+const warnings: string[] = []
 const cachedFiles: cachedFile[] = []
 let DEV_OR_PROD = <'DEV' | 'PROD'>nullAs()
 let errorHandler = <messageHandler>nullAs()
@@ -27,6 +28,9 @@ const zodCheck_toErrors = zodCheck_curry(addToErrors)
 _//TODO: an schema for ref's esqueleton? (temp, debug, debugLog, devOrProd, socket)
 _//TODO: check "ref.ts" matches (getDebugOptions, mongoCollection)
 
+export function addToErrors(error: string) {
+	errors.push(error)
+}
 /** Check the version of @botoron/utils, the enviroment variables and various config files */
 export async function basicProjectChecks(errHandler: messageHandler) {
 	errorHandler = errHandler
@@ -403,7 +407,7 @@ async function fillCachedFiles() {
 	const typeFilePaths = getFilesAndFoldersNames('./types', '.ts')
 	const gitIgnore = './.gitignore'
 
-	await addToCachedFiles([clientTsFilePaths, clientVueFilePaths, gitIgnore, serverTsFilePaths, tsConfigs, typeFilePaths, vueDevFiles].flat())
+	await getCachedFiles([clientTsFilePaths, clientVueFilePaths, gitIgnore, serverTsFilePaths, tsConfigs, typeFilePaths, vueDevFiles].flat())
 }
 
 /**Get all the file and folders within a folder, stopping at predefined folders */

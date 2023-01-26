@@ -31,15 +31,16 @@ import {
 	arrayPredicate, btr_validVariant, btr_trackedVueComponent, bvModal, bvToast, cachedFile, messageHandler, myEnv, pipe_mutable_type, pipe_persistent_type, timer, validChalkColor, validNpmCommand_package, validNpmCommand_project, vueComponentsTracker, zSchema
 } from './types/types.js'
 _
-import {
-	cachedFiles, errors, getUniqueId_generator, isNode, timers,
-	utilsRepoName, warnings, zValidVariants, zValidVersionIncrement
-} from './types/constants.js'
+import { getUniqueId_generator, isNode, utilsRepoName, zValidVariants, zValidVersionIncrement } from './types/constants.js'
 _
 import { type Primitive, z, type ZodRawShape, type ZodTypeAny } from 'zod'
 _
 import { fromZodError } from 'zod-validation-error'
 _
+
+export const timers: timer[] = []
+const warnings: string[] = []
+const errors: string[] = []
 
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
@@ -986,11 +987,20 @@ _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY *************
 _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 
 /**Batch-load files for checking purposes */
-export async function addToCachedFiles(filepaths: string[]) {
+export async function getCachedFiles(filepaths: string[]) {
+
+	const cachedFiles: cachedFile[] = []
+
 	for await (const filepath of filepaths) {
 		if (!fileExists(filepath)) { addToErrors(`File not found at '${filepath}'`); continue }
 		if (cachedFiles.some(x => x.filepath === filepath)) { addToErrors(`File readed more than once by fsReadFileAsync: >>> (${filepath}) << <`) }
 		cachedFiles.push({ filepath, content: await fsReadFileAsync(filepath) })
+	}
+
+	return cachedFiles
+
+	function addToErrors(error: string) {
+		errors.push(error)
 	}
 
 	async function fileExists(path: string) {
@@ -998,8 +1008,6 @@ export async function addToCachedFiles(filepaths: string[]) {
 		catch { addToErrors('Missing file, couldn\'t read: ' + path); return false }
 	}
 }
-//TODO: describe me
-export function addToErrors(error: string) { errors.push(error) }
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
 export function bigConsoleError(message: string) {
 	function logAsterisks(lines: number) { for (let i = 0; i < lines; i++) { log('*'.repeat(150)) } }
@@ -1148,8 +1156,7 @@ export function npmRun_package(npmCommand: validNpmCommand_package) {
 	if (npmCommand === 'check') { cachePackageFilesAndCheckThem() }
 
 	async function cachePackageFilesAndCheckThem() {
-		await addToCachedFiles(['./basicProjectChecks.ts', './btr.ts', './npmRun.ts'])
-		checkCodeThatCouldBeUpdated(cachedFiles)
+		checkCodeThatCouldBeUpdated(await getCachedFiles(['./basicProjectChecks.ts', './btr.ts', './npmRun.ts']))
 		warnings.length ? warnings.forEach(warning => colorLog('yellow', warning)) : successLog('No errors or warnings :D')
 	}
 

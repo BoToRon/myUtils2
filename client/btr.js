@@ -14,12 +14,15 @@ _;
 _;
 _;
 _;
-import { getUniqueId_generator, isNode, timers, zValidVariants } from './types/constants.js';
+import { getUniqueId_generator, isNode, zValidVariants } from './types/constants.js';
 _;
 import { z } from 'zod';
 _;
 import { fromZodError } from 'zod-validation-error';
 _;
+export const timers = [];
+const warnings = [];
+const errors = [];
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/

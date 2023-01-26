@@ -2,11 +2,13 @@ let _;
 import { z } from 'zod';
 _;
 _;
-export const timers = [];
-export const errors = [];
-export const warnings = [];
+export const ref = {
+    timers: [],
+    errors: [],
+    warnings: [],
+    cachedFiles: []
+};
 export const utilsRepoName = 'Utils 🛠️';
-export const cachedFiles = [];
 export const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 export const getUniqueId_generator = (function* () { let i = 0; while (true) {
     i++;
