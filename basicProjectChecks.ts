@@ -74,6 +74,10 @@ function addToErrors(error: string) {
 	errors.push(error)
 }
 
+function asConsecutiveLines(lines: string[]) {
+	return lines.join('\r\n')
+}
+
 function checkBasicValidAdminCommands() {
 	checkMatchInSpecificFile('./types_constants.ts', 'export const adminCommands = [\'getSockets\', \'help\', \'ref\',')
 	checkMatchInSpecificFile('./types_z.ts', 'export const zValidAdminCommands = z.enum(adminCommands)')
@@ -336,30 +340,30 @@ function checkSpecificMatchesInTypes_ioTs() {
 		'admin: (adminKey: string, command: string) => void',
 		'commandResult: (commandUsed: string, result: unknown) => void',
 		'export type socket_s2c_event = keyof ServerToClientEvents',
-		`export type clientSocket = socket_client<ServerToClientEvents, ClientToServerEvents>\r
-		export const io = new Server<ClientToServerEvents, ServerToClientEvents>(getStartedHttpServer(), { cors: { origin: '*' } }) \r
-		export interface serverSocket extends socket_server<ClientToServerEvents, ServerToClientEvents`
+		asConsecutiveLines([
+			'export type clientSocket = socket_client<ServerToClientEvents, ClientToServerEvents>',
+			'export const io = new Server<ClientToServerEvents, ServerToClientEvents>(getStartedHttpServer(), { cors: { origin: \' * \' } })',
+			'export interface serverSocket extends socket_server<ClientToServerEvents, ServerToClientEvents'
+		])
 	].forEach(event => checkMatchInSpecificFile('./types_io.ts', event))
 }
 
 function checkSpecificMatchesInTypesTs() {
 	[
-		`/**imported from utils */\r
-declare global {
-			\r
-	type fieldsForColumnOfTable = btr_fieldsForColumnOfTable\r
-		type globalAlert = btr_globalAlert\r
-		type language = btr_language\r
-		type newToastFn = btr_newToastFn\r
-		type socketEventInfo = btr_socketEventInfo\r
-		type trackedVueComponent = btr_trackedVueComponent\r
-		type validVariant = btr_validVariant\r
-	}`,
-		`/**infered from zod */\r
-declare global`,
+		asConsecutiveLines([
+			'/**imported from utils */',
+			'declare global {',
+			'type fieldsForColumnOfTable = btr_fieldsForColumnOfTable',
+			'type globalAlert = btr_globalAlert',
+			'type language = btr_language',
+			'type newToastFn = btr_newToastFn',
+			'type socketEventInfo = btr_socketEventInfo',
+			'type trackedVueComponent = btr_trackedVueComponent',
+			'type validVariant = btr_validVariant'
+		]),
+		asConsecutiveLines(['/**infered from zod */', 'declare global']),
 		'type validAdminCommands = z.infer<typeof zValidAdminCommands>',
-		`/**exclusive to this project */\r
-declare global`,
+		asConsecutiveLines(['/**exclusive to this project */', 'declare global']),
 		'type mongoMisc = { adminKey: string, pageVisits: number',
 	].forEach(x => checkMatchInSpecificFile('./types.d.ts', x))
 }
@@ -478,3 +482,4 @@ function withSpaceMargins(string: string) {
 	const margin = ' '.repeat(10)
 	return margin + string + margin
 }
+
