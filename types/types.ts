@@ -30,20 +30,21 @@ export type btr_fieldsForColumnOfTable = string | {
 
 /**Exclusive for this package */
 
+export type myEnv = z.infer<typeof zMyEnv>
+export type validNpmCommand_package = z.infer<typeof zValidNpmCommand_package>
+export type validNpmCommand_project = z.infer<typeof zValidNpmCommand_project>
+
 export type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: btr_validVariant, title: string }
 export type validChalkColor = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'white' | 'grey' | 'magentaBright'	//DELETETHISFORCLIENT
 export type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 export type vueComponentsTracker<T extends string> = Record<T, btr_trackedVueComponent[]>
 export type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
 export type bvModal = { show: (id: string) => void, hide: (id: string) => void }
-export type validNpmCommand_package = z.infer<typeof zValidNpmCommand_package>
-export type validNpmCommand_project = z.infer<typeof zValidNpmCommand_project>
 export type cachedFile = { filepath: string, content: string }
 export type messageHandler = (message: string) => void
 export type arrayPredicate<T> = (arg1: T) => boolean
 export type pipe_persistent_type<T> = (arg: T) => T
 export type tsConfig = { compilerOptions: object }
-export type myEnv = z.infer<typeof zMyEnv>
 export type pipe_mutable_type = {
 	<T, A>(source: T, a: (value: T) => A): A
 	<T, A, B>(source: T, a: (value: T) => A, b: (value: A) => B): B
