@@ -55,7 +55,8 @@ function addToErrors(error) {
     errors.push(error);
 }
 function checkBasicValidAdminCommands() {
-    checkMatchInSpecificFile('./types_z.ts', 'export const zValidAdminCommands = z.enum([\'getSockets\', \'help\', \'ref\'');
+    checkMatchInSpecificFile('./types_constants.ts', 'export const adminCommands = [\'getSockets\', \'help\', \'ref\',');
+    checkMatchInSpecificFile('./types_z.ts', 'export const zValidAdminCommands = z.enum(adminCommands)');
 }
 /**Check all the top-level functions in main .ts server files have a description */
 function checkAllExportedFunctionsAreDescribed() {
@@ -301,27 +302,27 @@ function checkSpecificMatchesInTypes_ioTs() {
         'admin: (adminKey: string, command: string) => void',
         'commandResult: (commandUsed: string, result: unknown) => void',
         'export type socket_s2c_event = keyof ServerToClientEvents',
-        `export type clientSocket = socket_client<ServerToClientEvents, ClientToServerEvents>
-export const io = new Server<ClientToServerEvents, ServerToClientEvents>(getStartedHttpServer(), { cors: { origin: '*' } })
+        `export type clientSocket = socket_client<ServerToClientEvents, ClientToServerEvents>\r
+export const io = new Server<ClientToServerEvents, ServerToClientEvents>(getStartedHttpServer(), { cors: { origin: '*' } })\r
 export interface serverSocket extends socket_server<ClientToServerEvents, ServerToClientEvents`
     ].forEach(event => checkMatchInSpecificFile('./types_io.ts', event));
 }
 function checkSpecificMatchesInTypesTs() {
     [
-        `/**imported from utils */
-declare global {
-	type fieldsForColumnOfTable = btr_fieldsForColumnOfTable
-	type globalAlert = btr_globalAlert
-	type language = btr_language
-	type newToastFn = btr_newToastFn
-	type socketEventInfo = btr_socketEventInfo
-	type trackedVueComponent = btr_trackedVueComponent
-	type validVariant = btr_validVariant
+        `/**imported from utils */\r
+declare global {\r
+	type fieldsForColumnOfTable = btr_fieldsForColumnOfTable\r
+	type globalAlert = btr_globalAlert\r
+	type language = btr_language\r
+	type newToastFn = btr_newToastFn\r
+	type socketEventInfo = btr_socketEventInfo\r
+	type trackedVueComponent = btr_trackedVueComponent\r
+	type validVariant = btr_validVariant\r
 }`,
-        `/**infered from zod */
+        `/**infered from zod */\r
 declare global`,
         'type validAdminCommands = z.infer<typeof zValidAdminCommands>',
-        `/**exclusive to this project */
+        `/**exclusive to this project */\r
 declare global`,
         'type mongoMisc = { adminKey: string, pageVisits: number',
     ].forEach(x => checkMatchInSpecificFile('./types.d.ts', x));

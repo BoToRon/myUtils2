@@ -812,7 +812,7 @@ export function getTraceableStack(error, type) {
     return `${stack}`.
         replace(/\(node:3864\).{0,}\n.{0,}exit code./, '').
         replace(/\n {4}at/g, `\n ${' * '.repeat(5)} at`).
-        replace(/^Error/, type + ':');
+        replace(/^Error/, type);
 }
 /**@returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export function isGuest(username) { return /Guest[0-9]{13}/i.test(`${username}`); }
