@@ -4,14 +4,13 @@ _
 import { z } from 'zod'
 _
 import {
-	colorLog,
-	compareArrays, fsReadFileAsync, getEnviromentVariables, getZodSchemaFromData,
+	colorLog, compareArrays, fsReadFileAsync, getEnviromentVariables, getZodSchemaFromData,
 	importFileFromProject, messageHandler, nullAs, successLog, zMyEnv, zodCheck_curry, zRegexGenerator
 } from './btr.js'
 _
 
 type tsConfig = { compilerOptions: object }
-type cachedFile = { filename: string, content: string }
+type cachedFile = { filepath: string, content: string }
 type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 
 const errors: string[] = []
@@ -46,7 +45,6 @@ export async function basicProjectChecks(errHandler: messageHandler) {
 		checkBasicValidAdminCommands(),
 		checkClientFilesDontReferenceLocalStorageDirectly(),
 		checkCodeThatCouldBeUpdated(),
-		checkConsistentReadonlyTypeSyntax(),
 		checkEnviromentVariables(),
 		checkEslintConfigRules(),
 		checkFilesAndFolderStructure(),
@@ -87,7 +85,7 @@ function checkBasicValidAdminCommands() {
 function checkAllExportedFunctionsAreDescribed() {
 	if (DEV_OR_PROD !== 'DEV') { return true }
 
-	getFromCachedFiles(['./server', '.ts']).forEach(file => {
+	serverTsFiles.forEach(file => {
 		const lines = file.content.split('\n')
 
 		const uncommentedTopLevelFunctions = lines.reduce((acc, line, index) => {
@@ -109,7 +107,7 @@ function checkAllExportedFunctionsAreDescribed() {
 /**Check all the vue components are trackable by the window */
 function checkAllVueComponentsAreTrackeable() {
 	if (DEV_OR_PROD !== 'DEV') { return true }
-	getFromCachedFiles(['./client/src', '.vue']).forEach(file => {
+	clientVueFiles.forEach(file => {
 		const wantedMatch = 'trackVueComponent(' //) <--here to not mess with the colour of parentheses
 		if (!file.content.includes(wantedMatch)) { addToErrors(`${file} must include "${wantedMatch}"`) }
 	})
@@ -117,30 +115,30 @@ function checkAllVueComponentsAreTrackeable() {
 
 function checkClientFilesDontReferenceLocalStorageDirectly() {
 	[clientTsFiles, clientVueFiles].flat().forEach(file => {
-		const { filename, content } = file
-		if (content.includes('localStorage.')) { addToErrors(`use localStorageGet / Set instead of referencing it directly, at ${filename}`) }
+		const { filepath, content } = file
+		if (content.includes('localStorage.')) { addToErrors(`use localStorageGet / Set instead of referencing it directly, at ${filepath}`) }
 	})
 }
 
 function checkCodeThatCouldBeUpdated() {
 	[serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
 
-		const { filename, content } = file
-		checkReplaceableCode('null as', 'nullAs')
+		const { filepath, content } = file
+
+		checkReplaceableCode('ReadonlyArray<', 'readonly ')
 		checkReplaceableCode('Object.keys', 'objectKeys')
+		checkReplaceableCode('Readonly<', 'readonly ')
+		checkReplaceableCode('null as', 'nullAs')
 
-		function checkReplaceableCode(replaceableCode: string, suggestion: string) {
+		function checkReplaceableCode(replaceableCode: string, suggestedReplacement: string) {
 			if (!content.includes(replaceableCode)) { return }
-			warnings.push(`Replaceable code ( ${replaceableCode} ${withSpaceMargins('=>')} ${suggestion} ), ${withSpaceMargins('at' + filename)}`)
-		}
-	})
-}
 
-function checkConsistentReadonlyTypeSyntax() {
-	[serverTsFiles, typeFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
-		const { filename, content } = file
-		if (!/Readonly<|ReadonlyArray</.test(content)) { return }
-		addToErrors(`Use the "readonly" keyword instead of the 'Readonly' / 'ReadonlyArray' generics, at(${filename})`)
+			const replaceableWithMargin = withSpaceMargins(replaceableCode)
+			const suggestionWithMargin = withSpaceMargins(suggestedReplacement)
+			const filepathWithMargin = withSpaceMargins(filepath)
+
+			warnings.push('Replace:' + replaceableWithMargin + '=>' + suggestionWithMargin + 'at' + filepathWithMargin)
+		}
 	})
 }
 
@@ -195,15 +193,15 @@ function checkImportsAreFromTheRightBtrFile() {
 	serverTsFiles.forEach(file => doCheck('server', file))
 
 	function doCheck(filetype: 'server' | 'client', file: cachedFile) {
-		const { filename, content } = file
+		const { filepath, content } = file
 		if (!content.includes('@botoron/utils')) { return }
 
 		if (filetype === 'server' && content.includes('@botoron/utils/client')) {
-			return addToErrors('Server file should not be exporting from @botoron/utils/client, at: ' + filename)
+			return addToErrors('Server file should not be exporting from @botoron/utils/client, at: ' + filepath)
 		}
 
 		if (filetype === 'client' && !content.includes('@botoron/utils/client/btr.js')) {
-			return addToErrors('Client file should be exporting from @botoron/utils/client/btr.js at: ' + filename)
+			return addToErrors('Client file should be exporting from @botoron/utils/client/btr.js at: ' + filepath)
 		}
 	}
 }
@@ -214,14 +212,14 @@ function checkInitTsCallsRefTsAndIoTs() {
 
 function checkLocalImportsHaveJsExtention() {
 	[serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
-		const { filename, content } = file
+		const { filepath, content } = file
 		const localImports = content.match(/from '\..{1,}/g)
 		if (!localImports) { return }
 
 		localImports.forEach(match => {
 			if (match.includes('.js\'')) { return }
 			if (match.includes('.vue\'')) { return }
-			addToErrors(`Local import(${match}) is missing.js at the end, at: ${filename}`)
+			addToErrors(`Local import(${match}) is missing.js at the end, at: ${filepath}`)
 		})
 	})
 }
@@ -282,8 +280,8 @@ async function checkPackageJson() {
 
 /**Check all socket events are handled aka socket.on(<EVENTNAME>) */
 function checkSocketEvents() {
-	const filename = './types_io.ts'
-	const linesInTypes_io = (getFromCachedFiles([filename])[0] as cachedFile).content.split('\n')
+	const filepath = './types_io.ts'
+	const linesInTypes_io = (getFromCachedFiles([filepath])[0] as cachedFile).content.split('\n')
 	checkSocketOnOfInterface('ServerToClientEvents', './client/src/socket.ts')
 	checkSocketOnOfInterface('ClientToServerEvents', './server/io.ts')
 
@@ -328,8 +326,8 @@ function checkTsConfigCompilerOptions() {
 
 function checkServerAndClientFilesLogTheirInitialization() {
 	[serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
-		const { filename, content } = file
-		const wantedMatch = `logInitialization('${filename}')`
+		const { filepath, content } = file
+		const wantedMatch = `logInitialization('${filepath}')`
 		if (!content.includes(wantedMatch)) { addToErrors(`"${withSpaceMargins(wantedMatch)}" is missing`) }
 	})
 }
@@ -342,7 +340,7 @@ function checkSpecificMatchesInTypes_ioTs() {
 		'export type socket_s2c_event = keyof ServerToClientEvents',
 		asConsecutiveLines([
 			'export type clientSocket = socket_client<ServerToClientEvents, ClientToServerEvents>',
-			'export const io = new Server<ClientToServerEvents, ServerToClientEvents>(getStartedHttpServer(), { cors: { origin: \' * \' } })',
+			'export const io = new Server<ClientToServerEvents, ServerToClientEvents>(getStartedHttpServer(), { cors: { origin: \'*\' } })',
 			'export interface serverSocket extends socket_server<ClientToServerEvents, ServerToClientEvents'
 		])
 	].forEach(event => checkMatchInSpecificFile('./types_io.ts', event))
@@ -353,13 +351,14 @@ function checkSpecificMatchesInTypesTs() {
 		asConsecutiveLines([
 			'/**imported from utils */',
 			'declare global {',
-			'type fieldsForColumnOfTable = btr_fieldsForColumnOfTable',
-			'type globalAlert = btr_globalAlert',
-			'type language = btr_language',
-			'type newToastFn = btr_newToastFn',
-			'type socketEventInfo = btr_socketEventInfo',
-			'type trackedVueComponent = btr_trackedVueComponent',
-			'type validVariant = btr_validVariant'
+			'	type fieldsForColumnOfTable = btr_fieldsForColumnOfTable',
+			'	type globalAlert = btr_globalAlert',
+			'	type language = btr_language',
+			'	type newToastFn = btr_newToastFn',
+			'	type socketEventInfo = btr_socketEventInfo',
+			'	type trackedVueComponent = btr_trackedVueComponent',
+			'	type validVariant = btr_validVariant',
+			'}'
 		]),
 		asConsecutiveLines(['/**infered from zod */', 'declare global']),
 		'type validAdminCommands = z.infer<typeof zValidAdminCommands>',
@@ -424,7 +423,6 @@ async function checkVueDevFiles() {
 }
 
 async function getCachedFiles() {
-	const filesRead: string[] = []
 	const cachedFiles: cachedFile[] = []
 
 	const vueDevFiles = ['env.d.ts', 'node_modules/@vue/tsconfig/tsconfig.json', 'vite.config.ts', 'vue.config.js'].map(x => './client/' + x)
@@ -432,14 +430,15 @@ async function getCachedFiles() {
 	const clientVueFiles = getFilesAndFoldersNames('./client/src', '.vue')
 	const clientTsFiles = getFilesAndFoldersNames('./client/src', '.ts')
 	const serverTsFiles = getFilesAndFoldersNames('./server', '.ts')
-	const typeFiles = getFilesAndFoldersNames('.', '.ts')
+	const typeFiles = getFilesAndFoldersNames('./types', '.ts')
 	const gitIgnore = './.gitignore'
 
-	const allFilenames = [clientTsFiles, clientVueFiles, gitIgnore, serverTsFiles, tsConfigs, typeFiles, vueDevFiles].flat(3)
+	const allFilepaths = [clientTsFiles, clientVueFiles, gitIgnore, serverTsFiles, tsConfigs, typeFiles, vueDevFiles].flat(3)
 
-	for await (const filename of allFilenames) {
-		if (!fileExists(filename)) { addToErrors(`File not found at '${filename}'`); continue }
-		cachedFiles.push({ filename, content: await fsReadFileAsyncAndCheckIfRepeat(filename) })
+	for await (const filepath of allFilepaths) {
+		if (!fileExists(filepath)) { addToErrors(`File not found at '${filepath}'`); continue }
+		if (cachedFiles.some(x => x.filepath === filepath)) { addToErrors(`File readed more than once by fsReadFileAsync: >>> (${filepath}) << <`) }
+		cachedFiles.push({ filepath, content: await fsReadFileAsync(filepath) })
 	}
 
 	return cachedFiles
@@ -447,11 +446,6 @@ async function getCachedFiles() {
 	async function fileExists(path: string) {
 		try { await fs.promises.access(path); return true }
 		catch { addToErrors('Missing file, couldn\'t read: ' + path); return false }
-	}
-
-	async function fsReadFileAsyncAndCheckIfRepeat(filepath: string) {
-		if (filesRead.includes(filepath)) { addToErrors(`File readed more than once by fsReadFileAsync: >>> (${filepath}) << <`) }
-		return await fsReadFileAsync(filepath)
 	}
 }
 
@@ -468,14 +462,14 @@ function getFilesAndFoldersNames(directory: string, extension: '.ts' | '.vue' | 
 		else { results.push(file) }
 	})
 
-	return extension ? results.filter(filename => filename.includes(extension)) : results
+	return extension ? results.filter(filepath => filepath.includes(extension)) : results
 }
 
 function getFromCachedFiles(obligatoryMatches: string[]): cachedFile[] {
-	const foundFiles = cachedFiles.filter(file => obligatoryMatches.every(match => file.filename.includes(match)))
+	const foundFiles = cachedFiles.filter(file => obligatoryMatches.every(match => file.filepath.includes(match)))
 	if (foundFiles.length) { return foundFiles }
 	addToErrors(`No file cached with the requested obligatory matches(${obligatoryMatches}) was found`)
-	return [{ filename: 'FAILSAFE', content: 'failsafe' }]
+	return [{ filepath: 'FAILSAFE', content: '' }]
 }
 
 function withSpaceMargins(string: string) {
