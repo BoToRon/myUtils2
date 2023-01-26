@@ -31,50 +31,15 @@ import {
 	arrayPredicate, btr_validVariant, btr_trackedVueComponent, bvModal, bvToast, cachedFile, messageHandler, myEnv, pipe_mutable_type, pipe_persistent_type, timer, validChalkColor, validNpmCommand_package, validNpmCommand_project, vueComponentsTracker, zSchema
 } from './types/types.js'
 _
+import {
+	cachedFiles, errors, getUniqueId_generator, isNode, timers,
+	utilsRepoName, warnings, zValidVariants, zValidVersionIncrement
+} from './types/constants.js'
+_
 import { type Primitive, z, type ZodRawShape, type ZodTypeAny } from 'zod'
 _
 import { fromZodError } from 'zod-validation-error'
 _
-
-_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-
-export const timers: timer[] = []
-export const warnings: string[] = []
-const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
-const getUniqueId_generator = (function* () { let i = 0; while (true) { i++; yield isNode ? `${Date.now() + i}` : i } })()
-
-export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'])
-export const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile'])
-export const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile'])
-const zValidVersionIncrement = z.enum(['major', 'minor', 'patch'])
-export const zMyEnv = z.object({
-	DEV_OR_PROD: z.enum(['DEV', 'PROD']),
-	ADMIN_PASSWORD: z.string(),
-	ERIS_TOKEN: z.string(),
-	MONGO_URI: z.string(),
-	APP_NAME: z.string(),
-	PORT: z.string(),
-})
-
-_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
@@ -194,7 +159,10 @@ export function addUnrepeatedItems<T>(arr: T[], newItems: T[]) {
  * @param mappingFn The function to determine the value of each entry
  * @returns An object where each key is an item of "arr" and the value is determined by "mappingFn"
  */
-export function arrayToObject<T extends Readonly<Array<string>>, F extends (...x: (T[number])[]) => ReturnType<F>>(arr: T, mappingFn: F) {
+export function arrayToObject<
+	T extends Readonly<Array<string>>,	//@btr-ignore
+	F extends (...x: (T[number])[]) => ReturnType<F>
+>(arr: T, mappingFn: F) {
 	type K = typeof arr[number]
 	const object = {} as Record<K, ReturnType<F>>
 	arr.forEach(x => object[x as K] = mappingFn(x))
@@ -648,12 +616,12 @@ export function mapObject<F extends (value: O[keyof O]) => ReturnType<F>, O exte
 export function objectEntries<T extends object>(object: T) {
 	return Object.entries(object).map(entry => ({ key: entry[0] as keyof T, value: entry[1] as T[keyof T] }))
 }
-/**Object.keys but with proper type-inference */
-export function objectKeys<K extends string, T extends Record<K, unknown>>(object: T) { return Object.keys(object) as (keyof T)[] }
+/**Object.keys but with proper type-inference */ //@btr-ignore
+export function objectKeys<K extends string, T extends Record<K, unknown>>(object: T) { return Object.keys(object) as (keyof T)[] } //@btr-ignore
 /**Object.values but with proper type-inference */
 export function objectValues<T extends object>(object: T) { return Object.values(object) as T[keyof T] }
 /**Create an object with only the specified properties of another base object (references are kept) */
-export function pick<T extends object, K extends keyof T>(theObject: T, properties: ReadonlyArray<K>) {
+export function pick<T extends object, K extends keyof T>(theObject: T, properties: readonly K[]) {
 	const thePartial = {} as Pick<T, K>
 	objectEntries(theObject).forEach(entry => {
 		const { key, value } = entry
@@ -860,8 +828,8 @@ export function dataIsEqual(A: unknown, B: unknown, errorHandler = <messageHandl
 }
 /**For obligatory callbacks */
 export function doNothing(...args: unknown[]) { args }
-/** @returns null as the provided type */
-export function nullAs<T>() { return null as T }
+/** @returns null, as the provided type */
+export function nullAs<T>() { return null as T } //@btr-ignore
 /**
  * Return the regex given with possibly an error indicating it wasn't matched.
  * MUST BE USED AS A SPREAD ARGUMENT, eg: zString.regex( ...zRegexGenerator(/hi/, false) )
@@ -1017,6 +985,21 @@ _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY *************
 _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 
+/**Batch-load files for checking purposes */
+export async function addToCachedFiles(filepaths: string[]) {
+	for await (const filepath of filepaths) {
+		if (!fileExists(filepath)) { addToErrors(`File not found at '${filepath}'`); continue }
+		if (cachedFiles.some(x => x.filepath === filepath)) { addToErrors(`File readed more than once by fsReadFileAsync: >>> (${filepath}) << <`) }
+		cachedFiles.push({ filepath, content: await fsReadFileAsync(filepath) })
+	}
+
+	async function fileExists(path: string) {
+		try { await fs.promises.access(path); return true }
+		catch { addToErrors('Missing file, couldn\'t read: ' + path); return false }
+	}
+}
+//TODO: describe me
+export function addToErrors(error: string) { errors.push(error) }
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
 export function bigConsoleError(message: string) {
 	function logAsterisks(lines: number) { for (let i = 0; i < lines; i++) { log('*'.repeat(150)) } }
@@ -1031,19 +1014,23 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[]) {
 	cachedFiles.forEach(file => {
 		const { filepath, content } = file
 
-		checkReplaceableCode('ReadonlyArray<', 'readonly ')
-		checkReplaceableCode('Object.keys', 'objectKeys')
-		checkReplaceableCode('Readonly<', 'readonly ')
-		checkReplaceableCode('null as', 'nullAs')
+		checkReplaceableCode('ReadonlyArray<', 'readonly ')	//@btr-ignore
+		checkReplaceableCode('Object.keys', 'objectKeys')	//@btr-ignore
+		checkReplaceableCode('Readonly<', 'readonly ')	//@btr-ignore
+		checkReplaceableCode('null as', 'nullAs')	//@btr-ignore
 
 		function checkReplaceableCode(replaceableCode: string, suggestedReplacement: string) {
-			if (!content.includes(replaceableCode)) { return }
 
+			const matches = Array(...content.match(new RegExp(replaceableCode + '.{0,}', 'gi')) || [])
+			selfFilter(matches, match => !/\/\/@btr-ignore/.test(match))
+			if (!matches.length) { return }
+
+			const matchCountWithMargin = withSpaceMargins(`Replace (x${matches.length})`, 10)
 			const suggestionWithMargin = withSpaceMargins(suggestedReplacement, 10)
 			const replaceableWithMargin = withSpaceMargins(replaceableCode, 10)
 			const filepathWithMargin = withSpaceMargins(filepath, 10)
 
-			warnings.push('Replace:' + replaceableWithMargin + '=>' + suggestionWithMargin + 'at' + filepathWithMargin)
+			warnings.push(matchCountWithMargin + 'Replace:' + replaceableWithMargin + '=>' + suggestionWithMargin + 'at' + filepathWithMargin)
 		}
 	})
 }
@@ -1121,7 +1108,7 @@ export async function getMongoClient() {
 	const { MONGO_URI } = getEnviromentVariables()
 
 	const mongo = new mongodb.MongoClient(MONGO_URI)
-	let mongoClient: MongoClient = <MongoClient>nullAs()
+	let mongoClient = <MongoClient>nullAs()
 	mongo.connect((err, client) => { if (err) { throw err } mongoClient = client as MongoClient })
 	colorLog('cyan', 'waiting for Mongo')
 	while (!mongoClient) { await delay(1000) }
@@ -1153,13 +1140,22 @@ export async function importFileFromProject<T>(filename: string, extension: 'cjs
 export function killProcess(message: string) { bigConsoleError(message); process.exit() }
 /**Easily run the scripts of this (utils) repo's package.json */
 export function npmRun_package(npmCommand: validNpmCommand_package) {
-
 	console.log({ npmCommand })
-	const utilsRepoName = 'Utils 🛠️'
 
-	if (npmCommand === 'transpile') { transpileFiles(() => colorLog('magenta', 'Process over')) }
-	if (npmCommand === 'git') { prompCommitMessageAndPush(utilsRepoName) }
-	if (npmCommand === 'all') { transpileFiles(promptVersioning) }
+	if (npmCommand === 'transpile-all') { transpileAllFiles(printProcessOver) }
+	if (npmCommand === 'transpile') { transpileBaseFiles(printProcessOver) }
+	if (npmCommand === 'all') { transpileAllFiles(promptVersioning) }
+	if (npmCommand === 'check') { cachePackageFilesAndCheckThem() }
+
+	async function cachePackageFilesAndCheckThem() {
+		await addToCachedFiles(['./basicProjectChecks.ts', './btr.ts', './npmRun.ts'])
+		checkCodeThatCouldBeUpdated(cachedFiles)
+		warnings.length ? warnings.forEach(warning => colorLog('yellow', warning)) : successLog('No errors or warnings :D')
+	}
+
+	function printProcessOver() {
+		colorLog('magenta', 'Process over')
+	}
 
 	async function promptVersioning() {
 		function tryAgain(error: string) { colorLog('yellow', error); promptVersioning() }
@@ -1174,43 +1170,44 @@ export function npmRun_package(npmCommand: validNpmCommand_package) {
 		})
 	}
 
-	function transpileFiles(followUp: () => void) {
-		exec('tsc --declaration --target esnext npmRun.ts', () => {
+	function transpileAllFiles(followUp: () => void) {
+		transpileBaseFiles(async () => {
 			const filename = 'btr.ts'
-			exec('tsc --declaration --target esnext ' + filename, async () => {
-				successLog(filename + ' transpiled')
+			const indexTs = await fsReadFileAsync(filename)
+			const lines = indexTs.replaceAll('bigConsoleError', 'colorLog').split('\n')
+			selfFilter(lines, (line) => !/DELETETHISFORCLIENT/.test(line))
 
-				const indexTs = await fsReadFileAsync(filename)
-				const lines = indexTs.replaceAll('bigConsoleError', 'colorLog').split('\n')
-				selfFilter(lines, (line) => !/DELETETHISFORCLIENT/.test(line))
+			const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x))
+			lines.splice(cutPoint, lines.length)
+			lines.push('const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)')
 
-				const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x))
-				lines.splice(cutPoint, lines.length)
-				lines.push('const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)')
+			await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'))
 
-				await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'))
-
-				exec('tsc --declaration --target esnext client/btr.ts ', async () => {
-					successLog('browser versions emitted')
-					await delay(500)
-					followUp()
-				})
+			exec('tsc --target esnext client/btr.ts ', async () => {
+				successLog('browser versions emitted')
+				await delay(500)
+				followUp()
 			})
+		})
+	}
+
+	function transpileBaseFiles(followUp: () => void) {
+		exec('tsc --target esnext npmRun.ts', async () => {
+			successLog('Base files transpiled')
+			await delay(500)
+			followUp()
 		})
 	}
 }
 /**Run convenient scripts for and from a project's root folder */
 export async function npmRun_project(npmCommand: validNpmCommand_project) {
-	//async (options: { serverFolder_dist?: string, serverFolder_src?: string, fileWithRef?: string })
-	//if (!options) { options = defaults }
-	//const { serverFolder_dist, serverFolder_src, fileWithRef } = addMissingPropsToObjects(options!, defaults)
-
 	await basicProjectChecks(divine.error)
 	if (npmCommand === 'check') { return }
 
-	const defaults = { serverFolder_dist: '../dist', serverFolder_src: './test', fileWithRef: 'ref' }
-	const { serverFolder_dist, serverFolder_src, fileWithRef } = defaults
 	const { APP_NAME } = getEnviromentVariables()
+	const serverFolder_dist = '../dist'
+	const serverFolder_src = './test'
+	const fileWithRef = 'ref'
 
 	if (npmCommand === 'git') { prompCommitMessageAndPush(`${APP_NAME}`) }
 	if (['build', 'transpile'].includes(npmCommand)) { canTranspileCheckAndHandle() }

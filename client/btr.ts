@@ -13,103 +13,20 @@ _
 _
 _
 _
-import { type Primitive, type SafeParseReturnType, z, type ZodRawShape, type ZodTypeAny, string } from 'zod'
+import {
+	arrayPredicate, btr_validVariant, btr_trackedVueComponent, bvModal, bvToast, cachedFile, messageHandler, myEnv, pipe_mutable_type, pipe_persistent_type, timer, validChalkColor, validNpmCommand_package, validNpmCommand_project, vueComponentsTracker, zSchema
+} from './types/types.js'
+_
+import {
+	cachedFiles, errors, getUniqueId_generator, isNode, timers,
+	utilsRepoName, warnings, zValidVariants, zValidVersionIncrement
+} from './types/constants.js'
+_
+import { type Primitive, z, type ZodRawShape, type ZodTypeAny } from 'zod'
 _
 import { fromZodError } from 'zod-validation-error'
 _
 
-_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_ /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-
-export const timers: timer[] = []
-const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
-const getUniqueId_generator = (function* () { let i = 0; while (true) { i++; yield isNode ? `${Date.now() + i}` : i } })()
-
-export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'])
-export const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile'])
-export const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile'])
-const zValidVersionIncrement = z.enum(['major', 'minor', 'patch'])
-export const zMyEnv = z.object({
-	DEV_OR_PROD: z.enum(['DEV', 'PROD']),
-	ADMIN_PASSWORD: string(),
-	ERIS_TOKEN: string(),
-	MONGO_URI: string(),
-	APP_NAME: string(),
-	PORT: string(),
-})
-
-_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-
-/**Generic to get the type of an object/interface while preserving key-value typing */
-export type objectEntriesT<T, amount extends 'plural' | 'single'> = { [K in keyof T]: [K, amount extends 'plural' ? T[K][] : T[K]] }[keyof T]
-/**Generic to get the type of an object/interface while preserving key-value typing */
-export type zSchema<T> = { _def: object, safeParse: (x: T) => SafeParseReturnType<T, T>, strict?: () => zSchema<T> }
-/**Syntaxic-sugar */
-export type nullable<T> = T | null
-
-//^^ GENERICS ABOVE ^^ vv TYPES BELOW vv
-
-export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void
-export type btr_nonVoidFn = <F extends (...args: Parameters<F>) => ReturnType<F>> () => unknown
-export type btr_trackedVueComponent = { id: string, name: string, beforeDestroy?: () => void }
-export type btr_socketEventInfo = { event: string, timestamp: number, data: unknown }
-export type btr_globalAlert = { message: string, show: boolean }
-export type btr_validVariant = z.infer<typeof zValidVariants>
-export type btr_language = 'English' | 'Spanish'
-
-export type btr_fieldsForColumnOfTable = string | {
-	key: string
-	label?: string
-	formatter?: (value: unknown, key: string, item: unknown) => unknown
-	sortable: boolean
-	thStyle?: btr_validVariant
-}
-
-type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: btr_validVariant, title: string }
-type vueComponentsTracker<T extends string> = Record<T, btr_trackedVueComponent[]>
-type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
-type bvModal = { show: (id: string) => void, hide: (id: string) => void }
-type validNpmCommand_package = z.infer<typeof zValidNpmCommand_package>
-type validNpmCommand_project = z.infer<typeof zValidNpmCommand_project>
-export type messageHandler = (message: string) => void
-type arrayPredicate<T> = (arg1: T) => boolean
-type pipe_persistent_type<T> = (arg: T) => T
-export type myEnv = z.infer<typeof zMyEnv>
-type pipe_mutable_type = {
-	<T, A>(source: T, a: (value: T) => A): A
-	<T, A, B>(source: T, a: (value: T) => A, b: (value: A) => B): B
-	<T, A, B, C>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C): C
-	<T, A, B, C, D>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D): D
-	<T, A, B, C, D, E>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D, e: (value: D) => E): E
-	//can always make it longer 😉
-}
-type timer = {
-	id: string,
-	runAt: number,
-	startedAt: number,
-	onComplete: btr_nonVoidFn,
-	onCancel: btr_nonVoidFn,
-	cancelStack: string,
-	cancelledAt: number,
-	wasCancelled: boolean
-}
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
@@ -228,7 +145,10 @@ export function addUnrepeatedItems<T>(arr: T[], newItems: T[]) {
  * @param mappingFn The function to determine the value of each entry
  * @returns An object where each key is an item of "arr" and the value is determined by "mappingFn"
  */
-export function arrayToObject<T extends Readonly<Array<string>>, F extends (...x: (T[number])[]) => ReturnType<F>>(arr: T, mappingFn: F) {
+export function arrayToObject<
+	T extends Readonly<Array<string>>,	//@btr-ignore
+	F extends (...x: (T[number])[]) => ReturnType<F>
+>(arr: T, mappingFn: F) {
 	type K = typeof arr[number]
 	const object = {} as Record<K, ReturnType<F>>
 	arr.forEach(x => object[x as K] = mappingFn(x))
@@ -682,12 +602,12 @@ export function mapObject<F extends (value: O[keyof O]) => ReturnType<F>, O exte
 export function objectEntries<T extends object>(object: T) {
 	return Object.entries(object).map(entry => ({ key: entry[0] as keyof T, value: entry[1] as T[keyof T] }))
 }
-/**Object.keys but with proper type-inference */
-export function objectKeys<K extends string, T extends Record<K, unknown>>(object: T) { return Object.keys(object) as (keyof T)[] }
+/**Object.keys but with proper type-inference */ //@btr-ignore
+export function objectKeys<K extends string, T extends Record<K, unknown>>(object: T) { return Object.keys(object) as (keyof T)[] } //@btr-ignore
 /**Object.values but with proper type-inference */
 export function objectValues<T extends object>(object: T) { return Object.values(object) as T[keyof T] }
 /**Create an object with only the specified properties of another base object (references are kept) */
-export function pick<T extends object, K extends keyof T>(theObject: T, properties: ReadonlyArray<K>) {
+export function pick<T extends object, K extends keyof T>(theObject: T, properties: readonly K[]) {
 	const thePartial = {} as Pick<T, K>
 	objectEntries(theObject).forEach(entry => {
 		const { key, value } = entry
@@ -865,6 +785,8 @@ export function logInitialization(filename: string) { colorLog(isNode ? 'cyan' :
 export function successLog(message: string) { return colorLog('green', message + ' ✔️') }
 /**@returns an string with its linebreaks converted into simple one-char spaces */
 export function toSingleLine(sentence: string) { return `${sentence}`.replace(/ {0,}\n {0,}/g, ' ') }
+/**Return an string with X amount of spaces as margin per side */
+export function withSpaceMargins(string: string, spaces: number) { const margin = ' '.repeat(spaces); return margin + string + margin }
 
 _ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
@@ -891,8 +813,8 @@ export function dataIsEqual(A: unknown, B: unknown, errorHandler = <messageHandl
 }
 /**For obligatory callbacks */
 export function doNothing(...args: unknown[]) { args }
-/** @returns null as the provided type */
-export function nullAs<T>() { return null as T }
+/** @returns null, as the provided type */
+export function nullAs<T>() { return null as T } //@btr-ignore
 /**
  * Return the regex given with possibly an error indicating it wasn't matched.
  * MUST BE USED AS A SPREAD ARGUMENT, eg: zString.regex( ...zRegexGenerator(/hi/, false) )

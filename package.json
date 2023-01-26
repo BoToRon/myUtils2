@@ -8,11 +8,12 @@
 		"test": "ts-node-esm --transpileOnly test/test.ts",
 		"zTest": "ts-node-esm --transpileOnly test/zTest.ts",
 		"npmScript": "ts-node-esm --transpileOnly npmRun.ts",
-		"__________________________________________________": "__________________________________________________",
+		"_________________________________________________a": "__________________________________________________",
 		"all": "npm run npmScript --command_package=all & npm publish",
-		"transpile": "npm run npmScript --command_package=transpile",
-		"git": "npm run npmScript --command_package=git",
-		"convertArrowFunctionsToDeclarations": "npm run npmScript --command_package=arrowsToDeclarations"
+		"check": "npm run npmScript --command_package=check",
+		"_________________________________________________b": "__________________________________________________",
+		"transpile-all": "npm run npmScript --command_package=transpile-all",
+		"transpile": "npm run npmScript --command_package=transpile"
 	},
 	"repository": {
 		"type": "git",

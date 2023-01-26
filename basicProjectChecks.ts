@@ -3,14 +3,15 @@ import fs from 'fs'
 _
 import { z } from 'zod'
 _
+import { warnings, zMyEnv } from './types/constants.js'
+_
 import { cachedFile, messageHandler, packageJson, tsConfig } from './types/types.js'
 _
 import {
-	checkCodeThatCouldBeUpdated, colorLog, compareArrays, fsReadFileAsync, getEnviromentVariables, getZodSchemaFromData,
-	importFileFromProject, nullAs, successLog, warnings, withSpaceMargins, zMyEnv, zodCheck_curry, zRegexGenerator
+	addToCachedFiles, addToErrors, checkCodeThatCouldBeUpdated, colorLog, compareArrays, getEnviromentVariables,
+	getZodSchemaFromData, importFileFromProject, nullAs, successLog, withSpaceMargins, zodCheck_curry, zRegexGenerator
 } from './btr.js'
 _
-
 
 const errors: string[] = []
 const cachedFiles: cachedFile[] = []
@@ -30,7 +31,7 @@ _//TODO: check "ref.ts" matches (getDebugOptions, mongoCollection)
 export async function basicProjectChecks(errHandler: messageHandler) {
 	errorHandler = errHandler
 	DEV_OR_PROD = getEnviromentVariables().DEV_OR_PROD
-	cachedFiles.push(...await getCachedFiles())
+	await fillCachedFiles()
 
 	clientVueFiles.push(...getFromCachedFiles(['./client/src', '.vue']))
 	clientTsFiles.push(...getFromCachedFiles(['./client/src', '.ts']))
@@ -64,10 +65,6 @@ export async function basicProjectChecks(errHandler: messageHandler) {
 	errors.length ? errorHandler('\n\n' + errors.join('\n\n') + '\n\n') : successLog('all basicProjectChecks passed')
 	warnings.forEach(warning => colorLog('yellow', warning))
 	return !errors.length
-}
-
-function addToErrors(error: string) {
-	errors.push(error)
 }
 
 function asConsecutiveLines(lines: string[]) {
@@ -397,31 +394,16 @@ async function checkVueDevFiles() {
 	}
 }
 
-async function getCachedFiles() {
-	const cachedFiles: cachedFile[] = []
-
+async function fillCachedFiles() {
 	const vueDevFiles = ['env.d.ts', 'node_modules/@vue/tsconfig/tsconfig.json', 'vite.config.ts', 'vue.config.js'].map(x => './client/' + x)
 	const tsConfigs = ['./node_modules/@botoron/utils/tsconfig.json', './tsconfig.json']
-	const clientVueFiles = getFilesAndFoldersNames('./client/src', '.vue')
-	const clientTsFiles = getFilesAndFoldersNames('./client/src', '.ts')
-	const serverTsFiles = getFilesAndFoldersNames('./server', '.ts')
-	const typeFiles = getFilesAndFoldersNames('./types', '.ts')
+	const clientVueFilePaths = getFilesAndFoldersNames('./client/src', '.vue')
+	const clientTsFilePaths = getFilesAndFoldersNames('./client/src', '.ts')
+	const serverTsFilePaths = getFilesAndFoldersNames('./server', '.ts')
+	const typeFilePaths = getFilesAndFoldersNames('./types', '.ts')
 	const gitIgnore = './.gitignore'
 
-	const allFilepaths = [clientTsFiles, clientVueFiles, gitIgnore, serverTsFiles, tsConfigs, typeFiles, vueDevFiles].flat(3)
-
-	for await (const filepath of allFilepaths) {
-		if (!fileExists(filepath)) { addToErrors(`File not found at '${filepath}'`); continue }
-		if (cachedFiles.some(x => x.filepath === filepath)) { addToErrors(`File readed more than once by fsReadFileAsync: >>> (${filepath}) << <`) }
-		cachedFiles.push({ filepath, content: await fsReadFileAsync(filepath) })
-	}
-
-	return cachedFiles
-
-	async function fileExists(path: string) {
-		try { await fs.promises.access(path); return true }
-		catch { addToErrors('Missing file, couldn\'t read: ' + path); return false }
-	}
+	await addToCachedFiles([clientTsFilePaths, clientVueFilePaths, gitIgnore, serverTsFilePaths, tsConfigs, typeFilePaths, vueDevFiles].flat())
 }
 
 /**Get all the file and folders within a folder, stopping at predefined folders */
@@ -446,4 +428,5 @@ function getFromCachedFiles(obligatoryMatches: string[]): cachedFile[] {
 	addToErrors(`No file cached with the requested obligatory matches(${obligatoryMatches}) was found`)
 	return [{ filepath: 'FAILSAFE', content: '' }]
 }
+
 

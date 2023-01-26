@@ -1,16 +1,19 @@
 let _
 import { z } from 'zod'
 _
-import { timer } from './types.js'
+import { cachedFile, timer } from './types.js'
 _
 
 export const timers: timer[] = []
+export const errors: string[] = []
 export const warnings: string[] = []
+export const utilsRepoName = 'Utils 🛠️'
+export const cachedFiles: cachedFile[] = []
 export const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
 export const getUniqueId_generator = (function* () { let i = 0; while (true) { i++; yield isNode ? `${Date.now() + i}` : i } })()
 
 const variants = ['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'] as const
-const npmPackageCommands = ['all', 'arrowsToDeclarations', 'git', 'transpile'] as const
+const npmPackageCommands = ['all', 'check', 'transpile', 'transpile-all'] as const
 const npmProjectCommands = ['build', 'check', 'git', 'transpile'] as const
 const npmVersionOptions = ['major', 'minor', 'patch'] as const
 

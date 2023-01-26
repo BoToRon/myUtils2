@@ -13,48 +13,13 @@ _;
 _;
 _;
 _;
-import { z, string } from 'zod';
+_;
+import { getUniqueId_generator, isNode, timers, zValidVariants } from './types/constants.js';
+_;
+import { z } from 'zod';
 _;
 import { fromZodError } from 'zod-validation-error';
 _;
-_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-export const timers = [];
-const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
-const getUniqueId_generator = (function* () { let i = 0; while (true) {
-    i++;
-    yield isNode ? `${Date.now() + i}` : i;
-} })();
-export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark']);
-export const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile']);
-export const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile']);
-const zValidVersionIncrement = z.enum(['major', 'minor', 'patch']);
-export const zMyEnv = z.object({
-    DEV_OR_PROD: z.enum(['DEV', 'PROD']),
-    ADMIN_PASSWORD: string(),
-    ERIS_TOKEN: string(),
-    MONGO_URI: string(),
-    APP_NAME: string(),
-    PORT: string(),
-});
-_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
@@ -642,8 +607,8 @@ export function mapObject(object, mappingFn) {
 export function objectEntries(object) {
     return Object.entries(object).map(entry => ({ key: entry[0], value: entry[1] }));
 }
-/**Object.keys but with proper type-inference */
-export function objectKeys(object) { return Object.keys(object); }
+/**Object.keys but with proper type-inference */ //@btr-ignore
+export function objectKeys(object) { return Object.keys(object); } //@btr-ignore
 /**Object.values but with proper type-inference */
 export function objectValues(object) { return Object.values(object); }
 /**Create an object with only the specified properties of another base object (references are kept) */
@@ -809,6 +774,8 @@ export function logInitialization(filename) { colorLog(isNode ? 'cyan' : 'magent
 export function successLog(message) { return colorLog('green', message + ' ✔️'); }
 /**@returns an string with its linebreaks converted into simple one-char spaces */
 export function toSingleLine(sentence) { return `${sentence}`.replace(/ {0,}\n {0,}/g, ' '); }
+/**Return an string with X amount of spaces as margin per side */
+export function withSpaceMargins(string, spaces) { const margin = ' '.repeat(spaces); return margin + string + margin; }
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
@@ -833,8 +800,8 @@ export function dataIsEqual(A, B, errorHandler = nullAs(), strictModeIfObject = 
 }
 /**For obligatory callbacks */
 export function doNothing(...args) { args; }
-/** @returns null as the provided type */
-export function nullAs() { return null; }
+/** @returns null, as the provided type */
+export function nullAs() { return null; } //@btr-ignore
 /**
  * Return the regex given with possibly an error indicating it wasn't matched.
  * MUST BE USED AS A SPREAD ARGUMENT, eg: zString.regex( ...zRegexGenerator(/hi/, false) )

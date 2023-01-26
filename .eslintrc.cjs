@@ -14,6 +14,7 @@ module.exports = {
 		'max-lines-per-function': ['error', 100],
 		'func-style': ['error', 'declaration'],
 		'quote-props': ['error', 'as-needed'],
+		'no-multiple-empty-lines': 'error',
 		quotes: ['error', 'single'],
 		'require-await': 'error',
 		semi: ['error', 'never'],

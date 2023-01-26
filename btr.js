@@ -26,48 +26,13 @@ import mongodb from 'mongodb'; //DELETETHISFORCLIENT
 _;
 import { basicProjectChecks } from './basicProjectChecks.js'; //DELETETHISFORCLIENT
 _;
-import { z, string } from 'zod';
+_;
+import { cachedFiles, errors, getUniqueId_generator, isNode, timers, utilsRepoName, warnings, zValidVariants, zValidVersionIncrement } from './types/constants.js';
+_;
+import { z } from 'zod';
 _;
 import { fromZodError } from 'zod-validation-error';
 _;
-_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-_; /********** GLOBAL VARIABLES ******************** GLOBAL VARIABLES ******************** GLOBAL VARIABLES **********/
-export const timers = [];
-const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
-const getUniqueId_generator = (function* () { let i = 0; while (true) {
-    i++;
-    yield isNode ? `${Date.now() + i}` : i;
-} })();
-export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark']);
-export const zValidNpmCommand_package = z.enum(['all', 'arrowsToDeclarations', 'git', 'transpile']);
-export const zValidNpmCommand_project = z.enum(['build', 'check', 'git', 'transpile']);
-const zValidVersionIncrement = z.enum(['major', 'minor', 'patch']);
-export const zMyEnv = z.object({
-    DEV_OR_PROD: z.enum(['DEV', 'PROD']),
-    ADMIN_PASSWORD: string(),
-    ERIS_TOKEN: string(),
-    MONGO_URI: string(),
-    APP_NAME: string(),
-    PORT: string(),
-});
-_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
-_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
@@ -655,8 +620,8 @@ export function mapObject(object, mappingFn) {
 export function objectEntries(object) {
     return Object.entries(object).map(entry => ({ key: entry[0], value: entry[1] }));
 }
-/**Object.keys but with proper type-inference */
-export function objectKeys(object) { return Object.keys(object); }
+/**Object.keys but with proper type-inference */ //@btr-ignore
+export function objectKeys(object) { return Object.keys(object); } //@btr-ignore
 /**Object.values but with proper type-inference */
 export function objectValues(object) { return Object.values(object); }
 /**Create an object with only the specified properties of another base object (references are kept) */
@@ -823,6 +788,8 @@ export function logInitialization(filename) { colorLog(isNode ? 'cyan' : 'magent
 export function successLog(message) { return colorLog('green', message + ' ✔️'); }
 /**@returns an string with its linebreaks converted into simple one-char spaces */
 export function toSingleLine(sentence) { return `${sentence}`.replace(/ {0,}\n {0,}/g, ' '); }
+/**Return an string with X amount of spaces as margin per side */
+export function withSpaceMargins(string, spaces) { const margin = ' '.repeat(spaces); return margin + string + margin; }
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
@@ -847,8 +814,8 @@ export function dataIsEqual(A, B, errorHandler = nullAs(), strictModeIfObject = 
 }
 /**For obligatory callbacks */
 export function doNothing(...args) { args; }
-/** @returns null as the provided type */
-export function nullAs() { return null; }
+/** @returns null, as the provided type */
+export function nullAs() { return null; } //@btr-ignore
 /**
  * Return the regex given with possibly an error indicating it wasn't matched.
  * MUST BE USED AS A SPREAD ARGUMENT, eg: zString.regex( ...zRegexGenerator(/hi/, false) )
@@ -1003,6 +970,31 @@ _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ************
 _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
+/**Batch-load files for checking purposes */
+export async function addToCachedFiles(filepaths) {
+    for await (const filepath of filepaths) {
+        if (!fileExists(filepath)) {
+            addToErrors(`File not found at '${filepath}'`);
+            continue;
+        }
+        if (cachedFiles.some(x => x.filepath === filepath)) {
+            addToErrors(`File readed more than once by fsReadFileAsync: >>> (${filepath}) << <`);
+        }
+        cachedFiles.push({ filepath, content: await fsReadFileAsync(filepath) });
+    }
+    async function fileExists(path) {
+        try {
+            await fs.promises.access(path);
+            return true;
+        }
+        catch {
+            addToErrors('Missing file, couldn\'t read: ' + path);
+            return false;
+        }
+    }
+}
+//TODO: describe me
+export function addToErrors(error) { errors.push(error); }
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
 export function bigConsoleError(message) {
     function logAsterisks(lines) { for (let i = 0; i < lines; i++) {
@@ -1012,6 +1004,28 @@ export function bigConsoleError(message) {
     logAsterisks(3);
     log(message);
     logAsterisks(3);
+}
+/**Basically custom ESlint warnings */
+export function checkCodeThatCouldBeUpdated(cachedFiles) {
+    cachedFiles.forEach(file => {
+        const { filepath, content } = file;
+        checkReplaceableCode('ReadonlyArray<', 'readonly '); //@btr-ignore
+        checkReplaceableCode('Object.keys', 'objectKeys'); //@btr-ignore
+        checkReplaceableCode('Readonly<', 'readonly '); //@btr-ignore
+        checkReplaceableCode('null as', 'nullAs'); //@btr-ignore
+        function checkReplaceableCode(replaceableCode, suggestedReplacement) {
+            const matches = Array(...content.match(new RegExp(replaceableCode + '.{0,}', 'gi')) || []);
+            selfFilter(matches, match => !/\/\/@btr-ignore/.test(match));
+            if (!matches.length) {
+                return;
+            }
+            const matchCountWithMargin = withSpaceMargins(`Replace (x${matches.length})`, 10);
+            const suggestionWithMargin = withSpaceMargins(suggestedReplacement, 10);
+            const replaceableWithMargin = withSpaceMargins(replaceableCode, 10);
+            const filepathWithMargin = withSpaceMargins(filepath, 10);
+            warnings.push(matchCountWithMargin + 'Replace:' + replaceableWithMargin + '=>' + suggestionWithMargin + 'at' + filepathWithMargin);
+        }
+    });
 }
 /**Copy to clipboard while running node */
 export function copyToClipboard_server(x) { return clipboard.write(stringify(x)); }
@@ -1127,15 +1141,25 @@ export function killProcess(message) { bigConsoleError(message); process.exit();
 /**Easily run the scripts of this (utils) repo's package.json */
 export function npmRun_package(npmCommand) {
     console.log({ npmCommand });
-    const utilsRepoName = 'Utils 🛠️';
-    if (npmCommand === 'transpile') {
-        transpileFiles(() => colorLog('magenta', 'Process over'));
+    if (npmCommand === 'transpile-all') {
+        transpileAllFiles(printProcessOver);
     }
-    if (npmCommand === 'git') {
-        prompCommitMessageAndPush(utilsRepoName);
+    if (npmCommand === 'transpile') {
+        transpileBaseFiles(printProcessOver);
     }
     if (npmCommand === 'all') {
-        transpileFiles(promptVersioning);
+        transpileAllFiles(promptVersioning);
+    }
+    if (npmCommand === 'check') {
+        cachePackageFilesAndCheckThem();
+    }
+    async function cachePackageFilesAndCheckThem() {
+        await addToCachedFiles(['./basicProjectChecks.ts', './btr.ts', './npmRun.ts']);
+        checkCodeThatCouldBeUpdated(cachedFiles);
+        warnings.length ? warnings.forEach(warning => colorLog('yellow', warning)) : successLog('No errors or warnings :D');
+    }
+    function printProcessOver() {
+        colorLog('magenta', 'Process over');
     }
     async function promptVersioning() {
         function tryAgain(error) { colorLog('yellow', error); promptVersioning(); }
@@ -1149,39 +1173,41 @@ export function npmRun_package(npmCommand) {
             successLog('package.json up-version\'d');
         });
     }
-    function transpileFiles(followUp) {
-        exec('tsc --declaration --target esnext npmRun.ts', () => {
+    function transpileAllFiles(followUp) {
+        transpileBaseFiles(async () => {
             const filename = 'btr.ts';
-            exec('tsc --declaration --target esnext ' + filename, async () => {
-                successLog(filename + ' transpiled');
-                const indexTs = await fsReadFileAsync(filename);
-                const lines = indexTs.replaceAll('bigConsoleError', 'colorLog').split('\n');
-                selfFilter(lines, (line) => !/DELETETHISFORCLIENT/.test(line));
-                const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x));
-                lines.splice(cutPoint, lines.length);
-                lines.push('const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)');
-                await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'));
-                exec('tsc --declaration --target esnext client/btr.ts ', async () => {
-                    successLog('browser versions emitted');
-                    await delay(500);
-                    followUp();
-                });
+            const indexTs = await fsReadFileAsync(filename);
+            const lines = indexTs.replaceAll('bigConsoleError', 'colorLog').split('\n');
+            selfFilter(lines, (line) => !/DELETETHISFORCLIENT/.test(line));
+            const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x));
+            lines.splice(cutPoint, lines.length);
+            lines.push('const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)');
+            await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'));
+            exec('tsc --target esnext client/btr.ts ', async () => {
+                successLog('browser versions emitted');
+                await delay(500);
+                followUp();
             });
+        });
+    }
+    function transpileBaseFiles(followUp) {
+        exec('tsc --target esnext npmRun.ts', async () => {
+            successLog('Base files transpiled');
+            await delay(500);
+            followUp();
         });
     }
 }
 /**Run convenient scripts for and from a project's root folder */
 export async function npmRun_project(npmCommand) {
-    //async (options: { serverFolder_dist?: string, serverFolder_src?: string, fileWithRef?: string })
-    //if (!options) { options = defaults }
-    //const { serverFolder_dist, serverFolder_src, fileWithRef } = addMissingPropsToObjects(options!, defaults)
     await basicProjectChecks(divine.error);
     if (npmCommand === 'check') {
         return;
     }
-    const defaults = { serverFolder_dist: '../dist', serverFolder_src: './test', fileWithRef: 'ref' };
-    const { serverFolder_dist, serverFolder_src, fileWithRef } = defaults;
     const { APP_NAME } = getEnviromentVariables();
+    const serverFolder_dist = '../dist';
+    const serverFolder_src = './test';
+    const fileWithRef = 'ref';
     if (npmCommand === 'git') {
         prompCommitMessageAndPush(`${APP_NAME}`);
     }
