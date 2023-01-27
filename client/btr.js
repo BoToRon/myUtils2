@@ -351,9 +351,9 @@ export async function retryF(fn, args, retriesLeft, defaultReturn, delayBetweenR
     }
 }
 /**tryCatch wrapper for functions with divineError as the default error handler */
-export function tryF(fn, args, errorHandler = divine.error) {
+export async function tryF(fn, args, errorHandler = divine.error) {
     try {
-        return fn(...args);
+        return await fn(...args);
     }
     catch (err) {
         errorHandler(err);
@@ -668,18 +668,24 @@ _; /********** FOR TIMERS ******************** FOR TIMERS ******************** F
  * @returns initializeTimer's resolveInfo with the return of onKill as the value (since onEach never resolves, just keeps going)
  */
 export async function initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully) {
-    const result = await new Promise(resolve => {
-        initializeTimer(id, Date.now() + intervalInMs, onEach, onKill).then(result => {
-            if (result.wasCancelled) {
-                return resolve(result);
+    const doContinue = await stayAliveChecker();
+    return { timesRanSucessfully, ...await getResult() };
+    async function getResult() {
+        return await new Promise(resolve => {
+            if (doContinue) {
+                initializeTimer(id, Date.now() + intervalInMs, onEach, onKill).then(result => {
+                    if (result.wasCancelled) {
+                        return resolve(result);
+                    }
+                    initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1).then(result => resolve(result));
+                });
             }
-            initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1).then(result => resolve(result));
+            else {
+                initializeTimer(id, Date.now() + intervalInMs, onEach, onKill).then(result => resolve(result));
+                killTimer(id, `stayAliveChecker (${stayAliveChecker.name}) = false`);
+            }
         });
-        if (!stayAliveChecker()) {
-            killTimer(id, `stayAliveChecker (${stayAliveChecker.name}) = false`);
-        }
-    });
-    return { timesRanSucessfully, ...result };
+    }
 }
 /**
  * Set a cancellable timer that runs at the specified time
@@ -690,13 +696,27 @@ export async function initializeInterval(id, intervalInMs, stayAliveChecker, onE
  * @returns the return of "onComplete" if it was completed, or all info revelant to cancellation along with the value of "onCancel"
  */
 export async function initializeTimer(id, runAt, onComplete, onCancel) {
-    const timer = { id, runAt, onComplete, onCancel, startedAt: Date.now(), wasCancelled: false, cancelledAt: 0, cancelStack: '' };
+    const timer = {
+        id, runAt, onComplete, onCancel,
+        value_onComplete: nullAs(),
+        value_onCancel: nullAs(),
+        resolveInfo: nullAs(),
+        startedAt: Date.now(),
+        wasCancelled: false,
+        cancelStack: '',
+        cancelledAt: 0,
+    };
     timers.push(timer);
     return await interval();
-    function getTimerResolveInfo(timer, fn) {
+    async function getResolvedTimer() {
         const { id, startedAt, runAt, onComplete, onCancel, cancelledAt, cancelStack, wasCancelled } = timer;
-        const value = tryF(fn, []);
-        const template = {
+        if (!timer.wasCancelled) {
+            timer.value_onComplete = await timer.onComplete();
+        }
+        else {
+            doNothing;
+        } /**timer.value_onCancel should have been set in killTimer */
+        timer.resolveInfo = {
             timerId: id,
             startedAt: formatDate(startedAt, 'es', 'medium+hour'),
             intendedRunAt: formatDate(runAt, 'es', 'medium+hour'),
@@ -707,31 +727,20 @@ export async function initializeTimer(id, runAt, onComplete, onCancel) {
             onCancelFn: onCancel.name,
             cancelStack,
         };
-        if (wasCancelled) {
-            return { value_onCancel: value, wasCancelled: true, ...template };
-        }
-        else {
-            return { value_onComplete: value, wasCancelled: false, ...template };
-        }
+        return timer;
     }
     async function interval() {
-        return await new Promise(resolve => {
-            const maxInterval = 1000;
-            const timeLeft = Math.max(runAt - Date.now(), 0);
-            const isTheLastInterval = maxInterval >= timeLeft;
-            if (!isTheLastInterval) {
-                setTimeout(() => resolveOrCancel(interval, true), maxInterval);
-            }
-            else {
-                setTimeout(() => { removeItem(timers, timer); resolveOrCancel(onComplete, false); }, timeLeft);
-            }
-            async function resolveOrCancel(fn, isInterval) {
-                resolve(isInterval ? await fn() : await getTimerResolveInfo(timer, fn));
-            }
-        });
+        const maxInterval = 1000;
+        const timeLeft = Math.max(runAt - Date.now(), 0);
+        const isTheLastInterval = maxInterval >= timeLeft;
+        await delay(isTheLastInterval ? timeLeft : maxInterval);
+        if (isTheLastInterval) {
+            removeItem(timers, timer);
+        }
+        return timer.wasCancelled ? timer : isTheLastInterval ? getResolvedTimer() : interval();
     }
 }
-/**Kill a timer created with initializeTimer, the reason provided will become a divine stack */
+/**Kill a timer created with initializeTimer/Interval, the reason provided will become a divine stack */
 export async function killTimer(timerId, reason) {
     const theTimer = timers.find(x => x.id === timerId);
     if (!theTimer) {
@@ -739,10 +748,11 @@ export async function killTimer(timerId, reason) {
         return;
     }
     removeItem(timers, theTimer);
+    theTimer.value_onCancel = await theTimer.onCancel();
     theTimer.cancelStack = getTraceableStack(reason, 'killTimer');
     theTimer.cancelledAt = Date.now();
     theTimer.wasCancelled = true;
-    return await theTimer.onCancel();
+    return theTimer;
 }
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
@@ -756,7 +766,7 @@ _; /********** FOR STRINGS ******************** FOR STRINGS ********************
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 /**Add an "S" to the end of a noun if talking about them in plural based on the amount passed */
 export function asSingularOrPlural(noun, amount) { return noun + `${amount === 1 ? '' : 's'}`; }
-/**console.log... WITH COLORS :D */
+/**console.log... WITH COLORS :D */ //@btr-ignore
 /** Copy to clipboard using the corresponding function for the running enviroment (node/client)*/
 export function copyToClipboard(x) { isNode ? copyToClipboard_server(x) : copyToClipboard_client(x); }
 /**(Message) 💀 */
@@ -803,6 +813,8 @@ export function dataIsEqual(A, B, errorHandler = nullAs(), strictModeIfObject = 
 }
 /**For obligatory callbacks */
 export function doNothing(...args) { args; }
+/**Margin to make reading logs easier */
+export function logEmptyLine() { console.log(''); } //@btr-ignore
 /** @returns null, as the provided type */
 export function nullAs() { return null; } //@btr-ignore
 /**

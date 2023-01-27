@@ -14,7 +14,9 @@ _
 _
 _
 import {
-	arrayPredicate, btr_validVariant, btr_trackedVueComponent, bvModal, bvToast, cachedFile, messageHandler, myEnv, pipe_mutable_type, pipe_persistent_type, timer, validChalkColor, validNpmCommand_package, validNpmCommand_project, vueComponentsTracker, zSchema
+	arrayPredicate, btr_validVariant, btr_trackedVueComponent, bvModal, bvToast, cachedFile, maybePromise,
+	messageHandler, myEnv, nullable, pipe_mutable_type, pipe_persistent_type, timer, validChalkColor,
+	validNpmCommand_package, validNpmCommand_project, vueComponentsTracker, zSchema
 } from './types/types.js'
 _
 import { getUniqueId_generator, isNode, utilsRepoName, zValidVariants, zValidVersionIncrement } from './types/constants.js'
@@ -354,11 +356,11 @@ export async function retryF<F extends (...args: Parameters<F>) => ReturnType<F>
 	}
 }
 /**tryCatch wrapper for functions with divineError as the default error handler */
-export function tryF<T extends (...args: Parameters<T>) => ReturnType<T>>(
+export async function tryF<T extends (...args: Parameters<T>) => maybePromise<ReturnType<T>>>(
 	fn: T,
 	args: Parameters<T>,
 	errorHandler = divine.error as messageHandler) {
-	try { return fn(...args) }
+	try { return await fn(...args) }
 	catch (err) { errorHandler(err as string) }
 }
 /**
@@ -627,7 +629,7 @@ export function replaceObject<K extends keyof T, T extends Record<K, unknown>>(o
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods, see deepClone) */
 export function stringify<T extends object>(object: T) {
 	const seen = new WeakSet()
-	return JSON.stringify(object, (_key: string, value: object | null) => {
+	return JSON.stringify(object, (_key: string, value: nullable<object>) => {
 		if (typeof value === 'object' && value !== null) {
 			if (seen.has(value)) { return '< Circular >' }
 			seen.add(value)
@@ -660,26 +662,34 @@ _ /********** FOR TIMERS ******************** FOR TIMERS ******************** FO
  * @param timesRanSucessfully The amount of times the interval ran before its dismise
  * @returns initializeTimer's resolveInfo with the return of onKill as the value (since onEach never resolves, just keeps going)
  */
-export async function initializeInterval<eachF extends () => ReturnType<eachF>, cancelF extends () => ReturnType<cancelF>>(
-	id: string,
-	intervalInMs: number,
-	stayAliveChecker: () => boolean,
-	onEach: eachF,
-	onKill: cancelF,
-	timesRanSucessfully: number
-) {
+export async function initializeInterval<
+	eachF extends () => maybePromise<ReturnType<eachF>>,
+	cancelF extends () => maybePromise<ReturnType<cancelF>>>(
+		id: string,
+		intervalInMs: number,
+		stayAliveChecker: () => maybePromise<boolean>,
+		onEach: eachF,
+		onKill: cancelF,
+		timesRanSucessfully: number
+	) {
 	type resolveInfo = Awaited<ReturnType<typeof initializeTimer<eachF, cancelF>>>
+	const doContinue = await stayAliveChecker()
+	return { timesRanSucessfully, ...await getResult() } as resolveInfo & { timesRanSucessfully: number, wasCancelled: true }
 
-	const result: resolveInfo = await new Promise(resolve => {
-		initializeTimer(id, Date.now() + intervalInMs, onEach, onKill).then(result => {
-			if (result.wasCancelled) { return resolve(result) }
-			initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1).then(result => resolve(result))
+	async function getResult(): Promise<resolveInfo> {
+		return await new Promise(resolve => {
+			if (doContinue) {
+				initializeTimer(id, Date.now() + intervalInMs, onEach, onKill).then(result => {
+					if (result.wasCancelled) { return resolve(result) }
+					initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1).then(result => resolve(result))
+				})
+			}
+			else {
+				initializeTimer(id, Date.now() + intervalInMs, onEach, onKill).then(result => resolve(result))
+				killTimer(id, `stayAliveChecker (${stayAliveChecker.name}) = false`)
+			}
 		})
-
-		if (!stayAliveChecker()) { killTimer(id, `stayAliveChecker (${stayAliveChecker.name}) = false`) }
-	})
-
-	return { timesRanSucessfully, ...result } as resolveInfo & { timesRanSucessfully: number, wasCancelled: true }
+	}
 }
 /**
  * Set a cancellable timer that runs at the specified time
@@ -689,26 +699,39 @@ export async function initializeInterval<eachF extends () => ReturnType<eachF>, 
  * @param onCancel The function that should run if the timer was cancelled via killTimer
  * @returns the return of "onComplete" if it was completed, or all info revelant to cancellation along with the value of "onCancel"
  */
-export async function initializeTimer<completeF extends () => ReturnType<completeF>, cancelF extends () => ReturnType<cancelF>>(
+export async function initializeTimer<
+	completeF extends () => maybePromise<ReturnType<completeF>>,
+	cancelF extends () => maybePromise<ReturnType<cancelF>>
+>(
 	id: string,
 	runAt: number,
 	onComplete: completeF,
 	onCancel: cancelF
 ) {
 
-	const timer: timer = { id, runAt, onComplete, onCancel, startedAt: Date.now(), wasCancelled: false, cancelledAt: 0, cancelStack: '' }
+	const timer: timer = {
+		id, runAt, onComplete, onCancel,
+		value_onComplete: nullAs(),
+		value_onCancel: nullAs(),
+		resolveInfo: nullAs(),
+		startedAt: Date.now(),
+		wasCancelled: false,
+		cancelStack: '',
+		cancelledAt: 0,
+	}
+
 	timers.push(timer)
 	return await interval()
 
-	function getTimerResolveInfo<completeF extends () => ReturnType<completeF>, cancelF extends () => ReturnType<cancelF>>(
-		timer: timer,
-		fn: completeF | cancelF
-	) {
+	async function getResolvedTimer<
+		completeF extends () => maybePromise<ReturnType<completeF>>,
+		cancelF extends () => maybePromise<ReturnType<cancelF>>
+	>() {
 		const { id, startedAt, runAt, onComplete, onCancel, cancelledAt, cancelStack, wasCancelled } = timer
+		if (!timer.wasCancelled) { timer.value_onComplete = await timer.onComplete() }
+		else { doNothing } /**timer.value_onCancel should have been set in killTimer */
 
-		const value = tryF(fn, [] as Parameters<typeof fn>)
-
-		const template = {
+		timer.resolveInfo = {
 			timerId: id,
 			startedAt: formatDate(startedAt, 'es', 'medium+hour'),
 			intendedRunAt: formatDate(runAt, 'es', 'medium+hour'),
@@ -719,37 +742,33 @@ export async function initializeTimer<completeF extends () => ReturnType<complet
 			onCancelFn: onCancel.name,
 			cancelStack,
 		}
-
-		if (wasCancelled) { return { value_onCancel: value as ReturnType<cancelF>, wasCancelled: true as const, ...template } }
-		else { return { value_onComplete: value as ReturnType<completeF>, wasCancelled: false as const, ...template } }
+		return timer
 	}
 
-	async function interval(): Promise<ReturnType<typeof getTimerResolveInfo>> {
-		return await new Promise(resolve => {
-			const maxInterval = 1000
-			const timeLeft = Math.max(runAt - Date.now(), 0)
-			const isTheLastInterval = maxInterval >= timeLeft
+	async function interval(): Promise<ReturnType<typeof getResolvedTimer>> {
+		const maxInterval = 1000
+		const timeLeft = Math.max(runAt - Date.now(), 0)
+		const isTheLastInterval = maxInterval >= timeLeft
 
-			if (!isTheLastInterval) { setTimeout(() => resolveOrCancel(interval, true), maxInterval) }
-			else { setTimeout(() => { removeItem(timers, timer); resolveOrCancel(onComplete, false) }, timeLeft) }
+		await delay(isTheLastInterval ? timeLeft : maxInterval)
+		if (isTheLastInterval) { removeItem(timers, timer) }
 
-			async function resolveOrCancel(fn: typeof interval | completeF, isInterval: boolean) {
-				resolve(isInterval ? await fn() as Awaited<ReturnType<typeof interval>> : await getTimerResolveInfo(timer, fn as completeF))
-			}
-		})
+		return timer.wasCancelled ? timer : isTheLastInterval ? getResolvedTimer() : interval()
 	}
 }
-/**Kill a timer created with initializeTimer, the reason provided will become a divine stack */
+/**Kill a timer created with initializeTimer/Interval, the reason provided will become a divine stack */
 export async function killTimer(timerId: string, reason: string) {
 	const theTimer = timers.find(x => x.id === timerId)
 	if (!theTimer) { divine.error('Unable to cancel, no timer was found with this id: ' + timerId); return }
 
 	removeItem(timers, theTimer)
+
+	theTimer.value_onCancel = await theTimer.onCancel()
 	theTimer.cancelStack = getTraceableStack(reason, 'killTimer')
 	theTimer.cancelledAt = Date.now()
 	theTimer.wasCancelled = true
 
-	return await theTimer.onCancel()
+	return theTimer
 }
 
 _ /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
@@ -765,7 +784,7 @@ _ /********** FOR STRINGS ******************** FOR STRINGS ******************** 
 
 /**Add an "S" to the end of a noun if talking about them in plural based on the amount passed */
 export function asSingularOrPlural(noun: string, amount: number) { return noun + `${amount === 1 ? '' : 's'}` }
-/**console.log... WITH COLORS :D */
+/**console.log... WITH COLORS :D */ //@btr-ignore
 /** Copy to clipboard using the corresponding function for the running enviroment (node/client)*/
 export function copyToClipboard(x: unknown) { isNode ? copyToClipboard_server(x) : copyToClipboard_client(x) }
 /**(Message) 💀 */
@@ -814,6 +833,8 @@ export function dataIsEqual(A: unknown, B: unknown, errorHandler = <messageHandl
 }
 /**For obligatory callbacks */
 export function doNothing(...args: unknown[]) { args }
+/**Margin to make reading logs easier */
+export function logEmptyLine() { console.log('') } //@btr-ignore
 /** @returns null, as the provided type */
 export function nullAs<T>() { return null as T } //@btr-ignore
 /**

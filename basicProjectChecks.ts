@@ -5,7 +5,7 @@ import { z } from 'zod'
 _
 import { zMyEnv } from './types/constants.js'
 _
-import { cachedFile, messageHandler, packageJson, tsConfig } from './types/types.js'
+import { cachedFile, messageHandler, nullable, packageJson, tsConfig } from './types/types.js'
 _
 import {
 	getCachedFiles, checkCodeThatCouldBeUpdated, colorLog, compareArrays, getEnviromentVariables, getZodSchemaFromData,
@@ -413,7 +413,7 @@ async function fillCachedFiles() {
 }
 
 /**Get all the file and folders within a folder, stopping at predefined folders */
-function getFilesAndFoldersNames(directory: string, extension: '.ts' | '.vue' | null) {
+function getFilesAndFoldersNames(directory: string, extension: nullable<'.ts' | '.vue'>) {
 	const results: string[] = []
 
 	fs.readdirSync(directory).forEach((file) => {
