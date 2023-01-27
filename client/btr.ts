@@ -84,7 +84,6 @@ export function triggerModalWithValidation_curry<validModalIds extends string>($
 		function promptError() { alert(`Modal with id (${id}) not found. Could not ${action}. Please report it`) }
 	}
 }
-
 /**Add/remove a vue component to the window for easy access/debugging */
 export function trackVueComponent<T extends string>(
 	name: T,
@@ -805,9 +804,11 @@ export function logInitialization(filename: string) { colorLog(isNode ? 'cyan' :
 export function successLog(message: string) { return colorLog('green', message + ' ✔️') }
 /**@returns an string with its linebreaks converted into simple one-char spaces */
 export function toSingleLine(sentence: string) { return `${sentence}`.replace(/ {0,}\n {0,}/g, ' ') }
-/**Return an string with X amount of spaces as margin per side */
-export function withSpaceMargins(string: string, spaces: number) { const margin = ' '.repeat(spaces); return margin + string + margin }
-
+/**Return an string with X amount of (character) as margin per side */
+export function surroundedString(string: string, margin: string, perSide: number) {
+	const x = margin.repeat(perSide)
+	return x + string + x
+}
 _ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
@@ -833,6 +834,45 @@ export function dataIsEqual(A: unknown, B: unknown, errorHandler = <messageHandl
 }
 /**For obligatory callbacks */
 export function doNothing(...args: unknown[]) { args }
+/**
+ * Register into the window's a finder and logger of all vue components, including the main instance and pinia store
+ * @example getAppLog(window as never, useStore) //at the bottom of store.ts
+ */
+export function getAppLog<T extends string, useStoreT extends () => btr_trackedVueComponent>(
+	window: { appLog: () => { store: { [x: string]: () => void } }, vueComponents: vueComponentsTracker<T> },
+	useStore: useStoreT
+) {
+	delay(1000).then(() => {
+		window.appLog = () => mapObject({
+			store: useStore(),
+			...arrayToObject(
+				objectEntries(window.vueComponents).map(entry => {
+					const components = window.vueComponents[entry.key]
+					return components.map(x => components.length > 1 ? x.id : x.name)
+				}).flat(),
+				idOrName => objectValues(window.vueComponents).flat().find(x => [x.id, x.name].includes(idOrName))
+			)
+		}, component => ({
+			...arrayToObject(
+				sortAlphabetically(objectKeys(component) as string[]).filter(key => ![
+					'$dispose', '$id', '$onAction', '$patch', '$reset', '$subscribe', '_hotUpdate', '_isOptionsAPI', '_r', //<- store, App -v 
+					'_uid', '_isVue', '__v_skip', '_scope', '$options', '_renderProxy', '_self', '$parent', '$root', '$children', '$refs', '_provided',
+					'_watcher', '_inactive', '_directInactive', '_isMounted', '_isDestroyed', '_isBeingDestroyed', '_events', '_hasHookEvent',
+					'_vnode', '_staticTrees', '$vnode', '$slots', '$scopedSlots', '_c', '$createElement', '$attrs', '$listeners', '$pinia',
+					'_bv__modal', '_bv__toast', '_data', '_computedWatchers', '$el', 'name', 'id', 'beforeDestroy'
+				].includes(key)),
+				key => () => console.log(stringify(component[key as keyof typeof component] as unknown as object)) //@btr-ignore
+			)
+		}))
+	})
+}
+/**localStorage, but better */
+export function getLocalStorageGetAndSet<T extends object>(defaults: T) {
+	objectEntries(defaults).forEach(({ key, value }) => { if (!(key in localStorage)) { localStorage[key as string] = value } })
+	function localStorageGet<K extends keyof T>(key: K): T[K] { return localStorage[key as string] || defaults[key] }
+	function localStorageSet<K extends keyof T>(key: K, value: T[K]) { localStorage[key as string] = value }
+	return { localStorageSet, localStorageGet }
+}
 /**Margin to make reading logs easier */
 export function logEmptyLine() { console.log('') } //@btr-ignore
 /** @returns null, as the provided type */

@@ -9,7 +9,7 @@ import { cachedFile, messageHandler, nullable, packageJson, tsConfig } from './t
 _
 import {
 	getCachedFiles, checkCodeThatCouldBeUpdated, colorLog, compareArrays, getEnviromentVariables, getZodSchemaFromData,
-	importFileFromProject, nullAs, successLog, withSpaceMargins, zodCheck_curry, zRegexGenerator
+	importFileFromProject, nullAs, successLog, surroundedString, zodCheck_curry, zRegexGenerator
 } from './btr.js'
 _
 
@@ -99,7 +99,7 @@ function checkAllExportedFunctionsAreDescribed() {
 		}, [] as string[])
 
 		if (!uncommentedTopLevelFunctions.length) { return }
-		addToErrors(`Uncommented exported function ${withSpaceMargins(`(in (${file})`, 10)} [${uncommentedTopLevelFunctions.join(', ')}]`)
+		addToErrors(`Uncommented exported function ${surroundedString(`(in (${file})`, ' ', 10)} [${uncommentedTopLevelFunctions.join(', ')}]`)
 	})
 }
 
@@ -202,7 +202,7 @@ function checkLocalImportsHaveJsExtention() {
 
 function checkMatchInSpecificFile(file: string, wantedMatch: string) {
 	const { content } = (getFromCachedFiles([file])[0] as cachedFile)
-	if (!content.includes(wantedMatch)) { addToErrors(`"${withSpaceMargins(wantedMatch, 10)}" is missing, at(${file})`) }
+	if (!content.includes(wantedMatch)) { addToErrors(`"${surroundedString(wantedMatch, ' ', 10)}" is missing, at(${file})`) }
 }
 
 /**Check the scripts in a project's package json all fit the established schema */
@@ -304,7 +304,7 @@ function checkServerAndClientFilesLogTheirInitialization() {
 	[serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
 		const { filepath, content } = file
 		const wantedMatch = `logInitialization('${filepath}')`
-		if (!content.includes(wantedMatch)) { addToErrors(`"${withSpaceMargins(wantedMatch, 10)}" is missing`) }
+		if (!content.includes(wantedMatch)) { addToErrors(`"${surroundedString(wantedMatch, ' ', 10)}" is missing`) }
 	})
 }
 

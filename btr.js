@@ -801,8 +801,11 @@ export function logInitialization(filename) { colorLog(isNode ? 'cyan' : 'magent
 export function successLog(message) { return colorLog('green', message + ' ✔️'); }
 /**@returns an string with its linebreaks converted into simple one-char spaces */
 export function toSingleLine(sentence) { return `${sentence}`.replace(/ {0,}\n {0,}/g, ' '); }
-/**Return an string with X amount of spaces as margin per side */
-export function withSpaceMargins(string, spaces) { const margin = ' '.repeat(spaces); return margin + string + margin; }
+/**Return an string with X amount of (character) as margin per side */
+export function surroundedString(string, margin, perSide) {
+    const x = margin.repeat(perSide);
+    return x + string + x;
+}
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
@@ -827,6 +830,39 @@ export function dataIsEqual(A, B, errorHandler = nullAs(), strictModeIfObject = 
 }
 /**For obligatory callbacks */
 export function doNothing(...args) { args; }
+/**
+ * Register into the window's a finder and logger of all vue components, including the main instance and pinia store
+ * @example getAppLog(window as never, useStore) //at the bottom of store.ts
+ */
+export function getAppLog(window, useStore) {
+    delay(1000).then(() => {
+        window.appLog = () => mapObject({
+            store: useStore(),
+            ...arrayToObject(objectEntries(window.vueComponents).map(entry => {
+                const components = window.vueComponents[entry.key];
+                return components.map(x => components.length > 1 ? x.id : x.name);
+            }).flat(), idOrName => objectValues(window.vueComponents).flat().find(x => [x.id, x.name].includes(idOrName)))
+        }, component => ({
+            ...arrayToObject(sortAlphabetically(objectKeys(component)).filter(key => ![
+                '$dispose', '$id', '$onAction', '$patch', '$reset', '$subscribe', '_hotUpdate', '_isOptionsAPI', '_r',
+                '_uid', '_isVue', '__v_skip', '_scope', '$options', '_renderProxy', '_self', '$parent', '$root', '$children', '$refs', '_provided',
+                '_watcher', '_inactive', '_directInactive', '_isMounted', '_isDestroyed', '_isBeingDestroyed', '_events', '_hasHookEvent',
+                '_vnode', '_staticTrees', '$vnode', '$slots', '$scopedSlots', '_c', '$createElement', '$attrs', '$listeners', '$pinia',
+                '_bv__modal', '_bv__toast', '_data', '_computedWatchers', '$el', 'name', 'id', 'beforeDestroy'
+            ].includes(key)), key => () => console.log(stringify(component[key])) //@btr-ignore
+            )
+        }));
+    });
+}
+/**localStorage, but better */
+export function getLocalStorageGetAndSet(defaults) {
+    objectEntries(defaults).forEach(({ key, value }) => { if (!(key in localStorage)) {
+        localStorage[key] = value;
+    } });
+    function localStorageGet(key) { return localStorage[key] || defaults[key]; }
+    function localStorageSet(key, value) { localStorage[key] = value; }
+    return { localStorageSet, localStorageGet };
+}
 /**Margin to make reading logs easier */
 export function logEmptyLine() { console.log(''); } //@btr-ignore
 /** @returns null, as the provided type */
@@ -1044,11 +1080,8 @@ export function checkCodeThatCouldBeUpdated(cachedFiles) {
             if (!matches.length) {
                 return;
             }
-            const matchCountWithMargin = withSpaceMargins(`Replace (x${matches.length})`, 10);
-            const suggestionWithMargin = withSpaceMargins(suggestedReplacement, 10);
-            const replaceableWithMargin = withSpaceMargins(replaceableCode, 10);
-            const filepathWithMargin = withSpaceMargins(filepath, 10);
-            warnings.push(matchCountWithMargin + 'Replace:' + replaceableWithMargin + '=>' + suggestionWithMargin + 'at' + filepathWithMargin);
+            colorLog('yellow', surroundedString('WARNING: OUTDATED/REPLACEABLE CODE', '-', 50));
+            console.log({ matches, replaceableCode, suggestedReplacement, filepath }); //@btr-ignore
         }
     });
 }
@@ -1106,10 +1139,9 @@ export function getEnviromentVariables() {
 }
 /**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
 export function getSeparatingCommentBlock(message) {
-    let line = '';
-    const asterisks = '*'.repeat(10);
+    let line = message.toLowerCase();
     while (line.length < 100) {
-        line += `${asterisks} ${message.toUpperCase()} ${asterisks}`;
+        line = surroundedString(` ${line} `, '*', 5);
     }
     const theBlock = `_ /${line}/\n`.repeat(5);
     console.log(theBlock); //@btr-ignore
@@ -1181,7 +1213,7 @@ export function npmRun_package(npmCommand) {
     }
     async function cachePackageFilesAndCheckThem() {
         checkCodeThatCouldBeUpdated(await getCachedFiles(['./basicProjectChecks.ts', './btr.ts', './npmRun.ts']));
-        warnings.length ? warnings.forEach(warning => colorLog('yellow', warning)) : successLog('No errors or warnings :D');
+        warnings.length ? warnings.forEach(warning => colorLog('yellow', warning)) : successLog('All checks passeds :D');
     }
     function printProcessOver() {
         colorLog('magenta', 'Process over');

@@ -6,7 +6,7 @@ _;
 import { zMyEnv } from './types/constants.js';
 _;
 _;
-import { getCachedFiles, checkCodeThatCouldBeUpdated, colorLog, compareArrays, getEnviromentVariables, getZodSchemaFromData, importFileFromProject, nullAs, successLog, withSpaceMargins, zodCheck_curry, zRegexGenerator } from './btr.js';
+import { getCachedFiles, checkCodeThatCouldBeUpdated, colorLog, compareArrays, getEnviromentVariables, getZodSchemaFromData, importFileFromProject, nullAs, successLog, surroundedString, zodCheck_curry, zRegexGenerator } from './btr.js';
 _;
 const errors = [];
 const warnings = [];
@@ -88,7 +88,7 @@ function checkAllExportedFunctionsAreDescribed() {
         if (!uncommentedTopLevelFunctions.length) {
             return;
         }
-        addToErrors(`Uncommented exported function ${withSpaceMargins(`(in (${file})`, 10)} [${uncommentedTopLevelFunctions.join(', ')}]`);
+        addToErrors(`Uncommented exported function ${surroundedString(`(in (${file})`, ' ', 10)} [${uncommentedTopLevelFunctions.join(', ')}]`);
     });
 }
 /**Check all the vue components are trackable by the window */
@@ -189,7 +189,7 @@ function checkLocalImportsHaveJsExtention() {
 function checkMatchInSpecificFile(file, wantedMatch) {
     const { content } = getFromCachedFiles([file])[0];
     if (!content.includes(wantedMatch)) {
-        addToErrors(`"${withSpaceMargins(wantedMatch, 10)}" is missing, at(${file})`);
+        addToErrors(`"${surroundedString(wantedMatch, ' ', 10)}" is missing, at(${file})`);
     }
 }
 /**Check the scripts in a project's package json all fit the established schema */
@@ -290,7 +290,7 @@ function checkServerAndClientFilesLogTheirInitialization() {
         const { filepath, content } = file;
         const wantedMatch = `logInitialization('${filepath}')`;
         if (!content.includes(wantedMatch)) {
-            addToErrors(`"${withSpaceMargins(wantedMatch, 10)}" is missing`);
+            addToErrors(`"${surroundedString(wantedMatch, ' ', 10)}" is missing`);
         }
     });
 }
