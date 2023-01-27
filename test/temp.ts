@@ -1,20 +1,6 @@
 
-import {
-	//timers, tryF, formatDate, removeItem,
-	formatDate, removeItem, timers, tryF,
-	//initializeTimer,
-	//removeItem, timers, divine, getTraceableStack,
-	//killTimer,
-	divine, getTraceableStack,
-	//doNothing,
-	delay,
-	nullAs,
-	doNothing
-} from '../btr.js'
-
-import {
-	maybePromise, timer,
-} from '../types/types.js'
+import { delay, divine, doNothing, formatDate, getTraceableStack, nullAs, removeItem, timers } from '../btr.js'
+import { maybePromise, timer } from '../types/types.js'
 
 /**Kill a timer created with initializeTimer, the reason provided will become a divine stack */
 export async function killTimer(timerId: string, reason: string) {
@@ -67,7 +53,6 @@ export async function initializeTimer<
 		completeF extends () => maybePromise<ReturnType<completeF>>,
 		cancelF extends () => maybePromise<ReturnType<cancelF>>
 	>() {
-
 		const { id, startedAt, runAt, onComplete, onCancel, cancelledAt, cancelStack, wasCancelled } = timer
 		if (!timer.wasCancelled) { timer.value_onComplete = await timer.onComplete() }
 		else { doNothing } /**timer.value_onCancel should have been set in killTimer */
@@ -97,7 +82,6 @@ export async function initializeTimer<
 		return timer.wasCancelled ? nullAs() : isTheLastInterval ? getResolvedTimer() : interval()
 	}
 }
-
 
 /**
  * Set an interval that is automatically killed when the stay-alive-checker fails but can also be manually killed with killTimer
