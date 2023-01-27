@@ -340,7 +340,7 @@ function checkSpecificMatchesInTypesTs() {
 		'type validAdminCommands = z.infer<typeof zValidAdminCommands>',
 		asConsecutiveLines(['/**exclusive to this project */', 'declare global']),
 		'type mongoMisc = { adminKey: string, pageVisits: number',
-	].forEach(x => checkMatchInSpecificFile('./types.d.ts', x))
+	].forEach(x => checkMatchInSpecificFile('./types/types.d.ts', x))
 }
 
 /**Check if the project is using the latest version of "myUtils" */
@@ -386,7 +386,7 @@ async function checkVueDevFiles() {
 		readVueFile('vite.config.ts', 'optimizeDeps: { exclude: [\'node_modules/@botoron/utils\'], },'),
 		readVueFile('vue.config.js', 'export const assetsDir = resolve(__dirname, \'../assets\')'),
 		readVueFile('node_modules/@vue/tsconfig/tsconfig.json', '"skipLibCheck": false'),
-		readVueFile('env.d.ts', '/// <reference types="../types" />'),
+		readVueFile('env.d.ts', '/// <reference types="../types/types" />'),
 	])
 
 	function readVueFile(clientSlash: string, mustMatch: string) {
@@ -407,7 +407,9 @@ async function fillCachedFiles() {
 	const typeFilePaths = getFilesAndFoldersNames('./types', '.ts')
 	const gitIgnore = './.gitignore'
 
-	await getCachedFiles([clientTsFilePaths, clientVueFilePaths, gitIgnore, serverTsFilePaths, tsConfigs, typeFilePaths, vueDevFiles].flat())
+	cachedFiles.push(...await getCachedFiles([
+		clientTsFilePaths, clientVueFilePaths, gitIgnore, serverTsFilePaths, tsConfigs, typeFilePaths, vueDevFiles
+	].flat()))
 }
 
 /**Get all the file and folders within a folder, stopping at predefined folders */

@@ -1,5 +1,6 @@
 let _
 import { type SafeParseReturnType, z } from 'zod'
+import { nullAs } from '../btr.js'
 _
 import { zMyEnv, zValidNpmCommand_package, zValidNpmCommand_project, zValidVariants } from './constants.js'
 _
@@ -45,6 +46,7 @@ export type messageHandler = (message: string) => void
 export type arrayPredicate<T> = (arg1: T) => boolean
 export type pipe_persistent_type<T> = (arg: T) => T
 export type tsConfig = { compilerOptions: object }
+export type maybePromise<T> = T | Promise<T>
 export type pipe_mutable_type = {
 	<T, A>(source: T, a: (value: T) => A): A
 	<T, A, B>(source: T, a: (value: T) => A, b: (value: A) => B): B
@@ -61,5 +63,20 @@ export type timer = {
 	onCancel: btr_nonVoidFn,
 	cancelStack: string,
 	cancelledAt: number,
-	wasCancelled: boolean
+	wasCancelled: boolean,
+	value_onCancel: unknown,
+	value_onComplete: unknown,
+
+	resolveInfo: {
+		timerId: string
+		startedAt: string
+		intendedRunAt: string
+		cancelledAt: string | null
+		timeElapsedBeforeCancelation: string | null
+		timeLeftBeforeCancelation: string | null
+		onCompleteFn: string
+		onCancelFn: string
+		cancelStack: string
+	}
 }
+

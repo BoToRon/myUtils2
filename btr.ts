@@ -28,7 +28,9 @@ _
 import { basicProjectChecks } from './basicProjectChecks.js' //DELETETHISFORCLIENT
 _
 import {
-	arrayPredicate, btr_validVariant, btr_trackedVueComponent, bvModal, bvToast, cachedFile, messageHandler, myEnv, pipe_mutable_type, pipe_persistent_type, timer, validChalkColor, validNpmCommand_package, validNpmCommand_project, vueComponentsTracker, zSchema
+	arrayPredicate, btr_validVariant, btr_trackedVueComponent, bvModal, bvToast, cachedFile, maybePromise,
+	messageHandler, myEnv, pipe_mutable_type, pipe_persistent_type, timer, validChalkColor,
+	validNpmCommand_package, validNpmCommand_project, vueComponentsTracker, zSchema
 } from './types/types.js'
 _
 import { getUniqueId_generator, isNode, utilsRepoName, zValidVariants, zValidVersionIncrement } from './types/constants.js'
@@ -368,11 +370,11 @@ export async function retryF<F extends (...args: Parameters<F>) => ReturnType<F>
 	}
 }
 /**tryCatch wrapper for functions with divineError as the default error handler */
-export function tryF<T extends (...args: Parameters<T>) => ReturnType<T>>(
+export async function tryF<T extends (...args: Parameters<T>) => maybePromise<ReturnType<T>>>(
 	fn: T,
 	args: Parameters<T>,
 	errorHandler = divine.error as messageHandler) {
-	try { return fn(...args) }
+	try { return await fn(...args) }
 	catch (err) { errorHandler(err as string) }
 }
 /**
@@ -703,7 +705,10 @@ export async function initializeInterval<eachF extends () => ReturnType<eachF>, 
  * @param onCancel The function that should run if the timer was cancelled via killTimer
  * @returns the return of "onComplete" if it was completed, or all info revelant to cancellation along with the value of "onCancel"
  */
-export async function initializeTimer<completeF extends () => ReturnType<completeF>, cancelF extends () => ReturnType<cancelF>>(
+export async function initializeTimer<
+	completeF extends () => maybePromise<ReturnType<completeF>>,
+	cancelF extends () => maybePromise<ReturnType<cancelF>>
+>(
 	id: string,
 	runAt: number,
 	onComplete: completeF,
@@ -714,7 +719,10 @@ export async function initializeTimer<completeF extends () => ReturnType<complet
 	timers.push(timer)
 	return await interval()
 
-	function getTimerResolveInfo<completeF extends () => ReturnType<completeF>, cancelF extends () => ReturnType<cancelF>>(
+	function getTimerResolveInfo<
+		completeF extends () => maybePromise<ReturnType<completeF>>,
+		cancelF extends () => maybePromise<ReturnType<cancelF>>
+	>(
 		timer: timer,
 		fn: completeF | cancelF
 	) {
@@ -1025,6 +1033,8 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[]) {
 		checkReplaceableCode('ReadonlyArray<', 'readonly ')	//@btr-ignore
 		checkReplaceableCode('Object.keys', 'objectKeys')	//@btr-ignore
 		checkReplaceableCode('Readonly<', 'readonly ')	//@btr-ignore
+		checkReplaceableCode('| null', 'nullable')	//@btr-ignore
+		checkReplaceableCode('null |', 'nullable')	//@btr-ignore
 		checkReplaceableCode('null as', 'nullAs')	//@btr-ignore
 
 		function checkReplaceableCode(replaceableCode: string, suggestedReplacement: string) {
