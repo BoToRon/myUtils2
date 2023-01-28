@@ -14,9 +14,8 @@ _
 _
 _
 import {
-	arrayPredicate, btr_validVariant, btr_trackedVueComponent, bvModal, bvToast, cachedFile, maybePromise,
-	messageHandler, myEnv, nullable, pipe_mutable_type, pipe_persistent_type, timer, validChalkColor,
-	validNpmCommand_package, validNpmCommand_project, vueComponentsTracker, zSchema
+	arrayPredicate, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, bvModal, bvToast, cachedFile, maybePromise, messageHandler, myEnv, nullable, pipe_mutable_type, pipe_persistent_type,
+	timer, validChalkColor, validNpmCommand_package, validNpmCommand_project, vueComponentsTracker, zSchema
 } from './types/types.js'
 _
 import { getUniqueId_generator, isNode, utilsRepoName, zValidVariants, zValidVersionIncrement } from './types/constants.js'
@@ -26,8 +25,24 @@ _
 import { fromZodError } from 'zod-validation-error'
 _
 
+_ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+
+export {
+	btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn,
+	btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, nullable, zValidVariants
+}
+
+_ /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
+_ /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
+_ /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
+_ /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
+_ /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
+
 export const timers: timer[] = []
-const warnings: string[] = []
 const errors: string[] = []
 
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
@@ -867,11 +882,11 @@ export function getAppLog<T extends string, useStoreT extends () => btr_trackedV
 	})
 }
 /**localStorage, but better */
-export function getLocalStorageGetAndSet<T extends object>(defaults: T) {
+export function getLocalStorageAndSetter<T extends Record<string, unknown>>(defaults: T) {
 	objectEntries(defaults).forEach(({ key, value }) => { if (!(key in localStorage)) { localStorage[key as string] = value } })
-	function localStorageGet<K extends keyof T>(key: K): T[K] { return localStorage[key as string] || defaults[key] }
 	function localStorageSet<K extends keyof T>(key: K, value: T[K]) { localStorage[key as string] = value }
-	return { localStorageSet, localStorageGet }
+	const myLocalStorage = pick(localStorage as unknown as T, objectKeys(defaults))
+	return { myLocalStorage, localStorageSet }
 }
 /**Margin to make reading logs easier */
 export function logEmptyLine() { console.log('') } //@btr-ignore

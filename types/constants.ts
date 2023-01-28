@@ -1,18 +1,8 @@
 let _
 import { z } from 'zod'
 _
-import { cachedFile, timer } from './types.js'
-_
 
-
-export const ref = {
-	timers: [] as timer[],
-	errors: [] as string[],
-	warnings: [] as string[],
-	cachedFiles: [] as cachedFile[]
-}
-
-export const utilsRepoName = 'Utils 🛠️'
+export const utilsRepoName = 'Utils 🛠️' as const
 export const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
 export const getUniqueId_generator = (function* () { let i = 0; while (true) { i++; yield isNode ? `${Date.now() + i}` : i } })()
 

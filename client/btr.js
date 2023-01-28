@@ -13,6 +13,7 @@ _;
 _;
 _;
 _;
+import { btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, nullable } from './types/types.js';
 _;
 import { getUniqueId_generator, isNode, zValidVariants } from './types/constants.js';
 _;
@@ -20,8 +21,18 @@ import { z } from 'zod';
 _;
 import { fromZodError } from 'zod-validation-error';
 _;
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+export { btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, nullable, zValidVariants };
+_; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
+_; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
+_; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
+_; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
+_; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
 export const timers = [];
-const warnings = [];
 const errors = [];
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
@@ -841,13 +852,13 @@ export function getAppLog(window, useStore) {
     });
 }
 /**localStorage, but better */
-export function getLocalStorageGetAndSet(defaults) {
+export function getLocalStorageAndSetter(defaults) {
     objectEntries(defaults).forEach(({ key, value }) => { if (!(key in localStorage)) {
         localStorage[key] = value;
     } });
-    function localStorageGet(key) { return localStorage[key] || defaults[key]; }
     function localStorageSet(key, value) { localStorage[key] = value; }
-    return { localStorageSet, localStorageGet };
+    const myLocalStorage = pick(localStorage, objectKeys(defaults));
+    return { myLocalStorage, localStorageSet };
 }
 /**Margin to make reading logs easier */
 export function logEmptyLine() { console.log(''); } //@btr-ignore

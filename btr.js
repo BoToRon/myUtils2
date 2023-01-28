@@ -33,8 +33,18 @@ import { z } from 'zod';
 _;
 import { fromZodError } from 'zod-validation-error';
 _;
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+export { zValidVariants };
+_; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
+_; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
+_; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
+_; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
+_; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
 export const timers = [];
-const warnings = [];
 const errors = [];
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
@@ -855,13 +865,13 @@ export function getAppLog(window, useStore) {
     });
 }
 /**localStorage, but better */
-export function getLocalStorageGetAndSet(defaults) {
+export function getLocalStorageAndSetter(defaults) {
     objectEntries(defaults).forEach(({ key, value }) => { if (!(key in localStorage)) {
         localStorage[key] = value;
     } });
-    function localStorageGet(key) { return localStorage[key] || defaults[key]; }
     function localStorageSet(key, value) { localStorage[key] = value; }
-    return { localStorageSet, localStorageGet };
+    const myLocalStorage = pick(localStorage, objectKeys(defaults));
+    return { myLocalStorage, localStorageSet };
 }
 /**Margin to make reading logs easier */
 export function logEmptyLine() { console.log(''); } //@btr-ignore
@@ -1139,9 +1149,10 @@ export function getEnviromentVariables() {
 }
 /**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
 export function getSeparatingCommentBlock(message) {
-    let line = message.toLowerCase();
+    let line = '';
+    const asterisks = '*'.repeat(10);
     while (line.length < 100) {
-        line = surroundedString(` ${line} `, '*', 5);
+        line += `${asterisks} ${message.toUpperCase()} ${asterisks}`;
     }
     const theBlock = `_ /${line}/\n`.repeat(5);
     console.log(theBlock); //@btr-ignore
@@ -1213,7 +1224,6 @@ export function npmRun_package(npmCommand) {
     }
     async function cachePackageFilesAndCheckThem() {
         checkCodeThatCouldBeUpdated(await getCachedFiles(['./basicProjectChecks.ts', './btr.ts', './npmRun.ts']));
-        warnings.length ? warnings.forEach(warning => colorLog('yellow', warning)) : successLog('All checks passeds :D');
     }
     function printProcessOver() {
         colorLog('magenta', 'Process over');
