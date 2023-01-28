@@ -1244,8 +1244,8 @@ export function npmRun_package(npmCommand) {
         transpileBaseFiles(async () => {
             const filename = 'btr.ts';
             const indexTs = await fsReadFileAsync(filename);
-            const lines = indexTs.replaceAll('bigConsoleError', 'colorLog').split('\n');
-            selfFilter(lines, (line) => !/DELETETHISFORCLIENT/.test(line));
+            const lines = indexTs.replaceAll('bigConsoleError', 'colorLog').replaceAll('from \'./types', 'from \'../types').split('\n');
+            selfFilter(lines, line => !/DELETETHISFORCLIENT/.test(line));
             const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x));
             lines.splice(cutPoint, lines.length);
             lines.push('const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)'); //@btr-ignore
