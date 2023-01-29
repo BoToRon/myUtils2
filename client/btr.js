@@ -852,12 +852,19 @@ export function getAppLog(window, useStore) {
 }
 /**localStorage, but better */
 export function getLocalStorageAndSetter(defaults) {
-    objectEntries(defaults).forEach(({ key, value }) => { if (!(key in localStorage)) {
-        localStorage[key] = value;
+    const storedInfo = getStoredInfo();
+    objectEntries(defaults).forEach(({ key, value }) => { if (!(key in storedInfo)) {
+        localStorageSet(key, value);
     } });
-    function localStorageSet(key, value) { localStorage[key] = value; }
-    const myLocalStorage = pick(localStorage, objectKeys(defaults));
-    return { myLocalStorage, localStorageSet };
+    return { myLocalStorage: getStoredInfo(), localStorageSet };
+    function getStoredInfo() {
+        return JSON.parse(localStorage['info'] || '{}');
+    }
+    function localStorageSet(key, value) {
+        const storedInfo = getStoredInfo();
+        storedInfo[key] = value;
+        localStorage['info'] = JSON.stringify(storedInfo);
+    }
 }
 /**Margin to make reading logs easier */
 export function logEmptyLine() { console.log(''); } //@btr-ignore

@@ -898,10 +898,20 @@ export function getAppLog<T extends string, useStoreT extends () => btr_trackedV
 }
 /**localStorage, but better */
 export function getLocalStorageAndSetter<T extends Record<string, unknown>>(defaults: T) {
-	objectEntries(defaults).forEach(({ key, value }) => { if (!(key in localStorage)) { localStorage[key as string] = value } })
-	function localStorageSet<K extends keyof T>(key: K, value: T[K]) { localStorage[key as string] = value }
-	const myLocalStorage = pick(localStorage as unknown as T, objectKeys(defaults))
-	return { myLocalStorage, localStorageSet }
+
+	const storedInfo = getStoredInfo()
+	objectEntries(defaults).forEach(({ key, value }) => { if (!(key in storedInfo)) { localStorageSet(key, value) } })
+	return { myLocalStorage: getStoredInfo(), localStorageSet }
+
+	function getStoredInfo() {
+		return JSON.parse(localStorage['info'] || '{}') as T
+	}
+
+	function localStorageSet<K extends keyof T>(key: K, value: T[K]) {
+		const storedInfo = getStoredInfo()
+		storedInfo[key] = value
+		localStorage['info'] = JSON.stringify(storedInfo)
+	}
 }
 /**Margin to make reading logs easier */
 export function logEmptyLine() { console.log('') } //@btr-ignore
@@ -1098,26 +1108,25 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[]) {
 	cachedFiles.forEach(file => {
 		const { filepath, content } = file
 
-		checkReplaceableCode('console.log()', 'logEmptyLine')	//@btr-ignore
-		checkReplaceableCode('console.log(\'\')', 'logEmptyLine')	//@btr-ignore
-		checkReplaceableCode('ReadonlyArray<', 'readonly ')	//@btr-ignore
-		checkReplaceableCode('Object.keys', 'objectKeys')	//@btr-ignore
-		checkReplaceableCode('console.log', 'colorLog')	//@btr-ignore
-		checkReplaceableCode('Readonly<', 'readonly ')	//@btr-ignore
-		checkReplaceableCode('| null', 'nullable')	//@btr-ignore
-		checkReplaceableCode('null |', 'nullable')	//@btr-ignore
-		checkReplaceableCode('null as', 'nullAs')	//@btr-ignore
+		checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine')	//@btr-ignore
+		checkReplaceableCode(['Readonly<', 'ReadonlyArray<'], 'readonly ')	//@btr-ignore
+		checkReplaceableCode(['| null', 'null |'], 'nullable')	//@btr-ignore
+		checkReplaceableCode(['Object.keys'], 'objectKeys')	//@btr-ignore
+		checkReplaceableCode(['console.log'], 'colorLog')	//@btr-ignore
+		checkReplaceableCode(['null as'], 'nullAs')	//@btr-ignore
 
-		function checkReplaceableCode(replaceableCode: string, suggestedReplacement: string) {
-			const withEscapedCharacters = replaceableCode.replace(/(?=\W{1,1})/g, '\\')
-			const theRegex = new RegExp(withEscapedCharacters + '.{0,}', 'gi')
-			const matches = Array(...content.match(theRegex) || [])
+		function checkReplaceableCode(replaceableCodeStrings: string[], suggestedReplacement: string) {
+			replaceableCodeStrings.forEach(replaceableString => {
+				const withEscapedCharacters = replaceableString.replace(/(?=\W{1,1})/g, '\\')
+				const theRegex = new RegExp(withEscapedCharacters + '.{0,}', 'gi')
+				const matches = Array(...content.match(theRegex) || [])
 
-			selfFilter(matches, match => !/@btr-ignore/.test(match))
-			if (!matches.length) { return }
+				selfFilter(matches, match => !/@btr-ignore/.test(match))
+				if (!matches.length) { return }
 
-			colorLog('yellow', surroundedString('WARNING: OUTDATED/REPLACEABLE CODE', '-', 50))
-			console.log({ matches, replaceableCode, suggestedReplacement, filepath }) //@btr-ignore
+				colorLog('yellow', surroundedString('WARNING: OUTDATED/REPLACEABLE CODE', '-', 50))
+				console.log({ matches, replaceableCode: replaceableString, suggestedReplacement, filepath }) //@btr-ignore
+			})
 		}
 	})
 }

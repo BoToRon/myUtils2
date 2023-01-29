@@ -883,10 +883,20 @@ export function getAppLog<T extends string, useStoreT extends () => btr_trackedV
 }
 /**localStorage, but better */
 export function getLocalStorageAndSetter<T extends Record<string, unknown>>(defaults: T) {
-	objectEntries(defaults).forEach(({ key, value }) => { if (!(key in localStorage)) { localStorage[key as string] = value } })
-	function localStorageSet<K extends keyof T>(key: K, value: T[K]) { localStorage[key as string] = value }
-	const myLocalStorage = pick(localStorage as unknown as T, objectKeys(defaults))
-	return { myLocalStorage, localStorageSet }
+
+	const storedInfo = getStoredInfo()
+	objectEntries(defaults).forEach(({ key, value }) => { if (!(key in storedInfo)) { localStorageSet(key, value) } })
+	return { myLocalStorage: getStoredInfo(), localStorageSet }
+
+	function getStoredInfo() {
+		return JSON.parse(localStorage['info'] || '{}') as T
+	}
+
+	function localStorageSet<K extends keyof T>(key: K, value: T[K]) {
+		const storedInfo = getStoredInfo()
+		storedInfo[key] = value
+		localStorage['info'] = JSON.stringify(storedInfo)
+	}
 }
 /**Margin to make reading logs easier */
 export function logEmptyLine() { console.log('') } //@btr-ignore

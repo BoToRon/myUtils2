@@ -866,12 +866,19 @@ export function getAppLog(window, useStore) {
 }
 /**localStorage, but better */
 export function getLocalStorageAndSetter(defaults) {
-    objectEntries(defaults).forEach(({ key, value }) => { if (!(key in localStorage)) {
-        localStorage[key] = value;
+    const storedInfo = getStoredInfo();
+    objectEntries(defaults).forEach(({ key, value }) => { if (!(key in storedInfo)) {
+        localStorageSet(key, value);
     } });
-    function localStorageSet(key, value) { localStorage[key] = value; }
-    const myLocalStorage = pick(localStorage, objectKeys(defaults));
-    return { myLocalStorage, localStorageSet };
+    return { myLocalStorage: getStoredInfo(), localStorageSet };
+    function getStoredInfo() {
+        return JSON.parse(localStorage['info'] || '{}');
+    }
+    function localStorageSet(key, value) {
+        const storedInfo = getStoredInfo();
+        storedInfo[key] = value;
+        localStorage['info'] = JSON.stringify(storedInfo);
+    }
 }
 /**Margin to make reading logs easier */
 export function logEmptyLine() { console.log(''); } //@btr-ignore
@@ -1073,25 +1080,24 @@ export function bigConsoleError(message) {
 export function checkCodeThatCouldBeUpdated(cachedFiles) {
     cachedFiles.forEach(file => {
         const { filepath, content } = file;
-        checkReplaceableCode('console.log()', 'logEmptyLine'); //@btr-ignore
-        checkReplaceableCode('console.log(\'\')', 'logEmptyLine'); //@btr-ignore
-        checkReplaceableCode('ReadonlyArray<', 'readonly '); //@btr-ignore
-        checkReplaceableCode('Object.keys', 'objectKeys'); //@btr-ignore
-        checkReplaceableCode('console.log', 'colorLog'); //@btr-ignore
-        checkReplaceableCode('Readonly<', 'readonly '); //@btr-ignore
-        checkReplaceableCode('| null', 'nullable'); //@btr-ignore
-        checkReplaceableCode('null |', 'nullable'); //@btr-ignore
-        checkReplaceableCode('null as', 'nullAs'); //@btr-ignore
-        function checkReplaceableCode(replaceableCode, suggestedReplacement) {
-            const withEscapedCharacters = replaceableCode.replace(/(?=\W{1,1})/g, '\\');
-            const theRegex = new RegExp(withEscapedCharacters + '.{0,}', 'gi');
-            const matches = Array(...content.match(theRegex) || []);
-            selfFilter(matches, match => !/@btr-ignore/.test(match));
-            if (!matches.length) {
-                return;
-            }
-            colorLog('yellow', surroundedString('WARNING: OUTDATED/REPLACEABLE CODE', '-', 50));
-            console.log({ matches, replaceableCode, suggestedReplacement, filepath }); //@btr-ignore
+        checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine'); //@btr-ignore
+        checkReplaceableCode(['Readonly<', 'ReadonlyArray<'], 'readonly '); //@btr-ignore
+        checkReplaceableCode(['| null', 'null |'], 'nullable'); //@btr-ignore
+        checkReplaceableCode(['Object.keys'], 'objectKeys'); //@btr-ignore
+        checkReplaceableCode(['console.log'], 'colorLog'); //@btr-ignore
+        checkReplaceableCode(['null as'], 'nullAs'); //@btr-ignore
+        function checkReplaceableCode(replaceableCodeStrings, suggestedReplacement) {
+            replaceableCodeStrings.forEach(replaceableString => {
+                const withEscapedCharacters = replaceableString.replace(/(?=\W{1,1})/g, '\\');
+                const theRegex = new RegExp(withEscapedCharacters + '.{0,}', 'gi');
+                const matches = Array(...content.match(theRegex) || []);
+                selfFilter(matches, match => !/@btr-ignore/.test(match));
+                if (!matches.length) {
+                    return;
+                }
+                colorLog('yellow', surroundedString('WARNING: OUTDATED/REPLACEABLE CODE', '-', 50));
+                console.log({ matches, replaceableCode: replaceableString, suggestedReplacement, filepath }); //@btr-ignore
+            });
         }
     });
 }
