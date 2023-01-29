@@ -1387,25 +1387,24 @@ export async function npmRun_project(npmCommand: validNpmCommand_project) {
 	}
 }
 /**Prompt to submit a git commit message and then push */
-export async function prompCommitMessageAndPush(repoName: string) {
+export async function prompCommitMessageAndPush(repoName: string): Promise<boolean> {
 
 	//order matters with these 3
 	const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test)'
 
 	logDetailsForPrompt()
 	const commitMessage = await questionAsPromise(`Enter commit type ${commitTypes} plus a message:`)
-
-	function tryAgain(error: string) { colorLog('yellow', error); prompCommitMessageAndPush(repoName); return }
-	if (!zodCheck_curry(tryAgain)(get_zValidCommitMessage(), commitMessage)) { return }
 	copyToClipboard_server(commitMessage)
-	await gitAddCommitPush()
+
+	if (!zodCheck_curry(tryAgain)(get_zValidCommitMessage(), commitMessage)) { return prompCommitMessageAndPush(repoName) }
+	return await gitAddCommitPush()
 
 	function get_zValidCommitMessage() {
 		const commitRegex = new RegExp(`(?<!.)${commitTypes}:`)
 		return z.string().min(15).max(50).regex(commitRegex, `String must start with ${commitTypes}:`)
 	}
 
-	function gitAddCommitPush() {
+	function gitAddCommitPush(): Promise<boolean> {
 		return new Promise(resolve => {
 			exec('git add .', () => {
 				successLog('git add .')
@@ -1427,6 +1426,11 @@ export async function prompCommitMessageAndPush(repoName: string) {
 			colorLog('green', repoName)
 			logEmptyLine()
 		})
+	}
+
+	function tryAgain(error: string) {
+		colorLog('yellow', error)
+		prompCommitMessageAndPush(repoName)
 	}
 }
 /**Prompts a question in the terminal, awaits for the input and returns it */

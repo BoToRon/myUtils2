@@ -1382,11 +1382,10 @@ export async function prompCommitMessageAndPush(repoName) {
     const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test)';
     logDetailsForPrompt();
     const commitMessage = await questionAsPromise(`Enter commit type ${commitTypes} plus a message:`);
-    function tryAgain(error) { colorLog('yellow', error); prompCommitMessageAndPush(repoName); return; }
-    if (!zodCheck_curry(tryAgain)(get_zValidCommitMessage(), commitMessage)) {
-        return;
-    }
     copyToClipboard_server(commitMessage);
+    if (!zodCheck_curry(tryAgain)(get_zValidCommitMessage(), commitMessage)) {
+        return prompCommitMessageAndPush(repoName);
+    }
     await gitAddCommitPush();
     function get_zValidCommitMessage() {
         const commitRegex = new RegExp(`(?<!.)${commitTypes}:`);
@@ -1413,6 +1412,10 @@ export async function prompCommitMessageAndPush(repoName) {
             colorLog('green', repoName);
             logEmptyLine();
         });
+    }
+    function tryAgain(error) {
+        colorLog('yellow', error);
+        prompCommitMessageAndPush(repoName);
     }
 }
 /**Prompts a question in the terminal, awaits for the input and returns it */
