@@ -143,7 +143,7 @@ function checkFilesAndFolderStructure() {
 		'./test', './TODO.MD',
 
 		'./tsconfig.json', './types/types.d.ts', './types/constants.ts', './types/io.ts', './types/z.ts',
-		'./server/fns.ts', './server/init.ts', './server/io.ts', './server/ref.ts',
+		'./server/fns.ts', './server/init.ts', './server/ioEvents.ts', './server/ref.ts',
 
 		'./client/env.d.ts', './client/index.html', './client/node_modules', './client/package-lock.json', './client/package.json',
 		'./client/tsconfig.config.json', './client/tsconfig.json', './client/vite.config.ts', './client/vue.config.js',
@@ -259,7 +259,7 @@ function checkSocketEvents() {
 	const filepath = './types/io.ts'
 	const linesInTypesIo = (getFromCachedFiles([filepath])[0] as cachedFile).content.split('\n')
 	checkSocketOnOfInterface('ServerToClientEvents', './client/src/socket.ts')
-	checkSocketOnOfInterface('ClientToServerEvents', './server/io.ts')
+	checkSocketOnOfInterface('ClientToServerEvents', './server/ioEvents.ts')
 
 	function checkSocketOnOfInterface(nameOfInterface: string, pathToHandlingFile: string) {
 

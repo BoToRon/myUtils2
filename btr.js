@@ -1235,6 +1235,7 @@ export function npmRun_package(npmCommand) {
         colorLog('magenta', 'Process over');
     }
     async function promptVersioning() {
+        console.trace('promptVersioning');
         function tryAgain(error) { colorLog('yellow', error); promptVersioning(); }
         const versionIncrement = await questionAsPromise('Type of package version increment (major, minor, patch)?');
         if (!zodCheck_curry(tryAgain)(zValidVersionIncrement, versionIncrement)) {
@@ -1386,7 +1387,7 @@ export async function prompCommitMessageAndPush(repoName) {
     if (!zodCheck_curry(tryAgain)(get_zValidCommitMessage(), commitMessage)) {
         return prompCommitMessageAndPush(repoName);
     }
-    await gitAddCommitPush();
+    return await gitAddCommitPush();
     function get_zValidCommitMessage() {
         const commitRegex = new RegExp(`(?<!.)${commitTypes}:`);
         return z.string().min(15).max(50).regex(commitRegex, `String must start with ${commitTypes}:`);

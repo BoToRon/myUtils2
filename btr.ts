@@ -1254,6 +1254,8 @@ export function npmRun_package(npmCommand: validNpmCommand_package) {
 	}
 
 	async function promptVersioning() {
+		console.trace('promptVersioning')
+
 		function tryAgain(error: string) { colorLog('yellow', error); promptVersioning() }
 		const versionIncrement = await questionAsPromise('Type of package version increment (major, minor, patch)?')
 

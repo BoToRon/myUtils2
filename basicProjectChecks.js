@@ -130,7 +130,7 @@ function checkFilesAndFolderStructure() {
         './node_modules', './package-lock.json', './package.json', './README.md',
         './test', './TODO.MD',
         './tsconfig.json', './types/types.d.ts', './types/constants.ts', './types/io.ts', './types/z.ts',
-        './server/fns.ts', './server/init.ts', './server/io.ts', './server/ref.ts',
+        './server/fns.ts', './server/init.ts', './server/ioEvents.ts', './server/ref.ts',
         './client/env.d.ts', './client/index.html', './client/node_modules', './client/package-lock.json', './client/package.json',
         './client/tsconfig.config.json', './client/tsconfig.json', './client/vite.config.ts', './client/vue.config.js',
         './client/src/App.vue', './client/src/assets', './client/src/index.ts', './client/src/socket.ts', './client/src/store.ts',
@@ -243,7 +243,7 @@ function checkSocketEvents() {
     const filepath = './types/io.ts';
     const linesInTypesIo = getFromCachedFiles([filepath])[0].content.split('\n');
     checkSocketOnOfInterface('ServerToClientEvents', './client/src/socket.ts');
-    checkSocketOnOfInterface('ClientToServerEvents', './server/io.ts');
+    checkSocketOnOfInterface('ClientToServerEvents', './server/ioEvents.ts');
     function checkSocketOnOfInterface(nameOfInterface, pathToHandlingFile) {
         const handlingFile = getFromCachedFiles([pathToHandlingFile])[0].content;
         let isKeyOfWantedInterface = false;
