@@ -95,7 +95,7 @@ export function zodCheck_curry(errorHandler = divine.error as messageHandler, st
 	return zodCheck
 }
 /**(generates a function that:) Opens/close a bootstrap-vue modal with zod validation */
-//TODO: delete this (hard to initialize when bvModal is declared after triggerModalWithValidation in the pinia store)
+//TODO: delete this ( hard to initialize when bvModal is declared after triggerModalWithValidation in the pinia store )
 export function triggerModalWithValidation_curry<validModalIds extends string>($bvModal: bvModal) {
 	return async function body(id: validModalIds, action: 'show' | 'hide') {
 
@@ -1451,4 +1451,4 @@ export function zodCheck_socket<T>(socket: Socket, schema: zSchema<T>, data: T) 
 }
 
 export const command_package = process.env['npm_config_command_package'] as validNpmCommand_package
-export const command_project = process.env['npm_config_command_project'] as validNpmCommand_project
+export const command_project = process.env['npm_config_command_project'] as validNpmCommand_project 
