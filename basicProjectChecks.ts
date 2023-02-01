@@ -115,7 +115,7 @@ function checkAllVueComponentsAreTrackeable() {
 function checkClientFilesDontReferenceLocalStorageDirectly() {
 	[clientTsFiles, clientVueFiles].flat().forEach(file => {
 		const { filepath, content } = file
-		if (content.includes('localStorage.')) { addToErrors(`use localStorageGet / Set instead of referencing it directly, at ${filepath}`) }
+		if (content.includes('localStorage.')) { addToErrors(`use getLocalStorageAndSetter instead of referencing it directly, at ${filepath}`) }
 	})
 }
 
@@ -229,7 +229,7 @@ async function checkPackageJson() {
 			nodemon: z.literal('nodemon test/server/init.js'),
 			npmScript: z.literal('node node_modules/@botoron/utils/npmRun.js'),
 			start: z.literal('node test/server/init.js'),
-			test: z.literal('ts-node-esm test.ts'),
+			test: z.literal('ts-node-esm --transpileOnly test.ts'),
 			transpile: z.literal('npm run npmScript --command_project=transpile'),
 			vue: z.literal('cd client & npm run dev'),
 			git: z.literal('npm run npmScript --command_project=git')

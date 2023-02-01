@@ -83,7 +83,7 @@ export function zodCheck_curry(errorHandler = divine.error, strictModeIfObject =
     return zodCheck;
 }
 /**(generates a function that:) Opens/close a bootstrap-vue modal with zod validation */
-//TODO: delete this (hard to initialize when bvModal is declared after triggerModalWithValidation in the pinia store)
+//TODO: delete this ( hard to initialize when bvModal is declared after triggerModalWithValidation in the pinia store )
 export function triggerModalWithValidation_curry($bvModal) {
     return async function body(id, action) {
         if (action === 'show') {
