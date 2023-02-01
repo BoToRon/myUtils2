@@ -529,9 +529,22 @@ export function isOdd(number) { return Boolean(Number(number) % 2); }
 /**@returns whether a number is either the minimum provided, the maximum provided or any number in-between */
 export function isWithinRange(number, max, min) {
     if (min > max) {
-        divine.ping('"min" should not be higher than "max"!');
+        divine.ping('"min" should be lower than "max"!');
     }
     return number <= max && number >= min;
+}
+/**Math.max and Math.min merged into one */
+export function mathMaxMin(max, min, number) {
+    if (min > max) {
+        divine.ping('"min" should be lower than "max"!');
+    }
+    if (number > max) {
+        return max;
+    }
+    if (min > number) {
+        return min;
+    }
+    return number;
 }
 /**@returns a number up to (but not included) provided max, eg: roll(1) will ALWAYS return zero */
 export function roll(maxRoll) { return Math.floor(Math.random() * Number(maxRoll)); }
