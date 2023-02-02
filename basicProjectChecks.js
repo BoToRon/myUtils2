@@ -3,7 +3,7 @@ import fs from 'fs';
 _;
 import { z } from 'zod';
 _;
-import { zMyEnv } from './types/constants.js';
+import { zMyEnv } from './constants/constants.js';
 _;
 _;
 import { getCachedFiles, checkCodeThatCouldBeUpdated, colorLog, compareArrays, getEnviromentVariables, getZodSchemaFromData, importFileFromProject, nullAs, successLog, surroundedString, zodCheck_curry, zRegexGenerator } from './btr.js';
@@ -63,7 +63,7 @@ function asConsecutiveLines(lines) {
     return lines.join('\r\n');
 }
 function checkBasicValidAdminCommands() {
-    checkMatchInSpecificFile('./types/constants.ts', 'export const adminCommands = [\'getSockets\', \'help\', \'ref\',');
+    checkMatchInSpecificFile('./global/vars.ts', 'export const adminCommands = [\'getSockets\', \'help\', \'ref\',');
     checkMatchInSpecificFile('./types/z.ts', 'export const zValidAdminCommands = z.enum(adminCommands)');
 }
 /**Check all the top-level functions in main .ts server files have a description */
@@ -126,14 +126,14 @@ async function checkEslintConfigRules() {
 function checkFilesAndFolderStructure() {
     const currentFilesAndFolders = getFilesAndFoldersNames('.', null);
     const desiredFilesAndFolders = [
-        './.env', './.eslintrc.cjs', './.git', './.gitignore',
-        './node_modules', './package-lock.json', './package.json', './README.md',
-        './test', './TODO.MD',
-        './tsconfig.json', './types/types.d.ts', './types/constants.ts', './types/io.ts', './types/z.ts',
-        './server/fns.ts', './server/init.ts', './server/ioEvents.ts', './server/ref.ts',
+        './dev', './test',
+        './.env', './.eslintrc.cjs', './.git', './.gitignore', './package-lock.json', './package.json', './TODO.md', './tsconfig.json',
+        './server/events.ts', './server/fns.ts', './server/init.ts', './server/ref.ts',
+        './global/fns.ts', './global/vars.ts',
+        './types/types.d.ts', './types/io.ts', './types/z.ts',
         './client/env.d.ts', './client/index.html', './client/node_modules', './client/package-lock.json', './client/package.json',
         './client/tsconfig.config.json', './client/tsconfig.json', './client/vite.config.ts', './client/vue.config.js',
-        './client/src/App.vue', './client/src/assets', './client/src/index.ts', './client/src/socket.ts', './client/src/store.ts',
+        './client/src/App.vue', './client/src/assets', './client/src/index.ts', './client/src/socket.ts', './client/src/store.ts', //client files
     ];
     const missingItems = compareArrays(desiredFilesAndFolders, currentFilesAndFolders).missingItems;
     if (missingItems.length) {
@@ -331,8 +331,8 @@ function checkSpecificMatchesInTypesTs() {
 async function checkUtilsVersion() {
     const latestVersion = await getLatestVersion();
     const installedVersion = (await import('./package.json', { assert: { type: 'json' } })).default.version;
-    const isUpToDate = installedVersion === latestVersion;
-    if (!isUpToDate) {
+    const isOutdated = versionValue(latestVersion) > versionValue(installedVersion);
+    if (isOutdated) {
         errorHandler(`Outdated "utils" package. (${installedVersion} vs ${latestVersion}) PLEASE UPDATE: npm run btr`);
     }
     /**Check if the project is using the latest version of "@botoron/utils" */
@@ -347,6 +347,10 @@ async function checkUtilsVersion() {
             }
         }));
         return response.objects[0].package.version;
+    }
+    function versionValue(version) {
+        const [major, minor, patch] = version.split('.').map(x => Number(x));
+        return (major * 99 * 99) + (minor * 99) + patch;
     }
 }
 async function checkVsCodeSettings() {

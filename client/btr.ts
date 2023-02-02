@@ -18,7 +18,7 @@ import {
 	timer, validChalkColor, validNpmCommand_package, validNpmCommand_project, vueComponentsTracker, zSchema
 } from '../types/types.js'
 _
-import { getUniqueId_generator, isNode, utilsRepoName, zValidVariants, zValidVersionIncrement } from '../types/constants.js'
+import { getUniqueId_generator, isNode, utilsRepoName, zValidVariants, zValidVersionIncrement } from './constants/constants.js'
 _
 import { type Primitive, z, type ZodRawShape, type ZodTypeAny } from 'zod'
 _
@@ -971,4 +971,4 @@ export function getFormattedTimestamp() { doNothing }
 /**@deprecated use "trackVueComponent" instead */
 export function trackVueComponent_curry() { doNothing }
 
-const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)
+export const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)

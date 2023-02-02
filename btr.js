@@ -27,7 +27,7 @@ _;
 import { basicProjectChecks } from './basicProjectChecks.js'; //DELETETHISFORCLIENT
 _;
 _;
-import { getUniqueId_generator, isNode, utilsRepoName, zValidVariants, zValidVersionIncrement } from './types/constants.js';
+import { getUniqueId_generator, isNode, utilsRepoName, zValidVariants, zValidVersionIncrement } from './constants/constants.js';
 _;
 import { z } from 'zod';
 _;
@@ -1270,7 +1270,7 @@ export function npmRun_package(npmCommand) {
             lines.splice(cutPoint, lines.length);
             lines.push('export const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)'); //@btr-ignore
             await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'));
-            exec('tsc --target esnext client/btr.ts ', async () => {
+            exec('tsc --target esnext client/btr.ts', async () => {
                 successLog('browser versions emitted');
                 await delay(500);
                 followUp();

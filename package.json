@@ -13,7 +13,8 @@
 		"check": "npm run npmScript --command_package=check",
 		"_________________________________________________b": "__________________________________________________",
 		"transpile-all": "npm run npmScript --command_package=transpile-all",
-		"transpile": "npm run npmScript --command_package=transpile"
+		"transpile": "npm run npmScript --command_package=transpile",
+		"transpile-safe": "tsc --target esnext npmRun.ts"
 	},
 	"repository": {
 		"type": "git",

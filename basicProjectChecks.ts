@@ -3,7 +3,7 @@ import fs from 'fs'
 _
 import { z } from 'zod'
 _
-import { zMyEnv } from './types/constants.js'
+import { zMyEnv } from './constants/constants.js'
 _
 import { cachedFile, messageHandler, nullable, packageJson, tsConfig } from './types/types.js'
 _
@@ -76,7 +76,7 @@ function asConsecutiveLines(lines: string[]) {
 }
 
 function checkBasicValidAdminCommands() {
-	checkMatchInSpecificFile('./types/constants.ts', 'export const adminCommands = [\'getSockets\', \'help\', \'ref\',')
+	checkMatchInSpecificFile('./global/vars.ts', 'export const adminCommands = [\'getSockets\', \'help\', \'ref\',')
 	checkMatchInSpecificFile('./types/z.ts', 'export const zValidAdminCommands = z.enum(adminCommands)')
 }
 
@@ -138,17 +138,16 @@ function checkFilesAndFolderStructure() {
 	const currentFilesAndFolders = getFilesAndFoldersNames('.', null)
 
 	const desiredFilesAndFolders = [
-		'./.env', './.eslintrc.cjs', './.git', './.gitignore',
-		'./node_modules', './package-lock.json', './package.json', './README.md',
-		'./test', './TODO.MD',
-
-		'./tsconfig.json', './types/types.d.ts', './types/constants.ts', './types/io.ts', './types/z.ts',
-		'./server/fns.ts', './server/init.ts', './server/ioEvents.ts', './server/ref.ts',
+		'./dev', './test',	//folders for generating data and testing the server before building, respectively
+		'./.env', './.eslintrc.cjs', './.git', './.gitignore', './package-lock.json', './package.json', './TODO.md', './tsconfig.json', //solo-files
+		'./server/events.ts', './server/fns.ts', './server/init.ts', './server/ref.ts', //server files
+		'./global/fns.ts', './global/vars.ts', //functions and constants for both server and client
+		'./types/types.d.ts', './types/io.ts', './types/z.ts', //types and schemas
 
 		'./client/env.d.ts', './client/index.html', './client/node_modules', './client/package-lock.json', './client/package.json',
-		'./client/tsconfig.config.json', './client/tsconfig.json', './client/vite.config.ts', './client/vue.config.js',
+		'./client/tsconfig.config.json', './client/tsconfig.json', './client/vite.config.ts', './client/vue.config.js', //required client files
 
-		'./client/src/App.vue', './client/src/assets', './client/src/index.ts', './client/src/socket.ts', './client/src/store.ts',
+		'./client/src/App.vue', './client/src/assets', './client/src/index.ts', './client/src/socket.ts', './client/src/store.ts',  //client files
 	]
 
 	const missingItems = compareArrays(desiredFilesAndFolders, currentFilesAndFolders).missingItems
@@ -347,9 +346,9 @@ function checkSpecificMatchesInTypesTs() {
 async function checkUtilsVersion() {
 	const latestVersion = await getLatestVersion()
 	const installedVersion = (await import('./package.json', { assert: { type: 'json' } })).default.version
-	const isUpToDate = installedVersion === latestVersion
+	const isOutdated = versionValue(latestVersion) > versionValue(installedVersion)
 
-	if (!isUpToDate) { errorHandler(`Outdated "utils" package. (${installedVersion} vs ${latestVersion}) PLEASE UPDATE: npm run btr`) }
+	if (isOutdated) { errorHandler(`Outdated "utils" package. (${installedVersion} vs ${latestVersion}) PLEASE UPDATE: npm run btr`) }
 
 	/**Check if the project is using the latest version of "@botoron/utils" */
 	async function getLatestVersion() {
@@ -361,6 +360,11 @@ async function checkUtilsVersion() {
 			catch { return { objects: [{ package: { version: '0' } }] } }
 		}))
 		return response.objects[0].package.version
+	}
+
+	function versionValue(version: string) {
+		const [major, minor, patch] = version.split('.').map(x => Number(x)) as [number, number, number]
+		return (major * 99 * 99) + (minor * 99) + patch
 	}
 }
 
@@ -433,6 +437,4 @@ function getFromCachedFiles(obligatoryMatches: string[]): cachedFile[] {
 	if (foundFiles.length) { return foundFiles }
 	addToErrors(`No file cached with the requested obligatory matches(${obligatoryMatches}) was found`)
 	return [{ filepath: 'FAILSAFE', content: '' }]
-}
-
-
+} 

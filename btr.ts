@@ -32,7 +32,7 @@ import {
 	timer, validChalkColor, validNpmCommand_package, validNpmCommand_project, vueComponentsTracker, zSchema
 } from './types/types.js'
 _
-import { getUniqueId_generator, isNode, utilsRepoName, zValidVariants, zValidVersionIncrement } from './types/constants.js'
+import { getUniqueId_generator, isNode, utilsRepoName, zValidVariants, zValidVersionIncrement } from './constants/constants.js'
 _
 import { type Primitive, z, type ZodRawShape, type ZodTypeAny } from 'zod'
 _
@@ -1289,7 +1289,7 @@ export function npmRun_package(npmCommand: validNpmCommand_package) {
 
 			await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'))
 
-			exec('tsc --target esnext client/btr.ts ', async () => {
+			exec('tsc --target esnext client/btr.ts', async () => {
 				successLog('browser versions emitted')
 				await delay(500)
 				followUp()

@@ -1,5 +1,5 @@
 let _
-import { zValidNpmCommand_package, zValidNpmCommand_project } from './types/constants.js'
+import { zValidNpmCommand_package, zValidNpmCommand_project } from './constants/constants.js'
 _
 import { command_package, command_project, npmRun_package, npmRun_project, zodCheckAndHandle } from './btr.js'
 _

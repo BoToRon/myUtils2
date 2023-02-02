@@ -14,7 +14,7 @@ _;
 _;
 _;
 _;
-import { getUniqueId_generator, isNode, zValidVariants } from '../types/constants.js';
+import { getUniqueId_generator, isNode, zValidVariants } from './constants/constants.js';
 _;
 import { z } from 'zod';
 _;
@@ -943,4 +943,4 @@ _; /********** DEPRECATED ******************** DEPRECATED ******************** D
 export function getFormattedTimestamp() { doNothing; }
 /**@deprecated use "trackVueComponent" instead */
 export function trackVueComponent_curry() { doNothing; }
-const colorLog = (color, message) => console.log(`%c${message}`, `color: ${color};`);
+export const colorLog = (color, message) => console.log(`%c${message}`, `color: ${color};`);
