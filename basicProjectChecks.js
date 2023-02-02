@@ -211,7 +211,7 @@ async function checkPackageJson() {
             'build-client': z.literal('cd client & npm run build-only'),
             'build-all': z.literal('tsc --target esnext server/init.ts --outDir ../dist & cd client & npm run build-only && cd ..'),
             check: z.literal('npm run npmScript --command_project=check'),
-            localtunnel: z.literal('lt --port 3000'),
+            localtunnel: z.literal('lt --port 5173'),
             nodemon: z.literal('nodemon test/server/init.js'),
             npmScript: z.literal('node node_modules/@botoron/utils/npmRun.js'),
             start: z.literal('node test/server/init.js'),

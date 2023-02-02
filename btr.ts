@@ -1285,7 +1285,7 @@ export function npmRun_package(npmCommand: validNpmCommand_package) {
 
 			const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x))
 			lines.splice(cutPoint, lines.length)
-			lines.push('const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)') //@btr-ignore
+			lines.push('export const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)') //@btr-ignore
 
 			await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'))
 
