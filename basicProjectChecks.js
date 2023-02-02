@@ -135,7 +135,7 @@ function checkFilesAndFolderStructure() {
         './client/tsconfig.config.json', './client/tsconfig.json', './client/vite.config.ts', './client/vue.config.js',
         './client/src/App.vue', './client/src/assets', './client/src/index.ts', './client/src/socket.ts', './client/src/store.ts', //client files
     ];
-    const missingItems = compareArrays(desiredFilesAndFolders, currentFilesAndFolders).missingItems;
+    const { missingItems } = compareArrays(desiredFilesAndFolders, currentFilesAndFolders);
     if (missingItems.length) {
         addToErrors(`The following files / directories are missing: [${missingItems.join(', ')}]`);
     }
@@ -243,7 +243,7 @@ function checkSocketEvents() {
     const filepath = './types/io.ts';
     const linesInTypesIo = getFromCachedFiles([filepath])[0].content.split('\n');
     checkSocketOnOfInterface('ServerToClientEvents', './client/src/socket.ts');
-    checkSocketOnOfInterface('ClientToServerEvents', './server/ioEvents.ts');
+    checkSocketOnOfInterface('ClientToServerEvents', './server/events.ts');
     function checkSocketOnOfInterface(nameOfInterface, pathToHandlingFile) {
         const handlingFile = getFromCachedFiles([pathToHandlingFile])[0].content;
         let isKeyOfWantedInterface = false;
@@ -265,7 +265,7 @@ function checkSocketEvents() {
             if (handlingFile.includes(`socket.on('${event}'`)) {
                 return;
             }
-            addToErrors(`${nameOfInterface}.${event} is declared but not handled in ${pathToHandlingFile}`);
+            addToErrors(`${nameOfInterface}'s ${event} is declared but not handled in ${pathToHandlingFile}`);
         });
     }
 }
@@ -391,9 +391,11 @@ async function fillCachedFiles() {
     const clientTsFilePaths = getFilesAndFoldersNames('./client/src', '.ts');
     const serverTsFilePaths = getFilesAndFoldersNames('./server', '.ts');
     const typeFilePaths = getFilesAndFoldersNames('./types', '.ts');
+    const globalVars = './global/vars.ts';
     const gitIgnore = './.gitignore';
     cachedFiles.push(...await getCachedFiles([
-        clientTsFilePaths, clientVueFilePaths, gitIgnore, serverTsFilePaths, tsConfigs, typeFilePaths, vueDevFiles
+        clientTsFilePaths, clientVueFilePaths, gitIgnore, globalVars,
+        serverTsFilePaths, tsConfigs, typeFilePaths, vueDevFiles
     ].flat()));
 }
 /**Get all the file and folders within a folder, stopping at predefined folders */
@@ -402,7 +404,7 @@ function getFilesAndFoldersNames(directory, extension) {
     fs.readdirSync(directory).forEach((file) => {
         file = directory + '/' + file;
         const stat = fs.statSync(file);
-        const stopHere = /node_modules|git|test|assets/.test(file);
+        const stopHere = /node_modules|dev|git|test|assets/.test(file);
         if (stat && stat.isDirectory() && !stopHere) {
             results.push(...getFilesAndFoldersNames(file, null));
         }
