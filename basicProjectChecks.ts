@@ -5,11 +5,11 @@ import { z } from 'zod'
 _
 import { zMyEnv } from './constants/constants.js'
 _
-import { cachedFile, messageHandler, nullable, packageJson, tsConfig } from './types/types.js'
+import { cachedFile, messageHandler, nullable, packageJson, tsConfig, zSchema } from './types/types.js'
 _
 import {
 	getCachedFiles, checkCodeThatCouldBeUpdated, colorLog, compareArrays, getEnviromentVariables, getZodSchemaFromData,
-	importFileFromProject, nullAs, successLog, surroundedString, zodCheck_curry, zRegexGenerator
+	importFileFromProject, nullAs, successLog, surroundedString, zodCheck_curry, zRegexGenerator, fsReadFileAsync
 } from './btr.js'
 _
 
@@ -23,14 +23,17 @@ const clientTsFiles: cachedFile[] = []
 const serverTsFiles: cachedFile[] = []
 const typeFiles: cachedFile[] = []
 
-const zodCheck_toErrors = zodCheck_curry(addToErrors)
+function zodCheck_toErrors<T>(path: string, schema: zSchema<T>, data: T) {
+	zodCheck_curry((error: string) => addToErrors(path, error))(schema, data)
+}
 
 _//TODO: an schema for ref's esqueleton? (temp, debug, debugLog, devOrProd, socket)
 _//TODO: check "ref.ts" matches (getDebugOptions, mongoCollection)
 
-export function addToErrors(error: string) {
-	errors.push(error)
+export function addToErrors(path: string, error: string) {
+	errors.push(`(at ${path}): ${error}`)
 }
+
 /** Check the version of @botoron/utils, the enviroment variables and various config files */
 export async function basicProjectChecks(errHandler: messageHandler) {
 	errorHandler = errHandler
@@ -55,7 +58,7 @@ export async function basicProjectChecks(errHandler: messageHandler) {
 		checkImportsAreFromTheRightBtrFile(),
 		checkInitTsCallsRefTsAndIoTs(),
 		checkLocalImportsHaveJsExtention(),
-		checkPackageJson(),
+		checkPackageJsons(),
 		checkSocketEvents(),
 		checkTsConfigCompilerOptions(),
 		checkServerAndClientFilesLogTheirInitialization(),
@@ -99,7 +102,7 @@ function checkAllExportedFunctionsAreDescribed() {
 		}, [] as string[])
 
 		if (!uncommentedTopLevelFunctions.length) { return }
-		addToErrors(`Uncommented exported function ${surroundedString(`(in (${file})`, ' ', 10)} [${uncommentedTopLevelFunctions.join(', ')}]`)
+		addToErrors(file.path, `Uncommented exported functions [${uncommentedTopLevelFunctions.join(', ')}]`)
 	})
 }
 
@@ -108,28 +111,28 @@ function checkAllVueComponentsAreTrackeable() {
 	if (DEV_OR_PROD !== 'DEV') { return true }
 	clientVueFiles.forEach(file => {
 		const wantedMatch = 'trackVueComponent(' //) <--here to not mess with the colour of parentheses
-		if (!file.content.includes(wantedMatch)) { addToErrors(`${file} must include "${wantedMatch}"`) }
+		if (!file.content.includes(wantedMatch)) { addToErrors(file.path, `${file} must include "${wantedMatch}"`) }
 	})
 }
 
 function checkClientFilesDontReferenceLocalStorageDirectly() {
 	[clientTsFiles, clientVueFiles].flat().forEach(file => {
-		const { filepath, content } = file
-		if (content.includes('localStorage.')) { addToErrors(`use getLocalStorageAndSetter instead of referencing it directly, at ${filepath}`) }
+		const { path, content } = file
+		if (content.includes('localStorage.')) { addToErrors(path, 'use getLocalStorageAndSetter instead of referencing it directly') }
 	})
 }
 
 /**Check if all the desired enviroment keys are defined */
 function checkEnviromentVariables() {
-	zodCheck_curry(addToErrors, false)(zMyEnv, getEnviromentVariables())
+	zodCheck_curry((error: string) => addToErrors('.env', error), false)(zMyEnv, getEnviromentVariables())
 }
 
 /**Check the rules in a project's eslint config file all fit the established schema */
 async function checkEslintConfigRules() {
-	const pathToUtilsEslint = './.eslintrc.cjs'
-	const desiredEslintConfig = (await import(pathToUtilsEslint)).default
+	const filepath = './.eslintrc.cjs'
+	const desiredEslintConfig = (await import(filepath)).default
 	const eslintConfingOfProject = await importFileFromProject('.eslintrc', 'cjs')
-	zodCheck_toErrors(getZodSchemaFromData(desiredEslintConfig), eslintConfingOfProject)
+	zodCheck_toErrors(filepath, getZodSchemaFromData(desiredEslintConfig), eslintConfingOfProject)
 }
 
 /**Check the structure of the project */
@@ -151,7 +154,8 @@ function checkFilesAndFolderStructure() {
 	]
 
 	const { missingItems } = compareArrays(desiredFilesAndFolders, currentFilesAndFolders)
-	if (missingItems.length) { addToErrors(`The following files / directories are missing: [${missingItems.join(', ')}]`) }
+	if (!missingItems.length) { return }
+	addToErrors('checks.checkFilesAndFolderStructure', `The following files/directories are missing: [${missingItems.join(', ')}]`)
 }
 
 /**Check all files/folders that should be ignored by default are so */
@@ -160,7 +164,7 @@ function checkGitIgnore() {
 	const desiredIgnores = ['.env', 'client/node_modules', 'node_modules', 'test/*']
 	const missingItems = compareArrays(desiredIgnores, currentIgnores).missingItems
 
-	if (missingItems.length) { addToErrors(`.gitignore must include the following: [${missingItems.join(', ')}]`) }
+	if (missingItems.length) { addToErrors('.gitignore', `Must include the following: [${missingItems.join(', ')}]`) }
 }
 
 function checkImportsAreFromTheRightBtrFile() {
@@ -168,15 +172,15 @@ function checkImportsAreFromTheRightBtrFile() {
 	serverTsFiles.forEach(file => doCheck('server', file))
 
 	function doCheck(filetype: 'server' | 'client', file: cachedFile) {
-		const { filepath, content } = file
+		const { path, content } = file
 		if (!content.includes('@botoron/utils')) { return }
 
 		if (filetype === 'server' && content.includes('@botoron/utils/client')) {
-			return addToErrors('Server file should not be exporting from @botoron/utils/client, at: ' + filepath)
+			return addToErrors(path, 'Server file should not be exporting from @botoron/utils/client')
 		}
 
 		if (filetype === 'client' && !content.includes('@botoron/utils/client/btr.js')) {
-			return addToErrors('Client file should be exporting from @botoron/utils/client/btr.js at: ' + filepath)
+			return addToErrors(path, 'Client file should be exporting from @botoron/utils/client/btr.js')
 		}
 	}
 }
@@ -187,28 +191,47 @@ function checkInitTsCallsRefTsAndIoTs() {
 
 function checkLocalImportsHaveJsExtention() {
 	[serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
-		const { filepath, content } = file
+		const { path, content } = file
 		const localImports = content.match(/from '\..{1,}/g)
 		if (!localImports) { return }
 
 		localImports.forEach(match => {
 			if (match.includes('.js\'')) { return }
 			if (match.includes('.vue\'')) { return }
-			addToErrors(`Local import(${match}) is missing.js at the end, at: ${filepath}`)
+			addToErrors(path, `Local import(${match}) is missing.js at the end`)
 		})
 	})
 }
 
-function checkMatchInSpecificFile(file: string, wantedMatch: string) {
-	const { content } = (getFromCachedFiles([file])[0] as cachedFile)
-	if (!content.includes(wantedMatch)) { addToErrors(`"${surroundedString(wantedMatch, ' ', 10)}" is missing, at(${file})`) }
+function checkMatchInSpecificFile(filepath: string, wantedMatch: string) {
+	const { content } = (getFromCachedFiles([filepath])[0] as cachedFile)
+	if (!content.includes(wantedMatch)) { addToErrors(filepath, `"${surroundedString(wantedMatch, ' ', 10)}" is missing)`) }
 }
 
 /**Check the scripts in a project's package json all fit the established schema */
-async function checkPackageJson() {
-	const packageJsonOfProject = (<packageJson>await importFileFromProject('package', 'json'))
+async function checkPackageJsons() {
+	const packageJsonOfProjectRoot = (<packageJson>await importFileFromProject('package', 'json'))
+	const packageJsonOfProjectClient = (<packageJson>await importFileFromProject('client/package', 'json'))
 
-	const desiredPackageJsonSchema = z.object({
+	const desiredPackageJsonClientSchema = z.object({
+		name: z.string(),
+		version: z.string(),
+		scripts: z.object({
+			dev: z.literal('vite'),
+			build: z.literal('vite')
+		}).strict(),
+		dependencies: z.object({
+			'bootstrap-vue': z.string(),
+			'chart.js': z.string(),
+			'chartjs-adapter-date-fns': z.string(),
+			'date-fns': z.string(),
+			pinia: z.string(),
+			vue: z.string(),
+			'vue-chartjs': z.string(),
+		}),
+	})
+
+	const desiredPackageJsonRootSchema = z.object({
 		name: z.string().regex(...zRegexGenerator(/-(src|dist)$/, false)),
 		author: z.literal('BoToRon'),
 		description: z.string().min(10),
@@ -221,7 +244,7 @@ async function checkPackageJson() {
 			btr: z.literal('npm i @botoron/utils'),
 			'btr-u': z.literal('npm uninstall @botoron/utils'),
 			'build-server': z.literal('npm run npmScript --command_project=build'),
-			'build-client': z.literal('cd client & npm run build-only'),
+			'build-client': z.literal('cd client & npm run build'),
 			'build-all': z.literal('tsc --target esnext server/init.ts --outDir ../dist & cd client & npm run build-only && cd ..'),
 			check: z.literal('npm run npmScript --command_project=check'),
 			localtunnel: z.literal('lt --port 5173'),
@@ -250,7 +273,8 @@ async function checkPackageJson() {
 		})
 	})
 
-	zodCheck_toErrors(desiredPackageJsonSchema, packageJsonOfProject)
+	zodCheck_toErrors('./client/package.json', desiredPackageJsonClientSchema, packageJsonOfProjectClient)
+	zodCheck_toErrors('./package.json', desiredPackageJsonRootSchema, packageJsonOfProjectRoot)
 }
 
 /**Check all socket events are handled aka socket.on(<EVENTNAME>) */
@@ -274,18 +298,19 @@ function checkSocketEvents() {
 			const event = (line.match(/(?<=\t)\w{1,}/) || [''])[0]
 
 			if (handlingFile.includes(`socket.on('${event}'`)) { return }
-			addToErrors(`${nameOfInterface}'s ${event} is declared but not handled in ${pathToHandlingFile}`)
+			errors.push(`${nameOfInterface}'s " ${event} " is declared but not handled in ${pathToHandlingFile}`)
 		})
 	}
 }
 
 /**Check the rules in a project's ts config file all fit the established schema */
 function checkTsConfigCompilerOptions() {
+	const tsConfigJsonOfProject = './tsconfig.json'
 	const desiredTsConfig = getTsConfigJson('./node_modules/@botoron/utils/tsconfig.json')
-	const usedTsConfig = getTsConfigJson('./tsconfig.json')
-
+	const usedTsConfig = getTsConfigJson(tsConfigJsonOfProject)
 	const zSchema = getZodSchemaFromData(desiredTsConfig)
-	zodCheck_toErrors(zSchema, usedTsConfig)
+
+	zodCheck_toErrors(tsConfigJsonOfProject, zSchema, usedTsConfig)
 
 	/**Get the ts config file of the main project */
 	function getTsConfigJson(filepath: string) {
@@ -301,9 +326,9 @@ function checkTsConfigCompilerOptions() {
 
 function checkServerAndClientFilesLogTheirInitialization() {
 	[serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
-		const { filepath, content } = file
-		const wantedMatch = `logInitialization('${filepath}')`
-		if (!content.includes(wantedMatch)) { addToErrors(`"${surroundedString(wantedMatch, ' ', 10)}" is missing`) }
+		const { path, content } = file
+		const wantedMatch = `logInitialization('${path}')`
+		if (!content.includes(wantedMatch)) { addToErrors(path, `"${surroundedString(wantedMatch, ' ', 10)}" is missing`) }
 	})
 }
 
@@ -377,28 +402,29 @@ async function checkVsCodeSettings() {
 		'workbench.colorCustomizations': z.object({}),
 	})
 
-	zodCheck_toErrors(desiredVsSettings, vsSettingsOfProject)
+	zodCheck_toErrors('.vscode/settings.json', desiredVsSettings, vsSettingsOfProject)
 }
 
 /**Turn off that damn skipLibCheck that comes on by default */
 async function checkVueDevFiles() {
-
 	if (DEV_OR_PROD !== 'DEV') { return true }
 
 	await Promise.all([
-		readVueFile('vue.config.js', 'export const devServer = { proxy: \'http://localhost:\' + process.env.port }'),
-		readVueFile('vite.config.ts', 'optimizeDeps: { exclude: [\'node_modules/@botoron/utils\'], },'),
-		readVueFile('vue.config.js', 'export const assetsDir = resolve(__dirname, \'../assets\')'),
-		readVueFile('node_modules/@vue/tsconfig/tsconfig.json', '"skipLibCheck": false'),
-		readVueFile('env.d.ts', '/// <reference types="../types/types" />'),
+		checkTsConfigConfigJson('env.d.ts'),
+		checkTsConfigConfigJson('tsconfig.config.json'),
+		checkTsConfigConfigJson('tsconfig.json'),
+		checkTsConfigConfigJson('vite.config.ts'),
+		checkTsConfigConfigJson('vue.config.js')
 	])
 
-	function readVueFile(clientSlash: string, mustMatch: string) {
+	async function checkTsConfigConfigJson(clientSlash: string) {
 		const path = './client/' + clientSlash
+		const pathToBtrVersion = 'node_modules/@botoron/utils/templateFiles' + clientSlash
 		const file = getFromCachedFiles([path])[0] as cachedFile
 
-		if (file.content.includes(mustMatch)) { return true }
-		addToErrors(`file(${path})     must include: ${mustMatch}`)
+		const sampleFile = await fsReadFileAsync(pathToBtrVersion)
+		if (file.content === sampleFile) { return true }
+		addToErrors(path, 'File should be identical to the one at ' + pathToBtrVersion)
 	}
 }
 
@@ -431,12 +457,12 @@ function getFilesAndFoldersNames(directory: string, extension: nullable<'.ts' | 
 		else { results.push(file) }
 	})
 
-	return extension ? results.filter(filepath => filepath.includes(extension)) : results
+	return extension ? results.filter(path => path.includes(extension)) : results
 }
 
 function getFromCachedFiles(obligatoryMatches: string[]): cachedFile[] {
-	const foundFiles = cachedFiles.filter(file => obligatoryMatches.every(match => file.filepath.includes(match)))
+	const foundFiles = cachedFiles.filter(file => obligatoryMatches.every(match => file.path.includes(match)))
 	if (foundFiles.length) { return foundFiles }
-	addToErrors(`No file cached with the requested obligatory matches(${obligatoryMatches}) was found`)
-	return [{ filepath: 'FAILSAFE', content: '' }]
+	addToErrors('checks.getFromCachedFiles', `No file cached with the requested obligatory matches(${obligatoryMatches}) was found`)
+	return [{ path: 'FAILSAFE', content: '' }]
 } 

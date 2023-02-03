@@ -40,7 +40,7 @@ export type packageJson = { name: string, version: string, scripts: { [key: stri
 export type vueComponentsTracker<T extends string> = Record<T, btr_trackedVueComponent[]>
 export type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
 export type bvModal = { show: (id: string) => void, hide: (id: string) => void }
-export type cachedFile = { filepath: string, content: string }
+export type cachedFile = { path: string, content: string }
 export type messageHandler = (message: string) => void
 export type arrayPredicate<T> = (arg1: T) => boolean
 export type pipe_persistent_type<T> = (arg: T) => T

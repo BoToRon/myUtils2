@@ -1086,8 +1086,8 @@ export async function getCachedFiles(filepaths: string[]) {
 
 	for await (const filepath of filepaths) {
 		if (!fileExists(filepath)) { addToErrors(`File not found at '${filepath}'`); continue }
-		if (cachedFiles.some(x => x.filepath === filepath)) { addToErrors(`File readed more than once by fsReadFileAsync: >>> (${filepath}) << <`) }
-		cachedFiles.push({ filepath, content: await fsReadFileAsync(filepath) })
+		if (cachedFiles.some(x => x.path === filepath)) { addToErrors(`File readed more than once by fsReadFileAsync: >>> (${filepath}) << <`) }
+		cachedFiles.push({ path: filepath, content: await fsReadFileAsync(filepath) })
 	}
 
 	return cachedFiles
@@ -1113,7 +1113,7 @@ export function bigConsoleError(message: string) {
 /**Basically custom ESlint warnings */
 export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[]) {
 	cachedFiles.forEach(file => {
-		const { filepath, content } = file
+		const { path, content } = file
 
 		checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine')	//@btr-ignore
 		checkReplaceableCode(['Readonly<', 'ReadonlyArray<'], 'readonly ')	//@btr-ignore
@@ -1132,7 +1132,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[]) {
 				if (!matches.length) { return }
 
 				colorLog('yellow', surroundedString('WARNING: OUTDATED/REPLACEABLE CODE', '-', 50))
-				console.log({ matches, replaceableCode: replaceableString, suggestedReplacement, filepath }) //@btr-ignore
+				console.log({ matches, replaceableCode: replaceableString, suggestedReplacement, path }) //@btr-ignore
 			})
 		}
 	})

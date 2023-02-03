@@ -1,0 +1,21 @@
+{
+	"extends": "@vue/tsconfig/tsconfig.web.json",
+	"compilerOptions": {
+		"baseUrl": ".",
+		"paths": {
+			"@/*": [
+				"./src/*"
+			]
+		}
+	},
+	"include": [
+		"env.d.ts.txt",
+		"src/**/*",
+		"src/**/*.vue"
+	],
+	"references": [
+		{
+			"path": "./tsconfig.config.json"
+		}
+	]
+}
