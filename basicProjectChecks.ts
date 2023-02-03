@@ -410,14 +410,14 @@ async function checkVueDevFiles() {
 	if (DEV_OR_PROD !== 'DEV') { return true }
 
 	await Promise.all([
-		checkTsConfigConfigJson('env.d.ts'),
-		checkTsConfigConfigJson('tsconfig.config.json'),
-		checkTsConfigConfigJson('tsconfig.json'),
-		checkTsConfigConfigJson('vite.config.ts'),
-		checkTsConfigConfigJson('vue.config.js')
+		compareFileToTemplate('env.d.ts'),
+		compareFileToTemplate('tsconfig.config.json'),
+		compareFileToTemplate('tsconfig.json'),
+		compareFileToTemplate('vite.config.ts'),
+		compareFileToTemplate('vue.config.js')
 	])
 
-	async function checkTsConfigConfigJson(clientSlash: string) {
+	async function compareFileToTemplate(clientSlash: string) {
 		const path = './client/' + clientSlash
 		const pathToBtrVersion = 'node_modules/@botoron/utils/templateFiles' + clientSlash
 		const file = getFromCachedFiles([path])[0] as cachedFile
