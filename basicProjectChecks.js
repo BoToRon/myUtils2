@@ -202,9 +202,10 @@ async function checkPackageJsons() {
     const desiredPackageJsonClientSchema = z.object({
         name: z.string(),
         version: z.string(),
+        devDependencies: z.object({}),
         scripts: z.object({
             dev: z.literal('vite'),
-            build: z.literal('vite')
+            build: z.literal('vite build')
         }).strict(),
         dependencies: z.object({
             'bootstrap-vue': z.string(),
@@ -400,17 +401,17 @@ async function checkVueDevFiles() {
     ]);
     async function compareFileToTemplate(clientSlash) {
         const path = './client/' + clientSlash;
-        const pathToBtrVersion = 'node_modules/@botoron/utils/templateFiles' + clientSlash;
+        const pathToTemplate = 'node_modules/@botoron/utils/templateFiles/' + clientSlash;
         const file = getFromCachedFiles([path])[0];
-        const sampleFile = await fsReadFileAsync(pathToBtrVersion);
-        if (file.content === sampleFile) {
+        const sampleFile = await fsReadFileAsync(pathToTemplate);
+        if (withoutSlash_r_n(file.content) === withoutSlash_r_n(sampleFile)) {
             return true;
         }
-        addToErrors(path, 'File should be identical to the one at ' + pathToBtrVersion);
+        addToErrors(path, 'File should be identical to the one at ' + pathToTemplate);
+        function withoutSlash_r_n(content) { return content.replace(/\r|\n/g, ''); }
     }
 }
 async function fillCachedFiles() {
-    const vueDevFiles = ['env.d.ts', 'node_modules/@vue/tsconfig/tsconfig.json', 'vite.config.ts', 'vue.config.js'].map(x => './client/' + x);
     const tsConfigs = ['./node_modules/@botoron/utils/tsconfig.json', './tsconfig.json'];
     const clientVueFilePaths = getFilesAndFoldersNames('./client/src', '.vue');
     const clientTsFilePaths = getFilesAndFoldersNames('./client/src', '.ts');
@@ -418,6 +419,10 @@ async function fillCachedFiles() {
     const typeFilePaths = getFilesAndFoldersNames('./types', '.ts');
     const globalVars = './global/vars.ts';
     const gitIgnore = './.gitignore';
+    const vueDevFiles = [
+        'env.d.ts', 'node_modules/@vue/tsconfig/tsconfig.json', 'tsconfig.config.json',
+        'tsconfig.json', 'vite.config.ts', 'vue.config.js'
+    ].map(x => './client/' + x);
     cachedFiles.push(...await getCachedFiles([
         clientTsFilePaths, clientVueFilePaths, gitIgnore, globalVars,
         serverTsFilePaths, tsConfigs, typeFilePaths, vueDevFiles
