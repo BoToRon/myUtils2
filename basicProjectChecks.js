@@ -205,7 +205,7 @@ async function checkPackageJsons() {
         devDependencies: z.object({}),
         scripts: z.object({
             dev: z.literal('vite'),
-            build: z.literal('vite build')
+            build: z.literal('vite build --emptyOutDir')
         }).strict(),
         dependencies: z.object({
             'bootstrap-vue': z.string(),

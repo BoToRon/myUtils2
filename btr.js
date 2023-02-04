@@ -1232,11 +1232,11 @@ export function npmRun_package(npmCommand) {
     if (npmCommand === 'check') {
         return;
     }
+    if (npmCommand === 'transpile-base') {
+        transpileBaseFiles(printProcessOver);
+    }
     if (npmCommand === 'transpile-all') {
         transpileAllFiles(printProcessOver);
-    }
-    if (npmCommand === 'transpile') {
-        transpileBaseFiles(printProcessOver);
     }
     if (npmCommand === 'all') {
         transpileAllFiles(promptVersioning);
@@ -1264,7 +1264,11 @@ export function npmRun_package(npmCommand) {
         transpileBaseFiles(async () => {
             const filename = 'btr.ts';
             const indexTs = await fsReadFileAsync(filename);
-            const lines = indexTs.replaceAll('bigConsoleError', 'colorLog').replaceAll('from \'./types', 'from \'../types').split('\n');
+            const lines = indexTs.
+                replaceAll('from \'./constants', 'from \'../constants').
+                replaceAll('from \'./types', 'from \'../types').
+                replaceAll('bigConsoleError', 'colorLog').
+                split('\n');
             selfFilter(lines, line => !/DELETETHISFORCLIENT/.test(line));
             const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x));
             lines.splice(cutPoint, lines.length);
@@ -1335,7 +1339,6 @@ export async function npmRun_project(npmCommand) {
             await copyFileToDis('.env');
             await copyFileToDis('.gitignore');
             await copyFileToDis('package.json'); //TODO: make it so the "-src" in the name is replaced with "-dist"
-            await copyFileToDis('types.js');
             exec(`tsc --target esnext server/init.ts server/io.ts --outDir ${serverFolder_dist}`, async () => {
                 await checkDevPropsOfRef(serverFolder_dist + '/server/' + fileWithRef + '.js', true);
                 successLog('(server) Build sucessful!');
@@ -1374,19 +1377,19 @@ export async function npmRun_project(npmCommand) {
 	`);
                 }
             }
-        }
-        async function transpileTypesFile() {
-            return await new Promise(resolve => {
-                fsReadFileAsync('types.d.ts').then(typesFile => {
-                    fsWriteFileAsync('types.ts', typesFile).then(() => {
-                        exec('tsc --target esnext types.ts', () => {
-                            successLog('types.d.ts transpiled to root folder!');
-                            fs.unlinkSync('types.ts');
-                            delay(1000).then(() => resolve(true));
+            async function transpileTypesFile() {
+                return await new Promise(resolve => {
+                    fsReadFileAsync('types.d.ts').then(typesFile => {
+                        fsWriteFileAsync('types.ts', typesFile).then(() => {
+                            exec('tsc --target esnext types.ts', () => {
+                                successLog('types.d.ts transpiled to root folder!');
+                                fs.unlinkSync('types.ts');
+                                delay(1000).then(() => resolve(true));
+                            });
                         });
                     });
                 });
-            });
+            }
         }
     }
 }

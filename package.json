@@ -12,8 +12,8 @@
 		"all": "npm run npmScript --command_package=all & npm publish",
 		"check": "npm run npmScript --command_package=check",
 		"_________________________________________________b": "__________________________________________________",
+		"transpile-base": "npm run npmScript --command_package=transpile-base",
 		"transpile-all": "npm run npmScript --command_package=transpile-all",
-		"transpile": "npm run npmScript --command_package=transpile",
 		"transpile-safe": "tsc --target esnext npmRun.ts"
 	},
 	"repository": {
