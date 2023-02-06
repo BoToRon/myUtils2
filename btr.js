@@ -1444,9 +1444,14 @@ export async function questionAsPromise(question) {
 }
 /**Check the user input in socket.on functions and send error toasts if the validation fails */
 export function zodCheck_socket(socket, schema, data) {
-    const caller = ((getTraceableStack('', 'z').split('\n') || [])[3]?.match(/at \w{1,}/) || ['at <unable to identify function caller>'])[0];
-    function errorHandler(error) { socket.emit('toast', '💀', `${error} - - - (${caller}, ${{ ...schema._def }})`, 'danger'); }
     return zodCheck_curry(errorHandler)(schema, data);
+    function caller() {
+        return ((getTraceableStack('', 'zodCheck_socket').split('\n') || [])[3]?.match(/at \w{1,}/) ||
+            ['at <unable to identify function caller>'])[0];
+    }
+    function errorHandler(error) {
+        socket.emit('toast', '💀', `${error} - - - (${caller()}, ${{ ...schema._def }})`, 'danger');
+    }
 }
 export const command_package = process.env['npm_config_command_package'];
 export const command_project = process.env['npm_config_command_project'];

@@ -20,8 +20,6 @@ const typeFiles = [];
 function zodCheck_toErrors(path, schema, data) {
     zodCheck_curry((error) => addToErrors(path, error))(schema, data);
 }
-_; //TODO: an schema for ref's esqueleton? (temp, debug, debugLog, devOrProd, socket)
-_; //TODO: check "ref.ts" matches (getDebugOptions, mongoCollection)
 export function addToErrors(path, error) {
     errors.push(`(at ${path}): ${error}`);
 }
@@ -48,6 +46,7 @@ export async function basicProjectChecks(errHandler) {
         checkInitTsCallsRefTsAndIoTs(),
         checkLocalImportsHaveJsExtention(),
         checkPackageJsons(),
+        checkServerRefTs(),
         checkSocketEvents(),
         checkTsConfigCompilerOptions(),
         checkServerAndClientFilesLogTheirInitialization(),
@@ -260,6 +259,25 @@ async function checkPackageJsons() {
     });
     zodCheck_toErrors('./client/package.json', desiredPackageJsonClientSchema, packageJsonOfProjectClient);
     zodCheck_toErrors('./package.json', desiredPackageJsonRootSchema, packageJsonOfProjectRoot);
+}
+/**Check the properties and initialization of server/ref.ts */
+function checkServerRefTs() {
+    [
+        'const mongoClient = await getMongoClient()',
+        'const devOrProd = \'dev\' as \'dev\' | \'prod\'',
+        'const { debugOptions: debug, debugLog } = getDebugOptionsAndLog(devOrProd, {',
+        'export const ref = {',
+        'temp: {} as Record<string, unknown>, //for admin-debugging purposes',
+        'debug, debugLog, devOrProd,',
+        'sockets: [] as serverSocket[],',
+        'alert: { message: \'\', show: false } as globalAlert,',
+        'DB_misc: mongoCollection(\'misc\'),',
+        'pageVisits: (await mongoCollection(\'misc\').findOne({}) as unknown as mongoMisc).pageVisits,',
+        asConsecutiveLines([
+            '/**Shorthand for mongoClient.db(DATABASE).collection(COLLECTION) */',
+            'function mongoCollection(name: string) { return mongoClient.db('
+        ])
+    ].forEach(line => checkMatchInSpecificFile('./server/ref.ts', line));
 }
 /**Check all socket events are handled aka socket.on(<EVENTNAME>) */
 function checkSocketEvents() {

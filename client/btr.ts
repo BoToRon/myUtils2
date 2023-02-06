@@ -811,7 +811,7 @@ export function copyToClipboard(x: unknown) { isNode ? copyToClipboard_server(x)
 /**(Message) 💀 */
 export function errorLog(message: string) { return colorLog('red', message + ' 💀') }
 /**TODO: describe me */
-export function getTraceableStack(error: string | Error, type: string) {
+export function getTraceableStack(error: string | Error, type: 'debugLog' | 'divineError' | 'killTimer' | 'zodCheck_socket') {
 	const { stack } = (typeof error === 'string' ? new Error(error) : error)
 	return `${stack}`.
 		replace(/\(node:3864\).{0,}\n.{0,}exit code./, '').

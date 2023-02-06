@@ -826,7 +826,7 @@ export function copyToClipboard(x: unknown) { isNode ? copyToClipboard_server(x)
 /**(Message) 💀 */
 export function errorLog(message: string) { return colorLog('red', message + ' 💀') }
 /**TODO: describe me */
-export function getTraceableStack(error: string | Error, type: string) {
+export function getTraceableStack(error: string | Error, type: 'debugLog' | 'divineError' | 'killTimer' | 'zodCheck_socket') {
 	const { stack } = (typeof error === 'string' ? new Error(error) : error)
 	return `${stack}`.
 		replace(/\(node:3864\).{0,}\n.{0,}exit code./, '').
@@ -1455,9 +1455,18 @@ export async function questionAsPromise(question: string) {
 
 /**Check the user input in socket.on functions and send error toasts if the validation fails */
 export function zodCheck_socket<T>(socket: Socket, schema: zSchema<T>, data: T) {
-	const caller = ((getTraceableStack('', 'z').split('\n') || [])[3]?.match(/at \w{1,}/) || ['at <unable to identify function caller>'])[0]
-	function errorHandler(error: string) { socket.emit('toast', '💀', `${error} - - - (${caller}, ${{ ...schema._def }})`, 'danger') }
 	return zodCheck_curry(errorHandler)(schema, data)
+
+	function caller() {
+		return (
+			(getTraceableStack('', 'zodCheck_socket').split('\n') || [])[3]?.match(/at \w{1,}/) ||
+			['at <unable to identify function caller>']
+		)[0]
+	}
+
+	function errorHandler(error: string) {
+		socket.emit('toast', '💀', `${error} - - - (${caller()}, ${{ ...schema._def }})`, 'danger')
+	}
 }
 
 export const command_package = process.env['npm_config_command_package'] as validNpmCommand_package
