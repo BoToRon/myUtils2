@@ -1470,4 +1470,15 @@ export function zodCheck_socket<T>(socket: Socket, schema: zSchema<T>, data: T) 
 }
 
 export const command_package = process.env['npm_config_command_package'] as validNpmCommand_package
-export const command_project = process.env['npm_config_command_project'] as validNpmCommand_project 
+export const command_project = process.env['npm_config_command_project'] as validNpmCommand_project
+
+export function clientSocketLongOnAny(
+	socket: { onAny: (arg0: (eventName: string, ...args: unknown[]) => void) => void },
+	socketEvents: btr_socketEventInfo[]
+) {
+	socket.onAny((eventName: string, ...args: unknown[]) => {
+		const eventInfo: btr_socketEventInfo = { event: eventName, timestamp: Date.now(), data: args }
+		colorLog('red', stringify(eventInfo))
+		socketEvents.unshift(eventInfo)
+	})
+}

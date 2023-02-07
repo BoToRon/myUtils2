@@ -2,9 +2,9 @@
 
 module.exports = {
 	env: { browser: true, es2021: true, node: true },
-	plugins: ['vue', '@typescript-eslint',], //'jsdoc'
+	plugins: ['vue', '@typescript-eslint', 'sonarjs'], //'jsdoc'
 
-	extends: ['eslint:recommended', 'plugin:vue/vue3-essential', 'plugin:@typescript-eslint/recommended'],
+	extends: ['eslint:recommended', 'plugin:vue/vue3-essential', 'plugin:@typescript-eslint/recommended', 'plugin:sonarjs/recommended'],
 	parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
 	parser: '@typescript-eslint/parser',
 

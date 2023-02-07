@@ -13,6 +13,9 @@ import {
 } from './btr.js'
 _
 
+function zodCheck_toErrors<T>(path: string, schema: zSchema<T>, data: T) { zodCheck_curry((e: string) => addToErrors(path, e))(schema, data) }
+function addToErrors(path: string, error: string) { errors.push(`(at ${path}): ${error}`) }
+
 const errors: string[] = []
 const warnings: string[] = []
 const cachedFiles: cachedFile[] = []
@@ -22,14 +25,6 @@ const clientVueFiles: cachedFile[] = []
 const clientTsFiles: cachedFile[] = []
 const serverTsFiles: cachedFile[] = []
 const typeFiles: cachedFile[] = []
-
-function zodCheck_toErrors<T>(path: string, schema: zSchema<T>, data: T) {
-	zodCheck_curry((error: string) => addToErrors(path, error))(schema, data)
-}
-
-export function addToErrors(path: string, error: string) {
-	errors.push(`(at ${path}): ${error}`)
-}
 
 /** Check the version of @botoron/utils, the enviroment variables and various config files */
 export async function basicProjectChecks(errHandler: messageHandler) {
@@ -42,34 +37,40 @@ export async function basicProjectChecks(errHandler: messageHandler) {
 	serverTsFiles.push(...getFromCachedFiles(['./server', '.ts']))
 	typeFiles.push(...getFromCachedFiles(['./types', '.ts']))
 
-	await Promise.all([
-		checkAllExportedFunctionsAreDescribed(),
-		checkAllVueComponentsAreTrackeable(),
-		checkBasicValidAdminCommands(),
-		checkClientFilesDontReferenceLocalStorageDirectly(),
-		checkCodeThatCouldBeUpdated([serverTsFiles, clientTsFiles, clientVueFiles].flat()),
-		checkEnviromentVariables(),
-		checkEslintConfigRules(),
-		checkFilesAndFolderStructure(),
-		checkGitIgnore(),
-		checkImportsAreFromTheRightBtrFile(),
-		checkInitTsCallsRefTsAndIoTs(),
-		checkLocalImportsHaveJsExtention(),
-		checkPackageJsons(),
-		checkServerRefTs(),
-		checkSocketEvents(),
-		checkTsConfigCompilerOptions(),
-		checkServerAndClientFilesLogTheirInitialization(),
-		checkSpecificMatchesInTypesIoTs(),
-		checkSpecificMatchesInTypesTs(),
-		checkUtilsVersion(),
-		checkVsCodeSettings(),
-		checkVueDevFiles(),
-	])
+	await allPromises()
 
 	errors.length ? errorHandler('\n\n' + errors.join('\n\n') + '\n\n') : successLog('all basicProjectChecks passed')
 	warnings.forEach(warning => colorLog('yellow', warning))
 	return !errors.length
+
+	function allPromises() {
+		return Promise.all([
+			checkAllExportedFunctionsAreDescribed(),
+			checkAllVueComponentsAreTrackeable(),
+			checkBasicValidAdminCommands(),
+			checkClientFilesDontReferenceLocalStorageDirectly(),
+			checkClientStoreTs(),
+			checkCodeThatCouldBeUpdated([serverTsFiles, clientTsFiles, clientVueFiles].flat()),
+			checkEnviromentVariables(),
+			checkEslintConfigRules(),
+			checkFilesAndFolderStructure(),
+			checkGitIgnore(),
+			checkImportsAreFromTheRightBtrFile(),
+			checkInitTsCallsRefTsAndIoTs(),
+			checkLocalImportsHaveJsExtention(),
+			checkPackageJsons(),
+			checkServerEventsTs(),
+			checkServerRefTs(),
+			checkSocketEvents(),
+			checkTsConfigCompilerOptions(),
+			checkServerAndClientFilesLogTheirInitialization(),
+			checkSpecificMatchesInTypesIoTs(),
+			checkSpecificMatchesInTypesTs(),
+			checkUtilsVersion(),
+			checkVsCodeSettings(),
+			checkVueDevFiles(),
+		])
+	}
 }
 
 function asConsecutiveLines(lines: string[]) {
@@ -116,8 +117,42 @@ function checkAllVueComponentsAreTrackeable() {
 function checkClientFilesDontReferenceLocalStorageDirectly() {
 	[clientTsFiles, clientVueFiles].flat().forEach(file => {
 		const { path, content } = file
-		if (content.includes('localStorage.')) { addToErrors(path, 'use getLocalStorageAndSetter instead of referencing it directly') }
+		if (!content.includes('localStorage.')) { return }
+		addToErrors(path, 'use updateStoreAndLocalStorageKey (with updateStoreAndLocalStorageKey) instead of referencing localStorage directly')
 	})
+}
+
+function checkClientSocketTs() {
+	[
+		asConsecutiveLines([
+			'export const socket: clientSocket = import.meta.env.PROD ? io() : io(\'http://localhost:3000/\')',
+			'if (import.meta.env.DEV) { clientSocketLongOnAny(socket, useStore().socketEvents) }'
+		]),
+		asConsecutiveLines([
+			'socket.on(\'autoLogin\', () => useStore().login())',
+			'socket.on(\'globalAlert\', globalAlert => useStore().globalAlert = globalAlert)',
+			'socket.on(\'initInfo\','
+		])
+	].forEach(x => checkMatchInSpecificFile('./client/src/socket.ts', x))
+}
+
+function checkClientStoreTs() {
+	[
+		asConsecutiveLines([
+			'declare global {',
+			'\tinterface Window {',
+			'appLog: ReturnType<typeof getAppLog>',
+			'vueComponents: Record<'
+		]),
+		'const { myLocalStorage, localStorageSet } = getLocalStorageAndSetter({',
+		asConsecutiveLines([
+			'\t\tupdateStoreAndLocalStorageKey<K extends keyof T, T extends typeof myLocalStorage>(key: K, value: T[K]) {',
+			'\t\t\t//@ts-expect-error ts doesn\'t automatically realize all keys of myLocalStorage also are present in useStore()',
+			'\t\t\tuseStore()[key] = value; localStorageSet(key, value)',
+			'\t\t},'
+		]),
+		'getAppLog(window as never, useStore as never)',
+	].forEach(x => checkMatchInSpecificFile('./client/src/store.ts', x))
 }
 
 /**Check if all the desired enviroment keys are defined */
@@ -276,12 +311,29 @@ async function checkPackageJsons() {
 	zodCheck_toErrors('./package.json', desiredPackageJsonRootSchema, packageJsonOfProjectRoot)
 }
 
+function checkServerEventsTs() {
+	[
+		asConsecutiveLines([
+			'io.on(\'connection\', x => {',
+			'\tconst socket = x as serverSocket',
+			'\tref.DB_misc.updateOne({}, { $inc: { pageVisits: 1 } }).then(() => ref.pageVisits++)',
+			'socket.onAny(args => ref.debugLog(\'logSocketOnAny\', { args }))',
+			'ref.debugLog(\'logWhenSocketConnects\', { id: x.id })',
+		]),
+		'export const ioInitialized = true'
+	].forEach(line => checkMatchInSpecificFile('./server/ref.ts', line))
+}
+
 /**Check the properties and initialization of server/ref.ts */
 function checkServerRefTs() {
 	[
 		'const mongoClient = await getMongoClient()',
 		'const devOrProd = \'dev\' as \'dev\' | \'prod\'',
-		'const { debugOptions: debug, debugLog } = getDebugOptionsAndLog(devOrProd, {',
+		asConsecutiveLines([
+			'const { debugOptions: debug, debugLog } = getDebugOptionsAndLog(devOrProd, {',
+			'\tlogSocketOnAny: [true, false],',
+			'\tlogWhenSocketConnects: [true, false],'
+		]),
 		'export const ref = {',
 		'temp: {} as Record<string, unknown>, //for admin-debugging purposes',
 		'debug, debugLog, devOrProd,',
