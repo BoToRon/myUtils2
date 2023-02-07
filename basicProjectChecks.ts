@@ -5,26 +5,36 @@ import { z } from 'zod'
 _
 import { zMyEnv } from './constants/constants.js'
 _
-import { cachedFile, messageHandler, nullable, packageJson, tsConfig, zSchema } from './types/types.js'
+import { cachedFile, messageHandler, nullable, packageJson, zSchema } from './types/types.js'
 _
 import {
-	getCachedFiles, checkCodeThatCouldBeUpdated, colorLog, compareArrays, getEnviromentVariables, getZodSchemaFromData,
-	importFileFromProject, nullAs, successLog, surroundedString, zodCheck_curry, zRegexGenerator, fsReadFileAsync
+	getCachedFiles, checkCodeThatCouldBeUpdated, compareArrays, getEnviromentVariables, importFileFromProject,
+	nullAs, successLog, surroundedString, zodCheck_curry, zRegexGenerator, fsReadFileAsync
 } from './btr.js'
 _
 
 function zodCheck_toErrors<T>(path: string, schema: zSchema<T>, data: T) { zodCheck_curry((e: string) => addToErrors(path, e))(schema, data) }
 function addToErrors(path: string, error: string) { errors.push(`(at ${path}): ${error}`) }
+function inBtrUtils(path: string) { return './node_modules/@botoron/utils/' + path }
+
+let errorHandler = <messageHandler>nullAs()
+let DEV_OR_PROD = <'DEV' | 'PROD'>nullAs()
+
+const GITIGNORE = './.gitignore'
+const CLIENT_SRC = './client/src'
+const TYPES_IO_TS = './types/io.ts'
+const ESLINT_CJS = './.eslintrc.cjs'
+const GLOBAL_VARS = './global/vars.ts'
+const SERVER_REF_TS = './server/ref.ts'
+const TSCONFIG_JSON = './tsconfig.json'
+const CLIENT_SRC_SOCKET = CLIENT_SRC + '/socket.ts'
 
 const errors: string[] = []
-const warnings: string[] = []
 const cachedFiles: cachedFile[] = []
-let DEV_OR_PROD = <'DEV' | 'PROD'>nullAs()
-let errorHandler = <messageHandler>nullAs()
+
 const clientVueFiles: cachedFile[] = []
 const clientTsFiles: cachedFile[] = []
 const serverTsFiles: cachedFile[] = []
-const typeFiles: cachedFile[] = []
 
 /** Check the version of @botoron/utils, the enviroment variables and various config files */
 export async function basicProjectChecks(errHandler: messageHandler) {
@@ -32,40 +42,41 @@ export async function basicProjectChecks(errHandler: messageHandler) {
 	DEV_OR_PROD = getEnviromentVariables().DEV_OR_PROD
 	await fillCachedFiles()
 
-	clientVueFiles.push(...getFromCachedFiles(['./client/src', '.vue']))
-	clientTsFiles.push(...getFromCachedFiles(['./client/src', '.ts']))
+	clientVueFiles.push(...getFromCachedFiles([CLIENT_SRC, '.vue']))
+	clientTsFiles.push(...getFromCachedFiles([CLIENT_SRC, '.ts']))
 	serverTsFiles.push(...getFromCachedFiles(['./server', '.ts']))
-	typeFiles.push(...getFromCachedFiles(['./types', '.ts']))
 
 	await allPromises()
 
 	errors.length ? errorHandler('\n\n' + errors.join('\n\n') + '\n\n') : successLog('all basicProjectChecks passed')
-	warnings.forEach(warning => colorLog('yellow', warning))
 	return !errors.length
 
 	function allPromises() {
+
+		checkBasicValidAdminCommands()
+		checkClientFilesDontReferenceLocalStorageDirectly()
+		checkClientSocketTs()
+		checkClientStoreTs()
+		checkEnviromentVariables()
+		checkFilesAndFolderStructure()
+		checkGitIgnore()
+		checkImportsAreFromTheRightBtrFile()
+		checkInitTsCallsRefTsAndIoTs()
+		checkLocalImportsHaveJsExtention()
+		checkServerEventsTs()
+		checkServerRefTs()
+		checkSocketEvents()
+		checkServerAndClientFilesLogTheirInitialization()
+		checkSpecificMatchesInTypesIoTs()
+		checkSpecificMatchesInTypesTs()
+
 		return Promise.all([
 			checkAllExportedFunctionsAreDescribed(),
 			checkAllVueComponentsAreTrackeable(),
-			checkBasicValidAdminCommands(),
-			checkClientFilesDontReferenceLocalStorageDirectly(),
-			checkClientStoreTs(),
 			checkCodeThatCouldBeUpdated([serverTsFiles, clientTsFiles, clientVueFiles].flat()),
-			checkEnviromentVariables(),
-			checkEslintConfigRules(),
-			checkFilesAndFolderStructure(),
-			checkGitIgnore(),
-			checkImportsAreFromTheRightBtrFile(),
-			checkInitTsCallsRefTsAndIoTs(),
-			checkLocalImportsHaveJsExtention(),
+			checkFilesAreIdentical(ESLINT_CJS, inBtrUtils(ESLINT_CJS)),
+			checkFilesAreIdentical(TSCONFIG_JSON, inBtrUtils(TSCONFIG_JSON)),
 			checkPackageJsons(),
-			checkServerEventsTs(),
-			checkServerRefTs(),
-			checkSocketEvents(),
-			checkTsConfigCompilerOptions(),
-			checkServerAndClientFilesLogTheirInitialization(),
-			checkSpecificMatchesInTypesIoTs(),
-			checkSpecificMatchesInTypesTs(),
 			checkUtilsVersion(),
 			checkVsCodeSettings(),
 			checkVueDevFiles(),
@@ -78,7 +89,7 @@ function asConsecutiveLines(lines: string[]) {
 }
 
 function checkBasicValidAdminCommands() {
-	checkMatchInSpecificFile('./global/vars.ts', 'export const adminCommands = [\'getSockets\', \'help\', \'ref\',')
+	checkMatchInSpecificFile(GLOBAL_VARS, 'export const adminCommands = [\'getSockets\', \'help\', \'ref\',')
 	checkMatchInSpecificFile('./types/z.ts', 'export const zValidAdminCommands = z.enum(adminCommands)')
 }
 
@@ -133,7 +144,7 @@ function checkClientSocketTs() {
 			'socket.on(\'globalAlert\', globalAlert => useStore().globalAlert = globalAlert)',
 			'socket.on(\'initInfo\','
 		])
-	].forEach(x => checkMatchInSpecificFile('./client/src/socket.ts', x))
+	].forEach(x => checkMatchInSpecificFile(CLIENT_SRC_SOCKET, x))
 }
 
 function checkClientStoreTs() {
@@ -160,12 +171,13 @@ function checkEnviromentVariables() {
 	zodCheck_curry((error: string) => addToErrors('.env', error), false)(zMyEnv, getEnviromentVariables())
 }
 
-/**Check the rules in a project's eslint config file all fit the established schema */
-async function checkEslintConfigRules() {
-	const filepath = './.eslintrc.cjs'
-	const desiredEslintConfig = (await import(filepath)).default
-	const eslintConfingOfProject = await importFileFromProject('.eslintrc', 'cjs')
-	zodCheck_toErrors(filepath, getZodSchemaFromData(desiredEslintConfig), eslintConfingOfProject)
+async function checkFilesAreIdentical(path: string, pathToTemplate: string) {
+	const file = getFromCachedFiles([path])[0] as cachedFile
+	const sampleFile = await fsReadFileAsync(pathToTemplate)
+	if (withoutSlash_r_n(file.content) === withoutSlash_r_n(sampleFile)) { return true }
+
+	addToErrors(path, 'File should be identical to the one at ' + pathToTemplate)
+	function withoutSlash_r_n(content: string) { return content.replace(/\r|\n/g, '') }
 }
 
 /**Check the structure of the project */
@@ -175,15 +187,15 @@ function checkFilesAndFolderStructure() {
 
 	const desiredFilesAndFolders = [
 		'./dev', './test',	//folders for generating data and testing the server before building, respectively
-		'./.env', './.eslintrc.cjs', './.git', './.gitignore', './package-lock.json', './package.json', './TODO.md', './tsconfig.json', //solo-files
-		'./server/events.ts', './server/fns.ts', './server/init.ts', './server/ref.ts', //server files
-		'./global/fns.ts', './global/vars.ts', //functions and constants for both server and client
-		'./types/types.d.ts', './types/io.ts', './types/z.ts', //types and schemas
+		ESLINT_CJS, GITIGNORE, TSCONFIG_JSON, './.env', './.git', './package-lock.json', './package.json', './TODO.md', //solo-files
+		SERVER_REF_TS, './server/events.ts', './server/fns.ts', './server/init.ts',  //server files
+		GLOBAL_VARS, './global/fns.ts',  //functions and constants for both server and client
+		TYPES_IO_TS, './types/types.d.ts', './types/z.ts', //types and schemas
 
 		'./client/env.d.ts', './client/index.html', './client/node_modules', './client/package-lock.json', './client/package.json',
 		'./client/tsconfig.config.json', './client/tsconfig.json', './client/vite.config.ts', './client/vue.config.js', //required client files
 
-		'./client/src/App.vue', './client/src/assets', './client/src/index.ts', './client/src/socket.ts', './client/src/store.ts',  //client files
+		CLIENT_SRC_SOCKET, './client/src/App.vue', './client/src/assets', './client/src/index.ts', './client/src/store.ts',  //client files
 	]
 
 	const { missingItems } = compareArrays(desiredFilesAndFolders, currentFilesAndFolders)
@@ -193,7 +205,7 @@ function checkFilesAndFolderStructure() {
 
 /**Check all files/folders that should be ignored by default are so */
 function checkGitIgnore() {
-	const currentIgnores = (getFromCachedFiles(['./.gitignore'])[0] as cachedFile).content.split('\r\n')
+	const currentIgnores = (getFromCachedFiles([GITIGNORE])[0] as cachedFile).content.split('\r\n')
 	const desiredIgnores = ['.env', 'client/node_modules', 'node_modules', 'test/*']
 	const missingItems = compareArrays(desiredIgnores, currentIgnores).missingItems
 
@@ -321,7 +333,7 @@ function checkServerEventsTs() {
 			'ref.debugLog(\'logWhenSocketConnects\', { id: x.id })',
 		]),
 		'export const ioInitialized = true'
-	].forEach(line => checkMatchInSpecificFile('./server/ref.ts', line))
+	].forEach(line => checkMatchInSpecificFile(SERVER_REF_TS, line))
 }
 
 /**Check the properties and initialization of server/ref.ts */
@@ -344,14 +356,14 @@ function checkServerRefTs() {
 		asConsecutiveLines([
 			'/**Shorthand for mongoClient.db(DATABASE).collection(COLLECTION) */',
 			'function mongoCollection(name: string) { return mongoClient.db('])
-	].forEach(line => checkMatchInSpecificFile('./server/ref.ts', line))
+	].forEach(line => checkMatchInSpecificFile(SERVER_REF_TS, line))
 }
 
 /**Check all socket events are handled aka socket.on(<EVENTNAME>) */
 function checkSocketEvents() {
-	const filepath = './types/io.ts'
+	const filepath = TYPES_IO_TS
 	const linesInTypesIo = (getFromCachedFiles([filepath])[0] as cachedFile).content.split('\n')
-	checkSocketOnOfInterface('ServerToClientEvents', './client/src/socket.ts')
+	checkSocketOnOfInterface('ServerToClientEvents', CLIENT_SRC_SOCKET)
 	checkSocketOnOfInterface('ClientToServerEvents', './server/events.ts')
 
 	function checkSocketOnOfInterface(nameOfInterface: string, pathToHandlingFile: string) {
@@ -370,27 +382,6 @@ function checkSocketEvents() {
 			if (handlingFile.includes(`socket.on('${event}'`)) { return }
 			errors.push(`${nameOfInterface}'s " ${event} " is declared but not handled in ${pathToHandlingFile}`)
 		})
-	}
-}
-
-/**Check the rules in a project's ts config file all fit the established schema */
-function checkTsConfigCompilerOptions() {
-	const tsConfigJsonOfProject = './tsconfig.json'
-	const desiredTsConfig = getTsConfigJson('./node_modules/@botoron/utils/tsconfig.json')
-	const usedTsConfig = getTsConfigJson(tsConfigJsonOfProject)
-	const zSchema = getZodSchemaFromData(desiredTsConfig)
-
-	zodCheck_toErrors(tsConfigJsonOfProject, zSchema, usedTsConfig)
-
-	/**Get the ts config file of the main project */
-	function getTsConfigJson(filepath: string) {
-		return JSON.parse(
-			(getFromCachedFiles([filepath])[0] as cachedFile).
-				content.
-				replace(/\/(\/|\*).{1,}/g, '').
-				replace(/(\n|\r|\t)/g, '').
-				replace(', }', ' }') //{ { <-- commented here to keep the colour of brackets the same
-		) as tsConfig
 	}
 }
 
@@ -413,7 +404,7 @@ function checkSpecificMatchesInTypesIoTs() {
 			'export const io = new Server<ClientToServerEvents, ServerToClientEvents>(getStartedHttpServer(), { cors: { origin: \'*\' } })',
 			'export interface serverSocket extends socket_server<ClientToServerEvents, ServerToClientEvents'
 		])
-	].forEach(event => checkMatchInSpecificFile('./types/io.ts', event))
+	].forEach(event => checkMatchInSpecificFile(TYPES_IO_TS, event))
 }
 
 function checkSpecificMatchesInTypesTs() {
@@ -479,44 +470,29 @@ async function checkVsCodeSettings() {
 async function checkVueDevFiles() {
 	if (DEV_OR_PROD !== 'DEV') { return true }
 
-	await Promise.all([
-		compareFileToTemplate('env.d.ts'),
-		compareFileToTemplate('tsconfig.config.json'),
-		compareFileToTemplate('tsconfig.json'),
-		compareFileToTemplate('vite.config.ts'),
-		compareFileToTemplate('vue.config.js')
-	])
-
-	async function compareFileToTemplate(clientSlash: string) {
-		const path = './client/' + clientSlash
-		const pathToTemplate = 'node_modules/@botoron/utils/templateFiles/' + clientSlash
-		const file = getFromCachedFiles([path])[0] as cachedFile
-
-		const sampleFile = await fsReadFileAsync(pathToTemplate)
-		if (withoutSlash_r_n(file.content) === withoutSlash_r_n(sampleFile)) { return true }
-		addToErrors(path, 'File should be identical to the one at ' + pathToTemplate)
-
-		function withoutSlash_r_n(content: string) { return content.replace(/\r|\n/g, '') }
-	}
+	await Promise.all(['env.d.ts', 'tsconfig.config.json', 'tsconfig.json', 'vite.config.ts', 'vue.config.js'].map(filename => {
+		const fullpath = './client/' + filename
+		const pathToTemplate = 'node_modules/@botoron/utils/templateFiles/' + filename
+		return checkFilesAreIdentical(fullpath, pathToTemplate)
+	}))
 }
 
 async function fillCachedFiles() {
-	const tsConfigs = ['./node_modules/@botoron/utils/tsconfig.json', './tsconfig.json']
-	const clientVueFilePaths = getFilesAndFoldersNames('./client/src', '.vue')
-	const clientTsFilePaths = getFilesAndFoldersNames('./client/src', '.ts')
+	const clientVueFilePaths = getFilesAndFoldersNames(CLIENT_SRC, '.vue')
+	const clientTsFilePaths = getFilesAndFoldersNames(CLIENT_SRC, '.ts')
 	const serverTsFilePaths = getFilesAndFoldersNames('./server', '.ts')
 	const typeFilePaths = getFilesAndFoldersNames('./types', '.ts')
-	const globalVars = './global/vars.ts'
-	const gitIgnore = './.gitignore'
+	const tsConfigs = [inBtrUtils(TSCONFIG_JSON), TSCONFIG_JSON]
+	const eslintConfigs = [inBtrUtils(ESLINT_CJS), ESLINT_CJS]
 
 	const vueDevFiles = [
 		'env.d.ts', 'node_modules/@vue/tsconfig/tsconfig.json', 'tsconfig.config.json',
 		'tsconfig.json', 'vite.config.ts', 'vue.config.js'
 	].map(x => './client/' + x)
 
-	cachedFiles.push(...await getCachedFiles([
-		clientTsFilePaths, clientVueFilePaths, gitIgnore, globalVars,
-		serverTsFilePaths, tsConfigs, typeFilePaths, vueDevFiles
+	cachedFiles.push(...await getCachedFiles(errors, [
+		clientTsFilePaths, clientVueFilePaths, eslintConfigs, GITIGNORE,
+		GLOBAL_VARS, serverTsFilePaths, tsConfigs, typeFilePaths, vueDevFiles
 	].flat()))
 }
 

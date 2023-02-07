@@ -57,7 +57,7 @@ _ /********** CONSTANTS ******************** CONSTANTS ******************** CONS
 _ /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
 
 export const timers: timer[] = []
-const errors: string[] = []
+const PACKAGE_DOT_JSON = 'package.json'
 
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
@@ -237,7 +237,7 @@ export function multiMap<
 	F4 extends (x: T) => ReturnType<F4>,
 	F5 extends (x: T) => ReturnType<F5>,
 >(arr: T[], f1: F1, f2: F2, f3 = doNothing as F3, f4 = doNothing as F4, f5 = doNothing as F5) {
-	const maps = arr.reduce((acc, item) => {
+	return arr.reduce((acc, item) => {
 		acc.map1.push(f1(item))
 		acc.map2.push(f2(item))
 		acc.map3.push(f3(item))
@@ -251,7 +251,6 @@ export function multiMap<
 		map4: [] as ReturnType<F4>[],
 		map5: [] as ReturnType<F5>[],
 	})
-	return maps
 }
 /*Remove a single item from an array, or all copies of that item if its a primitive value and return the removedCount */
 export function removeItem<T>(arr: T[], item: T) { return selfFilter(arr, (x: T) => x !== item).removedCount }
@@ -526,6 +525,7 @@ export function formatDate(timestamp: number,
 			case 'medium': return { dateStyle: 'medium' }
 			case 'long': return { dateStyle: 'long' }
 			case 'hourOnly': return { timeStyle: 'short' }
+			// eslint-disable-next-line sonarjs/no-duplicate-string
 			case 'medium+hour': return { dateStyle: 'medium', timeStyle: 'short' }
 			case 'short+hour': return { dateStyle: 'short', timeStyle: 'short' }
 			case 'long+hour': return { dateStyle: 'long', timeStyle: 'short' }
@@ -1080,7 +1080,7 @@ _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY *************
 _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 
 /**Batch-load files for checking purposes */
-export async function getCachedFiles(filepaths: string[]) {
+export async function getCachedFiles(errors: string[], filepaths: string[]) {
 
 	const cachedFiles: cachedFile[] = []
 
@@ -1156,14 +1156,12 @@ export async function downloadFile_node(filename: string, fileFormat: '.txt' | '
 /**Wrapper for fs.promise.readFile that announces the start of the file-reading */
 export async function fsReadFileAsync(filePath: string) {
 	colorLog('white', `reading '${filePath}'..`)
-	const file = await fs.promises.readFile(filePath, 'utf8')
-	return file
+	return await fs.promises.readFile(filePath, 'utf8')
 }
 /**Wrapper for fsWriteFileAsync that announces the start of the file-writing */
 export async function fsWriteFileAsync(filePath: string, content: string) {
 	colorLog('white', `writing to '${filePath}'..`)
-	const file = await fs.promises.writeFile(filePath, content)
-	return file
+	return await fs.promises.writeFile(filePath, content)
 }
 /**For a project's debugging purposes */
 export function getDebugOptionsAndLog<K extends string>(devOrProd: 'dev' | 'prod', options: Record<K, [boolean, boolean]>) {
@@ -1253,7 +1251,7 @@ export function npmRun_package(npmCommand: validNpmCommand_package) {
 	if (npmCommand === 'all') { transpileAllFiles(promptVersioning) }
 
 	async function cachePackageFilesAndCheckThem() {
-		checkCodeThatCouldBeUpdated(await getCachedFiles(['./basicProjectChecks.ts', './btr.ts', './npmRun.ts']))
+		checkCodeThatCouldBeUpdated(await getCachedFiles([], ['./basicProjectChecks.ts', './btr.ts', './npmRun.ts']))
 	}
 
 	function printProcessOver() {
@@ -1310,6 +1308,8 @@ export function npmRun_package(npmCommand: validNpmCommand_package) {
 	}
 }
 /**Run convenient scripts for and from a project's root folder */
+//TODO: delete the rule-disabling below and move this function into its own file
+// eslint-disable-next-line sonarjs/cognitive-complexity 
 export async function npmRun_project(npmCommand: validNpmCommand_project) {
 	await basicProjectChecks(divine.error)
 	if (npmCommand === 'check') { return }
@@ -1337,7 +1337,7 @@ export async function npmRun_project(npmCommand: validNpmCommand_project) {
 
 		function transpileServerFilesToTestFolder() {
 			exec(`tsc --target esnext server/init.ts --outDir ${serverFolder_src}`, async () => {
-				const packageJson = await fsReadFileAsync('package.json')
+				const packageJson = await fsReadFileAsync(PACKAGE_DOT_JSON)
 				await fsWriteFileAsync('test/package.json', packageJson)
 				successLog(`files transpiled to ${serverFolder_src}`)
 			})
@@ -1348,7 +1348,7 @@ export async function npmRun_project(npmCommand: validNpmCommand_project) {
 			await transpileTypesFile()
 			await copyFileToDis('.env')
 			await copyFileToDis('.gitignore')
-			await copyFileToDis('package.json') //TODO: make it so the "-src" in the name is replaced with "-dist"
+			await copyFileToDis(PACKAGE_DOT_JSON) //TODO: make it so the "-src" in the name is replaced with "-dist"
 
 			exec(`tsc --target esnext server/init.ts server/io.ts --outDir ${serverFolder_dist}`, async () => {
 				await checkDevPropsOfRef(serverFolder_dist + '/server/' + fileWithRef + '.js', true)
@@ -1370,7 +1370,7 @@ export async function npmRun_project(npmCommand: validNpmCommand_project) {
 
 			async function copyFileToDis(filename: string) {
 				let content = await fsReadFileAsync(filename)
-				if (filename === 'package.json') { deleteAllPackageJsonScriptsExceptStart() }
+				if (filename === PACKAGE_DOT_JSON) { deleteAllPackageJsonScriptsExceptStart() }
 				await fsWriteFileAsync('../dist/' + filename, content)
 
 				function deleteAllPackageJsonScriptsExceptStart() {

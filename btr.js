@@ -45,7 +45,7 @@ _; /********** CONSTANTS ******************** CONSTANTS ******************** CON
 _; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
 _; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
 export const timers = [];
-const errors = [];
+const PACKAGE_DOT_JSON = 'package.json';
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
@@ -221,7 +221,7 @@ export function isLastItem(arr, item) { return arr.indexOf(item) === arr.length 
 export function lastItem(arr) { return arr[arr.length - 1]; }
 /**Apply multiple mapping functions to a single array at once and return an object with all the result */
 export function multiMap(arr, f1, f2, f3 = doNothing, f4 = doNothing, f5 = doNothing) {
-    const maps = arr.reduce((acc, item) => {
+    return arr.reduce((acc, item) => {
         acc.map1.push(f1(item));
         acc.map2.push(f2(item));
         acc.map3.push(f3(item));
@@ -235,7 +235,6 @@ export function multiMap(arr, f1, f2, f3 = doNothing, f4 = doNothing, f5 = doNot
         map4: [],
         map5: [],
     });
-    return maps;
 }
 /*Remove a single item from an array, or all copies of that item if its a primitive value and return the removedCount */
 export function removeItem(arr, item) { return selfFilter(arr, (x) => x !== item).removedCount; }
@@ -516,6 +515,7 @@ export function formatDate(timestamp, language, type) {
             case 'medium': return { dateStyle: 'medium' };
             case 'long': return { dateStyle: 'long' };
             case 'hourOnly': return { timeStyle: 'short' };
+            // eslint-disable-next-line sonarjs/no-duplicate-string
             case 'medium+hour': return { dateStyle: 'medium', timeStyle: 'short' };
             case 'short+hour': return { dateStyle: 'short', timeStyle: 'short' };
             case 'long+hour': return { dateStyle: 'long', timeStyle: 'short' };
@@ -1052,7 +1052,7 @@ _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ************
 _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 _; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
 /**Batch-load files for checking purposes */
-export async function getCachedFiles(filepaths) {
+export async function getCachedFiles(errors, filepaths) {
     const cachedFiles = [];
     for await (const filepath of filepaths) {
         if (!fileExists(filepath)) {
@@ -1135,14 +1135,12 @@ export async function downloadFile_node(filename, fileFormat, data, killProcessA
 /**Wrapper for fs.promise.readFile that announces the start of the file-reading */
 export async function fsReadFileAsync(filePath) {
     colorLog('white', `reading '${filePath}'..`);
-    const file = await fs.promises.readFile(filePath, 'utf8');
-    return file;
+    return await fs.promises.readFile(filePath, 'utf8');
 }
 /**Wrapper for fsWriteFileAsync that announces the start of the file-writing */
 export async function fsWriteFileAsync(filePath, content) {
     colorLog('white', `writing to '${filePath}'..`);
-    const file = await fs.promises.writeFile(filePath, content);
-    return file;
+    return await fs.promises.writeFile(filePath, content);
 }
 /**For a project's debugging purposes */
 export function getDebugOptionsAndLog(devOrProd, options) {
@@ -1242,7 +1240,7 @@ export function npmRun_package(npmCommand) {
         transpileAllFiles(promptVersioning);
     }
     async function cachePackageFilesAndCheckThem() {
-        checkCodeThatCouldBeUpdated(await getCachedFiles(['./basicProjectChecks.ts', './btr.ts', './npmRun.ts']));
+        checkCodeThatCouldBeUpdated(await getCachedFiles([], ['./basicProjectChecks.ts', './btr.ts', './npmRun.ts']));
     }
     function printProcessOver() {
         colorLog('magenta', 'Process over');
@@ -1290,6 +1288,8 @@ export function npmRun_package(npmCommand) {
     }
 }
 /**Run convenient scripts for and from a project's root folder */
+//TODO: delete the rule-disabling below and move this function into its own file
+// eslint-disable-next-line sonarjs/cognitive-complexity 
 export async function npmRun_project(npmCommand) {
     await basicProjectChecks(divine.error);
     if (npmCommand === 'check') {
@@ -1326,7 +1326,7 @@ export async function npmRun_project(npmCommand) {
         }
         function transpileServerFilesToTestFolder() {
             exec(`tsc --target esnext server/init.ts --outDir ${serverFolder_src}`, async () => {
-                const packageJson = await fsReadFileAsync('package.json');
+                const packageJson = await fsReadFileAsync(PACKAGE_DOT_JSON);
                 await fsWriteFileAsync('test/package.json', packageJson);
                 successLog(`files transpiled to ${serverFolder_src}`);
             });
@@ -1338,7 +1338,7 @@ export async function npmRun_project(npmCommand) {
             await transpileTypesFile();
             await copyFileToDis('.env');
             await copyFileToDis('.gitignore');
-            await copyFileToDis('package.json'); //TODO: make it so the "-src" in the name is replaced with "-dist"
+            await copyFileToDis(PACKAGE_DOT_JSON); //TODO: make it so the "-src" in the name is replaced with "-dist"
             exec(`tsc --target esnext server/init.ts server/io.ts --outDir ${serverFolder_dist}`, async () => {
                 await checkDevPropsOfRef(serverFolder_dist + '/server/' + fileWithRef + '.js', true);
                 successLog('(server) Build sucessful!');
@@ -1365,7 +1365,7 @@ export async function npmRun_project(npmCommand) {
             }
             async function copyFileToDis(filename) {
                 let content = await fsReadFileAsync(filename);
-                if (filename === 'package.json') {
+                if (filename === PACKAGE_DOT_JSON) {
                     deleteAllPackageJsonScriptsExceptStart();
                 }
                 await fsWriteFileAsync('../dist/' + filename, content);
@@ -1455,3 +1455,10 @@ export function zodCheck_socket(socket, schema, data) {
 }
 export const command_package = process.env['npm_config_command_package'];
 export const command_project = process.env['npm_config_command_project'];
+export function clientSocketLongOnAny(socket, socketEvents) {
+    socket.onAny((eventName, ...args) => {
+        const eventInfo = { event: eventName, timestamp: Date.now(), data: args };
+        colorLog('red', stringify(eventInfo));
+        socketEvents.unshift(eventInfo);
+    });
+}

@@ -32,7 +32,7 @@ _; /********** CONSTANTS ******************** CONSTANTS ******************** CON
 _; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
 _; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
 export const timers = [];
-const errors = [];
+const PACKAGE_DOT_JSON = 'package.json';
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
@@ -208,7 +208,7 @@ export function isLastItem(arr, item) { return arr.indexOf(item) === arr.length 
 export function lastItem(arr) { return arr[arr.length - 1]; }
 /**Apply multiple mapping functions to a single array at once and return an object with all the result */
 export function multiMap(arr, f1, f2, f3 = doNothing, f4 = doNothing, f5 = doNothing) {
-    const maps = arr.reduce((acc, item) => {
+    return arr.reduce((acc, item) => {
         acc.map1.push(f1(item));
         acc.map2.push(f2(item));
         acc.map3.push(f3(item));
@@ -222,7 +222,6 @@ export function multiMap(arr, f1, f2, f3 = doNothing, f4 = doNothing, f5 = doNot
         map4: [],
         map5: [],
     });
-    return maps;
 }
 /*Remove a single item from an array, or all copies of that item if its a primitive value and return the removedCount */
 export function removeItem(arr, item) { return selfFilter(arr, (x) => x !== item).removedCount; }
@@ -503,6 +502,7 @@ export function formatDate(timestamp, language, type) {
             case 'medium': return { dateStyle: 'medium' };
             case 'long': return { dateStyle: 'long' };
             case 'hourOnly': return { timeStyle: 'short' };
+            // eslint-disable-next-line sonarjs/no-duplicate-string
             case 'medium+hour': return { dateStyle: 'medium', timeStyle: 'short' };
             case 'short+hour': return { dateStyle: 'short', timeStyle: 'short' };
             case 'long+hour': return { dateStyle: 'long', timeStyle: 'short' };

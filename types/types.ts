@@ -44,7 +44,6 @@ export type cachedFile = { path: string, content: string }
 export type messageHandler = (message: string) => void
 export type arrayPredicate<T> = (arg1: T) => boolean
 export type pipe_persistent_type<T> = (arg: T) => T
-export type tsConfig = { compilerOptions: object }
 export type maybePromise<T> = T | Promise<T>
 export type pipe_mutable_type = {
 	<T, A>(source: T, a: (value: T) => A): A

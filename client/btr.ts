@@ -43,7 +43,7 @@ _ /********** CONSTANTS ******************** CONSTANTS ******************** CONS
 _ /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
 
 export const timers: timer[] = []
-const errors: string[] = []
+const PACKAGE_DOT_JSON = 'package.json'
 
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
@@ -223,7 +223,7 @@ export function multiMap<
 	F4 extends (x: T) => ReturnType<F4>,
 	F5 extends (x: T) => ReturnType<F5>,
 >(arr: T[], f1: F1, f2: F2, f3 = doNothing as F3, f4 = doNothing as F4, f5 = doNothing as F5) {
-	const maps = arr.reduce((acc, item) => {
+	return arr.reduce((acc, item) => {
 		acc.map1.push(f1(item))
 		acc.map2.push(f2(item))
 		acc.map3.push(f3(item))
@@ -237,7 +237,6 @@ export function multiMap<
 		map4: [] as ReturnType<F4>[],
 		map5: [] as ReturnType<F5>[],
 	})
-	return maps
 }
 /*Remove a single item from an array, or all copies of that item if its a primitive value and return the removedCount */
 export function removeItem<T>(arr: T[], item: T) { return selfFilter(arr, (x: T) => x !== item).removedCount }
@@ -512,6 +511,7 @@ export function formatDate(timestamp: number,
 			case 'medium': return { dateStyle: 'medium' }
 			case 'long': return { dateStyle: 'long' }
 			case 'hourOnly': return { timeStyle: 'short' }
+			// eslint-disable-next-line sonarjs/no-duplicate-string
 			case 'medium+hour': return { dateStyle: 'medium', timeStyle: 'short' }
 			case 'short+hour': return { dateStyle: 'short', timeStyle: 'short' }
 			case 'long+hour': return { dateStyle: 'long', timeStyle: 'short' }
