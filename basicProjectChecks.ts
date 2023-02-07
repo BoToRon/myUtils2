@@ -3,14 +3,17 @@ import fs from 'fs'
 _
 import { z } from 'zod'
 _
-import { zMyEnv } from './constants/constants.js'
-_
 import { cachedFile, messageHandler, nullable, packageJson, zSchema } from './types/types.js'
 _
 import {
 	getCachedFiles, checkCodeThatCouldBeUpdated, compareArrays, getEnviromentVariables, importFileFromProject,
 	nullAs, successLog, surroundedString, zodCheck_curry, zRegexGenerator, fsReadFileAsync
 } from './btr.js'
+_
+import {
+	CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE,
+	GLOBAL_VARS, SERVER_REF_TS, TSCONFIG_JSON, TYPES_IO_TS, zMyEnv,
+} from './constants/constants.js'
 _
 
 function zodCheck_toErrors<T>(path: string, schema: zSchema<T>, data: T) { zodCheck_curry((e: string) => addToErrors(path, e))(schema, data) }
@@ -19,15 +22,6 @@ function inBtrUtils(path: string) { return './node_modules/@botoron/utils/' + pa
 
 let errorHandler = <messageHandler>nullAs()
 let DEV_OR_PROD = <'DEV' | 'PROD'>nullAs()
-
-const GITIGNORE = './.gitignore'
-const CLIENT_SRC = './client/src'
-const TYPES_IO_TS = './types/io.ts'
-const ESLINT_CJS = './.eslintrc.cjs'
-const GLOBAL_VARS = './global/vars.ts'
-const SERVER_REF_TS = './server/ref.ts'
-const TSCONFIG_JSON = './tsconfig.json'
-const CLIENT_SRC_SOCKET = CLIENT_SRC + '/socket.ts'
 
 const errors: string[] = []
 const cachedFiles: cachedFile[] = []
@@ -101,13 +95,13 @@ function checkAllExportedFunctionsAreDescribed() {
 		const lines = file.content.split('\n')
 
 		const uncommentedTopLevelFunctions = lines.reduce((acc, line, index) => {
-			const isTopLevelFunction = /^export (async|function)/.test(line)
+			const isTopLevelFunction = /^export (async|function)/.test(line) //regexHere
 			if (!isTopLevelFunction) { return acc }
 
 			const isCommented = /\*\//.test(lines[index - 1] as string)
 			if (isCommented) { return acc }
 
-			acc.push(line.slice(0, line.length - 5).replace(/(export ){0,}(async |function |\(.{1,})/g, ''))
+			acc.push(line.slice(0, line.length - 5).replace(/(export ){0,}(async |function |\(.{1,})/g, '')) //regexHere
 			return acc
 		}, [] as string[])
 
@@ -177,7 +171,7 @@ async function checkFilesAreIdentical(path: string, pathToTemplate: string) {
 	if (withoutSlash_r_n(file.content) === withoutSlash_r_n(sampleFile)) { return true }
 
 	addToErrors(path, 'File should be identical to the one at ' + pathToTemplate)
-	function withoutSlash_r_n(content: string) { return content.replace(/\r|\n/g, '') }
+	function withoutSlash_r_n(content: string) { return content.replace(/\r|\n/g, '') } //regexHere
 }
 
 /**Check the structure of the project */
@@ -237,7 +231,7 @@ function checkInitTsCallsRefTsAndIoTs() {
 function checkLocalImportsHaveJsExtention() {
 	[serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
 		const { path, content } = file
-		const localImports = content.match(/from '\..{1,}/g)
+		const localImports = content.match(/from '\..{1,}/g) //regexHere
 		if (!localImports) { return }
 
 		localImports.forEach(match => {
@@ -278,7 +272,7 @@ async function checkPackageJsons() {
 	})
 
 	const desiredPackageJsonRootSchema = z.object({
-		name: z.string().regex(...zRegexGenerator(/-(src|dist)$/, false)),
+		name: z.string().regex(...zRegexGenerator(/-(src|dist)$/, false)), //regexHere
 		author: z.literal('BoToRon'),
 		description: z.string().min(10),
 		license: z.literal('ISC'),
@@ -304,6 +298,7 @@ async function checkPackageJsons() {
 		}).strict(),
 		dependencies: z.object({
 			'@botoron/utils': z.string(),
+			//'magic-regexp': z.string(),
 			'socket.io': z.string(),
 			'socket.io-client': z.string(),
 			'zod-validation-error': z.string()
@@ -373,11 +368,11 @@ function checkSocketEvents() {
 
 		linesInTypesIo.forEach(line => {
 			if (line.includes(`export interface ${nameOfInterface}`)) { isKeyOfWantedInterface = true; return }
-			if (/^\}/.test(line)) { isKeyOfWantedInterface = false } //"{"" <-- here so it doesn't mess with the color of brackets
+			if (/^\}/.test(line)) { isKeyOfWantedInterface = false } //"{"" <-- here so it doesn't mess with the color of brackets //regexHere
 			if (!isKeyOfWantedInterface) { return }
 
-			if (!/^\t\w/.test(line)) { return }
-			const event = (line.match(/(?<=\t)\w{1,}/) || [''])[0]
+			if (!/^\t\w/.test(line)) { return } //regexHere
+			const event = (line.match(/(?<=\t)\w{1,}/) || [''])[0] //regexHere
 
 			if (handlingFile.includes(`socket.on('${event}'`)) { return }
 			errors.push(`${nameOfInterface}'s " ${event} " is declared but not handled in ${pathToHandlingFile}`)
@@ -504,7 +499,7 @@ function getFilesAndFoldersNames(directory: string, extension: nullable<'.ts' | 
 		file = directory + '/' + file
 		const stat = fs.statSync(file)
 
-		const stopHere = /node_modules|dev|git|test|assets/.test(file)
+		const stopHere = /node_modules|dev|git|test|assets/.test(file) //regexHere
 		if (stat && stat.isDirectory() && !stopHere) { results.push(...getFilesAndFoldersNames(file, null)) }
 		else { results.push(file) }
 	})

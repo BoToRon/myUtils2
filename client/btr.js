@@ -14,7 +14,7 @@ _;
 _;
 _;
 _;
-import { getUniqueId_generator, isNode, zValidVariants } from '../constants/constants.js';
+import { getUniqueId_generator, isNode, timers, zValidVariants } from '../constants/constants.js';
 _;
 import { z } from 'zod';
 _;
@@ -26,13 +26,6 @@ _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 export { zValidVariants };
-_; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
-_; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
-_; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
-_; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
-_; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
-export const timers = [];
-const PACKAGE_DOT_JSON = 'package.json';
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
@@ -473,13 +466,13 @@ export function getDisplayableTimeLeft(deadline) {
     else if (time > twoDays) {
         message = `${Math.round(time / 60 / 60 / 24)} Days`;
     }
-    message = message.replace(/\.[0-9]{0,}/g, '');
+    message = message.replace(/\.[0-9]{0,}/g, ''); //regexHere
     return { time: message, variant: getVariant() };
     function getVariant() {
         let variant = nullAs();
         if (/Minutes|Hours|Days/.test(message)) {
             variant = 'info';
-        }
+        } //regexHere
         else if (time > 20) {
             variant = 'primary';
         }
@@ -798,18 +791,18 @@ export function errorLog(message) { return colorLog('red', message + ' 💀'); }
 export function getTraceableStack(error, type) {
     const { stack } = (typeof error === 'string' ? new Error(error) : error);
     return `${stack}`.
-        replace(/\(node:3864\).{0,}\n.{0,}exit code./, '').
-        replace(/\n {4}at/g, `\n ${' * '.repeat(5)} at`).
-        replace(/^Error/, type);
+        replace(/\(node:3864\).{0,}\n.{0,}exit code./, ''). //regexHere
+        replace(/\n {4}at/g, `\n ${' * '.repeat(5)} at`). //regexHere
+        replace(/^Error/, type); //regexHere
 }
 /**@returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
-export function isGuest(username) { return /Guest[0-9]{13}/i.test(`${username}`); }
+export function isGuest(username) { return /Guest[0-9]{13}/i.test(`${username}`); } //regexHere
 /**To know when files are fired and in what order  */
 export function logInitialization(filename) { colorLog(isNode ? 'cyan' : 'magenta', '*'.repeat(20) + ' ' + filename); }
 /**(Message) ✔️ */
 export function successLog(message) { return colorLog('green', message + ' ✔️'); }
 /**@returns an string with its linebreaks converted into simple one-char spaces */
-export function toSingleLine(sentence) { return `${sentence}`.replace(/ {0,}\n {0,}/g, ' '); }
+export function toSingleLine(sentence) { return `${sentence}`.replace(/ {0,}\n {0,}/g, ' '); } //regexHere
 /**Return an string with X amount of (character) as margin per side */
 export function surroundedString(string, margin, perSide) {
     const x = margin.repeat(perSide);

@@ -27,7 +27,7 @@ _;
 import { basicProjectChecks } from './basicProjectChecks.js'; //DELETETHISFORCLIENT
 _;
 _;
-import { getUniqueId_generator, isNode, utilsRepoName, zValidVariants, zValidVersionIncrement } from './constants/constants.js';
+import { getUniqueId_generator, isNode, PACKAGE_DOT_JSON, timers, utilsRepoName, zValidVariants, zValidVersionIncrement } from './constants/constants.js';
 _;
 import { z } from 'zod';
 _;
@@ -39,13 +39,6 @@ _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 export { zValidVariants };
-_; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
-_; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
-_; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
-_; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
-_; /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
-export const timers = [];
-const PACKAGE_DOT_JSON = 'package.json';
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
@@ -486,13 +479,13 @@ export function getDisplayableTimeLeft(deadline) {
     else if (time > twoDays) {
         message = `${Math.round(time / 60 / 60 / 24)} Days`;
     }
-    message = message.replace(/\.[0-9]{0,}/g, '');
+    message = message.replace(/\.[0-9]{0,}/g, ''); //regexHere
     return { time: message, variant: getVariant() };
     function getVariant() {
         let variant = nullAs();
         if (/Minutes|Hours|Days/.test(message)) {
             variant = 'info';
-        }
+        } //regexHere
         else if (time > 20) {
             variant = 'primary';
         }
@@ -812,18 +805,18 @@ export function errorLog(message) { return colorLog('red', message + ' 💀'); }
 export function getTraceableStack(error, type) {
     const { stack } = (typeof error === 'string' ? new Error(error) : error);
     return `${stack}`.
-        replace(/\(node:3864\).{0,}\n.{0,}exit code./, '').
-        replace(/\n {4}at/g, `\n ${' * '.repeat(5)} at`).
-        replace(/^Error/, type);
+        replace(/\(node:3864\).{0,}\n.{0,}exit code./, ''). //regexHere
+        replace(/\n {4}at/g, `\n ${' * '.repeat(5)} at`). //regexHere
+        replace(/^Error/, type); //regexHere
 }
 /**@returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
-export function isGuest(username) { return /Guest[0-9]{13}/i.test(`${username}`); }
+export function isGuest(username) { return /Guest[0-9]{13}/i.test(`${username}`); } //regexHere
 /**To know when files are fired and in what order  */
 export function logInitialization(filename) { colorLog(isNode ? 'cyan' : 'magenta', '*'.repeat(20) + ' ' + filename); }
 /**(Message) ✔️ */
 export function successLog(message) { return colorLog('green', message + ' ✔️'); }
 /**@returns an string with its linebreaks converted into simple one-char spaces */
-export function toSingleLine(sentence) { return `${sentence}`.replace(/ {0,}\n {0,}/g, ' '); }
+export function toSingleLine(sentence) { return `${sentence}`.replace(/ {0,}\n {0,}/g, ' '); } //regexHere
 /**Return an string with X amount of (character) as margin per side */
 export function surroundedString(string, margin, perSide) {
     const x = margin.repeat(perSide);
@@ -1101,10 +1094,10 @@ export function checkCodeThatCouldBeUpdated(cachedFiles) {
         checkReplaceableCode(['null as'], 'nullAs'); //@btr-ignore
         function checkReplaceableCode(replaceableCodeStrings, suggestedReplacement) {
             replaceableCodeStrings.forEach(replaceableString => {
-                const withEscapedCharacters = replaceableString.replace(/(?=\W{1,1})/g, '\\');
+                const withEscapedCharacters = replaceableString.replace(/(?=\W{1,1})/g, '\\'); //regexHere
                 const theRegex = new RegExp(withEscapedCharacters + '.{0,}', 'gi');
                 const matches = Array(...content.match(theRegex) || []);
-                selfFilter(matches, match => !/@btr-ignore/.test(match));
+                selfFilter(matches, match => !/@btr-ignore/.test(match)); //regexHere
                 if (!matches.length) {
                     return;
                 }
@@ -1119,7 +1112,7 @@ export function copyToClipboard_server(x) { return clipboard.write(stringify(x))
 /**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
 export async function downloadFile_node(filename, fileFormat, data, killProcessAfterwards) {
     const formatted = stringify(data);
-    const dateForFilename = formatDate(Date.now(), 'es', 'short').replace(/\/| |:/g, '_');
+    const dateForFilename = formatDate(Date.now(), 'es', 'short').replace(/\/| |:/g, '_'); //regexHere
     const completeFilename = filename + '_' + dateForFilename + fileFormat;
     colorLog('cyan', `Downloading ${completeFilename}..`);
     await fsWriteFileAsync(completeFilename, formatted);
@@ -1267,8 +1260,8 @@ export function npmRun_package(npmCommand) {
                 replaceAll('from \'./types', 'from \'../types').
                 replaceAll('bigConsoleError', 'colorLog').
                 split('\n');
-            selfFilter(lines, line => !/DELETETHISFORCLIENT/.test(line));
-            const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x));
+            selfFilter(lines, line => !/DELETETHISFORCLIENT/.test(line)); //regexHere
+            const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x)); //regexHere
             lines.splice(cutPoint, lines.length);
             lines.push('export const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)'); //@btr-ignore
             await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'));
@@ -1319,7 +1312,7 @@ export async function npmRun_project(npmCommand) {
         async function getCanTranspile() {
             try {
                 return !/debugging: true/.test(await fsReadFileAsync(`test/server/${fileWithRef}.js`));
-            }
+            } //regexHere
             catch {
                 return true;
             }
@@ -1370,7 +1363,7 @@ export async function npmRun_project(npmCommand) {
                 }
                 await fsWriteFileAsync('../dist/' + filename, content);
                 function deleteAllPackageJsonScriptsExceptStart() {
-                    content = content.replace(/"scripts": {[^}]{1,}/, `"scripts": { 
+                    content = content.replace(/"scripts": {[^}]{1,}/, `"scripts": { //regexHere
 		"start": "node server/init.js",
 		"git": "git add . & git commit & git push",
 		"btr": "npm i @botoron/utils"
@@ -1446,7 +1439,7 @@ export async function questionAsPromise(question) {
 export function zodCheck_socket(socket, schema, data) {
     return zodCheck_curry(errorHandler)(schema, data);
     function caller() {
-        return ((getTraceableStack('', 'zodCheck_socket').split('\n') || [])[3]?.match(/at \w{1,}/) ||
+        return ((getTraceableStack('', 'zodCheck_socket').split('\n') || [])[3]?.match(/at \w{1,}/) || //regexHere
             ['at <unable to identify function caller>'])[0];
     }
     function errorHandler(error) {

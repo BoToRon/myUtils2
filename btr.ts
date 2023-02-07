@@ -32,7 +32,10 @@ import {
 	timer, validChalkColor, validNpmCommand_package, validNpmCommand_project, vueComponentsTracker, zSchema
 } from './types/types.js'
 _
-import { getUniqueId_generator, isNode, utilsRepoName, zValidVariants, zValidVersionIncrement } from './constants/constants.js'
+import {
+	getUniqueId_generator, isNode, PACKAGE_DOT_JSON, timers,
+	utilsRepoName, zValidVariants, zValidVersionIncrement
+} from './constants/constants.js'
 _
 import { type Primitive, z, type ZodRawShape, type ZodTypeAny } from 'zod'
 _
@@ -49,15 +52,6 @@ export {
 	btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn,
 	btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, nullable, zValidVariants
 }
-
-_ /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
-_ /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
-_ /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
-_ /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
-_ /********** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS ******************** CONSTANTS **********/
-
-export const timers: timer[] = []
-const PACKAGE_DOT_JSON = 'package.json'
 
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
 _ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
@@ -501,12 +495,12 @@ export function getDisplayableTimeLeft(deadline: number) {
 	else if (time < twoDays) { message = `${Math.round(time / 60 / 60)} Hours` }
 	else if (time > twoDays) { message = `${Math.round(time / 60 / 60 / 24)} Days` }
 
-	message = message.replace(/\.[0-9]{0,}/g, '')
+	message = message.replace(/\.[0-9]{0,}/g, '') //regexHere
 	return { time: message, variant: getVariant() }
 
 	function getVariant() {
 		let variant = <btr_validVariant>nullAs()
-		if (/Minutes|Hours|Days/.test(message)) { variant = 'info' }
+		if (/Minutes|Hours|Days/.test(message)) { variant = 'info' } //regexHere
 		else if (time > 20) { variant = 'primary' }
 		else if (time < 21) { variant = 'warning' }
 		else { variant = 'danger' }
@@ -829,18 +823,18 @@ export function errorLog(message: string) { return colorLog('red', message + ' �
 export function getTraceableStack(error: string | Error, type: 'debugLog' | 'divineError' | 'killTimer' | 'zodCheck_socket') {
 	const { stack } = (typeof error === 'string' ? new Error(error) : error)
 	return `${stack}`.
-		replace(/\(node:3864\).{0,}\n.{0,}exit code./, '').
-		replace(/\n {4}at/g, `\n ${' * '.repeat(5)} at`).
-		replace(/^Error/, type)
+		replace(/\(node:3864\).{0,}\n.{0,}exit code./, ''). //regexHere
+		replace(/\n {4}at/g, `\n ${' * '.repeat(5)} at`). //regexHere
+		replace(/^Error/, type) //regexHere
 }
 /**@returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
-export function isGuest(username: string) { return /Guest[0-9]{13}/i.test(`${username}`) }
+export function isGuest(username: string) { return /Guest[0-9]{13}/i.test(`${username}`) } //regexHere
 /**To know when files are fired and in what order  */
 export function logInitialization(filename: string) { colorLog(isNode ? 'cyan' : 'magenta', '*'.repeat(20) + ' ' + filename) }
 /**(Message) ✔️ */
 export function successLog(message: string) { return colorLog('green', message + ' ✔️') }
 /**@returns an string with its linebreaks converted into simple one-char spaces */
-export function toSingleLine(sentence: string) { return `${sentence}`.replace(/ {0,}\n {0,}/g, ' ') }
+export function toSingleLine(sentence: string) { return `${sentence}`.replace(/ {0,}\n {0,}/g, ' ') } //regexHere
 /**Return an string with X amount of (character) as margin per side */
 export function surroundedString(string: string, margin: string, perSide: number) {
 	const x = margin.repeat(perSide)
@@ -1124,11 +1118,11 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[]) {
 
 		function checkReplaceableCode(replaceableCodeStrings: string[], suggestedReplacement: string) {
 			replaceableCodeStrings.forEach(replaceableString => {
-				const withEscapedCharacters = replaceableString.replace(/(?=\W{1,1})/g, '\\')
+				const withEscapedCharacters = replaceableString.replace(/(?=\W{1,1})/g, '\\') //regexHere
 				const theRegex = new RegExp(withEscapedCharacters + '.{0,}', 'gi')
 				const matches = Array(...content.match(theRegex) || [])
 
-				selfFilter(matches, match => !/@btr-ignore/.test(match))
+				selfFilter(matches, match => !/@btr-ignore/.test(match)) //regexHere
 				if (!matches.length) { return }
 
 				colorLog('yellow', surroundedString('WARNING: OUTDATED/REPLACEABLE CODE', '-', 50))
@@ -1142,7 +1136,7 @@ export function copyToClipboard_server(x: unknown) { return clipboard.write(stri
 /**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
 export async function downloadFile_node(filename: string, fileFormat: '.txt' | '.json', data: unknown, killProcessAfterwards: boolean) {
 	const formatted = stringify(data as object)
-	const dateForFilename = formatDate(Date.now(), 'es', 'short').replace(/\/| |:/g, '_')
+	const dateForFilename = formatDate(Date.now(), 'es', 'short').replace(/\/| |:/g, '_') //regexHere
 	const completeFilename = filename + '_' + dateForFilename + fileFormat
 
 	colorLog('cyan', `Downloading ${completeFilename}..`)
@@ -1283,9 +1277,9 @@ export function npmRun_package(npmCommand: validNpmCommand_package) {
 				replaceAll('bigConsoleError', 'colorLog').
 				split('\n')
 
-			selfFilter(lines, line => !/DELETETHISFORCLIENT/.test(line))
+			selfFilter(lines, line => !/DELETETHISFORCLIENT/.test(line)) //regexHere
 
-			const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x))
+			const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x)) //regexHere
 			lines.splice(cutPoint, lines.length)
 			lines.push('export const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)') //@btr-ignore
 
@@ -1331,7 +1325,7 @@ export async function npmRun_project(npmCommand: validNpmCommand_project) {
 		if (npmCommand === 'transpile') { transpileServerFilesToTestFolder() }
 
 		async function getCanTranspile() {
-			try { return !/debugging: true/.test(await fsReadFileAsync(`test/server/${fileWithRef}.js`)) }
+			try { return !/debugging: true/.test(await fsReadFileAsync(`test/server/${fileWithRef}.js`)) } //regexHere
 			catch { return true }
 		}
 
@@ -1374,7 +1368,7 @@ export async function npmRun_project(npmCommand: validNpmCommand_project) {
 				await fsWriteFileAsync('../dist/' + filename, content)
 
 				function deleteAllPackageJsonScriptsExceptStart() {
-					content = content.replace(/"scripts": {[^}]{1,}/, `"scripts": { 
+					content = content.replace(/"scripts": {[^}]{1,}/, `"scripts": { //regexHere
 		"start": "node server/init.js",
 		"git": "git add . & git commit & git push",
 		"btr": "npm i @botoron/utils"
@@ -1459,7 +1453,7 @@ export function zodCheck_socket<T>(socket: Socket, schema: zSchema<T>, data: T) 
 
 	function caller() {
 		return (
-			(getTraceableStack('', 'zodCheck_socket').split('\n') || [])[3]?.match(/at \w{1,}/) ||
+			(getTraceableStack('', 'zodCheck_socket').split('\n') || [])[3]?.match(/at \w{1,}/) || //regexHere
 			['at <unable to identify function caller>']
 		)[0]
 	}
