@@ -69,9 +69,9 @@ export async function basicProjectChecks(errHandler: messageHandler) {
 
 		return Promise.all([
 			checkAllExportedFunctionsAreDescribed(),
-			checkAllVueComponentsAreTrackeable(),
 			checkCodeThatCouldBeUpdated([serverTsFiles, clientTsFiles, clientVueFiles].flat()),
 			checkPackageJsons(),
+			checkStructureAndMatchesOfVueFiles(),
 			checkUtilsVersion(),
 			checkVsCodeSettings(),
 			checkVueDevFiles(),
@@ -112,11 +112,19 @@ function checkAllExportedFunctionsAreDescribed() {
 }
 
 /**Check all the vue components are trackable by the window */
-function checkAllVueComponentsAreTrackeable() {
+function checkStructureAndMatchesOfVueFiles() {
 	if (DEV_OR_PROD !== 'DEV') { return true }
+
 	clientVueFiles.forEach(file => {
-		const wantedMatch = 'trackVueComponent(' //) <--here to not mess with the colour of parentheses
-		if (!file.content.includes(wantedMatch)) { addToErrors(file.path, `${file} must include "${wantedMatch}"`) }
+		[
+			asConsecutiveLines([
+				'export default defineComponent({',
+				`\tmounted() { trackVueComponent(${filepathToComponentName()}, this as never, window as never) },`
+			]),
+			'<style scoped>'
+		].forEach(wantedMatch => checkMatchInSpecificFile(file.path, wantedMatch))
+
+		function filepathToComponentName() { return file.path.replace(/\.\/client\/src\/_?/, '').replace('.vue', '') }
 	})
 }
 
@@ -421,7 +429,7 @@ function checkSocketEvents() {
 }
 
 function checkServerAndClientFilesLogTheirInitialization() {
-	[serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
+	[(getFromCachedFiles([TYPES_Z_TS])[0] as cachedFile), serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
 		const { path, content } = file
 		const wantedMatch = `logInitialization('${path}')`
 		if (!content.includes(wantedMatch)) { addToErrors(path, `"${surroundedString(wantedMatch, ' ', 10)}" is missing`) }
