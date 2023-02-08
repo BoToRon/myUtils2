@@ -6,7 +6,7 @@ _;
 _;
 import { getCachedFiles, checkCodeThatCouldBeUpdated, compareArrays, getEnviromentVariables, importFileFromProject, nullAs, successLog, surroundedString, zodCheck_curry, zRegexGenerator, fsReadFileAsync } from './btr.js';
 _;
-import { CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_VARS, SERVER_REF_TS, TSCONFIG_JSON, TYPES_IO_TS, zMyEnv, } from './constants/constants.js';
+import { CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_VARS, SERVER_EVENTS_TS, SERVER_REF_TS, TSCONFIG_JSON, TYPES_IO_TS, zMyEnv } from './constants/constants.js';
 _;
 function zodCheck_toErrors(path, schema, data) { zodCheck_curry((e) => addToErrors(path, e))(schema, data); }
 function addToErrors(path, error) { errors.push(`(at ${path}): ${error}`); }
@@ -32,6 +32,7 @@ export async function basicProjectChecks(errHandler) {
     function allPromises() {
         checkBasicValidAdminCommands();
         checkClientFilesDontReferenceLocalStorageDirectly();
+        checkClientIndexTs();
         checkClientSocketTs();
         checkClientStoreTs();
         checkEnviromentVariables();
@@ -112,6 +113,43 @@ function checkClientFilesDontReferenceLocalStorageDirectly() {
         addToErrors(path, 'use updateStoreAndLocalStorageKey (with updateStoreAndLocalStorageKey) instead of referencing localStorage directly');
     });
 }
+function checkClientIndexTs() {
+    [
+        asConsecutiveLines([
+            'let _',
+            'import Vue from \'vue\'',
+            '_',
+            'import App from \'./App.vue\'',
+            '_',
+            'import { useStore } from \'./store.js\'',
+            '_',
+            'import \'bootstrap/dist/css/bootstrap.css\'',
+            '_',
+            'import \'bootstrap-vue/dist/bootstrap-vue.css\'',
+            '_',
+            'import { createPinia, PiniaVuePlugin } from \'pinia\'',
+            '_',
+            'import { BootstrapVue, IconsPlugin } from \'bootstrap-vue\'',
+            '_',
+            'import { logInitialization, newToast_client_curry } from \'@botoron/utils/client/btr.js\'',
+            '_',
+            'logInitialization(\'./client/src/index.ts\')',
+            '',
+            '//components',
+            'import admin from \'./_admin.vue\''
+        ]),
+        'Vue.component(\'component_admin\', admin)',
+        asConsecutiveLines([
+            'Vue.use(PiniaVuePlugin)',
+            'Vue.use(BootstrapVue)',
+            'Vue.use(IconsPlugin)',
+            '',
+            'const vueApp = new Vue({ pinia: createPinia(), render: (h) => h(App), }).$mount(\'#app\')',
+            'useStore().newToast = newToast_client_curry(vueApp.$bvToast)',
+            'useStore().bvModal = vueApp.$bvModal'
+        ])
+    ].forEach(x => checkMatchInSpecificFile(CLIENT_SRC + '/index.ts', x));
+}
 function checkClientSocketTs() {
     [
         asConsecutiveLines([
@@ -162,7 +200,7 @@ function checkFilesAndFolderStructure() {
     const desiredFilesAndFolders = [
         './dev', './test',
         ESLINT_CJS, GITIGNORE, TSCONFIG_JSON, './.env', './.git', './package-lock.json', './package.json', './TODO.md',
-        SERVER_REF_TS, './server/events.ts', './server/fns.ts', './server/init.ts',
+        SERVER_EVENTS_TS, SERVER_REF_TS, './server/fns.ts', './server/init.ts',
         GLOBAL_VARS, './global/fns.ts',
         TYPES_IO_TS, './types/types.d.ts', './types/z.ts',
         './client/env.d.ts', './client/index.html', './client/node_modules', './client/package-lock.json', './client/package.json',
@@ -300,11 +338,11 @@ function checkServerEventsTs() {
             'io.on(\'connection\', x => {',
             '\tconst socket = x as serverSocket',
             '\tref.DB_misc.updateOne({}, { $inc: { pageVisits: 1 } }).then(() => ref.pageVisits++)',
-            'socket.onAny(args => ref.debugLog(\'logSocketOnAny\', { args }))',
-            'ref.debugLog(\'logWhenSocketConnects\', { id: x.id })',
+            '\tsocket.onAny(args => ref.debugLog(\'logSocketOnAny\', { args }))',
+            '\tref.debugLog(\'logWhenSocketConnects\', { id: x.id })',
         ]),
         'export const ioInitialized = true'
-    ].forEach(line => checkMatchInSpecificFile(SERVER_REF_TS, line));
+    ].forEach(line => checkMatchInSpecificFile(SERVER_EVENTS_TS, line));
 }
 /**Check the properties and initialization of server/ref.ts */
 function checkServerRefTs() {
@@ -334,7 +372,7 @@ function checkSocketEvents() {
     const filepath = TYPES_IO_TS;
     const linesInTypesIo = getFromCachedFiles([filepath])[0].content.split('\n');
     checkSocketOnOfInterface('ServerToClientEvents', CLIENT_SRC_SOCKET);
-    checkSocketOnOfInterface('ClientToServerEvents', './server/events.ts');
+    checkSocketOnOfInterface('ClientToServerEvents', SERVER_EVENTS_TS);
     function checkSocketOnOfInterface(nameOfInterface, pathToHandlingFile) {
         const handlingFile = getFromCachedFiles([pathToHandlingFile])[0].content;
         let isKeyOfWantedInterface = false;

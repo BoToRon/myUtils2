@@ -485,9 +485,17 @@ export function getDisplayableTimeLeft(deadline) {
         return variant;
     }
 }
-/**Formate a timestamp with Intl.DateTimeFormt. Options: short/medium/long (add +hour to include Hour) or hOnly (hour only) */
+/**
+ *Formate a timestamp with Intl.DateTimeFormt. Options: short/medium/long (add +hour to include Hour) or hOnly (hour only)
+ @param timestamp //The timestamp to be converted to a readable date/hour
+ @param language //Either english or spanish formatting and month-naming
+ @param type The type of formatting to be applied.
+ @example
+ //can also do hourOnly or "+hour" to add the hour at the end
+ { short: '01/01/23', medium: 'Jan 01, 2023', long: 'January 01, 2023' }
+ */
 export function formatDate(timestamp, language, type) {
-    return new Intl.DateTimeFormat(language, getOptions()).format(timestamp);
+    return new Intl.DateTimeFormat({ English: 'en', Español: 'es' }[language], getOptions()).format(timestamp);
     function getOptions() {
         switch (type) {
             default:
@@ -734,9 +742,9 @@ export async function initializeTimer(id, runAt, onComplete, onCancel) {
         } /**timer.value_onCancel should have been set in killTimer */
         timer.resolveInfo = {
             timerId: id,
-            startedAt: formatDate(startedAt, 'es', 'medium+hour'),
-            intendedRunAt: formatDate(runAt, 'es', 'medium+hour'),
-            cancelledAt: wasCancelled ? formatDate(cancelledAt, 'es', 'medium+hour') : null,
+            startedAt: formatDate(startedAt, 'English', 'medium+hour'),
+            intendedRunAt: formatDate(runAt, 'English', 'medium+hour'),
+            cancelledAt: wasCancelled ? formatDate(cancelledAt, 'English', 'medium+hour') : null,
             timeElapsedBeforeCancelation: wasCancelled ? `${(cancelledAt - startedAt) / 1000} seconds` : null,
             timeLeftBeforeCancelation: wasCancelled ? `${(runAt - timer.cancelledAt) / 1000} seconds` : null,
             onCompleteFn: onComplete.name,
@@ -818,6 +826,14 @@ _; /********** MISC ******************** MISC ******************** MISC ********
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+//TODO: describe this
+export function clientSocketLongOnAny(socket, socketEvents) {
+    socket.onAny((eventName, ...args) => {
+        const eventInfo = { event: eventName, timestamp: Date.now(), data: args };
+        colorLog('red', stringify(eventInfo));
+        socketEvents.unshift(eventInfo);
+    });
+}
 /**
  * Compare data B against an schema created from data A
  * @param A The first piece of data

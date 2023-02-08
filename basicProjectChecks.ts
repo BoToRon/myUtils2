@@ -11,8 +11,8 @@ import {
 } from './btr.js'
 _
 import {
-	CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE,
-	GLOBAL_VARS, SERVER_REF_TS, TSCONFIG_JSON, TYPES_IO_TS, zMyEnv,
+	CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_VARS,
+	SERVER_EVENTS_TS, SERVER_REF_TS, TSCONFIG_JSON, TYPES_IO_TS, zMyEnv
 } from './constants/constants.js'
 _
 
@@ -49,6 +49,7 @@ export async function basicProjectChecks(errHandler: messageHandler) {
 
 		checkBasicValidAdminCommands()
 		checkClientFilesDontReferenceLocalStorageDirectly()
+		checkClientIndexTs()
 		checkClientSocketTs()
 		checkClientStoreTs()
 		checkEnviromentVariables()
@@ -127,6 +128,44 @@ function checkClientFilesDontReferenceLocalStorageDirectly() {
 	})
 }
 
+function checkClientIndexTs() {
+	[
+		asConsecutiveLines([
+			'let _',
+			'import Vue from \'vue\'',
+			'_',
+			'import App from \'./App.vue\'',
+			'_',
+			'import { useStore } from \'./store.js\'',
+			'_',
+			'import \'bootstrap/dist/css/bootstrap.css\'',
+			'_',
+			'import \'bootstrap-vue/dist/bootstrap-vue.css\'',
+			'_',
+			'import { createPinia, PiniaVuePlugin } from \'pinia\'',
+			'_',
+			'import { BootstrapVue, IconsPlugin } from \'bootstrap-vue\'',
+			'_',
+			'import { logInitialization, newToast_client_curry } from \'@botoron/utils/client/btr.js\'',
+			'_',
+			'logInitialization(\'./client/src/index.ts\')',
+			'',
+			'//components',
+			'import admin from \'./_admin.vue\''
+		]),
+		'Vue.component(\'component_admin\', admin)',
+		asConsecutiveLines([
+			'Vue.use(PiniaVuePlugin)',
+			'Vue.use(BootstrapVue)',
+			'Vue.use(IconsPlugin)',
+			'',
+			'const vueApp = new Vue({ pinia: createPinia(), render: (h) => h(App), }).$mount(\'#app\')',
+			'useStore().newToast = newToast_client_curry(vueApp.$bvToast)',
+			'useStore().bvModal = vueApp.$bvModal'
+		])
+	].forEach(x => checkMatchInSpecificFile(CLIENT_SRC + '/index.ts', x))
+}
+
 function checkClientSocketTs() {
 	[
 		asConsecutiveLines([
@@ -182,7 +221,7 @@ function checkFilesAndFolderStructure() {
 	const desiredFilesAndFolders = [
 		'./dev', './test',	//folders for generating data and testing the server before building, respectively
 		ESLINT_CJS, GITIGNORE, TSCONFIG_JSON, './.env', './.git', './package-lock.json', './package.json', './TODO.md', //solo-files
-		SERVER_REF_TS, './server/events.ts', './server/fns.ts', './server/init.ts',  //server files
+		SERVER_EVENTS_TS, SERVER_REF_TS, './server/fns.ts', './server/init.ts',  //server files
 		GLOBAL_VARS, './global/fns.ts',  //functions and constants for both server and client
 		TYPES_IO_TS, './types/types.d.ts', './types/z.ts', //types and schemas
 
@@ -324,11 +363,11 @@ function checkServerEventsTs() {
 			'io.on(\'connection\', x => {',
 			'\tconst socket = x as serverSocket',
 			'\tref.DB_misc.updateOne({}, { $inc: { pageVisits: 1 } }).then(() => ref.pageVisits++)',
-			'socket.onAny(args => ref.debugLog(\'logSocketOnAny\', { args }))',
-			'ref.debugLog(\'logWhenSocketConnects\', { id: x.id })',
+			'\tsocket.onAny(args => ref.debugLog(\'logSocketOnAny\', { args }))',
+			'\tref.debugLog(\'logWhenSocketConnects\', { id: x.id })',
 		]),
 		'export const ioInitialized = true'
-	].forEach(line => checkMatchInSpecificFile(SERVER_REF_TS, line))
+	].forEach(line => checkMatchInSpecificFile(SERVER_EVENTS_TS, line))
 }
 
 /**Check the properties and initialization of server/ref.ts */
@@ -359,7 +398,7 @@ function checkSocketEvents() {
 	const filepath = TYPES_IO_TS
 	const linesInTypesIo = (getFromCachedFiles([filepath])[0] as cachedFile).content.split('\n')
 	checkSocketOnOfInterface('ServerToClientEvents', CLIENT_SRC_SOCKET)
-	checkSocketOnOfInterface('ClientToServerEvents', './server/events.ts')
+	checkSocketOnOfInterface('ClientToServerEvents', SERVER_EVENTS_TS)
 
 	function checkSocketOnOfInterface(nameOfInterface: string, pathToHandlingFile: string) {
 

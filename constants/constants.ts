@@ -12,6 +12,7 @@ export const GLOBAL_VARS = './global/vars.ts'
 export const SERVER_REF_TS = './server/ref.ts'
 export const TSCONFIG_JSON = './tsconfig.json'
 export const PACKAGE_DOT_JSON = 'package.json'
+export const SERVER_EVENTS_TS = './server/events.ts'
 export const CLIENT_SRC_SOCKET = CLIENT_SRC + '/socket.ts'
 
 export const utilsRepoName = 'Utils 🛠️'
