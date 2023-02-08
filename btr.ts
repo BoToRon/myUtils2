@@ -99,10 +99,7 @@ export function triggerModalWithValidation_curry<validModalIds extends string>($
 			if (!elementExists()) { promptError() }
 		}
 
-		if (action === 'hide') {
-			elementExists() ? $bvModal.hide(id) : promptError()
-		}
-
+		if (action === 'hide') { elementExists() ? $bvModal.hide(id) : promptError() }
 		function elementExists() { return Boolean(document.getElementById(id)) }
 		function promptError() { alert(`Modal with id (${id}) not found. Could not ${action}. Please report it`) }
 	}
@@ -1135,6 +1132,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[]) {
 		checkReplaceableCode(['| null', 'null |'], 'nullable')	//@btr-ignore
 		checkReplaceableCode(['Object.keys'], 'objectKeys')	//@btr-ignore
 		checkReplaceableCode(['console.log'], 'colorLog')	//@btr-ignore
+		checkReplaceableCode(['autologin'], 'login')	//@btr-ignore
 		checkReplaceableCode(['null as'], 'nullAs')	//@btr-ignore
 
 		function checkReplaceableCode(replaceableCodeStrings: string[], suggestedReplacement: string) {

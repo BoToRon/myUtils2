@@ -85,10 +85,7 @@ export function triggerModalWithValidation_curry<validModalIds extends string>($
 			if (!elementExists()) { promptError() }
 		}
 
-		if (action === 'hide') {
-			elementExists() ? $bvModal.hide(id) : promptError()
-		}
-
+		if (action === 'hide') { elementExists() ? $bvModal.hide(id) : promptError() }
 		function elementExists() { return Boolean(document.getElementById(id)) }
 		function promptError() { alert(`Modal with id (${id}) not found. Could not ${action}. Please report it`) }
 	}

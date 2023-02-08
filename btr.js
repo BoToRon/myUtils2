@@ -1107,6 +1107,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles) {
         checkReplaceableCode(['| null', 'null |'], 'nullable'); //@btr-ignore
         checkReplaceableCode(['Object.keys'], 'objectKeys'); //@btr-ignore
         checkReplaceableCode(['console.log'], 'colorLog'); //@btr-ignore
+        checkReplaceableCode(['autologin'], 'login'); //@btr-ignore
         checkReplaceableCode(['null as'], 'nullAs'); //@btr-ignore
         function checkReplaceableCode(replaceableCodeStrings, suggestedReplacement) {
             replaceableCodeStrings.forEach(replaceableString => {

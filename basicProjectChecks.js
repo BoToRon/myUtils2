@@ -154,12 +154,9 @@ function checkClientSocketTs() {
     [
         asConsecutiveLines([
             'export const socket: clientSocket = import.meta.env.PROD ? io() : io(\'http://localhost:3000/\')',
-            'if (import.meta.env.DEV) { clientSocketLongOnAny(socket, useStore().socketEvents) }'
-        ]),
-        asConsecutiveLines([
-            'socket.on(\'autoLogin\', () => useStore().login())',
+            'if (import.meta.env.DEV) { clientSocketLongOnAny(socket, useStore().socketEvents) }',
             'socket.on(\'globalAlert\', globalAlert => useStore().globalAlert = globalAlert)',
-            'socket.on(\'initInfo\','
+            'socket.on(\'initData\','
         ])
     ].forEach(x => checkMatchInSpecificFile(CLIENT_SRC_SOCKET, x));
 }
@@ -178,7 +175,10 @@ function checkClientStoreTs() {
             '\t\t\tuseStore()[key] = value; localStorageSet(key, value)',
             '\t\t},'
         ]),
-        'getAppLog(window as never, useStore as never)',
+        asConsecutiveLines([
+            'getAppLog(window as never, useStore as never)',
+            'useStore().login()'
+        ])
     ].forEach(x => checkMatchInSpecificFile('./client/src/store.ts', x));
 }
 /**Check if all the desired enviroment keys are defined */
@@ -186,7 +186,8 @@ function checkEnviromentVariables() {
     zodCheck_curry((error) => addToErrors('.env', error), false)(zMyEnv, getEnviromentVariables());
 }
 function checkFilesAreIdentical(path, pathToTemplate) {
-    const [file, template] = getFromCachedFiles([path]);
+    const file = getFromCachedFiles([path]).find(x => !x.path.includes('@botoron'));
+    const template = getFromCachedFiles([pathToTemplate])[0];
     if (withoutSlash_r_n(file.content) === withoutSlash_r_n(template.content)) {
         return;
     }
@@ -324,6 +325,7 @@ async function checkPackageJsons() {
             '@typescript-eslint/parser': z.string(),
             dotenv: z.string(),
             eslint: z.string(),
+            'eslint-plugin-sonarjs': z.string(),
             'eslint-plugin-vue': z.string(),
             nodemon: z.string(),
         })
@@ -408,14 +410,29 @@ function checkServerAndClientFilesLogTheirInitialization() {
 }
 function checkSpecificMatchesInTypesIoTs() {
     [
-        'export type socket_c2s_event = keyof ClientToServerEvents',
-        'admin: (adminKey: string, command: string) => void',
-        'commandResult: (commandUsed: string, result: unknown) => void',
-        'export type socket_s2c_event = keyof ServerToClientEvents',
+        asConsecutiveLine([
+            'import { Server, Socket as socket_server } from \'socket.io\'',
+            'import { Socket as socket_client } from \'socket.io-client\'',
+            'import { getStartedHttpServer } from \'@botoron/utils\'',
+            '',
+            'export type socket_s2c_event = keyof ServerToClientEvents',
+            'export interface ServerToClientEvents {',
+            '\tglobalAlert: (alert: globalAlert) => void',
+            '\tinitData: (allPlayersWithVotes: playerWithVotes[]) => void',
+            '\tcommandResult: (commandUsed: string, result: unknown) => void',
+            '\ttoast: (title: string, message: string, variant: validVariant) => void',
+            ''
+        ]),
+        asConsecutiveLines([
+            'export type socket_c2s_event = keyof ClientToServerEvents',
+            'export interface ClientToServerEvents {',
+            'admin: (adminKey: string, command: string) => void',
+            ''
+        ]),
         asConsecutiveLines([
             'export type clientSocket = socket_client<ServerToClientEvents, ClientToServerEvents>',
             'export const io = new Server<ClientToServerEvents, ServerToClientEvents>(getStartedHttpServer(), { cors: { origin: \'*\' } })',
-            'export interface serverSocket extends socket_server<ClientToServerEvents, ServerToClientEvents'
+            'export interface serverSocket extends socket_server<ClientToServerEvents, ServerToClientEvents, object, object> {'
         ])
     ].forEach(event => checkMatchInSpecificFile(TYPES_IO_TS, event));
 }
