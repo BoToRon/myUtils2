@@ -31,8 +31,8 @@ export const zValidVariants = z.enum(variants);
 export const zMyEnv = z.object({
     DEV_OR_PROD: z.enum(['DEV', 'PROD']),
     ADMIN_PASSWORD: z.string(),
+    PORT: z.literal('3000'),
     ERIS_TOKEN: z.string(),
     MONGO_URI: z.string(),
     APP_NAME: z.string(),
-    PORT: z.string(),
 });

@@ -28,8 +28,8 @@ _
 import { basicProjectChecks } from './basicProjectChecks.js' //DELETETHISFORCLIENT
 _
 import {
-	arrayPredicate, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, bvModal, bvToast, cachedFile, maybePromise, messageHandler, myEnv, nullable, pipe_mutable_type, pipe_persistent_type,
-	timer, validChalkColor, validNpmCommand_package, validNpmCommand_project, vueComponentsTracker, zSchema
+	arrayPredicate, btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, bvModal, bvToast, cachedFile, maybePromise, messageHandler, myEnv, nullable, pipe_mutable_type,
+	pipe_persistent_type, timer, validChalkColor, validNpmCommand_package, validNpmCommand_project, vueComponentsTracker, zSchema
 } from './types/types.js'
 _
 import {
@@ -49,7 +49,7 @@ _ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ***********
 _ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 
 export {
-	btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn,
+	btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn,
 	btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, nullable, zValidVariants
 }
 
@@ -1131,6 +1131,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[]) {
 
 		checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine')	//@btr-ignore
 		checkReplaceableCode(['Readonly<', 'ReadonlyArray<'], 'readonly ')	//@btr-ignore
+		checkReplaceableCode(['//@ts-ignore'], '//@ts-expect-error')	//@btr-ignore
 		checkReplaceableCode(['| null', 'null |'], 'nullable')	//@btr-ignore
 		checkReplaceableCode(['Object.keys'], 'objectKeys')	//@btr-ignore
 		checkReplaceableCode(['console.log'], 'colorLog')	//@btr-ignore
@@ -1239,7 +1240,7 @@ export function getStartedHttpServer() {
 	const httpServer = http.createServer(app)
 	app.use(express.static(path.resolve() + '/public'))
 	app.get('/', (_request, response) => response.sendFile(path.resolve() + '/public/index.html'))
-	httpServer.listen(PORT, () => delay(1500).then(() => colorLog('white', `server up at: http://localhost:${PORT}/`)))
+	httpServer.listen(PORT, () => delay(1500).then(() => colorLog('white', 'Server up and running~')))
 	return httpServer
 }
 /**Import modules or jsons */

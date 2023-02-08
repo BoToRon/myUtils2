@@ -1104,6 +1104,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles) {
         const { path, content } = file;
         checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine'); //@btr-ignore
         checkReplaceableCode(['Readonly<', 'ReadonlyArray<'], 'readonly '); //@btr-ignore
+        checkReplaceableCode(['//@ts-ignore'], '//@ts-expect-error'); //@btr-ignore
         checkReplaceableCode(['| null', 'null |'], 'nullable'); //@btr-ignore
         checkReplaceableCode(['Object.keys'], 'objectKeys'); //@btr-ignore
         checkReplaceableCode(['console.log'], 'colorLog'); //@btr-ignore
@@ -1216,7 +1217,7 @@ export function getStartedHttpServer() {
     const httpServer = http.createServer(app);
     app.use(express.static(path.resolve() + '/public'));
     app.get('/', (_request, response) => response.sendFile(path.resolve() + '/public/index.html'));
-    httpServer.listen(PORT, () => delay(1500).then(() => colorLog('white', `server up at: http://localhost:${PORT}/`)));
+    httpServer.listen(PORT, () => delay(1500).then(() => colorLog('white', 'Server up and running~')));
     return httpServer;
 }
 /**Import modules or jsons */

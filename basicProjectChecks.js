@@ -101,7 +101,7 @@ function checkStructureAndMatchesOfVueFiles() {
         [
             asConsecutiveLines([
                 'export default defineComponent({',
-                `\tmounted() { trackVueComponent(${filepathToComponentName()}, this as never, window as never) },`
+                `\tmounted() { trackVueComponent('${filepathToComponentName()}', this as never, window as never) },`
             ]),
             '<style scoped>'
         ].forEach(wantedMatch => checkMatchInSpecificFile(file.path, wantedMatch));
@@ -176,6 +176,18 @@ function checkClientStoreTs() {
             '\t\tvueComponents: Record<'
         ]),
         'const { myLocalStorage, localStorageSet } = getLocalStorageAndSetter({',
+        asConsecutiveLines([
+            'export const useStore = defineStore(\'data\', {',
+            '\tstate: () => ({',
+            '\t\tsocket,',
+            '\t\t...myLocalStorage,',
+            '\t\tbvModal: <BvModal>nullAs(),',
+            '\t\tnewToast: <newToastFn>nullAs(),',
+            '\t\tsocketEvents: [] as socketEventInfo[],',
+            '\t\tview: \'main\' as validCurrentViews,',
+            '\t\tadminFetch: { command: \'\', data: null } as adminFetch,',
+            '\t\tglobalAlert: { message: \'\', show: false } as globalAlert,'
+        ]),
         asConsecutiveLines([
             '\t\tupdateStoreAndLocalStorageKey<K extends keyof T, T extends typeof myLocalStorage>(key: K, value: T[K]) {',
             '\t\t\t//@ts-expect-error ts doesn\'t automatically realize all keys of myLocalStorage also are present in useStore()',
@@ -444,18 +456,25 @@ function checkSpecificMatchesInTypesTs() {
         asConsecutiveLines([
             '/**imported from utils */',
             'declare global {',
-            '	type fieldsForColumnOfTable = btr_fieldsForColumnOfTable',
-            '	type globalAlert = btr_globalAlert',
-            '	type language = btr_language',
-            '	type newToastFn = btr_newToastFn',
-            '	type socketEventInfo = btr_socketEventInfo',
-            '	type trackedVueComponent = btr_trackedVueComponent',
-            '	type validVariant = btr_validVariant',
+            '\ttype adminFetch = btr_adminFetch',
+            '\ttype fieldsForColumnOfTable = btr_fieldsForColumnOfTable',
+            '\ttype globalAlert = btr_globalAlert',
+            '\ttype language = btr_language',
+            '\ttype newToastFn = btr_newToastFn',
+            '\ttype socketEventInfo = btr_socketEventInfo',
+            '\ttype trackedVueComponent = btr_trackedVueComponent',
+            '\ttype validVariant = btr_validVariant',
             '}'
         ]),
-        asConsecutiveLines(['/**infered from zod */', 'declare global']),
+        asConsecutiveLines([
+            '/**infered from zod */',
+            'declare global'
+        ]),
         'type validAdminCommands = z.infer<typeof zValidAdminCommands>',
-        asConsecutiveLines(['/**exclusive to this project */', 'declare global']),
+        asConsecutiveLines([
+            '/**exclusive to this project */',
+            'declare global'
+        ]),
         'type mongoMisc = { adminKey: string, pageVisits: number',
     ].forEach(x => checkMatchInSpecificFile('./types/types.d.ts', x));
 }

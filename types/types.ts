@@ -18,6 +18,7 @@ export type btr_nonVoidFn = <F extends (...args: Parameters<F>) => ReturnType<F>
 export type btr_trackedVueComponent = { id: string, name: string, beforeDestroy?: () => void }
 export type btr_socketEventInfo = { event: string, timestamp: number, data: unknown }
 export type btr_globalAlert = { message: string, show: boolean }
+export type btr_adminFetch = { command: string, data: unknown }
 export type btr_validVariant = z.infer<typeof zValidVariants>
 export type btr_language = 'English' | 'Español'
 export type btr_fieldsForColumnOfTable = string | {

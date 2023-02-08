@@ -14,8 +14,8 @@ _
 _
 _
 import {
-	arrayPredicate, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, bvModal, bvToast, cachedFile, maybePromise, messageHandler, myEnv, nullable, pipe_mutable_type, pipe_persistent_type,
-	timer, validChalkColor, validNpmCommand_package, validNpmCommand_project, vueComponentsTracker, zSchema
+	arrayPredicate, btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, bvModal, bvToast, cachedFile, maybePromise, messageHandler, myEnv, nullable, pipe_mutable_type,
+	pipe_persistent_type, timer, validChalkColor, validNpmCommand_package, validNpmCommand_project, vueComponentsTracker, zSchema
 } from '../types/types.js'
 _
 import {
@@ -35,7 +35,7 @@ _ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ***********
 _ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 
 export {
-	btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn,
+	btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn,
 	btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, nullable, zValidVariants
 }
 
