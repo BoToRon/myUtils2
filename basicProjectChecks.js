@@ -4,7 +4,7 @@ _;
 import { z } from 'zod';
 _;
 _;
-import { getCachedFiles, checkCodeThatCouldBeUpdated, compareArrays, getEnviromentVariables, importFileFromProject, nullAs, successLog, surroundedString, zodCheck_curry, zRegexGenerator, fsReadFileAsync } from './btr.js';
+import { getCachedFiles, checkCodeThatCouldBeUpdated, compareArrays, getEnviromentVariables, importFileFromProject, nullAs, successLog, surroundedString, zodCheck_curry, zRegexGenerator } from './btr.js';
 _;
 import { CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_VARS, SERVER_EVENTS_TS, SERVER_REF_TS, TSCONFIG_JSON, TYPES_IO_TS, zMyEnv } from './constants/constants.js';
 _;
@@ -26,10 +26,10 @@ export async function basicProjectChecks(errHandler) {
     clientVueFiles.push(...getFromCachedFiles([CLIENT_SRC, '.vue']));
     clientTsFiles.push(...getFromCachedFiles([CLIENT_SRC, '.ts']));
     serverTsFiles.push(...getFromCachedFiles(['./server', '.ts']));
-    await allPromises();
+    await allChecks();
     errors.length ? errorHandler('\n\n' + errors.join('\n\n') + '\n\n') : successLog('all basicProjectChecks passed');
     return !errors.length;
-    function allPromises() {
+    function allChecks() {
         checkBasicValidAdminCommands();
         checkClientFilesDontReferenceLocalStorageDirectly();
         checkClientIndexTs();
@@ -37,6 +37,8 @@ export async function basicProjectChecks(errHandler) {
         checkClientStoreTs();
         checkEnviromentVariables();
         checkFilesAndFolderStructure();
+        checkFilesAreIdentical(ESLINT_CJS, inBtrUtils(ESLINT_CJS));
+        checkFilesAreIdentical(TSCONFIG_JSON, inBtrUtils(TSCONFIG_JSON));
         checkGitIgnore();
         checkImportsAreFromTheRightBtrFile();
         checkInitTsCallsRefTsAndIoTs();
@@ -51,8 +53,6 @@ export async function basicProjectChecks(errHandler) {
             checkAllExportedFunctionsAreDescribed(),
             checkAllVueComponentsAreTrackeable(),
             checkCodeThatCouldBeUpdated([serverTsFiles, clientTsFiles, clientVueFiles].flat()),
-            checkFilesAreIdentical(ESLINT_CJS, inBtrUtils(ESLINT_CJS)),
-            checkFilesAreIdentical(TSCONFIG_JSON, inBtrUtils(TSCONFIG_JSON)),
             checkPackageJsons(),
             checkUtilsVersion(),
             checkVsCodeSettings(),
@@ -168,8 +168,8 @@ function checkClientStoreTs() {
         asConsecutiveLines([
             'declare global {',
             '\tinterface Window {',
-            'appLog: ReturnType<typeof getAppLog>',
-            'vueComponents: Record<'
+            '\t\tappLog: ReturnType<typeof getAppLog>',
+            '\t\tvueComponents: Record<'
         ]),
         'const { myLocalStorage, localStorageSet } = getLocalStorageAndSetter({',
         asConsecutiveLines([
@@ -185,11 +185,10 @@ function checkClientStoreTs() {
 function checkEnviromentVariables() {
     zodCheck_curry((error) => addToErrors('.env', error), false)(zMyEnv, getEnviromentVariables());
 }
-async function checkFilesAreIdentical(path, pathToTemplate) {
-    const file = getFromCachedFiles([path])[0];
-    const sampleFile = await fsReadFileAsync(pathToTemplate);
-    if (withoutSlash_r_n(file.content) === withoutSlash_r_n(sampleFile)) {
-        return true;
+function checkFilesAreIdentical(path, pathToTemplate) {
+    const [file, template] = getFromCachedFiles([path]);
+    if (withoutSlash_r_n(file.content) === withoutSlash_r_n(template.content)) {
+        return;
     }
     addToErrors(path, 'File should be identical to the one at ' + pathToTemplate);
     function withoutSlash_r_n(content) { return content.replace(/\r|\n/g, ''); } //regexHere
