@@ -827,11 +827,11 @@ _; /********** MISC ******************** MISC ******************** MISC ********
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 //TODO: describe this
-export function clientSocketLongOnAny(socket, socketEvents) {
-    socket.onAny((eventName, ...args) => {
+export function clientSocketLongOnAny(useStore) {
+    useStore().socket.onAny((eventName, ...args) => {
         const eventInfo = { event: eventName, timestamp: Date.now(), data: args };
         colorLog('red', stringify(eventInfo));
-        socketEvents.unshift(eventInfo);
+        useStore().socketEvents.unshift(eventInfo);
     });
 }
 /**

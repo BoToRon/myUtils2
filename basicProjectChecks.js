@@ -6,7 +6,7 @@ _;
 _;
 import { getCachedFiles, checkCodeThatCouldBeUpdated, compareArrays, getEnviromentVariables, importFileFromProject, nullAs, successLog, surroundedString, zodCheck_curry, zRegexGenerator } from './btr.js';
 _;
-import { CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_VARS, SERVER_EVENTS_TS, SERVER_REF_TS, TSCONFIG_JSON, TYPES_IO_TS, zMyEnv } from './constants/constants.js';
+import { CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_VARS, SERVER_EVENTS_TS, SERVER_REF_TS, TSCONFIG_JSON, TYPES_IO_TS, TYPES_Z_TS, zMyEnv } from './constants/constants.js';
 _;
 function zodCheck_toErrors(path, schema, data) { zodCheck_curry((e) => addToErrors(path, e))(schema, data); }
 function addToErrors(path, error) { errors.push(`(at ${path}): ${error}`); }
@@ -65,7 +65,7 @@ function asConsecutiveLines(lines) {
 }
 function checkBasicValidAdminCommands() {
     checkMatchInSpecificFile(GLOBAL_VARS, 'export const adminCommands = [\'getSockets\', \'help\', \'ref\',');
-    checkMatchInSpecificFile('./types/z.ts', 'export const zValidAdminCommands = z.enum(adminCommands)');
+    checkMatchInSpecificFile(TYPES_Z_TS, 'export const zValidAdminCommands = z.enum(adminCommands)');
 }
 /**Check all the top-level functions in main .ts server files have a description */
 function checkAllExportedFunctionsAreDescribed() {
@@ -131,7 +131,7 @@ function checkClientIndexTs() {
             '_',
             'import { BootstrapVue, IconsPlugin } from \'bootstrap-vue\'',
             '_',
-            'import { logInitialization, newToast_client_curry } from \'@botoron/utils/client/btr.js\'',
+            'import { clientSocketLongOnAny, getAppLog, logInitialization, newToast_client_curry } from \'@botoron/utils/client/btr.js\'',
             '_',
             'logInitialization(\'./client/src/index.ts\')',
             '',
@@ -146,7 +146,11 @@ function checkClientIndexTs() {
             '',
             'const vueApp = new Vue({ pinia: createPinia(), render: (h) => h(App), }).$mount(\'#app\')',
             'useStore().newToast = newToast_client_curry(vueApp.$bvToast)',
-            'useStore().bvModal = vueApp.$bvModal'
+            'useStore().bvModal = vueApp.$bvModal',
+            '',
+            'if (import.meta.env.DEV) { clientSocketLongOnAny(useStore) }',
+            'getAppLog(window as never, useStore as never)',
+            'useStore().login()',
         ])
     ].forEach(x => checkMatchInSpecificFile(CLIENT_SRC + '/index.ts', x));
 }
@@ -154,7 +158,6 @@ function checkClientSocketTs() {
     [
         asConsecutiveLines([
             'export const socket: clientSocket = import.meta.env.PROD ? io() : io(\'http://localhost:3000/\')',
-            'if (import.meta.env.DEV) { clientSocketLongOnAny(socket, useStore().socketEvents) }',
             'socket.on(\'globalAlert\', globalAlert => useStore().globalAlert = globalAlert)',
             'socket.on(\'initData\','
         ])
@@ -174,10 +177,6 @@ function checkClientStoreTs() {
             '\t\t\t//@ts-expect-error ts doesn\'t automatically realize all keys of myLocalStorage also are present in useStore()',
             '\t\t\tuseStore()[key] = value; localStorageSet(key, value)',
             '\t\t},'
-        ]),
-        asConsecutiveLines([
-            'getAppLog(window as never, useStore as never)',
-            'useStore().login()'
         ])
     ].forEach(x => checkMatchInSpecificFile('./client/src/store.ts', x));
 }
@@ -202,7 +201,7 @@ function checkFilesAndFolderStructure() {
         ESLINT_CJS, GITIGNORE, TSCONFIG_JSON, './.env', './.git', './package-lock.json', './package.json', './TODO.md',
         SERVER_EVENTS_TS, SERVER_REF_TS, './server/fns.ts', './server/init.ts',
         GLOBAL_VARS, './global/fns.ts',
-        TYPES_IO_TS, './types/types.d.ts', './types/z.ts',
+        TYPES_IO_TS, TYPES_Z_TS, './types/types.d.ts',
         './client/env.d.ts', './client/index.html', './client/node_modules', './client/package-lock.json', './client/package.json',
         './client/tsconfig.config.json', './client/tsconfig.json', './client/vite.config.ts', './client/vue.config.js',
         CLIENT_SRC_SOCKET, './client/src/App.vue', './client/src/assets', './client/src/index.ts', './client/src/store.ts', //client files
@@ -242,7 +241,7 @@ function checkInitTsCallsRefTsAndIoTs() {
     checkMatchInSpecificFile('./server/init.ts', 'successLog(stringify({ refInitialized: true, ioInitialized }))');
 }
 function checkLocalImportsHaveJsExtention() {
-    [serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
+    [getFromCachedFiles([TYPES_Z_TS])[0], serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
         const { path, content } = file;
         const localImports = content.match(/from '\..{1,}/g); //regexHere
         if (!localImports) {
@@ -410,7 +409,7 @@ function checkServerAndClientFilesLogTheirInitialization() {
 }
 function checkSpecificMatchesInTypesIoTs() {
     [
-        asConsecutiveLine([
+        asConsecutiveLines([
             'import { Server, Socket as socket_server } from \'socket.io\'',
             'import { Socket as socket_client } from \'socket.io-client\'',
             'import { getStartedHttpServer } from \'@botoron/utils\'',
@@ -426,7 +425,7 @@ function checkSpecificMatchesInTypesIoTs() {
         asConsecutiveLines([
             'export type socket_c2s_event = keyof ClientToServerEvents',
             'export interface ClientToServerEvents {',
-            'admin: (adminKey: string, command: string) => void',
+            '\tadmin: (adminKey: string, command: string) => void',
             ''
         ]),
         asConsecutiveLines([
@@ -504,19 +503,18 @@ async function checkVueDevFiles() {
     }));
 }
 async function fillCachedFiles() {
+    const nodeModulesVueTsConfig = './client/node_modules/@vue/tsconfig/tsconfig.json';
     const clientVueFilePaths = getFilesAndFoldersNames(CLIENT_SRC, '.vue');
     const clientTsFilePaths = getFilesAndFoldersNames(CLIENT_SRC, '.ts');
     const serverTsFilePaths = getFilesAndFoldersNames('./server', '.ts');
     const typeFilePaths = getFilesAndFoldersNames('./types', '.ts');
     const tsConfigs = [inBtrUtils(TSCONFIG_JSON), TSCONFIG_JSON];
     const eslintConfigs = [inBtrUtils(ESLINT_CJS), ESLINT_CJS];
-    const vueDevFiles = [
-        'env.d.ts', 'node_modules/@vue/tsconfig/tsconfig.json', 'tsconfig.config.json',
-        'tsconfig.json', 'vite.config.ts', 'vue.config.js'
-    ].map(x => './client/' + x);
     cachedFiles.push(...await getCachedFiles(errors, [
         clientTsFilePaths, clientVueFilePaths, eslintConfigs, GITIGNORE,
-        GLOBAL_VARS, serverTsFilePaths, tsConfigs, typeFilePaths, vueDevFiles
+        GLOBAL_VARS, nodeModulesVueTsConfig, serverTsFilePaths, tsConfigs, typeFilePaths,
+        ['env.d.ts', 'tsconfig.config.json', 'tsconfig.json', 'vite.config.ts', 'vue.config.js'].
+            map(x => ['./client/' + x, './node_modules/@botoron/utils/templateFiles/' + x]).flat()
     ].flat()));
 }
 /**Get all the file and folders within a folder, stopping at predefined folders */

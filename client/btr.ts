@@ -845,13 +845,15 @@ _ /********** MISC ******************** MISC ******************** MISC *********
 
 //TODO: describe this
 export function clientSocketLongOnAny(
-	socket: { onAny: (arg0: (eventName: string, ...args: unknown[]) => void) => void },
-	socketEvents: btr_socketEventInfo[]
+	useStore: () => ({
+		socketEvents: btr_socketEventInfo[],
+		socket: { onAny: (arg0: (eventName: string, ...args: unknown[]) => void) => void },
+	}),
 ) {
-	socket.onAny((eventName: string, ...args: unknown[]) => {
+	useStore().socket.onAny((eventName: string, ...args: unknown[]) => {
 		const eventInfo: btr_socketEventInfo = { event: eventName, timestamp: Date.now(), data: args }
 		colorLog('red', stringify(eventInfo))
-		socketEvents.unshift(eventInfo)
+		useStore().socketEvents.unshift(eventInfo)
 	})
 }
 /**

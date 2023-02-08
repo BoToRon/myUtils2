@@ -4,6 +4,7 @@ _;
 _;
 export const GITIGNORE = './.gitignore';
 export const CLIENT_SRC = './client/src';
+export const TYPES_Z_TS = './types/z.ts';
 export const TYPES_IO_TS = './types/io.ts';
 export const ESLINT_CJS = './.eslintrc.cjs';
 export const GLOBAL_VARS = './global/vars.ts';
