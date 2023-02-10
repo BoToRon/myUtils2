@@ -209,8 +209,8 @@ export function getRandomItem(arr) { const r = roll(arr.length); return { item: 
 /**@returns a version of the provided array without repeating items */
 export function getUniqueValues(arr) { return [...new Set(arr)]; }
 /**@returns whether an item is the last one in an array or not (warning: maybe don't use with primitives) */
-export function isLastItem(arr, item) { return arr.indexOf(item) === arr.length - 1; }
-/**Return the last item of the given array */
+export function isLastItem(arr, item) { return item === arr.at(-1); }
+/**Return the last item of the given array */ //TODO: consider replacing this for Array.prototype.at(-1)
 export function lastItem(arr) { return arr[arr.length - 1]; }
 /**Apply multiple mapping functions to a single array at once and return an object with all the result */
 export function multiMap(arr, f1, f2, f3 = doNothing, f4 = doNothing, f5 = doNothing) {
@@ -906,6 +906,25 @@ export function getLocalStorageAndSetter(defaults) {
 export function logEmptyLine() { console.log(''); } //@btr-ignore
 /** @returns null, as the provided type */
 export function nullAs() { return null; } //@btr-ignore
+//TODO: describe me
+export async function triggerModal(useStore, id, action) {
+    if (action === 'show') {
+        useStore().bvModal.show(id);
+        for (let i = 0; i < 10; i++) {
+            if (!elementExists()) {
+                await delay(250);
+            }
+        }
+        if (!elementExists()) {
+            promptError();
+        }
+    }
+    if (action === 'hide') {
+        elementExists() ? useStore().bvModal.hide(id) : promptError();
+    }
+    function elementExists() { return Boolean(document.getElementById(id)); }
+    function promptError() { alert(`Modal with the '${id}' id was not found. Could not ${action}. Please report this`); }
+}
 /**
  * Return the regex given with possibly an error indicating it wasn't matched.
  * MUST BE USED AS A SPREAD ARGUMENT, eg: zString.regex( ...zRegexGenerator(/hi/, false) )
@@ -1102,6 +1121,7 @@ export function bigConsoleError(message) {
 export function checkCodeThatCouldBeUpdated(cachedFiles) {
     cachedFiles.forEach(file => {
         const { path, content } = file;
+        checkReplaceableCode(['bvModal.show', 'bvModal.hide'], '.triggerModal(modalId, show | hide)'); //@btr-ignore
         checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine'); //@btr-ignore
         checkReplaceableCode(['Readonly<', 'ReadonlyArray<'], 'readonly '); //@btr-ignore
         checkReplaceableCode(['//@ts-ignore'], '//@ts-expect-error'); //@btr-ignore
@@ -1257,7 +1277,6 @@ export function npmRun_package(npmCommand) {
         colorLog('magenta', 'Process over');
     }
     async function promptVersioning() {
-        console.trace('promptVersioning');
         function tryAgain(error) { colorLog('yellow', error); promptVersioning(); }
         const versionIncrement = await questionAsPromise('Type of package version increment (major, minor, patch)?');
         if (!zodCheck_curry(tryAgain)(zValidVersionIncrement, versionIncrement)) {

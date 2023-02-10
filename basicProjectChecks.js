@@ -37,6 +37,8 @@ export async function basicProjectChecks(errHandler) {
         checkClientStoreTs();
         checkEnviromentVariables();
         checkFilesAndFolderStructure();
+        checkFilesAreIdentical('./client/src/__admin.vue', externalTemplatePath('__admin.vue'));
+        checkFilesAreIdentical('./client/src/__simpleConfirmationModal.vue', externalTemplatePath('__simpleConfirmationModal.vue'));
         checkFilesAreIdentical(ESLINT_CJS, inBtrUtils(ESLINT_CJS));
         checkFilesAreIdentical(TSCONFIG_JSON, inBtrUtils(TSCONFIG_JSON));
         checkGitIgnore();
@@ -140,8 +142,10 @@ function checkClientIndexTs() {
             'logInitialization(\'./client/src/index.ts\')',
             '',
             '//components',
-            'import admin from \'./_admin.vue\''
         ]),
+        'import admin from \'./__admin.vue\'',
+        'import simpleConfirmationModal from \'./__simpleConfirmationModal.vue\'',
+        'Vue.component(\'component_simpleConfirmationModal\', simpleConfirmationModal)',
         'Vue.component(\'component_admin\', admin)',
         asConsecutiveLines([
             'Vue.use(PiniaVuePlugin)',
@@ -183,12 +187,17 @@ function checkClientStoreTs() {
             '\t\t...myLocalStorage,',
             '\t\tbvModal: <BvModal>nullAs(),',
             '\t\tnewToast: <newToastFn>nullAs(),',
-            '\t\tsocketEvents: [] as socketEventInfo[],',
             '\t\tview: \'main\' as validCurrentViews,',
+            '\t\tsocketEvents: [] as socketEventInfo[],',
             '\t\tadminFetch: { command: \'\', data: null } as adminFetch,',
             '\t\tglobalAlert: { message: \'\', show: false } as globalAlert,'
         ]),
         asConsecutiveLines([
+            '\tactions: {',
+            '\t\tlogin() { socket.emit',
+        ]),
+        asConsecutiveLines([
+            '\t\ttriggerModal(id: validModalIds, action: \'show\' | \'hide\') { triggerModal(useStore, id, action) },',
             '\t\tupdateStoreAndLocalStorageKey<K extends keyof T, T extends typeof myLocalStorage>(key: K, value: T[K]) {',
             '\t\t\t//@ts-expect-error ts doesn\'t automatically realize all keys of myLocalStorage also are present in useStore()',
             '\t\t\tuseStore()[key] = value; localStorageSet(key, value)',
@@ -525,7 +534,11 @@ async function checkVueDevFiles() {
         return checkFilesAreIdentical(fullpath, pathToTemplate);
     }));
 }
+function externalTemplatePath(filename) {
+    return '../../_templateFiles/' + filename;
+}
 async function fillCachedFiles() {
+    const vueTemplates = ['admin', 'simpleConfirmationModal'].map(x => externalTemplatePath(`__${x}.vue`));
     const nodeModulesVueTsConfig = './client/node_modules/@vue/tsconfig/tsconfig.json';
     const clientVueFilePaths = getFilesAndFoldersNames(CLIENT_SRC, '.vue');
     const clientTsFilePaths = getFilesAndFoldersNames(CLIENT_SRC, '.ts');
@@ -534,8 +547,8 @@ async function fillCachedFiles() {
     const tsConfigs = [inBtrUtils(TSCONFIG_JSON), TSCONFIG_JSON];
     const eslintConfigs = [inBtrUtils(ESLINT_CJS), ESLINT_CJS];
     cachedFiles.push(...await getCachedFiles(errors, [
-        clientTsFilePaths, clientVueFilePaths, eslintConfigs, GITIGNORE,
-        GLOBAL_VARS, nodeModulesVueTsConfig, serverTsFilePaths, tsConfigs, typeFilePaths,
+        clientTsFilePaths, clientVueFilePaths, eslintConfigs, GITIGNORE, GLOBAL_VARS,
+        nodeModulesVueTsConfig, serverTsFilePaths, tsConfigs, typeFilePaths, vueTemplates.flat(),
         ['env.d.ts', 'tsconfig.config.json', 'tsconfig.json', 'vite.config.ts', 'vue.config.js'].
             map(x => ['./client/' + x, './node_modules/@botoron/utils/templateFiles/' + x]).flat()
     ].flat()));

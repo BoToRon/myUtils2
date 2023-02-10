@@ -202,8 +202,8 @@ export function getRandomItem<T>(arr: T[]) { const r = roll(arr.length); return 
 /**@returns a version of the provided array without repeating items */
 export function getUniqueValues<T>(arr: T[]) { return [...new Set(arr)] }
 /**@returns whether an item is the last one in an array or not (warning: maybe don't use with primitives) */
-export function isLastItem<T>(arr: T[], item: T) { return arr.indexOf(item) === arr.length - 1 }
-/**Return the last item of the given array */
+export function isLastItem<T>(arr: T[], item: T) { return item === arr.at(-1) }
+/**Return the last item of the given array */ //TODO: consider replacing this for Array.prototype.at(-1)
 export function lastItem<T>(arr: T[]) { return arr[arr.length - 1] as T }
 /**Apply multiple mapping functions to a single array at once and return an object with all the result */
 export function multiMap<
@@ -923,6 +923,21 @@ export function getLocalStorageAndSetter<T extends Record<string, unknown>>(defa
 export function logEmptyLine() { console.log('') } //@btr-ignore
 /** @returns null, as the provided type */
 export function nullAs<T>() { return null as T } //@btr-ignore
+//TODO: describe me
+export async function triggerModal(useStore: () => { bvModal: bvModal }, id: string, action: 'show' | 'hide') {
+	if (action === 'show') {
+		useStore().bvModal.show(id)
+		for (let i = 0; i < 10; i++) { if (!elementExists()) { await delay(250) } }
+		if (!elementExists()) { promptError() }
+	}
+
+	if (action === 'hide') {
+		elementExists() ? useStore().bvModal.hide(id) : promptError()
+	}
+
+	function elementExists() { return Boolean(document.getElementById(id)) }
+	function promptError() { alert(`Modal with the '${id}' id was not found. Could not ${action}. Please report this`) }
+}
 /**
  * Return the regex given with possibly an error indicating it wasn't matched.
  * MUST BE USED AS A SPREAD ARGUMENT, eg: zString.regex( ...zRegexGenerator(/hi/, false) )
