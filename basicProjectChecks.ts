@@ -54,10 +54,11 @@ export async function basicProjectChecks(errHandler: messageHandler) {
 		checkClientStoreTs()
 		checkEnviromentVariables()
 		checkFilesAndFolderStructure()
-		checkFilesAreIdentical('./client/src/__admin.vue', externalTemplatePath('__admin.vue'))
-		checkFilesAreIdentical('./client/src/__simpleConfirmationModal.vue', externalTemplatePath('__simpleConfirmationModal.vue'))
 		checkFilesAreIdentical(ESLINT_CJS, inBtrUtils(ESLINT_CJS))
 		checkFilesAreIdentical(TSCONFIG_JSON, inBtrUtils(TSCONFIG_JSON))
+		checkFilesAreIdentical('./client/src/__admin.vue', externalTemplatePath('__admin.vue'))
+		checkFilesAreIdentical('./client/src/__chartJs.ts', externalTemplatePath('__chartJs.ts'))
+		checkFilesAreIdentical('./client/src/__simpleConfirmationModal.vue', externalTemplatePath('__simpleConfirmationModal.vue'))
 		checkGitIgnore()
 		checkImportsAreFromTheRightBtrFile()
 		checkInitTsCallsRefTsAndIoTs()
@@ -576,9 +577,10 @@ async function fillCachedFiles() {
 	const typeFilePaths = getFilesAndFoldersNames('./types', '.ts')
 	const tsConfigs = [inBtrUtils(TSCONFIG_JSON), TSCONFIG_JSON]
 	const eslintConfigs = [inBtrUtils(ESLINT_CJS), ESLINT_CJS]
+	const chartJs = externalTemplatePath('__chartJs.ts')
 
 	cachedFiles.push(...await getCachedFiles(errors, [
-		clientTsFilePaths, clientVueFilePaths, eslintConfigs, GITIGNORE, GLOBAL_VARS,
+		chartJs, clientTsFilePaths, clientVueFilePaths, eslintConfigs, GITIGNORE, GLOBAL_VARS,
 		nodeModulesVueTsConfig, serverTsFilePaths, tsConfigs, typeFilePaths, vueTemplates.flat(),
 		['env.d.ts', 'tsconfig.config.json', 'tsconfig.json', 'vite.config.ts', 'vue.config.js'].
 			map(x => ['./client/' + x, './node_modules/@botoron/utils/templateFiles/' + x]).flat()
