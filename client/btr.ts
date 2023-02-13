@@ -74,22 +74,6 @@ export function zodCheck_curry(errorHandler = divine.error as messageHandler, st
 	}
 	return zodCheck
 }
-/**(generates a function that:) Opens/close a bootstrap-vue modal with zod validation */
-//TODO: delete this ( hard to initialize when bvModal is declared after triggerModalWithValidation in the pinia store )
-export function triggerModalWithValidation_curry<validModalIds extends string>($bvModal: bvModal) {
-	return async function body(id: validModalIds, action: 'show' | 'hide') {
-
-		if (action === 'show') {
-			$bvModal.show(id)
-			for (let i = 0; i < 10; i++) { if (!elementExists()) { await delay(500) } }
-			if (!elementExists()) { promptError() }
-		}
-
-		if (action === 'hide') { elementExists() ? $bvModal.hide(id) : promptError() }
-		function elementExists() { return Boolean(document.getElementById(id)) }
-		function promptError() { alert(`Modal with id (${id}) not found. Could not ${action}. Please report it`) }
-	}
-}
 /**Add/remove a vue component to the window for easy access/debugging */
 export function trackVueComponent<T extends string>(
 	name: T,
@@ -926,13 +910,13 @@ export function nullAs<T>() { return null as T } //@btr-ignore
 //TODO: describe me
 export async function triggerModal(useStore: () => { bvModal: bvModal }, id: string, action: 'show' | 'hide') {
 	if (action === 'show') {
-		useStore().bvModal.show(id)
+		useStore().bvModal.show(id) //@btr-ignore
 		for (let i = 0; i < 10; i++) { if (!elementExists()) { await delay(250) } }
 		if (!elementExists()) { promptError() }
 	}
 
 	if (action === 'hide') {
-		elementExists() ? useStore().bvModal.hide(id) : promptError()
+		elementExists() ? useStore().bvModal.hide(id) : promptError() //@btr-ignore
 	}
 
 	function elementExists() { return Boolean(document.getElementById(id)) }
@@ -999,5 +983,7 @@ _ /********** DEPRECATED ******************** DEPRECATED ******************** DE
 export function getFormattedTimestamp() { doNothing }
 /**@deprecated use "trackVueComponent" instead */
 export function trackVueComponent_curry() { doNothing }
+/**@deprecated use "triggerModal" instead */
+export function triggerModalWithValidation_curry() { doNothing }
 
 export const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)
