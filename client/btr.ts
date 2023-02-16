@@ -607,14 +607,14 @@ export function mapObject<F extends (value: O[keyof O]) => ReturnType<F>, O exte
 	objectEntries(object).forEach(x => { newObject[x.key] = mappingFn(x.value) })
 	return newObject as { [key in keyof O]: ReturnType<F> }
 }
-/**Object.entries but with proper type-inference */
+/**Object.Prototype.entries but with proper type-inference */
 export function objectEntries<T extends object>(object: T) {
-	return Object.entries(object).map(entry => ({ key: entry[0] as keyof T, value: entry[1] as T[keyof T] }))
+	return Object.entries(object).map(entry => ({ key: entry[0] as keyof T, value: entry[1] as T[keyof T] })) //@btr-ignore
 }
 /**Object.keys but with proper type-inference */ //@btr-ignore
 export function objectKeys<K extends string, T extends Record<K, unknown>>(object: T) { return Object.keys(object) as (keyof T)[] } //@btr-ignore
-/**Object.values but with proper type-inference */
-export function objectValues<T extends object>(object: T) { return Object.values(object) as T[keyof T] }
+/**Object.Prototype.values but with proper type-inference */
+export function objectValues<T extends object>(object: T) { return Object.values(object) as T[keyof T] } //@btr-ignore
 /**Create an object with only the specified properties of another base object (references are kept) */
 export function pick<T extends object, K extends keyof T>(theObject: T, properties: readonly K[]) {
 	const thePartial = {} as Pick<T, K>
