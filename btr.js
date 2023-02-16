@@ -621,14 +621,14 @@ export function mapObject(object, mappingFn) {
     objectEntries(object).forEach(x => { newObject[x.key] = mappingFn(x.value); });
     return newObject;
 }
-/**Object.entries but with proper type-inference */
+/**Object.Prototype.entries but with proper type-inference */
 export function objectEntries(object) {
-    return Object.entries(object).map(entry => ({ key: entry[0], value: entry[1] }));
+    return Object.entries(object).map(entry => ({ key: entry[0], value: entry[1] })); //@btr-ignore
 }
 /**Object.keys but with proper type-inference */ //@btr-ignore
 export function objectKeys(object) { return Object.keys(object); } //@btr-ignore
-/**Object.values but with proper type-inference */
-export function objectValues(object) { return Object.values(object); }
+/**Object.Prototype.values but with proper type-inference */
+export function objectValues(object) { return Object.values(object); } //@btr-ignore
 /**Create an object with only the specified properties of another base object (references are kept) */
 export function pick(theObject, properties) {
     const thePartial = {};
@@ -1100,6 +1100,7 @@ export function bigConsoleError(message) {
 /**Basically custom ESlint warnings */
 export function checkCodeThatCouldBeUpdated(cachedFiles) {
     cachedFiles.forEach(file => {
+        let warningsCount = 0;
         const { path, content } = file;
         checkReplaceableCode(['bvModal.show', 'bvModal.hide'], '.triggerModal(modalId, show | hide)'); //@btr-ignore
         checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine'); //@btr-ignore
@@ -1121,7 +1122,8 @@ export function checkCodeThatCouldBeUpdated(cachedFiles) {
                 if (!matches.length) {
                     return;
                 }
-                colorLog('yellow', surroundedString('WARNING: OUTDATED/REPLACEABLE CODE', '-', 50));
+                warningsCount++;
+                colorLog('yellow', surroundedString(`${warningsCount}. WARNING: OUTDATED/REPLACEABLE CODE`, '-', 50));
                 console.log({ matches, replaceableCode: replaceableString, suggestedReplacement, path }); //@btr-ignore
             });
         }
