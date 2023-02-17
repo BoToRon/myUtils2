@@ -443,11 +443,10 @@ function checkSpecificMatchesInTypesIoTs() {
             'export type socket_s2c_event = keyof ServerToClientEvents',
             'export interface ServerToClientEvents {',
             '\tglobalAlert: (alert: globalAlert) => void',
-            '\tinitData: (allPlayersWithVotes: playerWithVotes[]) => void',
             '\tcommandResult: (commandUsed: string, result: unknown) => void',
-            '\ttoast: (title: string, message: string, variant: validVariant) => void',
-            ''
         ]),
+        '\tinitData:',
+        '\ttoast:',
         asConsecutiveLines([
             'export type socket_c2s_event = keyof ClientToServerEvents',
             'export interface ClientToServerEvents {',
@@ -480,7 +479,7 @@ function checkSpecificMatchesInTypesTs() {
             '/**infered from zod */',
             'declare global'
         ]),
-        'type validAdminCommands = z.infer<typeof zValidAdminCommands>',
+        'type validAdminCommand = z.infer<typeof zValidAdminCommands>',
         asConsecutiveLines([
             '/**exclusive to this project */',
             'declare global'

@@ -1129,8 +1129,7 @@ export function bigConsoleError(message: string) {
 export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[]) {
 	cachedFiles.forEach(file => {
 		const { path, content } = file
-
-		checkReplaceableCode(['bvModal.show', 'bvModal.hide'], '.triggerModal(modalId, show | hide)')	//@btr-ignore
+		checkReplaceableCode(['triggerModalWithValidation, bvModal.show', 'bvModal.hide'], '.triggerModal(modalId, show | hide)')	//@btr-ignore
 		checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine')	//@btr-ignore
 		checkReplaceableCode(['Readonly<', 'ReadonlyArray<'], 'readonly ')	//@btr-ignore
 		checkReplaceableCode(['//@ts-ignore'], '//@ts-expect-error')	//@btr-ignore
