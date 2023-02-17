@@ -27,7 +27,7 @@ export async function basicProjectChecks(errHandler) {
     clientTsFiles.push(...getFromCachedFiles([CLIENT_SRC, '.ts']));
     serverTsFiles.push(...getFromCachedFiles(['./server', '.ts']));
     await allChecks();
-    errors.length ? errorHandler('\n\n' + errors.join('\n\n') + '\n\n') : successLog('all basicProjectChecks passed');
+    errors.length ? errorHandler('\n\n' + errors.map((e, i) => i + '. ' + e).join('\n\n') + '\n\n') : successLog('all basicProjectChecks passed');
     return !errors.length;
     function allChecks() {
         checkBasicValidAdminCommands();
@@ -186,9 +186,9 @@ function checkClientStoreTs() {
             '\tstate: () => ({',
             '\t\tsocket,',
             '\t\t...myLocalStorage,',
-            '\t\tbvModal: <BvModal>nullAs(),',
+            '\t\tbvModal: <bvModal>nullAs(),',
             '\t\tnewToast: <newToastFn>nullAs(),',
-            '\t\tview: \'main\' as validCurrentViews,',
+            '\t\tview: \'main\' as validCurrentView,',
             '\t\tsocketEvents: [] as socketEventInfo[],',
             '\t\tadminFetch: { command: \'\', data: null } as adminFetch,',
             '\t\tglobalAlert: { message: \'\', show: false } as globalAlert,'

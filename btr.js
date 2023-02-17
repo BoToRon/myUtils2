@@ -27,7 +27,7 @@ _;
 import { basicProjectChecks } from './basicProjectChecks.js'; //DELETETHISFORCLIENT
 _;
 _;
-import { getUniqueId_generator, isNode, PACKAGE_DOT_JSON, timers, utilsRepoName, zValidVariants, zValidVersionIncrement } from './constants/constants.js';
+import { getUniqueId_generator, isNode, PACKAGE_DOT_JSON, timers, utilsRepoName, warningsCount_generator, zValidVariants, zValidVersionIncrement } from './constants/constants.js';
 _;
 import { z } from 'zod';
 _;
@@ -74,29 +74,6 @@ export function zodCheck_curry(errorHandler = divine.error, strictModeIfObject =
         return body(errorHandler, schema, data, strictModeIfObject);
     }
     return zodCheck;
-}
-/**Add/remove a vue component to the window for easy access/debugging */
-export function trackVueComponent(name, component, window) {
-    component.name = name;
-    component.id = getUniqueId(name);
-    component.beforeDestroy = onDestroy;
-    if (!window.vueComponents) {
-        window.vueComponents = {};
-    }
-    if (!window.vueComponents[name]) {
-        window.vueComponents[name] = [];
-    }
-    successLog(`Component '${name}' added to window.vueComponents [${window.vueComponents[name].length}]`);
-    window.vueComponents[name].push(component);
-    logAllComponents();
-    function logAllComponents() {
-        colorLog('blue', `window.vueComponents: ${stringify(mapObject(window.vueComponents, value => value.length))}`);
-    }
-    function onDestroy() {
-        errorLog(`Component '${name}' (id: ${component.id}) removed from window.vueComponents`);
-        removeItem(window.vueComponents[name], component);
-        logAllComponents();
-    }
 }
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -818,14 +795,6 @@ _; /********** MISC ******************** MISC ******************** MISC ********
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-//TODO: describe this
-export function clientSocketLongOnAny(useStore) {
-    useStore().socket.onAny((eventName, ...args) => {
-        const eventInfo = { event: eventName, timestamp: Date.now(), data: args };
-        colorLog('red', stringify(eventInfo));
-        useStore().socketEvents.unshift(eventInfo);
-    });
-}
 /**
  * Compare data B against an schema created from data A
  * @param A The first piece of data
@@ -928,6 +897,14 @@ _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ************
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+/**Log every socket.io event with the data received for debugging purposes */
+export function clientSocketLongOnAny(useStore) {
+    useStore().socket.onAny((eventName, ...args) => {
+        const eventInfo = { event: eventName, timestamp: Date.now(), data: args };
+        colorLog('red', stringify(eventInfo));
+        useStore().socketEvents.unshift(eventInfo);
+    });
+}
 /**Copy to clipboard, objects arrays get stringify'd */
 export function copyToClipboard_client(x) {
     const text = stringify(x);
@@ -948,6 +925,29 @@ export function downloadFile_client(filename, fileFormat, data) {
     a.href = window.URL.createObjectURL(new Blob([data], { type: 'text/plain' }));
     a.download = `${filename}${fileFormat}`;
     a.click();
+}
+/**Add/remove a vue component to the window for easy access/debugging */
+export function trackVueComponent(name, component, window) {
+    component.name = name;
+    component.id = getUniqueId(name);
+    component.beforeDestroy = onDestroy;
+    if (!window.vueComponents) {
+        window.vueComponents = {};
+    }
+    if (!window.vueComponents[name]) {
+        window.vueComponents[name] = [];
+    }
+    successLog(`Component '${name}' added to window.vueComponents [${window.vueComponents[name].length}]`);
+    window.vueComponents[name].push(component);
+    logAllComponents();
+    function logAllComponents() {
+        colorLog('blue', `window.vueComponents: ${stringify(mapObject(window.vueComponents, value => value.length))}`);
+    }
+    function onDestroy() {
+        errorLog(`Component '${name}' (id: ${component.id}) removed from window.vueComponents`);
+        removeItem(window.vueComponents[name], component);
+        logAllComponents();
+    }
 }
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
@@ -1100,7 +1100,6 @@ export function bigConsoleError(message) {
 /**Basically custom ESlint warnings */
 export function checkCodeThatCouldBeUpdated(cachedFiles) {
     cachedFiles.forEach(file => {
-        let warningsCount = 0;
         const { path, content } = file;
         checkReplaceableCode(['bvModal.show', 'bvModal.hide'], '.triggerModal(modalId, show | hide)'); //@btr-ignore
         checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine'); //@btr-ignore
@@ -1108,10 +1107,10 @@ export function checkCodeThatCouldBeUpdated(cachedFiles) {
         checkReplaceableCode(['//@ts-ignore'], '//@ts-expect-error'); //@btr-ignore
         checkReplaceableCode(['| null', 'null |'], 'nullable'); //@btr-ignore
         checkReplaceableCode(['Object.entries'], 'objectEntries'); //@btr-ignore
+        checkReplaceableCode(['autologin'], 'useStore().login'); //@btr-ignore
         checkReplaceableCode(['Object.values'], 'objectValues'); //@btr-ignore
         checkReplaceableCode(['Object.keys'], 'objectKeys'); //@btr-ignore
         checkReplaceableCode(['console.log'], 'colorLog'); //@btr-ignore
-        checkReplaceableCode(['autologin'], 'login'); //@btr-ignore
         checkReplaceableCode(['null as'], 'nullAs'); //@btr-ignore
         function checkReplaceableCode(replaceableCodeStrings, suggestedReplacement) {
             replaceableCodeStrings.forEach(replaceableString => {
@@ -1122,8 +1121,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles) {
                 if (!matches.length) {
                     return;
                 }
-                warningsCount++;
-                colorLog('yellow', surroundedString(`${warningsCount}. WARNING: OUTDATED/REPLACEABLE CODE`, '-', 50));
+                colorLog('yellow', surroundedString(`${warningsCount_generator.next().value}. WARNING: OUTDATED/REPLACEABLE CODE`, '-', 50));
                 console.log({ matches, replaceableCode: replaceableString, suggestedReplacement, path }); //@btr-ignore
             });
         }
