@@ -27,9 +27,9 @@ import { createRequire } from 'module'	//DELETETHISFORCLIENT
 _
 import mongodb, { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
 _
-import { cachedFile, myEnv, zSchema } from '../types/types.js'
+import { cachedFile, myEnv, zSchema } from './types.js'
 _
-import { warningsCount_generator } from '../constants/constants.js'
+import { warningsCount_generator } from './constants.js'
 _
 import {
 	colorLog, command_package, command_project, delay, errorLog, formatDate, getTraceableStack,
@@ -107,28 +107,6 @@ export const divine = {
 	},
 }
 
-/**Batch-load files for checking purposes */
-export async function getCachedFiles(errors: string[], filepaths: string[]) {
-
-	const cachedFiles: cachedFile[] = []
-
-	for await (const filepath of filepaths) {
-		if (!fileExists(filepath)) { addToErrors(`File not found at '${filepath}'`); continue }
-		if (cachedFiles.some(x => x.path === filepath)) { addToErrors(`File readed more than once by fsReadFileAsync: >>> (${filepath}) << <`) }
-		cachedFiles.push({ path: filepath, content: await fsReadFileAsync(filepath) })
-	}
-
-	return cachedFiles
-
-	function addToErrors(error: string) {
-		errors.push(error)
-	}
-
-	async function fileExists(path: string) {
-		try { await fs.promises.access(path); return true }
-		catch { addToErrors('Missing file, couldn\'t read: ' + path); return false }
-	}
-}
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
 export function bigConsoleError(message: string) {
 	function logAsterisks(lines: number) { for (let i = 0; i < lines; i++) { log('*'.repeat(150)) } }
@@ -194,6 +172,26 @@ export async function fsReadFileAsync(filePath: string) {
 export async function fsWriteFileAsync(filePath: string, content: string) {
 	colorLog('white', `writing to '${filePath}'..`)
 	return await fs.promises.writeFile(filePath, content)
+}
+/**Batch-load files for checking purposes */
+export async function getCachedFiles(errors: string[], filepaths: string[]) {
+
+	const cachedFiles: cachedFile[] = []
+
+	for await (const filepath of filepaths) {
+		if (!fileExists(filepath)) { addToErrors(`File not found at '${filepath}'`); continue }
+		if (cachedFiles.some(x => x.path === filepath)) { addToErrors(`File readed more than once by fsReadFileAsync: >>> (${filepath}) << <`) }
+		cachedFiles.push({ path: filepath, content: await fsReadFileAsync(filepath) })
+	}
+
+	return cachedFiles
+
+	function addToErrors(error: string) { errors.push(error) }
+
+	async function fileExists(path: string) {
+		try { await fs.promises.access(path); return true }
+		catch { addToErrors('Missing file, couldn\'t read: ' + path); return false }
+	}
 }
 /**For a project's debugging purposes */
 export function getDebugOptionsAndLog<K extends string>(devOrProd: 'dev' | 'prod', options: Record<K, [boolean, boolean]>) {

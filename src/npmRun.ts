@@ -3,16 +3,16 @@ import { unlinkSync } from 'fs'
 _
 import { exec } from 'child_process'	//DELETETHISFORCLIENT
 _
-import { basicProjectChecks } from './basicProjectChecks.js'
+import { basicProjectChecks } from './btrCheck.js'
 _
-import { validNpmCommand_package, validNpmCommand_project } from '../types/types.js'
+import { validNpmCommand_package, validNpmCommand_project } from './types.js'
 _
 import { colorLog, command_package, command_project, delay, selfFilter, successLog, zodCheckAndHandle, zodCheck_curry } from './index.js'
 _
 import {
 	PACKAGE_DOT_JSON, utilsRepoName, zValidNpmCommand_package,
 	zValidNpmCommand_project, zValidVersionIncrement
-} from '../constants/constants.js'
+} from './constants.js'
 _
 import {
 	checkCodeThatCouldBeUpdated, divine, fsReadFileAsync, fsWriteFileAsync, getCachedFiles,
@@ -83,7 +83,7 @@ export function npmRun_package(npmCommand: validNpmCommand_package) {
 	}
 
 	function transpileBaseFiles(followUp: () => void) {
-		exec('tsc --target esnext npmRun.ts', async () => {
+		exec('tsc --target esnext npmRun.ts --outDir ../dist', async () => {
 			successLog('Base files transpiled')
 			await delay(500)
 			followUp()

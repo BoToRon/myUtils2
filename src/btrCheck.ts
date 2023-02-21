@@ -3,7 +3,7 @@ import fs from 'fs'
 _
 import { z } from 'zod'
 _
-import { cachedFile, messageHandler, nullable, packageJson, zSchema } from '../types/types.js'
+import { cachedFile, messageHandler, nullable, packageJson, zSchema } from './types.js'
 _
 import { getCachedFiles, checkCodeThatCouldBeUpdated, getEnviromentVariables, importFileFromProject } from './forServer'
 _
@@ -12,7 +12,7 @@ _
 import {
 	CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_VARS,
 	SERVER_EVENTS_TS, SERVER_REF_TS, TSCONFIG_JSON, TYPES_IO_TS, TYPES_Z_TS, zMyEnv
-} from '../constants/constants.js'
+} from './constants.js'
 _
 
 function addToErrors(path: string, error: string) { errors.push(`(at ${path}): ${error}`) }

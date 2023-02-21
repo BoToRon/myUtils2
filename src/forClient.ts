@@ -1,10 +1,10 @@
 let _
 _
-import { zValidVariants } from '../constants/constants.js'
+import { zValidVariants } from './constants.js'
 _
 import { colorLog, errorLog, getUniqueId, mapObject, removeItem, stringify, successLog, zodCheck_curry } from './index.js'
 _
-import { btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, bvToast, vueComponentsTracker } from '../types/types.js'
+import { btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, bvToast, vueComponentsTracker } from './types.js'
 _
 
 /**Log every socket.io event with the data received for debugging purposes */
