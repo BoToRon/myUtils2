@@ -5,7 +5,7 @@ import { z } from 'zod'
 _
 import { cachedFile, messageHandler, nullable, packageJson, zSchema } from './types.js'
 _
-import { getCachedFiles, checkCodeThatCouldBeUpdated, getEnviromentVariables, importFileFromProject } from './forServer'
+import { getCachedFiles, checkCodeThatCouldBeUpdated, getEnviromentVariables, importFileFromProject } from './forServer.js'
 _
 import { compareArrays, nullAs, sortBy, successLog, surroundedString, toSingleLine, zodCheck_curry, zRegexGenerator } from './index.js'
 _

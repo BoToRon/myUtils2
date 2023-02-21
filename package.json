@@ -7,14 +7,14 @@
 	"scripts": {
 		"test": "ts-node-esm --transpileOnly test/test.ts",
 		"zTest": "ts-node-esm --transpileOnly test/zTest.ts",
-		"npmScript": "ts-node-esm --transpileOnly npmRun.ts",
+		"npmScript": "ts-node-esm --transpileOnly dist/npmRun.ts",
 		"_________________________________________________a": "__________________________________________________",
 		"all": "npm run npmScript --command_package=all & npm publish",
 		"check": "npm run npmScript --command_package=check",
 		"_________________________________________________b": "__________________________________________________",
 		"transpile-base": "npm run npmScript --command_package=transpile-base",
 		"transpile-all": "npm run npmScript --command_package=transpile-all",
-		"transpile-safe": "tsc --target esnext npmRun.ts"
+		"transpile-safe": "tsc --target esnext src/npmRun.ts src/forClient.ts src/magicRegex.ts --outDir ./dist"
 	},
 	"repository": {
 		"type": "git",
