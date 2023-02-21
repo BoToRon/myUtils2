@@ -1,5 +1,5 @@
 
-import { delay, divine, doNothing, formatDate, getTraceableStack, nullAs, removeItem, timers } from '../btr.js'
+import { delay, divine, doNothing, formatDate, getTraceableStack, nullAs, removeItem, timers } from '../src/index.js'
 import { maybePromise, timer } from '../types/types.js'
 
 /**Kill a timer created with initializeTimer, the reason provided will become a divine stack */

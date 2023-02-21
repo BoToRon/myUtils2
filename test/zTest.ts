@@ -1,6 +1,6 @@
 //pm run zTest
 
-import { getZodSchemaFromData, zodCheck_curry, zodCheckAndHandle, zGetSafeParseResultAndHandleErrorMessage } from '../btr.js'
+import { getZodSchemaFromData, zodCheck_curry, zodCheckAndHandle, zGetSafeParseResultAndHandleErrorMessage } from '../src/index.js'
 import { z } from 'zod'
 
 const vsSchema = z.object({
