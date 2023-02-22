@@ -1123,7 +1123,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[]) {
 		checkReplaceableCode(['autologin'], 'useStore().login')	//@btr-ignore
 		checkReplaceableCode(['Object.values'], 'objectValues')	//@btr-ignore
 		checkReplaceableCode(['Object.keys'], 'objectKeys')	//@btr-ignore
-		checkReplaceableCode(['tryF'], 'divine.try')	//@btr-ignore
+		checkReplaceableCode([' tryF'], 'divine.try')	//@btr-ignore
 		checkReplaceableCode(['null as'], 'nullAs')	//@btr-ignore
 
 		function checkReplaceableCode(replaceableCodeStrings: string[], suggestedReplacement: string) {

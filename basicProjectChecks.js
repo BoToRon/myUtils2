@@ -104,7 +104,7 @@ function checkStructureAndMatchesOfVueFiles() {
             asConsecutiveLines([
                 'export default defineComponent({',
                 '\tmounted() {',
-                `\t\ttrackVueComponent('${filepathToComponentName()}', this as never, window as never) },`
+                `\t\ttrackVueComponent('${filepathToComponentName()}', this as never, window as never)`
             ]),
             '<style scoped>'
         ].forEach(wantedMatch => checkMatchInSpecificFile(file.path, wantedMatch));
