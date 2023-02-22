@@ -884,7 +884,7 @@ _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY *************
 _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 
 /**Log every socket.io event with the data received for debugging purposes */
-export function clientSocketLongOnAny(
+export function clientSocketLonOnAny(
 	useStore: () => ({
 		socketEvents: btr_socketEventInfo[],
 		socket: { onAny: (arg0: (eventName: string, ...args: unknown[]) => void) => void },
@@ -1123,6 +1123,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[]) {
 		checkReplaceableCode(['autologin'], 'useStore().login')	//@btr-ignore
 		checkReplaceableCode(['Object.values'], 'objectValues')	//@btr-ignore
 		checkReplaceableCode(['Object.keys'], 'objectKeys')	//@btr-ignore
+		checkReplaceableCode(['tryF'], 'divine.try')	//@btr-ignore
 		checkReplaceableCode(['null as'], 'nullAs')	//@btr-ignore
 
 		function checkReplaceableCode(replaceableCodeStrings: string[], suggestedReplacement: string) {

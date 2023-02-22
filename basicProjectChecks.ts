@@ -121,7 +121,8 @@ function checkStructureAndMatchesOfVueFiles() {
 		[
 			asConsecutiveLines([
 				'export default defineComponent({',
-				`\tmounted() { trackVueComponent('${filepathToComponentName()}', this as never, window as never) },`
+				'\tmounted() {',
+				`\t\ttrackVueComponent('${filepathToComponentName()}', this as never, window as never) },`
 			]),
 			'<style scoped>'
 		].forEach(wantedMatch => checkMatchInSpecificFile(file.path, wantedMatch))
@@ -206,19 +207,26 @@ function checkClientStoreTs() {
 			'\tstate: () => ({',
 			'\t\tsocket,',
 			'\t\t...myLocalStorage,',
+			'\t\tview: \'main\' as validView,',
 			'\t\tbvModal: <bvModal>nullAs(),',
 			'\t\tnewToast: <newToastFn>nullAs(),',
-			'\t\tview: \'main\' as validCurrentView,',
 			'\t\tsocketEvents: [] as socketEventInfo[],',
 			'\t\tadminFetch: { command: \'\', data: null } as adminFetch,',
-			'\t\tglobalAlert: { message: \'\', show: false } as globalAlert,'
+			'\t\tglobalAlert: { message: \'\', show: false } as globalAlert,',
+			'',
+			'\tsimpleConfirmationModal: {',
+			'\t\ttitle: \'\',',
+			'\t\tconfirmFn: doNothing,',
+			'\t\tconfirmationType: \'positive\' as \'positive\' | \'negative\',',
+			'\t\topen(title: string, confirmFn: () => void) { this.title = title; this.confirmFn = confirmFn }',
+			'},'
 		]),
 		asConsecutiveLines([
 			'\tactions: {',
 			'\t\tlogin() { socket.emit',
 		]),
 		asConsecutiveLines([
-			'\t\ttriggerModal(id: validModalIds, action: \'show\' | \'hide\') { triggerModal(useStore, id, action) },',
+			'\t\ttriggerModal(id: validModalId, action: \'show\' | \'hide\') { triggerModal(useStore, id, action) },',
 			'\t\tupdateStoreAndLocalStorageKey<K extends keyof T, T extends typeof myLocalStorage>(key: K, value: T[K]) {',
 			'\t\t\t//@ts-expect-error ts doesn\'t automatically realize all keys of myLocalStorage also are present in useStore()',
 			'\t\t\tuseStore()[key] = value; localStorageSet(key, value)',

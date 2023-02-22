@@ -870,7 +870,7 @@ _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY *************
 _ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 
 /**Log every socket.io event with the data received for debugging purposes */
-export function clientSocketLongOnAny(
+export function clientSocketLonOnAny(
 	useStore: () => ({
 		socketEvents: btr_socketEventInfo[],
 		socket: { onAny: (arg0: (eventName: string, ...args: unknown[]) => void) => void },

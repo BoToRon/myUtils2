@@ -859,7 +859,7 @@ _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ************
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 /**Log every socket.io event with the data received for debugging purposes */
-export function clientSocketLongOnAny(useStore) {
+export function clientSocketLonOnAny(useStore) {
     useStore().socket.onAny((eventName, ...args) => {
         const eventInfo = { event: eventName, timestamp: Date.now(), data: args };
         colorLog('red', stringify(eventInfo));
@@ -1102,6 +1102,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles) {
         checkReplaceableCode(['autologin'], 'useStore().login'); //@btr-ignore
         checkReplaceableCode(['Object.values'], 'objectValues'); //@btr-ignore
         checkReplaceableCode(['Object.keys'], 'objectKeys'); //@btr-ignore
+        checkReplaceableCode(['tryF'], 'divine.try'); //@btr-ignore
         checkReplaceableCode(['null as'], 'nullAs'); //@btr-ignore
         function checkReplaceableCode(replaceableCodeStrings, suggestedReplacement) {
             replaceableCodeStrings.forEach(replaceableString => {
