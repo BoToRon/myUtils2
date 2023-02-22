@@ -223,10 +223,7 @@ _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ****************
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 /**Set interval with try-catch and called immediately*/
-export function doAndRepeat_server(fn, interval) {
-    tryF(fn, [], divine.error);
-    setInterval(() => tryF(fn, [], divine.error), interval);
-}
+export function doAndRepeat_server(fn, interval) { divine.try(fn, []); setInterval(() => divine.try(fn, []), interval); }
 /**
  * Filter and map an array in a single loop
  * @param arr The array to be filterMap'd
@@ -271,15 +268,6 @@ export async function retryF(fn, args, retriesLeft, defaultReturn, delayBetweenR
         }
         await delay(delayBetweenRetries);
         return await retryF(fn, args, retriesLeft - 1, defaultReturn, delayBetweenRetries);
-    }
-}
-/**tryCatch wrapper for functions with divineError as the default error handler */
-export async function tryF(fn, args, errorHandler) {
-    try {
-        return await fn(...args);
-    }
-    catch (err) {
-        errorHandler(err);
     }
 }
 /**
@@ -944,4 +932,6 @@ export function getFormattedTimestamp() { doNothing; }
 export function trackVueComponent_curry() { doNothing; }
 /**@deprecated use "triggerModal" instead */
 export function triggerModalWithValidation_curry() { doNothing; }
+/**@deprecated use "divine.try" instead */
+export function tryF() { doNothing; }
 export const colorLog = (color, message) => console.log(`%c${message}`, `color: ${color};`);
