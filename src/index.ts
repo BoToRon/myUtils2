@@ -25,6 +25,42 @@ export {
 	btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, nullable, zValidVariants
 }
 
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+
+/**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
+export function newToast_client_curry($bvToast: bvToast) {
+	return function body(title: string, message: string, variant: btr_validVariant) {
+		if (!zodCheck_curry(alert)(zValidVariants, variant)) { return }
+		$bvToast.toast(message, {
+			toaster: 'b-toaster-bottom-right',
+			autoHideDelay: 5000,
+			solid: true,
+			variant,
+			title
+		})
+	}
+}
+/**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
+export function zodCheck_curry(errorHandler = divine.error as messageHandler, strictModeIfObject = true) {
+	function zodCheck<T>(schema: zSchema<T>, data: T) {
+		function body<T>(errorHandler: messageHandler, schema: zSchema<T>, data: T, strictModeIfObject = true) {
+			const result = zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler, strictModeIfObject)
+			return result.success as boolean
+		}
+		return body(errorHandler, schema, data, strictModeIfObject)
+	}
+	return zodCheck
+}
+
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -839,6 +875,7 @@ export async function triggerModal(useStore: () => { bvModal: bvModal }, id: str
 	function elementExists() { return Boolean(document.getElementById(id)) }
 	function promptError() { alert(`Modal with the '${id}' id was not found. Could not ${action}. Please report this`) }
 }
+<<<<<<< HEAD:src/index.ts
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
 export function zodCheck_curry(errorHandler: messageHandler, strictModeIfObject: boolean) {
 	return function zodCheck<T>(schema: zSchema<T>, data: T) {
@@ -849,6 +886,8 @@ export function zodCheck_curry(errorHandler: messageHandler, strictModeIfObject:
 		return body(errorHandler, schema, data, strictModeIfObject)
 	}
 }
+=======
+>>>>>>> parent of f15584f (gonna split into client and server and both):btr.ts
 /**
  * Return the regex given with possibly an error indicating it wasn't matched.
  * MUST BE USED AS A SPREAD ARGUMENT, eg: zString.regex( ...zRegexGenerator(/hi/, false) )
@@ -865,6 +904,80 @@ export function zRegexGenerator(regex: RegExp, exactPhrase: boolean) {
 	return [regex, 'Regex not matched: ' + regex] as [RegExp, string]
 }
 
+<<<<<<< HEAD:src/index.ts
+=======
+_ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_ /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+
+/**Log every socket.io event with the data received for debugging purposes */
+export function clientSocketLongOnAny(
+	useStore: () => ({
+		socketEvents: btr_socketEventInfo[],
+		socket: { onAny: (arg0: (eventName: string, ...args: unknown[]) => void) => void },
+	}),
+) {
+	useStore().socket.onAny((eventName: string, ...args: unknown[]) => {
+		const eventInfo: btr_socketEventInfo = { event: eventName, timestamp: Date.now(), data: args }
+		colorLog('red', stringify(eventInfo))
+		useStore().socketEvents.unshift(eventInfo)
+	})
+}
+/**Copy to clipboard, objects arrays get stringify'd */
+export function copyToClipboard_client(x: unknown) {
+	const text = stringify(x as object)
+	const a = document.createElement('textarea')
+	a.innerHTML = text
+	document.body.appendChild(a)
+	a.select()
+	document.execCommand('copy')
+	document.body.removeChild(a)
+}
+/**Stringifies and downloads the provided data*/
+export function downloadFile_client(filename: string, fileFormat: '.txt' | '.json', data: unknown) {
+	if (isNode) { bigConsoleError('downloadFile_client can only be run clientside!'); return }
+	const a = document.createElement('a')
+	a.href = window.URL.createObjectURL(new Blob([data as BlobPart], { type: 'text/plain' }))
+	a.download = `${filename}${fileFormat}`
+	a.click()
+}
+/**Add/remove a vue component to the window for easy access/debugging */
+export function trackVueComponent<T extends string>(
+	name: T,
+	component: btr_trackedVueComponent,
+	window: { vueComponents: vueComponentsTracker<T> }
+) {
+
+	component.name = name
+	component.id = getUniqueId(name)
+	component.beforeDestroy = onDestroy
+
+	if (!window.vueComponents) { window.vueComponents = {} as vueComponentsTracker<T> }
+	if (!window.vueComponents[name]) { window.vueComponents[name] = [] }
+
+	successLog(`Component '${name}' added to window.vueComponents [${window.vueComponents[name].length}]`)
+	window.vueComponents[name].push(component)
+	logAllComponents()
+
+	function logAllComponents() {
+		colorLog('blue', `window.vueComponents: ${stringify(mapObject(window.vueComponents, value => value.length))}`)
+	}
+
+	function onDestroy() {
+		errorLog(`Component '${name}' (id: ${component.id}) removed from window.vueComponents`)
+		removeItem(window.vueComponents[name], component)
+		logAllComponents()
+	}
+}
+
+>>>>>>> parent of f15584f (gonna split into client and server and both):btr.ts
 _ /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 _ /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 _ /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
@@ -885,5 +998,493 @@ export function trackVueComponent_curry() { doNothing }
 /**@deprecated use "triggerModal" instead */
 export function triggerModalWithValidation_curry() { doNothing }
 
+<<<<<<< HEAD:src/index.ts
+=======
+// ! DELETEEVERYTHINGBELOW, as it is only meant for server-side use
+
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+
+export const divine = {
+	bot: <eris.Client>nullAs(),
+	error: (err: string | Error) => {
+		const message = getTraceableStack(err, 'divineError')
+		const { DEV_OR_PROD } = getEnviromentVariables()
+		DEV_OR_PROD !== 'PROD' ? killProcess(message) : divine.ping(message)
+	},
+	init: (() => {
+		delay(1000).then(async () => {
+			if (command_package || command_project) { return }
+
+			const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = getEnviromentVariables()
+			if (DEV_OR_PROD !== 'PROD') { return }
+
+			const divinePrepend = '***DivineBot:***'
+			const bot = eris(ERIS_TOKEN)
+
+			bot.on('messageReactionRemove', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('remove', a, b, c))
+			bot.on('messageReactionAdd', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('add', a, b, c))
+			bot.on('disconnect', () => { colorLog('red', `${divinePrepend}: Disconnected D: ... retrying!`) })
+			bot.on('connect', () => divine.ping(`(${APP_NAME}) - I'm alive bitch >:D`))
+
+			const idOfRoleAssigningMessage = '822523162724925473'
+			await attemptConnection()
+			divine.bot = bot
+
+			function role(action: 'add' | 'remove', message: eris.PossiblyUncachedMessage, emoji: eris.PartialEmoji, reactor: eris.Member) {
+				try {
+					if (message.id !== idOfRoleAssigningMessage) { return }
+
+					const role = [
+						{ app: 'UntCG', emoji: 'cards', id: 'SAMPLEROLEID' },
+						{ app: 'CwCA', emoji: 'chess', id: 'SAMPLEROLEID' },
+						{ app: 'Cool', emoji: 'cool', id: 'SAMPLEROLEID' },
+						{ app: 'Divine', emoji: 'divine', id: 'SAMPLEROLEID' },
+						{ app: 'Bluejay', emoji: 'bluejay', id: 'SAMPLEROLEID' },
+						{ app: 'Cute', emoji: 'cute', id: 'SAMPLEROLEID' },
+					].find(x => x.emoji === emoji.name)
+
+					if (role) { ({ add: reactor.addRole, remove: reactor.removeRole })[action](role.id) }
+				}
+				catch (e) { errorLog('divineBot.role.tryCatch.error: \n' + e) }
+			}
+
+			async function attemptConnection() {
+				try {
+					bot.connect()
+					colorLog('cyan', 'waiting for DivineBot')
+					while (!bot.uptime) { await delay(1000) }
+					successLog('The divine egg has hatched')
+				}
+				catch {
+					colorLog('yellow', `${divinePrepend} Failed to connect.. retrying >:D`)
+					await delay(1000)
+					attemptConnection()
+				}
+			}
+		})
+	})(),
+	ping: async (message: string) => {
+		while (!divine.bot?.ready) { await delay(1000) }
+		const { APP_NAME } = getEnviromentVariables()
+
+		const theMessage = `<@470322452040515584> - (${APP_NAME}) \n ${message}`
+		const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } }
+		divine.bot.createMessage('1055939528776495206', divineOptions)
+	}
+}
+
+_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
+_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
+_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
+_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
+_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
+_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
+_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
+_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
+_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
+_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
+
+/**Batch-load files for checking purposes */
+export async function getCachedFiles(errors: string[], filepaths: string[]) {
+
+	const cachedFiles: cachedFile[] = []
+
+	for await (const filepath of filepaths) {
+		if (!fileExists(filepath)) { addToErrors(`File not found at '${filepath}'`); continue }
+		if (cachedFiles.some(x => x.path === filepath)) { addToErrors(`File readed more than once by fsReadFileAsync: >>> (${filepath}) << <`) }
+		cachedFiles.push({ path: filepath, content: await fsReadFileAsync(filepath) })
+	}
+
+	return cachedFiles
+
+	function addToErrors(error: string) {
+		errors.push(error)
+	}
+
+	async function fileExists(path: string) {
+		try { await fs.promises.access(path); return true }
+		catch { addToErrors('Missing file, couldn\'t read: ' + path); return false }
+	}
+}
+/**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
+export function bigConsoleError(message: string) {
+	function logAsterisks(lines: number) { for (let i = 0; i < lines; i++) { log('*'.repeat(150)) } }
+	function log(message: string) { return colorLog('red', message) }
+
+	logAsterisks(3)
+	log(message)
+	logAsterisks(3)
+}
+/**Basically custom ESlint warnings */
+export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[]) {
+	cachedFiles.forEach(file => {
+		const { path, content } = file
+		checkReplaceableCode(['triggerModalWithValidation, bvModal.show', 'bvModal.hide'], '.triggerModal(modalId, show | hide)')	//@btr-ignore
+		checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine')	//@btr-ignore
+		checkReplaceableCode(['Readonly<', 'ReadonlyArray<'], 'readonly ')	//@btr-ignore
+		checkReplaceableCode(['//@ts-ignore'], '//@ts-expect-error')	//@btr-ignore
+		checkReplaceableCode(['| null', 'null |'], 'nullable')	//@btr-ignore
+		checkReplaceableCode(['Object.entries'], 'objectEntries')	//@btr-ignore
+		checkReplaceableCode(['autologin'], 'useStore().login')	//@btr-ignore
+		checkReplaceableCode(['Object.values'], 'objectValues')	//@btr-ignore
+		checkReplaceableCode(['Object.keys'], 'objectKeys')	//@btr-ignore
+		checkReplaceableCode(['console.log'], 'colorLog')	//@btr-ignore
+		checkReplaceableCode(['null as'], 'nullAs')	//@btr-ignore
+
+		function checkReplaceableCode(replaceableCodeStrings: string[], suggestedReplacement: string) {
+			replaceableCodeStrings.forEach(replaceableString => {
+				const withEscapedCharacters = replaceableString.replace(/(?=\W{1,1})/g, '\\') //regexHere
+				const theRegex = new RegExp(withEscapedCharacters + '.{0,}', 'gi')
+				const matches = Array(...content.match(theRegex) || [])
+
+				selfFilter(matches, match => !/@btr-ignore/.test(match)) //regexHere
+				if (!matches.length) { return }
+
+				colorLog('yellow', surroundedString(`${warningsCount_generator.next().value}. WARNING: OUTDATED/REPLACEABLE CODE`, '-', 50))
+				console.log({ matches, replaceableCode: replaceableString, suggestedReplacement, path }) //@btr-ignore
+			})
+		}
+	})
+}
+/**Copy to clipboard while running node */
+export function copyToClipboard_server(x: unknown) { return clipboard.write(stringify(x as object)) }
+/**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
+export async function downloadFile_node(filename: string, fileFormat: '.txt' | '.json', data: unknown, killProcessAfterwards: boolean) {
+	const formatted = stringify(data as object)
+	const dateForFilename = formatDate(Date.now(), 'English', 'short').replace(/\/| |:/g, '_') //regexHere
+	const completeFilename = filename + '_' + dateForFilename + fileFormat
+
+	colorLog('cyan', `Downloading ${completeFilename}..`)
+	await fsWriteFileAsync(completeFilename, formatted)
+	successLog('Done!')
+
+	if (!killProcessAfterwards) { return }
+	if (process.env['quokka']) { return }
+	process.exit()
+}
+/**Wrapper for fs.promise.readFile that announces the start of the file-reading */
+export async function fsReadFileAsync(filePath: string) {
+	colorLog('white', `reading '${filePath}'..`)
+	return await fs.promises.readFile(filePath, 'utf8')
+}
+/**Wrapper for fsWriteFileAsync that announces the start of the file-writing */
+export async function fsWriteFileAsync(filePath: string, content: string) {
+	colorLog('white', `writing to '${filePath}'..`)
+	return await fs.promises.writeFile(filePath, content)
+}
+/**For a project's debugging purposes */
+export function getDebugOptionsAndLog<K extends string>(devOrProd: 'dev' | 'prod', options: Record<K, [boolean, boolean]>) {
+	function forDevForProd(forDev: boolean, forProd: boolean) { return { dev: forDev, prod: forProd }[devOrProd] }
+	return {
+		debugOptions: mapObject(options, (x) => forDevForProd(x[0], x[1])),
+		debugLog: <T extends object>(debugKey: K, error: T) => {
+			if (!options[debugKey]) { return }
+			colorLog('yellow', debugKey)
+			colorLog('cyan', stringify(error))
+			colorLog('magenta', getTraceableStack('', 'debugLog'))
+			logEmptyLine()
+		}
+	}
+}
+/** Get the contents of the project's .env */
+export function getEnviromentVariables() {
+	const require = createRequire(import.meta.url)
+	require('dotenv').config({ path: './.env' })
+	return process.env as myEnv
+}
+/**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
+export function getSeparatingCommentBlock(message: string) {
+	let line = ''
+	const asterisks = '*'.repeat(10)
+	while (line.length < 100) { line += `${asterisks} ${message.toUpperCase()} ${asterisks}` }
+	const theBlock = `_ /${line}/\n`.repeat(5)
+	console.log(theBlock) //@btr-ignore
+	return theBlock
+}
+/**fetch the latest package.json of my-utils */
+export async function getLatestPackageJsonFromGithub() {
+	type response_github_file = { content: string }
+
+	const response: response_github_file = await new Promise((resolve) => {
+		fetch('https://api.github.com/repos/botoron/utils/contents/package.json', { method: 'GET' }
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		).then((res: any) => res.json().then((packageJson: any) => resolve(packageJson)))
+	})
+
+	return Buffer.from(response.content, 'base64').toString('utf8')
+}
+/**It's monging time >:D */
+export async function getMongoClient() {
+	const { MONGO_URI } = getEnviromentVariables()
+
+	const mongo = new mongodb.MongoClient(MONGO_URI)
+	let mongoClient = <MongoClient>nullAs()
+	mongo.connect((err, client) => { if (err) { throw err } mongoClient = client as MongoClient })
+	colorLog('cyan', 'waiting for Mongo')
+	while (!mongoClient) { await delay(1000) }
+	successLog('It\'s Monging time >:D')
+	return mongoClient
+}
+/**Start and return an http Express server */
+export function getStartedHttpServer() {
+	const { PORT } = getEnviromentVariables()
+
+	const app = express()
+	const httpServer = http.createServer(app)
+	app.use(express.static(path.resolve() + '/public'))
+	app.get('/', (_request, response) => response.sendFile(path.resolve() + '/public/index.html'))
+	httpServer.listen(PORT, () => delay(1500).then(() => colorLog('white', 'Server up and running~')))
+	return httpServer
+}
+/**Import modules or jsons */
+export async function importFileFromProject<T>(filename: string, extension: 'cjs' | 'js' | 'json') {
+	try {
+		const path = `../../../${filename}.${extension}`
+		const options = extension === 'json' ? { assert: { type: 'json' } } : {}
+		const mainPackageJson = (await import(path, options)).default
+		return mainPackageJson as T
+
+	} catch (e) { return e }
+}
+/**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
+export function killProcess(message: string) { bigConsoleError(message); process.exit() }
+/**Easily run the scripts of this (utils) repo's package.json */
+export function npmRun_package(npmCommand: validNpmCommand_package) {
+
+	console.log({ npmCommand }) //@btr-ignore
+	cachePackageFilesAndCheckThem()
+	if (npmCommand === 'check') { return }
+
+	if (npmCommand === 'transpile-base') { transpileBaseFiles(printProcessOver) }
+	if (npmCommand === 'transpile-all') { transpileAllFiles(printProcessOver) }
+	if (npmCommand === 'all') { transpileAllFiles(promptVersioning) }
+
+	async function cachePackageFilesAndCheckThem() {
+		checkCodeThatCouldBeUpdated(await getCachedFiles([], ['./basicProjectChecks.ts', './btr.ts', './npmRun.ts']))
+	}
+
+	function printProcessOver() {
+		colorLog('magenta', 'Process over')
+	}
+
+	async function promptVersioning() {
+		function tryAgain(error: string) { colorLog('yellow', error); promptVersioning() }
+		const versionIncrement = await questionAsPromise('Type of package version increment (major, minor, patch)?')
+
+		if (!zodCheck_curry(tryAgain)(zValidVersionIncrement, versionIncrement)) { return }
+		await prompCommitMessageAndPush(utilsRepoName)
+
+		exec(`npm version ${versionIncrement}`, (_err, stdout) => {
+			console.log({ stdout }) //@btr-ignore
+			successLog('package.json up-version\'d')
+		})
+	}
+
+	function transpileAllFiles(followUp: () => void) {
+		transpileBaseFiles(async () => {
+			const filename = 'btr.ts'
+			const indexTs = await fsReadFileAsync(filename)
+			const lines = indexTs.
+				replaceAll('from \'./constants', 'from \'../constants').
+				replaceAll('from \'./types', 'from \'../types').
+				replaceAll('bigConsoleError', 'colorLog').
+				split('\n')
+
+			selfFilter(lines, line => !/DELETETHISFORCLIENT/.test(line)) //regexHere
+
+			const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x)) //regexHere
+			lines.splice(cutPoint, lines.length)
+			lines.push('export const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)') //@btr-ignore
+
+			await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'))
+
+			exec('tsc --target esnext client/btr.ts', async () => {
+				successLog('browser versions emitted')
+				await delay(500)
+				followUp()
+			})
+		})
+	}
+
+	function transpileBaseFiles(followUp: () => void) {
+		exec('tsc --target esnext npmRun.ts', async () => {
+			successLog('Base files transpiled')
+			await delay(500)
+			followUp()
+		})
+	}
+}
+/**Run convenient scripts for and from a project's root folder */
+//TODO: delete the rule-disabling below and move this function into its own file
+// eslint-disable-next-line sonarjs/cognitive-complexity 
+export async function npmRun_project(npmCommand: validNpmCommand_project) {
+	await basicProjectChecks(divine.error)
+	if (npmCommand === 'check') { return }
+
+	const { APP_NAME } = getEnviromentVariables()
+	const serverFolder_dist = '../dist'
+	const serverFolder_src = './test'
+	const fileWithRef = 'ref'
+
+	if (npmCommand === 'git') { prompCommitMessageAndPush(`${APP_NAME}`) }
+	if (['build', 'transpile'].includes(npmCommand)) { canTranspileCheckAndHandle() }
+
+	async function canTranspileCheckAndHandle() {
+
+		const canTranspile = await getCanTranspile()
+		if (!canTranspile) { killProcess(`CANT TRANSPILE, ${fileWithRef}.js has debugging: on`) }
+
+		if (npmCommand === 'build') { transpileToDistFolder_plusCopyOverOtherFiles() }
+		if (npmCommand === 'transpile') { transpileServerFilesToTestFolder() }
+
+		async function getCanTranspile() {
+			try { return !/debugging: true/.test(await fsReadFileAsync(`test/server/${fileWithRef}.js`)) } //regexHere
+			catch { return true }
+		}
+
+		function transpileServerFilesToTestFolder() {
+			exec(`tsc --target esnext server/init.ts --outDir ${serverFolder_src}`, async () => {
+				const packageJson = await fsReadFileAsync(PACKAGE_DOT_JSON)
+				await fsWriteFileAsync('test/package.json', packageJson)
+				successLog(`files transpiled to ${serverFolder_src}`)
+			})
+		}
+
+		async function transpileToDistFolder_plusCopyOverOtherFiles() {
+			if (!(await checkDevPropsOfRef('server/' + fileWithRef + '.ts', false))) { return }
+			await transpileTypesFile()
+			await copyFileToDis('.env')
+			await copyFileToDis('.gitignore')
+			await copyFileToDis(PACKAGE_DOT_JSON) //TODO: make it so the "-src" in the name is replaced with "-dist"
+
+			exec(`tsc --target esnext server/init.ts server/io.ts --outDir ${serverFolder_dist}`, async () => {
+				await checkDevPropsOfRef(serverFolder_dist + '/server/' + fileWithRef + '.js', true)
+				successLog('(server) Build sucessful!')
+			})
+
+			async function checkDevPropsOfRef(filePath: string, toggleForProduction: boolean) {
+				let fileContent = await fsReadFileAsync(filePath)
+				if (!checkFor('devOrProd = \'dev\'', 'devOrProd = \'prod\'')) { return }
+				if (toggleForProduction) { await fsWriteFileAsync(filePath, fileContent) }
+				return true
+
+				function checkFor(forSrc: string, forDist: string) {
+					if (!fileContent.includes(forSrc)) { killProcess(`main.ts.ref must include: (${forSrc})`); return }
+					if (toggleForProduction) { fileContent = fileContent.replace(forSrc, forDist) }
+					return true
+				}
+			}
+
+			async function copyFileToDis(filename: string) {
+				let content = await fsReadFileAsync(filename)
+				if (filename === PACKAGE_DOT_JSON) { deleteAllPackageJsonScriptsExceptStart() }
+				await fsWriteFileAsync('../dist/' + filename, content)
+
+				function deleteAllPackageJsonScriptsExceptStart() {
+					content = content.replace(/"scripts": {[^}]{1,}/, `"scripts": { //regexHere
+		"start": "node server/init.js",
+		"git": "git add . & git commit & git push",
+		"btr": "npm i @botoron/utils"
+	`)
+				}
+			}
+
+			async function transpileTypesFile() {
+				return await new Promise(resolve => {
+					fsReadFileAsync('types.d.ts').then(typesFile => {
+						fsWriteFileAsync('types.ts', typesFile).then(() => {
+							exec('tsc --target esnext types.ts', () => {
+								successLog('types.d.ts transpiled to root folder!')
+								fs.unlinkSync('types.ts')
+								delay(1000).then(() => resolve(true))
+							})
+						})
+					})
+				})
+			}
+		}
+	}
+}
+/**Prompt to submit a git commit message and then push */
+export async function prompCommitMessageAndPush(repoName: string): Promise<boolean> {
+
+	//order matters with these 3
+	const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test)'
+
+	logDetailsForPrompt()
+	const commitMessage = await questionAsPromise(`Enter commit type ${commitTypes} plus a message:`)
+	copyToClipboard_server(commitMessage)
+
+	if (!zodCheck_curry(tryAgain)(get_zValidCommitMessage(), commitMessage)) { return prompCommitMessageAndPush(repoName) }
+	return await gitAddCommitPush()
+
+	function get_zValidCommitMessage() {
+		const commitRegex = new RegExp(`(?<!.)${commitTypes}:`)
+		return z.string().min(15).max(50).regex(commitRegex, `String must start with ${commitTypes}:`)
+	}
+
+	function gitAddCommitPush(): Promise<boolean> {
+		return new Promise(resolve => {
+			exec('git add .', () => {
+				successLog('git add .')
+				colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.')
+				exec('git commit', () => {
+					successLog('git commit')
+					exec('git push', () => {
+						successLog('git push')
+						resolve(true)
+					})
+				})
+			})
+		})
+	}
+
+	function logDetailsForPrompt() {
+		delay(500).then(() => {
+			colorLog('yellow', '50-character limits ends at that line: * * * * * |')
+			colorLog('green', repoName)
+			logEmptyLine()
+		})
+	}
+
+	function tryAgain(error: string) {
+		colorLog('yellow', error)
+		prompCommitMessageAndPush(repoName)
+	}
+}
+/**Prompts a question in the terminal, awaits for the input and returns it */
+export async function questionAsPromise(question: string) {
+	const readline = getReadLine.createInterface({ input: process.stdin, output: process.stdout })
+	const input = await new Promise(res => { readline.question(chalk.magenta(question) + '\n', res) }) as string
+	readline.close()
+	return input
+}
+
+/**Check the user input in socket.on functions and send error toasts if the validation fails */
+export function zodCheck_socket<T>(socket: Socket, schema: zSchema<T>, data: T) {
+	return zodCheck_curry(errorHandler)(schema, data)
+
+	function caller() {
+		return (
+			(getTraceableStack('', 'zodCheck_socket').split('\n') || [])[3]?.match(/at \w{1,}/) || //regexHere
+			['at <unable to identify function caller>']
+		)[0]
+	}
+
+	function errorHandler(error: string) {
+		socket.emit('toast', '💀', `${error} - - - (${caller()}, ${{ ...schema._def }})`, 'danger')
+	}
+}
+
+>>>>>>> parent of f15584f (gonna split into client and server and both):btr.ts
 export const command_package = process.env['npm_config_command_package'] as validNpmCommand_package
 export const command_project = process.env['npm_config_command_project'] as validNpmCommand_project
