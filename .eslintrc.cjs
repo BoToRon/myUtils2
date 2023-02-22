@@ -10,6 +10,8 @@ module.exports = {
 
 	rules: {
 		//'jsdoc/require-jsdoc': 1,
+		'sonarjs/cognitive-complexity': 'off',
+
 		'arrow-body-style': ['error', 'as-needed'],
 		'max-lines-per-function': ['error', 100],
 		'func-style': ['error', 'declaration'],

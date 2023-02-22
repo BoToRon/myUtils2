@@ -12,16 +12,12 @@ _
 _
 _
 _
-_
 import {
 	arrayPredicate, btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, bvModal, bvToast, cachedFile, maybePromise, messageHandler, myEnv, nullable, pipe_mutable_type,
 	pipe_persistent_type, timer, validChalkColor, validNpmCommand_package, validNpmCommand_project, vueComponentsTracker, zSchema
 } from '../types/types.js'
 _
-import {
-	getUniqueId_generator, isNode, PACKAGE_DOT_JSON, timers, utilsRepoName,
-	warningsCount_generator, zValidVariants, zValidVersionIncrement
-} from '../constants/constants.js'
+import { getUniqueId_generator, isNode, timers, warningsCount_generator, zValidVariants } from '../constants/constants.js'
 _
 import { type Primitive, z, type ZodRawShape, type ZodTypeAny } from 'zod'
 _
@@ -37,42 +33,6 @@ _ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ***********
 export {
 	btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn,
 	btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, nullable, zValidVariants
-}
-
-_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
-_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
-_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
-_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
-_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
-_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
-_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
-_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
-_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
-_ /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
-
-/**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
-export function newToast_client_curry($bvToast: bvToast) {
-	return function body(title: string, message: string, variant: btr_validVariant) {
-		if (!zodCheck_curry(alert)(zValidVariants, variant)) { return }
-		$bvToast.toast(message, {
-			toaster: 'b-toaster-bottom-right',
-			autoHideDelay: 5000,
-			solid: true,
-			variant,
-			title
-		})
-	}
-}
-/**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
-export function zodCheck_curry(errorHandler = divine.error as messageHandler, strictModeIfObject = true) {
-	function zodCheck<T>(schema: zSchema<T>, data: T) {
-		function body<T>(errorHandler: messageHandler, schema: zSchema<T>, data: T, strictModeIfObject = true) {
-			const result = zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler, strictModeIfObject)
-			return result.success as boolean
-		}
-		return body(errorHandler, schema, data, strictModeIfObject)
-	}
-	return zodCheck
 }
 
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -264,7 +224,10 @@ _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS *****************
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 
 /**Set interval with try-catch and called immediately*/
-export function doAndRepeat(fn: () => void, interval: number) { tryF(fn, []); setInterval(() => tryF(fn, []), interval) }
+export function doAndRepeat_server(fn: () => void, interval: number) {
+	tryF(fn, [], divine.error)
+	setInterval(() => tryF(fn, [], divine.error), interval)
+}
 /**
  * Filter and map an array in a single loop
  * @param arr The array to be filterMap'd
@@ -319,7 +282,8 @@ export async function retryF<F extends (...args: Parameters<F>) => ReturnType<F>
 export async function tryF<T extends (...args: Parameters<T>) => maybePromise<ReturnType<T>>>(
 	fn: T,
 	args: Parameters<T>,
-	errorHandler = divine.error as messageHandler) {
+	errorHandler: messageHandler
+) {
 	try { return await fn(...args) }
 	catch (err) { errorHandler(err as string) }
 }
@@ -358,8 +322,9 @@ export function zodCheckAndHandle<D, SH extends (...args: Parameters<SH>) => Ret
 	data: D,
 	successHandler: SH,
 	args: Parameters<SH>,
-	errorHandler = divine.error as messageHandler,
-	strictModeIfObject = true) {
+	errorHandler: messageHandler,
+	strictModeIfObject: boolean
+) {
 	const zResult = zGetSafeParseResultAndHandleErrorMessage(zSchema, data, errorHandler, strictModeIfObject)
 	if (zResult.success === true && successHandler) { successHandler(...args as Parameters<SH>) }
 }
@@ -763,8 +728,6 @@ _ /********** FOR STRINGS ******************** FOR STRINGS ******************** 
 /**Add an "S" to the end of a noun if talking about them in plural based on the amount passed */
 export function asSingularOrPlural(noun: string, amount: number) { return noun + `${amount === 1 ? '' : 's'}` }
 /**console.log... WITH COLORS :D */ //@btr-ignore
-/** Copy to clipboard using the corresponding function for the running enviroment (node/client)*/
-export function copyToClipboard(x: unknown) { isNode ? copyToClipboard_server(x) : copyToClipboard_client(x) }
 /**(Message) 💀 */
 export function errorLog(message: string) { return colorLog('red', message + ' 💀') }
 /**TODO: describe me */
@@ -881,6 +844,16 @@ export async function triggerModal(useStore: () => { bvModal: bvModal }, id: str
 	function elementExists() { return Boolean(document.getElementById(id)) }
 	function promptError() { alert(`Modal with the '${id}' id was not found. Could not ${action}. Please report this`) }
 }
+/**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
+export function zodCheck_curry(errorHandler: messageHandler, strictModeIfObject: boolean) {
+	return function zodCheck<T>(schema: zSchema<T>, data: T) {
+		function body<T>(errorHandler: messageHandler, schema: zSchema<T>, data: T, strictModeIfObject = true) {
+			const result = zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler, strictModeIfObject)
+			return result.success as boolean
+		}
+		return body(errorHandler, schema, data, strictModeIfObject)
+	}
+}
 /**
  * Return the regex given with possibly an error indicating it wasn't matched.
  * MUST BE USED AS A SPREAD ARGUMENT, eg: zString.regex( ...zRegexGenerator(/hi/, false) )
@@ -939,6 +912,19 @@ export function downloadFile_client(filename: string, fileFormat: '.txt' | '.jso
 	a.download = `${filename}${fileFormat}`
 	a.click()
 }
+/**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
+export function newToast_client_curry($bvToast: bvToast) {
+	return function body(title: string, message: string, variant: btr_validVariant) {
+		if (!zodCheck_curry(alert, true)(zValidVariants, variant)) { return }
+		$bvToast.toast(message, {
+			toaster: 'b-toaster-bottom-right',
+			autoHideDelay: 5000,
+			solid: true,
+			variant,
+			title
+		})
+	}
+}
 /**Add/remove a vue component to the window for easy access/debugging */
 export function trackVueComponent<T extends string>(
 	name: T,
@@ -979,6 +965,10 @@ _ /********** DEPRECATED ******************** DEPRECATED ******************** DE
 _ /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 _ /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 
+/**@deprecated use "copyToClipboard_server" or "copyToClipboard_client" instead */
+export function copyToClipboard() { doNothing }
+/**@deprecated use "doAndRepeat_server" instead (no doAndRepeat_client as there hasn't been a need for it yet) */
+export function doAndRepeat() { doNothing }
 /**@deprecated use "formatDate" instead */
 export function getFormattedTimestamp() { doNothing }
 /**@deprecated use "trackVueComponent" instead */

@@ -24,10 +24,8 @@ import { createRequire } from 'module'; //DELETETHISFORCLIENT
 _;
 import mongodb from 'mongodb'; //DELETETHISFORCLIENT
 _;
-import { basicProjectChecks } from './basicProjectChecks.js'; //DELETETHISFORCLIENT
 _;
-_;
-import { getUniqueId_generator, isNode, PACKAGE_DOT_JSON, timers, utilsRepoName, warningsCount_generator, zValidVariants, zValidVersionIncrement } from './constants/constants.js';
+import { getUniqueId_generator, isNode, timers, warningsCount_generator, zValidVariants } from './constants/constants.js';
 _;
 import { z } from 'zod';
 _;
@@ -39,42 +37,6 @@ _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 export { zValidVariants };
-_; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
-_; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
-_; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
-_; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
-_; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
-_; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
-_; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
-_; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
-_; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
-_; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
-/**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
-export function newToast_client_curry($bvToast) {
-    return function body(title, message, variant) {
-        if (!zodCheck_curry(alert)(zValidVariants, variant)) {
-            return;
-        }
-        $bvToast.toast(message, {
-            toaster: 'b-toaster-bottom-right',
-            autoHideDelay: 5000,
-            solid: true,
-            variant,
-            title
-        });
-    };
-}
-/**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
-export function zodCheck_curry(errorHandler = divine.error, strictModeIfObject = true) {
-    function zodCheck(schema, data) {
-        function body(errorHandler, schema, data, strictModeIfObject = true) {
-            const result = zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler, strictModeIfObject);
-            return result.success;
-        }
-        return body(errorHandler, schema, data, strictModeIfObject);
-    }
-    return zodCheck;
-}
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -273,7 +235,10 @@ _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ****************
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 /**Set interval with try-catch and called immediately*/
-export function doAndRepeat(fn, interval) { tryF(fn, []); setInterval(() => tryF(fn, []), interval); }
+export function doAndRepeat_server(fn, interval) {
+    tryF(fn, [], divine.error);
+    setInterval(() => tryF(fn, [], divine.error), interval);
+}
 /**
  * Filter and map an array in a single loop
  * @param arr The array to be filterMap'd
@@ -321,7 +286,7 @@ export async function retryF(fn, args, retriesLeft, defaultReturn, delayBetweenR
     }
 }
 /**tryCatch wrapper for functions with divineError as the default error handler */
-export async function tryF(fn, args, errorHandler = divine.error) {
+export async function tryF(fn, args, errorHandler) {
     try {
         return await fn(...args);
     }
@@ -361,7 +326,7 @@ export function zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHand
  * @param errorHandler The function that will execute if data does NOT fits zSchema
  * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not *
  */
-export function zodCheckAndHandle(zSchema, data, successHandler, args, errorHandler = divine.error, strictModeIfObject = true) {
+export function zodCheckAndHandle(zSchema, data, successHandler, args, errorHandler, strictModeIfObject) {
     const zResult = zGetSafeParseResultAndHandleErrorMessage(zSchema, data, errorHandler, strictModeIfObject);
     if (zResult.success === true && successHandler) {
         successHandler(...args);
@@ -760,8 +725,6 @@ _; /********** FOR STRINGS ******************** FOR STRINGS ********************
 export function asSingularOrPlural(noun, amount) { return noun + `${amount === 1 ? '' : 's'}`; }
 /**console.log... WITH COLORS :D */ //@btr-ignore
 export function colorLog(color, message) { console.log(chalk[color].bold(message)); } //DELETETHISFORCLIENT @btr-ignore
-/** Copy to clipboard using the corresponding function for the running enviroment (node/client)*/
-export function copyToClipboard(x) { isNode ? copyToClipboard_server(x) : copyToClipboard_client(x); }
 /**(Message) 💀 */
 export function errorLog(message) { return colorLog('red', message + ' 💀'); }
 /**TODO: describe me */
@@ -872,6 +835,16 @@ export async function triggerModal(useStore, id, action) {
     function elementExists() { return Boolean(document.getElementById(id)); }
     function promptError() { alert(`Modal with the '${id}' id was not found. Could not ${action}. Please report this`); }
 }
+/**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
+export function zodCheck_curry(errorHandler, strictModeIfObject) {
+    return function zodCheck(schema, data) {
+        function body(errorHandler, schema, data, strictModeIfObject = true) {
+            const result = zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler, strictModeIfObject);
+            return result.success;
+        }
+        return body(errorHandler, schema, data, strictModeIfObject);
+    };
+}
 /**
  * Return the regex given with possibly an error indicating it wasn't matched.
  * MUST BE USED AS A SPREAD ARGUMENT, eg: zString.regex( ...zRegexGenerator(/hi/, false) )
@@ -926,6 +899,21 @@ export function downloadFile_client(filename, fileFormat, data) {
     a.download = `${filename}${fileFormat}`;
     a.click();
 }
+/**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
+export function newToast_client_curry($bvToast) {
+    return function body(title, message, variant) {
+        if (!zodCheck_curry(alert, true)(zValidVariants, variant)) {
+            return;
+        }
+        $bvToast.toast(message, {
+            toaster: 'b-toaster-bottom-right',
+            autoHideDelay: 5000,
+            solid: true,
+            variant,
+            title
+        });
+    };
+}
 /**Add/remove a vue component to the window for easy access/debugging */
 export function trackVueComponent(name, component, window) {
     component.name = name;
@@ -959,6 +947,10 @@ _; /********** DEPRECATED ******************** DEPRECATED ******************** D
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
+/**@deprecated use "copyToClipboard_server" or "copyToClipboard_client" instead */
+export function copyToClipboard() { doNothing; }
+/**@deprecated use "doAndRepeat_server" instead (no doAndRepeat_client as there hasn't been a need for it yet) */
+export function doAndRepeat() { doNothing; }
 /**@deprecated use "formatDate" instead */
 export function getFormattedTimestamp() { doNothing; }
 /**@deprecated use "trackVueComponent" instead */
@@ -1105,12 +1097,12 @@ export function checkCodeThatCouldBeUpdated(cachedFiles) {
         checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine'); //@btr-ignore
         checkReplaceableCode(['Readonly<', 'ReadonlyArray<'], 'readonly '); //@btr-ignore
         checkReplaceableCode(['//@ts-ignore'], '//@ts-expect-error'); //@btr-ignore
-        checkReplaceableCode(['| null', 'null |'], 'nullable'); //@btr-ignore
+        checkReplaceableCode(['console.log'], 'colorLog OR debugLog'); //@btr-ignore
         checkReplaceableCode(['Object.entries'], 'objectEntries'); //@btr-ignore
+        checkReplaceableCode(['| null', 'null |'], 'nullable'); //@btr-ignore
         checkReplaceableCode(['autologin'], 'useStore().login'); //@btr-ignore
         checkReplaceableCode(['Object.values'], 'objectValues'); //@btr-ignore
         checkReplaceableCode(['Object.keys'], 'objectKeys'); //@btr-ignore
-        checkReplaceableCode(['console.log'], 'colorLog'); //@btr-ignore
         checkReplaceableCode(['null as'], 'nullAs'); //@btr-ignore
         function checkReplaceableCode(replaceableCodeStrings, suggestedReplacement) {
             replaceableCodeStrings.forEach(replaceableString => {
@@ -1236,175 +1228,6 @@ export async function importFileFromProject(filename, extension) {
 }
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export function killProcess(message) { bigConsoleError(message); process.exit(); }
-/**Easily run the scripts of this (utils) repo's package.json */
-export function npmRun_package(npmCommand) {
-    console.log({ npmCommand }); //@btr-ignore
-    cachePackageFilesAndCheckThem();
-    if (npmCommand === 'check') {
-        return;
-    }
-    if (npmCommand === 'transpile-base') {
-        transpileBaseFiles(printProcessOver);
-    }
-    if (npmCommand === 'transpile-all') {
-        transpileAllFiles(printProcessOver);
-    }
-    if (npmCommand === 'all') {
-        transpileAllFiles(promptVersioning);
-    }
-    async function cachePackageFilesAndCheckThem() {
-        checkCodeThatCouldBeUpdated(await getCachedFiles([], ['./basicProjectChecks.ts', './btr.ts', './npmRun.ts']));
-    }
-    function printProcessOver() {
-        colorLog('magenta', 'Process over');
-    }
-    async function promptVersioning() {
-        function tryAgain(error) { colorLog('yellow', error); promptVersioning(); }
-        const versionIncrement = await questionAsPromise('Type of package version increment (major, minor, patch)?');
-        if (!zodCheck_curry(tryAgain)(zValidVersionIncrement, versionIncrement)) {
-            return;
-        }
-        await prompCommitMessageAndPush(utilsRepoName);
-        exec(`npm version ${versionIncrement}`, (_err, stdout) => {
-            console.log({ stdout }); //@btr-ignore
-            successLog('package.json up-version\'d');
-        });
-    }
-    function transpileAllFiles(followUp) {
-        transpileBaseFiles(async () => {
-            const filename = 'btr.ts';
-            const indexTs = await fsReadFileAsync(filename);
-            const lines = indexTs.
-                replaceAll('from \'./constants', 'from \'../constants').
-                replaceAll('from \'./types', 'from \'../types').
-                replaceAll('bigConsoleError', 'colorLog').
-                split('\n');
-            selfFilter(lines, line => !/DELETETHISFORCLIENT/.test(line)); //regexHere
-            const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x)); //regexHere
-            lines.splice(cutPoint, lines.length);
-            lines.push('export const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)'); //@btr-ignore
-            await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'));
-            exec('tsc --target esnext client/btr.ts', async () => {
-                successLog('browser versions emitted');
-                await delay(500);
-                followUp();
-            });
-        });
-    }
-    function transpileBaseFiles(followUp) {
-        exec('tsc --target esnext npmRun.ts', async () => {
-            successLog('Base files transpiled');
-            await delay(500);
-            followUp();
-        });
-    }
-}
-/**Run convenient scripts for and from a project's root folder */
-//TODO: delete the rule-disabling below and move this function into its own file
-// eslint-disable-next-line sonarjs/cognitive-complexity 
-export async function npmRun_project(npmCommand) {
-    await basicProjectChecks(divine.error);
-    if (npmCommand === 'check') {
-        return;
-    }
-    const { APP_NAME } = getEnviromentVariables();
-    const serverFolder_dist = '../dist';
-    const serverFolder_src = './test';
-    const fileWithRef = 'ref';
-    if (npmCommand === 'git') {
-        prompCommitMessageAndPush(`${APP_NAME}`);
-    }
-    if (['build', 'transpile'].includes(npmCommand)) {
-        canTranspileCheckAndHandle();
-    }
-    async function canTranspileCheckAndHandle() {
-        const canTranspile = await getCanTranspile();
-        if (!canTranspile) {
-            killProcess(`CANT TRANSPILE, ${fileWithRef}.js has debugging: on`);
-        }
-        if (npmCommand === 'build') {
-            transpileToDistFolder_plusCopyOverOtherFiles();
-        }
-        if (npmCommand === 'transpile') {
-            transpileServerFilesToTestFolder();
-        }
-        async function getCanTranspile() {
-            try {
-                return !/debugging: true/.test(await fsReadFileAsync(`test/server/${fileWithRef}.js`));
-            } //regexHere
-            catch {
-                return true;
-            }
-        }
-        function transpileServerFilesToTestFolder() {
-            exec(`tsc --target esnext server/init.ts --outDir ${serverFolder_src}`, async () => {
-                const packageJson = await fsReadFileAsync(PACKAGE_DOT_JSON);
-                await fsWriteFileAsync('test/package.json', packageJson);
-                successLog(`files transpiled to ${serverFolder_src}`);
-            });
-        }
-        async function transpileToDistFolder_plusCopyOverOtherFiles() {
-            if (!(await checkDevPropsOfRef('server/' + fileWithRef + '.ts', false))) {
-                return;
-            }
-            await transpileTypesFile();
-            await copyFileToDis('.env');
-            await copyFileToDis('.gitignore');
-            await copyFileToDis(PACKAGE_DOT_JSON); //TODO: make it so the "-src" in the name is replaced with "-dist"
-            exec(`tsc --target esnext server/init.ts server/io.ts --outDir ${serverFolder_dist}`, async () => {
-                await checkDevPropsOfRef(serverFolder_dist + '/server/' + fileWithRef + '.js', true);
-                successLog('(server) Build sucessful!');
-            });
-            async function checkDevPropsOfRef(filePath, toggleForProduction) {
-                let fileContent = await fsReadFileAsync(filePath);
-                if (!checkFor('devOrProd = \'dev\'', 'devOrProd = \'prod\'')) {
-                    return;
-                }
-                if (toggleForProduction) {
-                    await fsWriteFileAsync(filePath, fileContent);
-                }
-                return true;
-                function checkFor(forSrc, forDist) {
-                    if (!fileContent.includes(forSrc)) {
-                        killProcess(`main.ts.ref must include: (${forSrc})`);
-                        return;
-                    }
-                    if (toggleForProduction) {
-                        fileContent = fileContent.replace(forSrc, forDist);
-                    }
-                    return true;
-                }
-            }
-            async function copyFileToDis(filename) {
-                let content = await fsReadFileAsync(filename);
-                if (filename === PACKAGE_DOT_JSON) {
-                    deleteAllPackageJsonScriptsExceptStart();
-                }
-                await fsWriteFileAsync('../dist/' + filename, content);
-                function deleteAllPackageJsonScriptsExceptStart() {
-                    content = content.replace(/"scripts": {[^}]{1,}/, `"scripts": { //regexHere
-		"start": "node server/init.js",
-		"git": "git add . & git commit & git push",
-		"btr": "npm i @botoron/utils"
-	`);
-                }
-            }
-            async function transpileTypesFile() {
-                return await new Promise(resolve => {
-                    fsReadFileAsync('types.d.ts').then(typesFile => {
-                        fsWriteFileAsync('types.ts', typesFile).then(() => {
-                            exec('tsc --target esnext types.ts', () => {
-                                successLog('types.d.ts transpiled to root folder!');
-                                fs.unlinkSync('types.ts');
-                                delay(1000).then(() => resolve(true));
-                            });
-                        });
-                    });
-                });
-            }
-        }
-    }
-}
 /**Prompt to submit a git commit message and then push */
 export async function prompCommitMessageAndPush(repoName) {
     //order matters with these 3
@@ -1412,7 +1235,7 @@ export async function prompCommitMessageAndPush(repoName) {
     logDetailsForPrompt();
     const commitMessage = await questionAsPromise(`Enter commit type ${commitTypes} plus a message:`);
     copyToClipboard_server(commitMessage);
-    if (!zodCheck_curry(tryAgain)(get_zValidCommitMessage(), commitMessage)) {
+    if (!zodCheck_curry(tryAgain, true)(get_zValidCommitMessage(), commitMessage)) {
         return prompCommitMessageAndPush(repoName);
     }
     return await gitAddCommitPush();
@@ -1456,7 +1279,7 @@ export async function questionAsPromise(question) {
 }
 /**Check the user input in socket.on functions and send error toasts if the validation fails */
 export function zodCheck_socket(socket, schema, data) {
-    return zodCheck_curry(errorHandler)(schema, data);
+    return zodCheck_curry(errorHandler, true)(schema, data);
     function caller() {
         return ((getTraceableStack('', 'zodCheck_socket').split('\n') || [])[3]?.match(/at \w{1,}/) || //regexHere
             ['at <unable to identify function caller>'])[0];

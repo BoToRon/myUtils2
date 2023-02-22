@@ -8,7 +8,6 @@ import { getCachedFiles, checkCodeThatCouldBeUpdated, compareArrays, getEnvirome
 _;
 import { CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_VARS, SERVER_EVENTS_TS, SERVER_REF_TS, TSCONFIG_JSON, TYPES_IO_TS, TYPES_Z_TS, zMyEnv } from './constants/constants.js';
 _;
-function zodCheck_toErrors(path, schema, data) { zodCheck_curry((e) => addToErrors(path, e))(schema, data); }
 function addToErrors(path, error) { errors.push(`(at ${path}): ${error}`); }
 function inBtrUtils(path) { return './node_modules/@botoron/utils/' + path; }
 let errorHandler = nullAs();
@@ -577,4 +576,7 @@ function getFromCachedFiles(obligatoryMatches) {
     }
     addToErrors('checks.getFromCachedFiles', `No file cached with the requested obligatory matches(${obligatoryMatches}) was found`);
     return [{ path: 'FAILSAFE', content: '' }];
+}
+function zodCheck_toErrors(path, schema, data) {
+    zodCheck_curry((e) => addToErrors(path, e), true)(schema, data);
 }

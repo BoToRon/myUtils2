@@ -13,23 +13,7 @@ import {
 } from './constants/constants.js'
 _
 import {
-	checkCodeThatCouldBeUpdated,
-	colorLog,
-	command_package,
-	command_project,
-	delay,
-	divine,
-	fsReadFileAsync,
-	fsWriteFileAsync,
-	getCachedFiles,
-	getEnviromentVariables,
-	killProcess,
-	prompCommitMessageAndPush,
-	questionAsPromise,
-	selfFilter,
-	successLog,
-	zodCheckAndHandle,
-	zodCheck_curry,
+	checkCodeThatCouldBeUpdated, colorLog, command_package, command_project, delay, divine, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getEnviromentVariables, killProcess, prompCommitMessageAndPush, questionAsPromise, selfFilter, successLog, zodCheckAndHandle, zodCheck_curry
 } from './btr.js'
 _
 
