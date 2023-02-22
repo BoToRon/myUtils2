@@ -193,12 +193,12 @@ function checkClientStoreTs() {
             '\t\tadminFetch: { command: \'\', data: null } as adminFetch,',
             '\t\tglobalAlert: { message: \'\', show: false } as globalAlert,',
             '',
-            '\tsimpleConfirmationModal: {',
-            '\t\ttitle: \'\',',
-            '\t\tconfirmFn: doNothing,',
-            '\t\tconfirmationType: \'positive\' as \'positive\' | \'negative\',',
-            '\t\topen(title: string, confirmFn: () => void) { this.title = title; this.confirmFn = confirmFn }',
-            '},'
+            '\t\tsimpleConfirmationModal: {',
+            '\t\t\ttitle: \'\',',
+            '\t\t\tconfirmFn: doNothing,',
+            '\t\t\tconfirmationType: \'positive\' as \'positive\' | \'negative\',',
+            '\t\t\topen(title: string, confirmFn: () => void) { this.title = title; this.confirmFn = confirmFn }',
+            '\t\t},'
         ]),
         asConsecutiveLines([
             '\tactions: {',

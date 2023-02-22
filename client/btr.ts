@@ -964,6 +964,6 @@ export function trackVueComponent_curry() { doNothing }
 /**@deprecated use "triggerModal" instead */
 export function triggerModalWithValidation_curry() { doNothing }
 /**@deprecated use "divine.try" instead */
-export function tryF() { doNothing }
+export function tryF() { doNothing } //@btr-ignore
 
 export const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)

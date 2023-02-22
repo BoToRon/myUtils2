@@ -978,7 +978,7 @@ export function trackVueComponent_curry() { doNothing }
 /**@deprecated use "triggerModal" instead */
 export function triggerModalWithValidation_curry() { doNothing }
 /**@deprecated use "divine.try" instead */
-export function tryF() { doNothing }
+export function tryF() { doNothing } //@btr-ignore
 
 // ! DELETEEVERYTHINGBELOW, as it is only meant for server-side use
 
