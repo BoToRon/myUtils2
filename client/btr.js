@@ -1,13 +1,24 @@
 let _;
 _;
-import chalk from 'chalk'; //DELETETHISFORCLIENT
 _;
-import { fromZodError } from 'zod-validation-error';
+_;
+_;
+_;
+_;
+_;
+_;
+_;
+_;
+_;
+_;
+_;
+_;
+_;
+import { getUniqueId_generator, isNode, timers, zValidVariants } from '../constants/constants.js';
 _;
 import { z } from 'zod';
 _;
-import { getUniqueId_generator, isNode, timers, zValidVariants } from './constants.js';
-_;
+import { fromZodError } from 'zod-validation-error';
 _;
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
@@ -15,6 +26,42 @@ _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 export { zValidVariants };
+_; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+_; /********** CURRIES ******************** CURRIES ******************** CURRIES ******************** CURRIES **********/
+/**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
+export function newToast_client_curry($bvToast) {
+    return function body(title, message, variant) {
+        if (!zodCheck_curry(alert)(zValidVariants, variant)) {
+            return;
+        }
+        $bvToast.toast(message, {
+            toaster: 'b-toaster-bottom-right',
+            autoHideDelay: 5000,
+            solid: true,
+            variant,
+            title
+        });
+    };
+}
+/**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
+export function zodCheck_curry(errorHandler = divine.error, strictModeIfObject = true) {
+    function zodCheck(schema, data) {
+        function body(errorHandler, schema, data, strictModeIfObject = true) {
+            const result = zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler, strictModeIfObject);
+            return result.success;
+        }
+        return body(errorHandler, schema, data, strictModeIfObject);
+    }
+    return zodCheck;
+}
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -213,10 +260,7 @@ _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ****************
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 /**Set interval with try-catch and called immediately*/
-export function doAndRepeat(fn, interval, errorHandler) {
-    tryF(fn, [], errorHandler);
-    setInterval(() => tryF(fn, [], errorHandler), interval);
-}
+export function doAndRepeat(fn, interval) { tryF(fn, []); setInterval(() => tryF(fn, []), interval); }
 /**
  * Filter and map an array in a single loop
  * @param arr The array to be filterMap'd
@@ -264,7 +308,7 @@ export async function retryF(fn, args, retriesLeft, defaultReturn, delayBetweenR
     }
 }
 /**tryCatch wrapper for functions with divineError as the default error handler */
-export async function tryF(fn, args, errorHandler) {
+export async function tryF(fn, args, errorHandler = divine.error) {
     try {
         return await fn(...args);
     }
@@ -304,7 +348,7 @@ export function zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHand
  * @param errorHandler The function that will execute if data does NOT fits zSchema
  * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not *
  */
-export function zodCheckAndHandle(zSchema, data, successHandler, args, errorHandler, strictModeIfObject) {
+export function zodCheckAndHandle(zSchema, data, successHandler, args, errorHandler = divine.error, strictModeIfObject = true) {
     const zResult = zGetSafeParseResultAndHandleErrorMessage(zSchema, data, errorHandler, strictModeIfObject);
     if (zResult.success === true && successHandler) {
         successHandler(...args);
@@ -426,16 +470,16 @@ export function isEven(number) { return !isOdd(number); }
 /**Self-explanatory */
 export function isOdd(number) { return Boolean(Number(number) % 2); }
 /**@returns whether a number is either the minimum provided, the maximum provided or any number in-between */
-export function isWithinRange(number, max, min, errorHandler) {
+export function isWithinRange(number, max, min) {
     if (min > max) {
-        errorHandler('"min" should be lower than "max"!');
+        divine.ping('"min" should be lower than "max"!');
     }
     return number <= max && number >= min;
 }
 /**Math.max and Math.min merged into one */
-export function mathMaxMin(max, min, number, errorHandler) {
+export function mathMaxMin(max, min, number) {
     if (min > max) {
-        errorHandler('"min" should be lower than "max"!');
+        divine.ping('"min" should be lower than "max"!');
     }
     if (number > max) {
         return max;
@@ -602,7 +646,7 @@ _; /********** FOR TIMERS ******************** FOR TIMERS ******************** F
  * @param timesRanSucessfully The amount of times the interval ran before its dismise
  * @returns initializeTimer's resolveInfo with the return of onKill as the value (since onEach never resolves, just keeps going)
  */
-export async function initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully, errorHandler) {
+export async function initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully) {
     const doContinue = await stayAliveChecker();
     return { timesRanSucessfully, ...await getResult() };
     async function getResult() {
@@ -612,13 +656,12 @@ export async function initializeInterval(id, intervalInMs, stayAliveChecker, onE
                     if (result.wasCancelled) {
                         return resolve(result);
                     }
-                    initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1, errorHandler)
-                        .then(result => resolve(result));
+                    initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1).then(result => resolve(result));
                 });
             }
             else {
                 initializeTimer(id, Date.now() + intervalInMs, onEach, onKill).then(result => resolve(result));
-                killTimer(id, `stayAliveChecker (${stayAliveChecker.name}) = false`, errorHandler);
+                killTimer(id, `stayAliveChecker (${stayAliveChecker.name}) = false`);
             }
         });
     }
@@ -677,10 +720,10 @@ export async function initializeTimer(id, runAt, onComplete, onCancel) {
     }
 }
 /**Kill a timer created with initializeTimer/Interval, the reason provided will become a divine stack */
-export async function killTimer(timerId, reason, errorHandler) {
+export async function killTimer(timerId, reason) {
     const theTimer = timers.find(x => x.id === timerId);
     if (!theTimer) {
-        errorHandler('Unable to cancel, no timer was found with this id: ' + timerId);
+        divine.error('Unable to cancel, no timer was found with this id: ' + timerId);
         return;
     }
     removeItem(timers, theTimer);
@@ -703,7 +746,8 @@ _; /********** FOR STRINGS ******************** FOR STRINGS ********************
 /**Add an "S" to the end of a noun if talking about them in plural based on the amount passed */
 export function asSingularOrPlural(noun, amount) { return noun + `${amount === 1 ? '' : 's'}`; }
 /**console.log... WITH COLORS :D */ //@btr-ignore
-export function colorLog(color, message) { console.log(chalk[color].bold(message)); } //DELETETHISFORCLIENT @btr-ignore
+/** Copy to clipboard using the corresponding function for the running enviroment (node/client)*/
+export function copyToClipboard(x) { isNode ? copyToClipboard_server(x) : copyToClipboard_client(x); }
 /**(Message) 💀 */
 export function errorLog(message) { return colorLog('red', message + ' 💀'); }
 /**TODO: describe me */
@@ -814,16 +858,6 @@ export async function triggerModal(useStore, id, action) {
     function elementExists() { return Boolean(document.getElementById(id)); }
     function promptError() { alert(`Modal with the '${id}' id was not found. Could not ${action}. Please report this`); }
 }
-/**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
-export function zodCheck_curry(errorHandler, strictModeIfObject) {
-    return function zodCheck(schema, data) {
-        function body(errorHandler, schema, data, strictModeIfObject = true) {
-            const result = zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler, strictModeIfObject);
-            return result.success;
-        }
-        return body(errorHandler, schema, data, strictModeIfObject);
-    };
-}
 /**
  * Return the regex given with possibly an error indicating it wasn't matched.
  * MUST BE USED AS A SPREAD ARGUMENT, eg: zString.regex( ...zRegexGenerator(/hi/, false) )
@@ -839,6 +873,68 @@ export function zRegexGenerator(regex, exactPhrase) {
     }
     return [regex, 'Regex not matched: ' + regex];
 }
+_; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+_; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
+/**Log every socket.io event with the data received for debugging purposes */
+export function clientSocketLongOnAny(useStore) {
+    useStore().socket.onAny((eventName, ...args) => {
+        const eventInfo = { event: eventName, timestamp: Date.now(), data: args };
+        colorLog('red', stringify(eventInfo));
+        useStore().socketEvents.unshift(eventInfo);
+    });
+}
+/**Copy to clipboard, objects arrays get stringify'd */
+export function copyToClipboard_client(x) {
+    const text = stringify(x);
+    const a = document.createElement('textarea');
+    a.innerHTML = text;
+    document.body.appendChild(a);
+    a.select();
+    document.execCommand('copy');
+    document.body.removeChild(a);
+}
+/**Stringifies and downloads the provided data*/
+export function downloadFile_client(filename, fileFormat, data) {
+    if (isNode) {
+        colorLog('downloadFile_client can only be run clientside!');
+        return;
+    }
+    const a = document.createElement('a');
+    a.href = window.URL.createObjectURL(new Blob([data], { type: 'text/plain' }));
+    a.download = `${filename}${fileFormat}`;
+    a.click();
+}
+/**Add/remove a vue component to the window for easy access/debugging */
+export function trackVueComponent(name, component, window) {
+    component.name = name;
+    component.id = getUniqueId(name);
+    component.beforeDestroy = onDestroy;
+    if (!window.vueComponents) {
+        window.vueComponents = {};
+    }
+    if (!window.vueComponents[name]) {
+        window.vueComponents[name] = [];
+    }
+    successLog(`Component '${name}' added to window.vueComponents [${window.vueComponents[name].length}]`);
+    window.vueComponents[name].push(component);
+    logAllComponents();
+    function logAllComponents() {
+        colorLog('blue', `window.vueComponents: ${stringify(mapObject(window.vueComponents, value => value.length))}`);
+    }
+    function onDestroy() {
+        errorLog(`Component '${name}' (id: ${component.id}) removed from window.vueComponents`);
+        removeItem(window.vueComponents[name], component);
+        logAllComponents();
+    }
+}
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
@@ -849,13 +945,10 @@ _; /********** DEPRECATED ******************** DEPRECATED ******************** D
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
-/**@deprecated use "copyToClipboard_server" or "copyToClipboard_client" instead */
-export function copyToClipboard() { doNothing; }
 /**@deprecated use "formatDate" instead */
 export function getFormattedTimestamp() { doNothing; }
 /**@deprecated use "trackVueComponent" instead */
 export function trackVueComponent_curry() { doNothing; }
 /**@deprecated use "triggerModal" instead */
 export function triggerModalWithValidation_curry() { doNothing; }
-export const command_package = process.env['npm_config_command_package'];
-export const command_project = process.env['npm_config_command_project'];
+export const colorLog = (color, message) => console.log(`%c${message}`, `color: ${color};`);

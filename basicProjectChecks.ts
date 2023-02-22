@@ -3,16 +3,17 @@ import fs from 'fs'
 _
 import { z } from 'zod'
 _
-import { cachedFile, messageHandler, nullable, packageJson, zSchema } from './types.js'
+import { cachedFile, messageHandler, nullable, packageJson, zSchema } from './types/types.js'
 _
-import { getCachedFiles, checkCodeThatCouldBeUpdated, getEnviromentVariables, importFileFromProject } from './forServer.js'
-_
-import { compareArrays, nullAs, sortBy, successLog, surroundedString, toSingleLine, zodCheck_curry, zRegexGenerator } from './index.js'
+import {
+	getCachedFiles, checkCodeThatCouldBeUpdated, compareArrays, getEnviromentVariables,
+	importFileFromProject, nullAs, successLog, surroundedString, zodCheck_curry, zRegexGenerator
+} from './btr.js'
 _
 import {
 	CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_VARS,
 	SERVER_EVENTS_TS, SERVER_REF_TS, TSCONFIG_JSON, TYPES_IO_TS, TYPES_Z_TS, zMyEnv
-} from './constants.js'
+} from './constants/constants.js'
 _
 
 function addToErrors(path: string, error: string) { errors.push(`(at ${path}): ${error}`) }
@@ -39,10 +40,9 @@ export async function basicProjectChecks(errHandler: messageHandler) {
 	serverTsFiles.push(...getFromCachedFiles(['./server', '.ts']))
 
 	await allChecks()
-	if (errors.length) { errorHandler('\n\n' + errors.map((e, i) => i + '. ' + e).join('\n\n') + '\n\n'); return }
 
-	logImportedVariablesWithUsage()
-	successLog('all basicProjectChecks passed')
+	errors.length ? errorHandler('\n\n' + errors.map((e, i) => i + '. ' + e).join('\n\n') + '\n\n') : successLog('all basicProjectChecks passed')
+	return !errors.length
 
 	function allChecks() {
 
@@ -516,7 +516,7 @@ function checkSpecificMatchesInTypesTs() {
 /**Check if the project is using the latest version of "myUtils" */
 async function checkUtilsVersion() {
 	const latestVersion = await getLatestVersion()
-	const installedVersion = (await import('../package.json', { assert: { type: 'json' } })).default.version
+	const installedVersion = (await import('./package.json', { assert: { type: 'json' } })).default.version
 	const isOutdated = versionValue(latestVersion) > versionValue(installedVersion)
 
 	if (isOutdated) { errorHandler(`Outdated "utils" package. (${installedVersion} vs ${latestVersion}) PLEASE UPDATE: npm run btr`) }
@@ -608,20 +608,6 @@ function getFromCachedFiles(obligatoryMatches: string[]): cachedFile[] {
 	return [{ path: 'FAILSAFE', content: '' }]
 }
 
-function logImportedVariablesWithUsage() {
-	const allContentAsSingleLine = toSingleLine(cachedFiles.map(x => x.content).join('\n')).replace(/\t/g, '')
-	const matches = (allContentAsSingleLine.match(/(?<=import {)[^']{1,}(?= } from '@botoron)/g)) as RegExpMatchArray
-	const exportedVars = matches.join(',').split(',').map(x => x.trim()) as readonly string[]
-
-	const reduced = exportedVars.reduce((acc, exportedVar) => {
-		const found = acc.find(x => x.exportedVar === exportedVar)
-		found ? found.count++ : acc.push({ exportedVar, count: 1 })
-		return acc
-	}, [] as { exportedVar: string, count: number }[])
-
-	console.table(sortBy(reduced, ['count', 'D']))
-}
-
 function zodCheck_toErrors<T>(path: string, schema: zSchema<T>, data: T) {
-	zodCheck_curry((error: string) => addToErrors(path, error), true)(schema, data)
+	zodCheck_curry((e: string) => addToErrors(path, e), true)(schema, data)
 }

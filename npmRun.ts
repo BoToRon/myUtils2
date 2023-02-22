@@ -1,23 +1,36 @@
 let _
-import { unlinkSync } from 'fs'
+import fs from 'fs'
 _
 import { exec } from 'child_process'	//DELETETHISFORCLIENT
 _
-import { basicProjectChecks } from './btrCheck.js'
+import { basicProjectChecks } from './basicProjectChecks.js' //DELETETHISFORCLIENT
 _
-import { validNpmCommand_package, validNpmCommand_project } from './types.js'
-_
-import { colorLog, command_package, command_project, delay, selfFilter, successLog, zodCheckAndHandle, zodCheck_curry } from './index.js'
+import { validNpmCommand_package, validNpmCommand_project } from './types/types.js'
 _
 import {
 	PACKAGE_DOT_JSON, utilsRepoName, zValidNpmCommand_package,
 	zValidNpmCommand_project, zValidVersionIncrement
-} from './constants.js'
+} from './constants/constants.js'
 _
 import {
-	checkCodeThatCouldBeUpdated, divine, fsReadFileAsync, fsWriteFileAsync, getCachedFiles,
-	getEnviromentVariables, killProcess, prompCommitMessageAndPush, questionAsPromise
-} from './forServer.js'
+	checkCodeThatCouldBeUpdated,
+	colorLog,
+	command_package,
+	command_project,
+	delay,
+	divine,
+	fsReadFileAsync,
+	fsWriteFileAsync,
+	getCachedFiles,
+	getEnviromentVariables,
+	killProcess,
+	prompCommitMessageAndPush,
+	questionAsPromise,
+	selfFilter,
+	successLog,
+	zodCheckAndHandle,
+	zodCheck_curry,
+} from './btr.js'
 _
 
 if (command_package) { zodCheckAndHandle(zValidNpmCommand_package, command_package, npmRun_package, [command_package], divine.error, true) }
@@ -82,13 +95,14 @@ export function npmRun_package(npmCommand: validNpmCommand_package) {
 	}
 
 	function transpileBaseFiles(followUp: () => void) {
-		exec('tsc --target esnext npmRun.ts --outDir ../dist', async () => {
+		exec('tsc --target esnext npmRun.ts', async () => {
 			successLog('Base files transpiled')
 			await delay(500)
 			followUp()
 		})
 	}
 }
+
 /**Run convenient scripts for and from a project's root folder */
 //TODO: delete the rule-disabling below and move this function into its own file
 // eslint-disable-next-line sonarjs/cognitive-complexity 
@@ -170,7 +184,7 @@ export async function npmRun_project(npmCommand: validNpmCommand_project) {
 						fsWriteFileAsync('types.ts', typesFile).then(() => {
 							exec('tsc --target esnext types.ts', () => {
 								successLog('types.d.ts transpiled to root folder!')
-								unlinkSync('types.ts')
+								fs.unlinkSync('types.ts')
 								delay(1000).then(() => resolve(true))
 							})
 						})
