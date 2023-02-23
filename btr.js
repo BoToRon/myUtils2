@@ -859,7 +859,7 @@ _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ************
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 /**Log every socket.io event with the data received for debugging purposes */
-export function clientSocketLonOnAny(useStore) {
+export function clientSocketLogOnAny(useStore) {
     useStore().socket.onAny((eventName, ...args) => {
         const eventInfo = { event: eventName, timestamp: Date.now(), data: args };
         colorLog('red', stringify(eventInfo));

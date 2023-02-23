@@ -258,7 +258,7 @@ function checkFilesAndFolderStructure() {
 	const desiredFilesAndFolders = [
 		'./dev', './test',	//folders for generating data and testing the server before building, respectively
 		ESLINT_CJS, GITIGNORE, TSCONFIG_JSON, './.env', './.git', './package-lock.json', './package.json', './TODO.md', //solo-files
-		SERVER_EVENTS_TS, SERVER_REF_TS, './server/fns.ts', './server/init.ts',  //server files
+		SERVER_EVENTS_TS, SERVER_REF_TS, './server/__socketOnAdmin.ts', './server/fns.ts', './server/init.ts',  //server files
 		GLOBAL_VARS, './global/fns.ts',  //functions and constants for both server and client
 		TYPES_IO_TS, TYPES_Z_TS, './types/types.d.ts',  //types and schemas
 
@@ -482,13 +482,13 @@ function checkSpecificMatchesInTypesIoTs() {
 		asConsecutiveLines([
 			'export type socket_c2s_event = keyof ClientToServerEvents',
 			'export interface ClientToServerEvents {',
-			'\tadmin: (adminKey: string, command: string) => void',
+			'\tadmin: (adminKey: string, command: validAdminCommand) => void',
 			''
 		]),
 		asConsecutiveLines([
 			'export type clientSocket = socket_client<ServerToClientEvents, ClientToServerEvents>',
 			'export const io = new Server<ClientToServerEvents, ServerToClientEvents>(getStartedHttpServer(), { cors: { origin: \'*\' } })',
-			'export interface serverSocket extends socket_server<ClientToServerEvents, ServerToClientEvents, object, object> {'
+			'export type serverSocket = socket_server<ClientToServerEvents, ServerToClientEvents, object, {',
 		])
 	].forEach(event => checkMatchInSpecificFile(TYPES_IO_TS, event))
 }
@@ -576,6 +576,7 @@ function externalTemplatePath(filename: string) {
 
 async function fillCachedFiles() {
 	const vueTemplates = ['admin', 'simpleConfirmationModal'].map(x => externalTemplatePath(`__${x}.vue`))
+	const tsTemplates = ['chartJs', 'socketOnAdmin'].map(x => externalTemplatePath(`__${x}.ts`))
 	const nodeModulesVueTsConfig = './client/node_modules/@vue/tsconfig/tsconfig.json'
 	const clientVueFilePaths = getFilesAndFoldersNames(CLIENT_SRC, '.vue')
 	const clientTsFilePaths = getFilesAndFoldersNames(CLIENT_SRC, '.ts')
@@ -583,11 +584,10 @@ async function fillCachedFiles() {
 	const typeFilePaths = getFilesAndFoldersNames('./types', '.ts')
 	const tsConfigs = [inBtrUtils(TSCONFIG_JSON), TSCONFIG_JSON]
 	const eslintConfigs = [inBtrUtils(ESLINT_CJS), ESLINT_CJS]
-	const chartJs = externalTemplatePath('__chartJs.ts')
 
 	cachedFiles.push(...await getCachedFiles(errors, [
-		chartJs, clientTsFilePaths, clientVueFilePaths, eslintConfigs, GITIGNORE, GLOBAL_VARS,
-		nodeModulesVueTsConfig, serverTsFilePaths, tsConfigs, typeFilePaths, vueTemplates.flat(),
+		clientTsFilePaths, clientVueFilePaths, eslintConfigs, GITIGNORE, GLOBAL_VARS, nodeModulesVueTsConfig,
+		serverTsFilePaths, tsConfigs, tsTemplates.flat(), typeFilePaths, vueTemplates.flat(),
 		['env.d.ts', 'tsconfig.config.json', 'tsconfig.json', 'vite.config.ts', 'vue.config.js'].
 			map(x => ['./client/' + x, './node_modules/@botoron/utils/templateFiles/' + x]).flat()
 	].flat()))
