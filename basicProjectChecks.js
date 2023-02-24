@@ -488,6 +488,7 @@ function checkSpecificMatchesInTypesTs() {
             '/**imported from utils */',
             'declare global {',
             '\ttype adminFetch = btr_adminFetch',
+            '\ttype bvModal = btr_bvModal',
             '\ttype fieldsForColumnOfTable = btr_fieldsForColumnOfTable',
             '\ttype globalAlert = btr_globalAlert',
             '\ttype language = btr_language',

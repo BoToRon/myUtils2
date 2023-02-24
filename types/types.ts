@@ -12,11 +12,11 @@ export type zSchema<T> = { _def: object, safeParse: (x: T) => SafeParseReturnTyp
 export type nullable<T> = T | null
 
 //^^ EXPORTABLE GENERICS ABOVE ^^ vv EXPORTABLE "btr_" TYPES BELOW vv
-
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void
 export type btr_nonVoidFn = <F extends (...args: Parameters<F>) => ReturnType<F>> () => unknown
 export type btr_trackedVueComponent = { id: string, name: string, beforeDestroy?: () => void }
 export type btr_socketEventInfo = { event: string, timestamp: number, data: unknown }
+export type btr_bvModal = { show: (id: string) => void, hide: (id: string) => void }
 export type btr_globalAlert = { message: string, show: boolean }
 export type btr_adminFetch = { command: string, data: unknown }
 export type btr_validVariant = z.infer<typeof zValidVariants>
@@ -40,7 +40,6 @@ export type validChalkColor = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 
 export type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 export type vueComponentsTracker<T extends string> = Record<T, btr_trackedVueComponent[]>
 export type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
-export type bvModal = { show: (id: string) => void, hide: (id: string) => void }
 export type cachedFile = { path: string, content: string }
 export type messageHandler = (message: string) => void
 export type arrayPredicate<T> = (arg1: T) => boolean

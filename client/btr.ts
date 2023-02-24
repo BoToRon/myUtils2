@@ -13,7 +13,7 @@ _
 _
 _
 import {
-	arrayPredicate, btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, bvModal, bvToast, cachedFile, maybePromise, messageHandler, myEnv, nullable, pipe_mutable_type,
+	arrayPredicate, btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, bvToast, cachedFile, maybePromise, messageHandler, myEnv, nullable, pipe_mutable_type,
 	pipe_persistent_type, timer, validChalkColor, validNpmCommand_package, validNpmCommand_project, vueComponentsTracker, zSchema
 } from '../types/types.js'
 _
@@ -818,7 +818,7 @@ export function logEmptyLine() { console.log('') } //@btr-ignore
 /** @returns null, as the provided type */
 export function nullAs<T>() { return null as T } //@btr-ignore
 //TODO: describe me
-export async function triggerModal(useStore: () => { bvModal: bvModal }, id: string, action: 'show' | 'hide') {
+export async function triggerModal(useStore: () => { bvModal: btr_bvModal }, id: string, action: 'show' | 'hide') {
 	if (action === 'show') {
 		useStore().bvModal.show(id) //@btr-ignore
 		for (let i = 0; i < 10; i++) { if (!elementExists()) { await delay(250) } }
