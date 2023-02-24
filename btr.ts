@@ -44,7 +44,7 @@ _ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ***********
 _ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 
 export {
-	btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn,
+	btr_adminFetch, btr_bvModal, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn,
 	btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, nullable, zValidVariants
 }
 
