@@ -28,7 +28,12 @@ export async function basicProjectChecks(errHandler) {
     await allChecks();
     errors.length ? errorHandler('\n\n' + errors.map((e, i) => i + '. ' + e).join('\n\n') + '\n\n') : successLog('all basicProjectChecks passed');
     return !errors.length;
-    function allChecks() {
+    async function allChecks() {
+        await checkUtilsVersion();
+        await checkPackageJsons();
+        await checkVueDevFiles();
+        await checkVsCodeSettings();
+        checkAllExportedFunctionsAreDescribed();
         checkBasicValidAdminCommands();
         checkClientFilesDontReferenceLocalStorageDirectly();
         checkClientIndexTs();
@@ -49,17 +54,11 @@ export async function basicProjectChecks(errHandler) {
         checkServerRefTs();
         checkSocketEvents();
         checkServerAndClientFilesLogTheirInitialization();
+        checkSpecificMatchesInAppVue();
         checkSpecificMatchesInTypesIoTs();
         checkSpecificMatchesInTypesTs();
-        return Promise.all([
-            checkAllExportedFunctionsAreDescribed(),
-            checkCodeThatCouldBeUpdated([serverTsFiles, clientTsFiles, clientVueFiles].flat()),
-            checkPackageJsons(),
-            checkStructureAndMatchesOfVueFiles(),
-            checkUtilsVersion(),
-            checkVsCodeSettings(),
-            checkVueDevFiles(),
-        ]);
+        checkStructureAndMatchesOfVueFiles();
+        checkCodeThatCouldBeUpdated([serverTsFiles, clientTsFiles, clientVueFiles].flat());
     }
 }
 function asConsecutiveLines(lines) {
@@ -439,6 +438,22 @@ function checkServerAndClientFilesLogTheirInitialization() {
             addToErrors(path, `"${surroundedString(wantedMatch, ' ', 10)}" is missing`);
         }
     });
+}
+function checkSpecificMatchesInAppVue() {
+    [
+        asConsecutiveLines([
+            '<template>',
+            '\t<b-container id="app" class="justify-content-center" v-cloak>',
+            '',
+            '\t\t<b-alert style = "margin-top: 10px; z-index:200" v - model="globalAlert.show" variant = "warning" dismissible >',
+            '\t\t\t<br>',
+            '\t\t\t<div style="border-bottom: 1px solid #333;" > </div>',
+            '\t\t\t< h1 > {{ globalAlert.message }} </>',
+            '\t\t\t< div style = "border-bottom: 1px solid #333;" > </>',
+            '\t\t\t< br >',
+            '\t\t</b-alert>'
+        ])
+    ].forEach(x => checkMatchInSpecificFile(CLIENT_SRC + '/App.vue', x));
 }
 function checkSpecificMatchesInTypesIoTs() {
     [
