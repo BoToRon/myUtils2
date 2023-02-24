@@ -470,12 +470,12 @@ function checkSpecificMatchesInAppVue() {
 			'<template>',
 			'\t<b-container id="app" class="justify-content-center" v-cloak>',
 			'',
-			'\t\t<b-alert style = "margin-top: 10px; z-index:200" v - model="globalAlert.show" variant = "warning" dismissible >',
+			'\t\t<b-alert style="margin-top: 10px; z-index:200" v-model="globalAlert.show" variant="warning" dismissible>',
 			'\t\t\t<br>',
-			'\t\t\t<div style="border-bottom: 1px solid #333;" > </div>',
-			'\t\t\t< h1 > {{ globalAlert.message }} </>',
-			'\t\t\t< div style = "border-bottom: 1px solid #333;" > </>',
-			'\t\t\t< br >',
+			'\t\t\t<div style="border-bottom: 1px solid #333;"></div>',
+			'\t\t\t<h1>{{ globalAlert.message }}</h1>',
+			'\t\t\t<div style="border-bottom: 1px solid #333;"></div>',
+			'\t\t\t<br>',
 			'\t\t</b-alert>'
 		])
 	].forEach(x => checkMatchInSpecificFile(CLIENT_SRC + '/App.vue', x))
