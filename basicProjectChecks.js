@@ -137,7 +137,7 @@ function checkClientIndexTs() {
             '_',
             'import { BootstrapVue, IconsPlugin } from \'bootstrap-vue\'',
             '_',
-            'import { clientSocketlogOnAny, getAppLog, logInitialization, newToast_client_curry } from \'@botoron/utils/client/btr.js\'',
+            'import { clientSocketLogOnAny, getAppLog, logInitialization, newToast_client_curry } from \'@botoron/utils/client/btr.js\'',
             '_',
             'logInitialization(\'./client/src/index.ts\')',
             '',
@@ -156,7 +156,7 @@ function checkClientIndexTs() {
             'useStore().newToast = newToast_client_curry(vueApp.$bvToast)',
             'useStore().bvModal = vueApp.$bvModal',
             '',
-            'if (import.meta.env.DEV) { clientSocketlogOnAny(useStore) }',
+            'if (import.meta.env.DEV) { clientSocketLogOnAny(useStore) }',
             'getAppLog(window as never, useStore as never)',
             'useStore().login()',
         ])
