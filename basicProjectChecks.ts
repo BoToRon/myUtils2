@@ -535,6 +535,7 @@ function checkSpecificMatchesInTypesTs() {
 			'declare global'
 		]),
 		'type mongoMisc = { adminKey: string, pageVisits: number',
+		'type validView = \'admin\' |',
 	].forEach(x => checkMatchInSpecificFile('./types/types.d.ts', x))
 }
 

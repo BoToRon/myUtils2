@@ -123,6 +123,14 @@ export function compareArrays(baseArray, testArray) {
 export function getLastItem(arr) { return arr[arr.length - 1]; }
 /**@returns a random item along its index */
 export function getRandomItem(arr) { const r = roll(arr.length); return { item: arr[r], index: r }; }
+/**getRandomItem, but each items has custom chances to be selected */
+export function getRandomItem_withCustomChances(items, chancesDefininingFunction) {
+    const chancesAdjustItems = [];
+    items.forEach(item => { for (let i = 0; i < chancesDefininingFunction(item); i++) {
+        chancesAdjustItems.push(item);
+    } });
+    return getRandomItem(chancesAdjustItems).item;
+}
 /**@returns a version of the provided array without repeating items */
 export function getUniqueValues(arr) { return [...new Set(arr)]; }
 /**@returns whether an item is the last one in an array or not (warning: maybe don't use with primitives) */

@@ -115,6 +115,12 @@ export function compareArrays<T>(baseArray: T[], testArray: T[]) {
 export function getLastItem<T>(arr: T[]) { return arr[arr.length - 1] }
 /**@returns a random item along its index */
 export function getRandomItem<T>(arr: T[]) { const r = roll(arr.length); return { item: arr[r] as T, index: r } }
+/**getRandomItem, but each items has custom chances to be selected */
+export function getRandomItem_withCustomChances<T>(items: T[], chancesDefininingFunction: (item: T) => number) {
+	const chancesAdjustItems: T[] = []
+	items.forEach(item => { for (let i = 0; i < chancesDefininingFunction(item); i++) { chancesAdjustItems.push(item) } })
+	return getRandomItem(chancesAdjustItems).item
+}
 /**@returns a version of the provided array without repeating items */
 export function getUniqueValues<T>(arr: T[]) { return [...new Set(arr)] }
 /**@returns whether an item is the last one in an array or not (warning: maybe don't use with primitives) */
