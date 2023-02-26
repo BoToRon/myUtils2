@@ -302,11 +302,12 @@ export async function retryF<F extends (...args: Parameters<F>) => ReturnType<F>
  * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not
  * @returns 
  */
-export function zGetSafeParseResultAndHandleErrorMessage<T>(schema: zSchema<T>,
+export function zGetSafeParseResultAndHandleErrorMessage<T>(
+	schema: zSchema<T>,
 	data: T,
 	errorHandler = <messageHandler>nullAs(),
-	strictModeIfObject = true) {
-
+	strictModeIfObject = true
+) {
 	const result = getResult()
 	if (result.success === false && errorHandler) { errorHandler(fromZodError(result.error).message) }
 	return result
@@ -852,7 +853,7 @@ export async function triggerModal(useStore: () => { bvModal: btr_bvModal }, id:
 	function elementExists() { return Boolean(document.getElementById(id)) }
 	function promptError() { alert(`Modal with the '${id}' id was not found. Could not ${action}. Please report this`) }
 }
-/**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
+/**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler in case it isn't a fit. */
 export function zodCheck_curry(errorHandler: messageHandler, strictModeIfObject: boolean) {
 	return function zodCheck<T>(schema: zSchema<T>, data: T) {
 		function body<T>(errorHandler: messageHandler, schema: zSchema<T>, data: T, strictModeIfObject = true) {
