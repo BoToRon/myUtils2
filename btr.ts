@@ -779,9 +779,9 @@ _ /********** MISC ******************** MISC ******************** MISC *********
  * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not
  * @returns 
  */
-export function dataIsEqual(A: unknown, B: unknown, errorHandler = <messageHandler>nullAs(), strictModeIfObject = true) {
+export function dataIsEqual(A: unknown, B: unknown, errorHandler = <messageHandler>nullAs()) {
 	const zodSchema = getZodSchemaFromData(A as object)
-	return zGetSafeParseResultAndHandleErrorMessage(zodSchema, B, errorHandler, strictModeIfObject)
+	return zGetSafeParseResultAndHandleErrorMessage(zodSchema, B, errorHandler)
 }
 /**For obligatory callbacks */
 export function doNothing(...args: unknown[]) { args }

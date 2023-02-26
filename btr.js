@@ -762,9 +762,9 @@ _; /********** MISC ******************** MISC ******************** MISC ********
  * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not
  * @returns
  */
-export function dataIsEqual(A, B, errorHandler = nullAs(), strictModeIfObject = true) {
+export function dataIsEqual(A, B, errorHandler = nullAs()) {
     const zodSchema = getZodSchemaFromData(A);
-    return zGetSafeParseResultAndHandleErrorMessage(zodSchema, B, errorHandler, strictModeIfObject);
+    return zGetSafeParseResultAndHandleErrorMessage(zodSchema, B, errorHandler);
 }
 /**For obligatory callbacks */
 export function doNothing(...args) { args; }
@@ -831,7 +831,7 @@ export async function triggerModal(useStore, id, action) {
     function elementExists() { return Boolean(document.getElementById(id)); }
     function promptError() { alert(`Modal with the '${id}' id was not found. Could not ${action}. Please report this`); }
 }
-/**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler if case it isn't a fit. */
+/**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler in case it isn't a fit. */
 export function zodCheck_curry(errorHandler, strictModeIfObject) {
     return function zodCheck(schema, data) {
         function body(errorHandler, schema, data, strictModeIfObject = true) {
