@@ -50,6 +50,7 @@ export async function basicProjectChecks(errHandler) {
         checkImportsAreFromTheRightBtrFile();
         checkInitTsCallsRefTsAndIoTs();
         checkLocalImportsHaveJsExtention();
+        checkLoginTsEmitsInitData();
         checkServerEventsTs();
         checkServerRefTs();
         checkSocketEvents();
@@ -229,9 +230,9 @@ function checkFilesAreIdentical(path, pathToTemplate) {
 function checkFilesAndFolderStructure() {
     const currentFilesAndFolders = getFilesAndFoldersNames('.', null);
     const desiredFilesAndFolders = [
-        './dev', './test',
+        SERVER_EVENTS_TS, SERVER_REF_TS, './server/__socketOnAdmin.ts', './server/fns.ts', './server/init.ts', './server/login.ts',
         ESLINT_CJS, GITIGNORE, TSCONFIG_JSON, './.env', './.git', './package-lock.json', './package.json', './TODO.md',
-        SERVER_EVENTS_TS, SERVER_REF_TS, './server/__socketOnAdmin.ts', './server/fns.ts', './server/init.ts',
+        './dev', './test',
         GLOBAL_VARS, './global/fns.ts',
         TYPES_IO_TS, TYPES_Z_TS, './types/types.d.ts',
         './client/env.d.ts', './client/index.html', './client/node_modules', './client/package-lock.json', './client/package.json',
@@ -289,6 +290,9 @@ function checkLocalImportsHaveJsExtention() {
             addToErrors(path, `Local import(${match}) is missing.js at the end`);
         });
     });
+}
+function checkLoginTsEmitsInitData() {
+    checkMatchInSpecificFile('./server/login.ts', 'socket.emit(\'initData\',');
 }
 function checkMatchInSpecificFile(filepath, wantedMatch) {
     const { content } = getFromCachedFiles([filepath])[0];
@@ -395,7 +399,7 @@ function checkServerRefTs() {
         'pageVisits: (await mongoCollection(\'misc\').findOne({}) as unknown as mongoMisc).pageVisits,',
         asConsecutiveLines([
             '/**Shorthand for mongoClient.db(DATABASE).collection(COLLECTION) */',
-            'function mongoCollection(name: string) { return mongoClient.db('
+            'function mongoCollection(name: validMongoCollection) { return mongoClient.db('
         ])
     ].forEach(line => checkMatchInSpecificFile(SERVER_REF_TS, line));
 }
@@ -508,6 +512,8 @@ function checkSpecificMatchesInTypesTs() {
             'declare global'
         ]),
         'type mongoMisc = { adminKey: string, pageVisits: number',
+        'type validModalId = \'modal-',
+        'type validMongoCollection = \'misc\'',
         'type validView = \'admin\' |',
     ].forEach(x => checkMatchInSpecificFile('./types/types.d.ts', x));
 }
