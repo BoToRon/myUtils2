@@ -3,7 +3,7 @@ import fs from 'fs'	//DELETETHISFORCLIENT
 _
 import eris from 'eris'	//DELETETHISFORCLIENT
 _
-import util from 'util' //DELETETHISFORCLIENT
+import util from 'util' //DELETETHISFORCLIEfNT
 _
 import http from 'http'	//DELETETHISFORCLIENT
 _
@@ -860,11 +860,14 @@ export async function triggerModal(useStore: () => { bvModal: btr_bvModal }, id:
 export function zodCheck_curry(errorHandler: messageHandler, strictModeIfObject: boolean) {
 	return function zodCheck<T>(schema: zSchema<T>, data: T) {
 		function body<T>(errorHandler: messageHandler, schema: zSchema<T>, data: T, strictModeIfObject = true) {
-			const result = zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler, strictModeIfObject)
-			return result.success as boolean
+			return zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler, strictModeIfObject).success
 		}
 		return body(errorHandler, schema, data, strictModeIfObject)
 	}
+}
+/**Simple zodCheck without any kind of error handler */
+export function zodCheck_simple<T>(schema: zSchema<T>, data: T) {
+	return zGetSafeParseResultAndHandleErrorMessage(schema, data, doNothing, true).success
 }
 /**
  * Return the regex given with possibly an error indicating it wasn't matched.
