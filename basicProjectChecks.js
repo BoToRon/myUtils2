@@ -22,45 +22,40 @@ export async function basicProjectChecks(errHandler) {
     errorHandler = errHandler;
     DEV_OR_PROD = getEnviromentVariables().DEV_OR_PROD;
     await fillCachedFiles();
-    clientVueFiles.push(...getFromCachedFiles([CLIENT_SRC, '.vue']));
-    clientTsFiles.push(...getFromCachedFiles([CLIENT_SRC, '.ts']));
-    serverTsFiles.push(...getFromCachedFiles(['./server', '.ts']));
-    await allChecks();
+    await checkUtilsVersion();
+    await checkPackageJsons();
+    await checkVueDevFiles();
+    await checkVsCodeSettings();
+    checkAllExportedFunctionsAreDescribed();
+    checkBasicValidAdminCommands();
+    checkClientFilesDontReferenceLocalStorageDirectly();
+    checkClientIndexTs();
+    checkClientSocketTs();
+    checkClientStoreTs();
+    checkEnviromentVariables();
+    checkFilesAndFolderStructure();
+    checkFilesAreIdentical(ESLINT_CJS, inBtrUtils(ESLINT_CJS));
+    checkFilesAreIdentical(TSCONFIG_JSON, inBtrUtils(TSCONFIG_JSON));
+    checkFilesAreIdentical('./client/src/__admin.vue', externalTemplatePath('__admin.vue'));
+    checkFilesAreIdentical('./client/src/__chartJs.ts', externalTemplatePath('__chartJs.ts'));
+    checkFilesAreIdentical('./client/src/__simpleConfirmationModal.vue', externalTemplatePath('__simpleConfirmationModal.vue'));
+    checkGitIgnore();
+    checkImportsAreFromTheRightBtrFile();
+    checkInitTsCallsRefTsAndIoTs();
+    checkLocalImportsHaveJsExtention();
+    checkLoginTsEmitsInitData();
+    checkServerEventsTs();
+    checkServerRefTs();
+    checkSocketEvents();
+    checkServerAndClientFilesLogTheirInitialization();
+    checkSpecificMatchesInAppVue();
+    checkSpecificMatchesGlobalFnsTs();
+    checkSpecificMatchesInTypesIoTs();
+    checkSpecificMatchesInTypesTs();
+    checkStructureAndMatchesOfVueFiles();
+    checkCodeThatCouldBeUpdated([serverTsFiles, clientTsFiles, clientVueFiles].flat());
     errors.length ? errorHandler('\n\n' + errors.map((e, i) => i + '. ' + e).join('\n\n') + '\n\n') : successLog('all basicProjectChecks passed');
     return !errors.length;
-    async function allChecks() {
-        await checkUtilsVersion();
-        await checkPackageJsons();
-        await checkVueDevFiles();
-        await checkVsCodeSettings();
-        checkAllExportedFunctionsAreDescribed();
-        checkBasicValidAdminCommands();
-        checkClientFilesDontReferenceLocalStorageDirectly();
-        checkClientIndexTs();
-        checkClientSocketTs();
-        checkClientStoreTs();
-        checkEnviromentVariables();
-        checkFilesAndFolderStructure();
-        checkFilesAreIdentical(ESLINT_CJS, inBtrUtils(ESLINT_CJS));
-        checkFilesAreIdentical(TSCONFIG_JSON, inBtrUtils(TSCONFIG_JSON));
-        checkFilesAreIdentical('./client/src/__admin.vue', externalTemplatePath('__admin.vue'));
-        checkFilesAreIdentical('./client/src/__chartJs.ts', externalTemplatePath('__chartJs.ts'));
-        checkFilesAreIdentical('./client/src/__simpleConfirmationModal.vue', externalTemplatePath('__simpleConfirmationModal.vue'));
-        checkGitIgnore();
-        checkImportsAreFromTheRightBtrFile();
-        checkInitTsCallsRefTsAndIoTs();
-        checkLocalImportsHaveJsExtention();
-        checkLoginTsEmitsInitData();
-        checkServerEventsTs();
-        checkServerRefTs();
-        checkSocketEvents();
-        checkServerAndClientFilesLogTheirInitialization();
-        checkSpecificMatchesInAppVue();
-        checkSpecificMatchesInTypesIoTs();
-        checkSpecificMatchesInTypesTs();
-        checkStructureAndMatchesOfVueFiles();
-        checkCodeThatCouldBeUpdated([serverTsFiles, clientTsFiles, clientVueFiles].flat());
-    }
 }
 function asConsecutiveLines(lines) {
     return lines.join('\r\n');
@@ -231,10 +226,11 @@ function checkFilesAndFolderStructure() {
     const currentFilesAndFolders = getFilesAndFoldersNames('.', null);
     const desiredFilesAndFolders = [
         SERVER_EVENTS_TS, SERVER_REF_TS, './server/__socketOnAdmin.ts', './server/fns.ts', './server/init.ts', './server/login.ts',
+        './dev/backups', './dev/transpiled', './dev/checks.ts', './dev/commands.ts',
         ESLINT_CJS, GITIGNORE, TSCONFIG_JSON, './.env', './.git', './package-lock.json', './package.json', './TODO.md',
-        './dev', './test',
         GLOBAL_VARS, './global/fns.ts',
         TYPES_IO_TS, TYPES_Z_TS, './types/types.d.ts',
+        './test/run.ts',
         './client/env.d.ts', './client/index.html', './client/node_modules', './client/package-lock.json', './client/package.json',
         './client/tsconfig.config.json', './client/tsconfig.json', './client/vite.config.ts', './client/vue.config.js',
         CLIENT_SRC_SOCKET, './client/src/App.vue', './client/src/assets', './client/src/index.ts', './client/src/store.ts', //client files
@@ -274,7 +270,7 @@ function checkInitTsCallsRefTsAndIoTs() {
     checkMatchInSpecificFile('./server/init.ts', 'successLog(stringify({ refInitialized: true, ioInitialized }))');
 }
 function checkLocalImportsHaveJsExtention() {
-    [getFromCachedFiles([TYPES_Z_TS])[0], serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
+    [serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
         const { path, content } = file;
         const localImports = content.match(/from '\..{1,}/g); //regexHere
         if (!localImports) {
@@ -287,7 +283,7 @@ function checkLocalImportsHaveJsExtention() {
             if (match.includes('.vue\'')) {
                 return;
             }
-            addToErrors(path, `Local import(${match}) is missing.js at the end`);
+            addToErrors(path, `Local import(${match}) is missing .js at the end`);
         });
     });
 }
@@ -397,10 +393,6 @@ function checkServerRefTs() {
         'alert: { message: \'\', show: false } as globalAlert,',
         'DB_misc: mongoCollection(\'misc\'),',
         'pageVisits: (await mongoCollection(\'misc\').findOne({}) as unknown as mongoMisc).pageVisits,',
-        asConsecutiveLines([
-            '/**Shorthand for mongoClient.db(DATABASE).collection(COLLECTION) */',
-            'function mongoCollection(name: validMongoCollection) { return mongoClient.db('
-        ])
     ].forEach(line => checkMatchInSpecificFile(SERVER_REF_TS, line));
 }
 /**Check all socket events are handled aka socket.on(<EVENTNAME>) */
@@ -435,7 +427,8 @@ function checkSocketEvents() {
     }
 }
 function checkServerAndClientFilesLogTheirInitialization() {
-    [getFromCachedFiles([TYPES_Z_TS])[0], serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
+    [serverTsFiles, clientTsFiles, clientVueFiles].flat().
+        forEach(file => {
         const { path, content } = file;
         const wantedMatch = `logInitialization('${path}')`;
         if (!content.includes(wantedMatch)) {
@@ -458,6 +451,12 @@ function checkSpecificMatchesInAppVue() {
             '\t\t</b-alert>'
         ])
     ].forEach(x => checkMatchInSpecificFile(CLIENT_SRC + '/App.vue', x));
+}
+function checkSpecificMatchesGlobalFnsTs() {
+    checkMatchInSpecificFile(TYPES_IO_TS, asConsecutiveLines([
+        '/**Shorthand for mongoClient.db(DATABASE).collection(COLLECTION) */',
+        'export function mongoCollection(name: validMongoCollection) { return mongoClient.db('
+    ])); //) <--to not mess with colours)
 }
 function checkSpecificMatchesInTypesIoTs() {
     [
@@ -577,12 +576,21 @@ async function fillCachedFiles() {
     const typeFilePaths = getFilesAndFoldersNames('./types', '.ts');
     const tsConfigs = [inBtrUtils(TSCONFIG_JSON), TSCONFIG_JSON];
     const eslintConfigs = [inBtrUtils(ESLINT_CJS), ESLINT_CJS];
-    cachedFiles.push(...await getCachedFiles(errors, [
-        clientTsFilePaths, clientVueFilePaths, eslintConfigs, GITIGNORE, GLOBAL_VARS, nodeModulesVueTsConfig,
-        serverTsFilePaths, tsConfigs, tsTemplates.flat(), typeFilePaths, vueTemplates.flat(),
-        ['env.d.ts', 'tsconfig.config.json', 'tsconfig.json', 'vite.config.ts', 'vue.config.js'].
-            map(x => ['./client/' + x, './node_modules/@botoron/utils/templateFiles/' + x]).flat()
-    ].flat()));
+    await fillCachedFilesVar();
+    fillCachedFileGroups();
+    async function fillCachedFilesVar() {
+        cachedFiles.push(...await getCachedFiles(errors, [
+            clientTsFilePaths, clientVueFilePaths, eslintConfigs, GITIGNORE, GLOBAL_VARS, nodeModulesVueTsConfig,
+            serverTsFilePaths, tsConfigs, tsTemplates.flat(), typeFilePaths, vueTemplates.flat(),
+            ['env.d.ts', 'tsconfig.config.json', 'tsconfig.json', 'vite.config.ts', 'vue.config.js'].
+                map(x => ['./client/' + x, './node_modules/@botoron/utils/templateFiles/' + x]).flat()
+        ].flat()));
+    }
+    function fillCachedFileGroups() {
+        clientVueFiles.push(...getFromCachedFiles([CLIENT_SRC, '.vue']));
+        clientTsFiles.push(...getFromCachedFiles([CLIENT_SRC, '.ts']));
+        serverTsFiles.push(...getFromCachedFiles(['./dev/commands.ts']), ...getFromCachedFiles(['./global/fns.ts']), ...getFromCachedFiles(['./server', '.ts']), ...getFromCachedFiles([TYPES_Z_TS]));
+    }
 }
 /**Get all the file and folders within a folder, stopping at predefined folders */
 function getFilesAndFoldersNames(directory, extension) {
