@@ -244,6 +244,16 @@ _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ****************
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+export async function asyncForEach(array, asyncFn, resolveSequentially = false) {
+    if (resolveSequentially) {
+        for await (const item of array) {
+            await asyncFn(item);
+        }
+    }
+    if (!resolveSequentially) {
+        await Promise.all(array.map(item => asyncFn(item)));
+    }
+}
 /**Set interval with try-catch and called immediately*/
 export function doAndRepeat_server(fn, interval) { divine.try(fn, []); setInterval(() => divine.try(fn, []), interval); }
 /**
@@ -1113,6 +1123,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles) {
         checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine'); //@btr-ignore
         checkReplaceableCode(['Readonly<', 'ReadonlyArray<'], 'readonly '); //@btr-ignore
         checkReplaceableCode(['//@ts-ignore'], '//@ts-expect-error'); //@btr-ignore
+        checkReplaceableCode(['for await'], 'await asyncForEach'); //@btr-ignore
         checkReplaceableCode(['Object.entries'], 'objectEntries'); //@btr-ignore
         checkReplaceableCode(['| null', 'null |'], 'nullable'); //@btr-ignore
         checkReplaceableCode(['autologin'], 'useStore().login'); //@btr-ignore

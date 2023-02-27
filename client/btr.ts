@@ -230,7 +230,10 @@ _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS *****************
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-
+export async function asyncForEach<T>(array: T[], asyncFn: (item: T) => Promise<unknown>, resolveSequentially = false) {
+	if (resolveSequentially) { for await (const item of array) { await asyncFn(item) } }
+	if (!resolveSequentially) { await Promise.all(array.map(item => asyncFn(item))) }
+}
 /**Set interval with try-catch and called immediately*/
 export function doAndRepeat_server(fn: () => void, interval: number) { divine.try(fn, []); setInterval(() => divine.try(fn, []), interval) }
 /**

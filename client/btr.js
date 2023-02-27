@@ -232,6 +232,16 @@ _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ****************
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+export async function asyncForEach(array, asyncFn, resolveSequentially = false) {
+    if (resolveSequentially) {
+        for await (const item of array) {
+            await asyncFn(item);
+        }
+    }
+    if (!resolveSequentially) {
+        await Promise.all(array.map(item => asyncFn(item)));
+    }
+}
 /**Set interval with try-catch and called immediately*/
 export function doAndRepeat_server(fn, interval) { divine.try(fn, []); setInterval(() => divine.try(fn, []), interval); }
 /**
