@@ -3,6 +3,8 @@ import fs from 'fs'	//DELETETHISFORCLIENT
 _
 import eris from 'eris'	//DELETETHISFORCLIENT
 _
+import util from 'util' //DELETETHISFORCLIENT
+_
 import http from 'http'	//DELETETHISFORCLIENT
 _
 import path from 'path'	//DELETETHISFORCLIENT
@@ -509,12 +511,13 @@ _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** 
 _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 
-
 /**Add all default properties missing in an object*/
 export function addMissingPropsToObjects<T extends object>(original: T, defaults: Required<T>) {
 	objectKeys(defaults).forEach(key => { if (!Object.prototype.hasOwnProperty.call(original, key)) { original[key] = defaults[key] } })
 	return original as Required<T>
 }
+/**Console log an object to its full depth */
+export function consoleLogFull(data: unknown) { console.log(util.inspect(data, { showHidden: false, depth: null, colors: true })) } //@btr-ignore
 /**Return a copy that can be altered without having to worry about modifying the original */
 export function deepClone<T extends object>(originalObject: T) {
 	const copy = JSON.parse(stringify(originalObject)) as T
@@ -580,7 +583,7 @@ export function replaceObject<K extends keyof T, T extends Record<K, unknown>>(o
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods, see deepClone) */
 export function stringify<T extends object>(object: T) {
 	const seen = new WeakSet()
-	return JSON.stringify(object, (_key: string, value: nullable<object>) => {
+	return JSON.stringify(object, (_key: string, value: nullable<object>) => { //@btr-ignore
 		if (typeof value === 'object' && value !== null) {
 			if (seen.has(value)) { return '< Circular >' }
 			seen.add(value)
@@ -831,7 +834,7 @@ export function getLocalStorageAndSetter<T extends Record<string, unknown>>(defa
 	function localStorageSet<K extends keyof T>(key: K, value: T[K]) {
 		const storedInfo = getStoredInfo()
 		storedInfo[key] = value
-		localStorage['info'] = JSON.stringify(storedInfo)
+		localStorage['info'] = stringify(storedInfo)
 	}
 }
 /**Margin to make reading logs easier */
@@ -1121,14 +1124,16 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[]) {
 	cachedFiles.forEach(file => {
 		const { path, content } = file
 		checkReplaceableCode(['triggerModalWithValidation, bvModal.show', 'bvModal.hide'], '.triggerModal(modalId, show | hide)')	//@btr-ignore
+		checkReplaceableCode(['console.log(stringify'], 'colorLog OR consoleLogFull OR debugLog')	//@btr-ignore
+		checkReplaceableCode(['console.log'], 'colorLog OR consoleLogFull OR debugLog')	//@btr-ignore
 		checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine')	//@btr-ignore
 		checkReplaceableCode(['Readonly<', 'ReadonlyArray<'], 'readonly ')	//@btr-ignore
 		checkReplaceableCode(['//@ts-ignore'], '//@ts-expect-error')	//@btr-ignore
-		checkReplaceableCode(['console.log'], 'colorLog OR debugLog')	//@btr-ignore
 		checkReplaceableCode(['Object.entries'], 'objectEntries')	//@btr-ignore
 		checkReplaceableCode(['| null', 'null |'], 'nullable')	//@btr-ignore
 		checkReplaceableCode(['autologin'], 'useStore().login')	//@btr-ignore
 		checkReplaceableCode(['Object.values'], 'objectValues')	//@btr-ignore
+		checkReplaceableCode(['JSON.stringify'], 'stringify') //@btr-ignore
 		checkReplaceableCode(['Object.keys'], 'objectKeys')	//@btr-ignore
 		checkReplaceableCode([' tryF'], 'divine.try')	//@btr-ignore
 		checkReplaceableCode(['null as'], 'nullAs')	//@btr-ignore
@@ -1203,7 +1208,7 @@ export function getSeparatingCommentBlock(message: string) {
 	console.log(theBlock) //@btr-ignore
 	return theBlock
 }
-/**fetch the latest package.json of my-utils */
+/**fetch the latest package.json of myUtils */
 export async function getLatestPackageJsonFromGithub() {
 	type response_github_file = { content: string }
 

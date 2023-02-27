@@ -12,6 +12,7 @@ _
 _
 _
 _
+_
 import {
 	arrayPredicate, btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, bvToast, cachedFile, maybePromise, messageHandler, myEnv, nullable, pipe_mutable_type,
 	pipe_persistent_type, timer, validChalkColor, validNpmCommand_package, validNpmCommand_project, vueComponentsTracker, zSchema
@@ -496,12 +497,13 @@ _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** 
 _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 _ /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 
-
 /**Add all default properties missing in an object*/
 export function addMissingPropsToObjects<T extends object>(original: T, defaults: Required<T>) {
 	objectKeys(defaults).forEach(key => { if (!Object.prototype.hasOwnProperty.call(original, key)) { original[key] = defaults[key] } })
 	return original as Required<T>
 }
+/**Console log an object to its full depth */
+export function consoleLogFull(data: unknown) { console.log(util.inspect(data, { showHidden: false, depth: null, colors: true })) } //@btr-ignore
 /**Return a copy that can be altered without having to worry about modifying the original */
 export function deepClone<T extends object>(originalObject: T) {
 	const copy = JSON.parse(stringify(originalObject)) as T
@@ -567,7 +569,7 @@ export function replaceObject<K extends keyof T, T extends Record<K, unknown>>(o
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods, see deepClone) */
 export function stringify<T extends object>(object: T) {
 	const seen = new WeakSet()
-	return JSON.stringify(object, (_key: string, value: nullable<object>) => {
+	return JSON.stringify(object, (_key: string, value: nullable<object>) => { //@btr-ignore
 		if (typeof value === 'object' && value !== null) {
 			if (seen.has(value)) { return '< Circular >' }
 			seen.add(value)
@@ -817,7 +819,7 @@ export function getLocalStorageAndSetter<T extends Record<string, unknown>>(defa
 	function localStorageSet<K extends keyof T>(key: K, value: T[K]) {
 		const storedInfo = getStoredInfo()
 		storedInfo[key] = value
-		localStorage['info'] = JSON.stringify(storedInfo)
+		localStorage['info'] = stringify(storedInfo)
 	}
 }
 /**Margin to make reading logs easier */

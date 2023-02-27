@@ -3,6 +3,8 @@ import fs from 'fs'; //DELETETHISFORCLIENT
 _;
 import eris from 'eris'; //DELETETHISFORCLIENT
 _;
+import util from 'util'; //DELETETHISFORCLIENT
+_;
 import http from 'http'; //DELETETHISFORCLIENT
 _;
 import path from 'path'; //DELETETHISFORCLIENT
@@ -515,6 +517,8 @@ export function addMissingPropsToObjects(original, defaults) {
     } });
     return original;
 }
+/**Console log an object to its full depth */
+export function consoleLogFull(data) { console.log(util.inspect(data, { showHidden: false, depth: null, colors: true })); } //@btr-ignore
 /**Return a copy that can be altered without having to worry about modifying the original */
 export function deepClone(originalObject) {
     const copy = JSON.parse(stringify(originalObject));
@@ -805,7 +809,7 @@ export function getLocalStorageAndSetter(defaults) {
     function localStorageSet(key, value) {
         const storedInfo = getStoredInfo();
         storedInfo[key] = value;
-        localStorage['info'] = JSON.stringify(storedInfo);
+        localStorage['info'] = stringify(storedInfo);
     }
 }
 /**Margin to make reading logs easier */
@@ -1101,14 +1105,16 @@ export function checkCodeThatCouldBeUpdated(cachedFiles) {
     cachedFiles.forEach(file => {
         const { path, content } = file;
         checkReplaceableCode(['triggerModalWithValidation, bvModal.show', 'bvModal.hide'], '.triggerModal(modalId, show | hide)'); //@btr-ignore
+        checkReplaceableCode(['console.log(stringify'], 'colorLog OR consoleLogFull OR debugLog'); //@btr-ignore
+        checkReplaceableCode(['console.log'], 'colorLog OR consoleLogFull OR debugLog'); //@btr-ignore
         checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine'); //@btr-ignore
         checkReplaceableCode(['Readonly<', 'ReadonlyArray<'], 'readonly '); //@btr-ignore
         checkReplaceableCode(['//@ts-ignore'], '//@ts-expect-error'); //@btr-ignore
-        checkReplaceableCode(['console.log'], 'colorLog OR debugLog'); //@btr-ignore
         checkReplaceableCode(['Object.entries'], 'objectEntries'); //@btr-ignore
         checkReplaceableCode(['| null', 'null |'], 'nullable'); //@btr-ignore
         checkReplaceableCode(['autologin'], 'useStore().login'); //@btr-ignore
         checkReplaceableCode(['Object.values'], 'objectValues'); //@btr-ignore
+        checkReplaceableCode(['JSON.stringify'], 'stringify'); //@btr-ignore
         checkReplaceableCode(['Object.keys'], 'objectKeys'); //@btr-ignore
         checkReplaceableCode([' tryF'], 'divine.try'); //@btr-ignore
         checkReplaceableCode(['null as'], 'nullAs'); //@btr-ignore
@@ -1188,7 +1194,7 @@ export function getSeparatingCommentBlock(message) {
     console.log(theBlock); //@btr-ignore
     return theBlock;
 }
-/**fetch the latest package.json of my-utils */
+/**fetch the latest package.json of myUtils */
 export async function getLatestPackageJsonFromGithub() {
     const response = await new Promise((resolve) => {
         fetch('https://api.github.com/repos/botoron/utils/contents/package.json', { method: 'GET' }

@@ -13,6 +13,7 @@ _;
 _;
 _;
 _;
+_;
 import { getUniqueId_generator, isNode, timers, zValidVariants } from '../constants/constants.js';
 _;
 import { z } from 'zod';
@@ -503,6 +504,8 @@ export function addMissingPropsToObjects(original, defaults) {
     } });
     return original;
 }
+/**Console log an object to its full depth */
+export function consoleLogFull(data) { console.log(util.inspect(data, { showHidden: false, depth: null, colors: true })); } //@btr-ignore
 /**Return a copy that can be altered without having to worry about modifying the original */
 export function deepClone(originalObject) {
     const copy = JSON.parse(stringify(originalObject));
@@ -792,7 +795,7 @@ export function getLocalStorageAndSetter(defaults) {
     function localStorageSet(key, value) {
         const storedInfo = getStoredInfo();
         storedInfo[key] = value;
-        localStorage['info'] = JSON.stringify(storedInfo);
+        localStorage['info'] = stringify(storedInfo);
     }
 }
 /**Margin to make reading logs easier */
