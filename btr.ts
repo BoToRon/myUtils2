@@ -1098,14 +1098,15 @@ _ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY *************
 export async function getCachedFiles(errors: string[], filepaths: string[]) {
 
 	const cachedFiles: cachedFile[] = []
-
-	for await (const filepath of filepaths) {
-		if (!fileExists(filepath)) { addToErrors(`File not found at '${filepath}'`); continue }
-		if (cachedFiles.some(x => x.path === filepath)) { addToErrors(`File readed more than once by fsReadFileAsync: >>> (${filepath}) << <`) }
-		cachedFiles.push({ path: filepath, content: await fsReadFileAsync(filepath) })
-	}
-
+	await asyncForEach(filepaths, addToCachedFiles)
 	return cachedFiles
+
+	async function addToCachedFiles(filepath: string) {
+		if (!fileExists(filepath)) { addToErrors(`File not found at '${filepath}'`); return }
+		cachedFiles.some(x => x.path === filepath) ?
+			addToErrors(`File readed more than once by fsReadFileAsync: >>> (${filepath}) << <`) :
+			cachedFiles.push({ path: filepath, content: await fsReadFileAsync(filepath) })
+	}
 
 	function addToErrors(error: string) {
 		errors.push(error)

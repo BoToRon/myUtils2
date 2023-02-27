@@ -6,7 +6,7 @@ _;
 _;
 import { getCachedFiles, checkCodeThatCouldBeUpdated, compareArrays, getEnviromentVariables, importFileFromProject, nullAs, successLog, surroundedString, zodCheck_curry, zRegexGenerator } from './btr.js';
 _;
-import { CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_VARS, SERVER_EVENTS_TS, SERVER_REF_TS, TSCONFIG_JSON, TYPES_IO_TS, TYPES_Z_TS, zMyEnv } from './constants/constants.js';
+import { CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_FNS_TS, GLOBAL_VARS_TS, SERVER_EVENTS_TS, SERVER_REF_TS, TSCONFIG_JSON, TYPES_IO_TS, TYPES_Z_TS, zMyEnv } from './constants/constants.js';
 _;
 function addToErrors(path, error) { errors.push(`(at ${path}): ${error}`); }
 function inBtrUtils(path) { return './node_modules/@botoron/utils/' + path; }
@@ -61,7 +61,7 @@ function asConsecutiveLines(lines) {
     return lines.join('\r\n');
 }
 function checkBasicValidAdminCommands() {
-    checkMatchInSpecificFile(GLOBAL_VARS, 'export const adminCommands = [\'getSockets\', \'help\', \'ref\',');
+    checkMatchInSpecificFile(GLOBAL_VARS_TS, 'export const adminCommands = [\'getSockets\', \'help\', \'ref\',');
     checkMatchInSpecificFile(TYPES_Z_TS, 'export const zValidAdminCommands = z.enum(adminCommands)');
 }
 /**Check all the top-level functions in main .ts server files have a description */
@@ -228,7 +228,7 @@ function checkFilesAndFolderStructure() {
         SERVER_EVENTS_TS, SERVER_REF_TS, './server/__socketOnAdmin.ts', './server/fns.ts', './server/init.ts', './server/login.ts',
         './dev/backups', './dev/transpiled', './dev/checks.ts', './dev/commands.ts',
         ESLINT_CJS, GITIGNORE, TSCONFIG_JSON, './.env', './.git', './package-lock.json', './package.json', './TODO.md',
-        GLOBAL_VARS, './global/fns.ts',
+        GLOBAL_VARS_TS, GLOBAL_FNS_TS,
         TYPES_IO_TS, TYPES_Z_TS, './types/types.d.ts',
         './test',
         './client/env.d.ts', './client/index.html', './client/node_modules', './client/package-lock.json', './client/package.json',
@@ -452,7 +452,7 @@ function checkSpecificMatchesInAppVue() {
     ].forEach(x => checkMatchInSpecificFile(CLIENT_SRC + '/App.vue', x));
 }
 function checkSpecificMatchesGlobalFnsTs() {
-    checkMatchInSpecificFile(TYPES_IO_TS, asConsecutiveLines([
+    checkMatchInSpecificFile(GLOBAL_FNS_TS, asConsecutiveLines([
         '/**Shorthand for mongoClient.db(DATABASE).collection(COLLECTION) */',
         'export function mongoCollection(name: validMongoCollection) { return mongoClient.db('
     ])); //) <--to not mess with colours)
@@ -582,7 +582,7 @@ async function fillCachedFiles() {
     async function fillCachedFilesVar() {
         cachedFiles.push(...await getCachedFiles(errors, [
             clientTsFilePaths, clientVueFilePaths, devFiles, eslintConfigs, GITIGNORE, globalFiles,
-            GLOBAL_VARS, nodeModulesVueTsConfig, serverTsFilePaths, tsConfigs, typeFilePaths,
+            GLOBAL_VARS_TS, nodeModulesVueTsConfig, serverTsFilePaths, tsConfigs, typeFilePaths,
             tsTemplates.flat(), vueTemplates.flat(),
             ['env.d.ts', 'tsconfig.config.json', 'tsconfig.json', 'vite.config.ts', 'vue.config.js'].
                 map(x => ['./client/' + x, './node_modules/@botoron/utils/templateFiles/' + x]).flat()
@@ -591,7 +591,7 @@ async function fillCachedFiles() {
     function fillCachedFileGroups() {
         clientVueFiles.push(...getFromCachedFiles([CLIENT_SRC, '.vue']));
         clientTsFiles.push(...getFromCachedFiles([CLIENT_SRC, '.ts']));
-        serverTsFiles.push(...getFromCachedFiles(['./dev/commands.ts']), ...getFromCachedFiles(['./global/fns.ts']), ...getFromCachedFiles(['./server', '.ts']), ...getFromCachedFiles([TYPES_Z_TS]));
+        serverTsFiles.push(...getFromCachedFiles(['./dev/commands.ts']), ...getFromCachedFiles([GLOBAL_FNS_TS]), ...getFromCachedFiles(['./server', '.ts']), ...getFromCachedFiles([TYPES_Z_TS]));
     }
 }
 /**Get all the file and folders within a folder, stopping at predefined folders */
@@ -615,7 +615,7 @@ function getFromCachedFiles(obligatoryMatches) {
     if (foundFiles.length) {
         return foundFiles;
     }
-    addToErrors('checks.getFromCachedFiles', `No file cached with the requested obligatory matches(${obligatoryMatches}) was found, check the "fillCachedFiles" function`);
+    addToErrors('checks.getFromCachedFiles', `No file cached with the requested obligatory matches(${obligatoryMatches}) was found, was it added by "fillCachedFiles" ?`);
     return [{ path: 'FAILSAFE', content: '' }];
 }
 function zodCheck_toErrors(path, schema, data) {

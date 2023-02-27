@@ -11,7 +11,7 @@ import {
 } from './btr.js'
 _
 import {
-	CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_VARS,
+	CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_FNS_TS, GLOBAL_VARS_TS,
 	SERVER_EVENTS_TS, SERVER_REF_TS, TSCONFIG_JSON, TYPES_IO_TS, TYPES_Z_TS, zMyEnv
 } from './constants/constants.js'
 _
@@ -79,7 +79,7 @@ function asConsecutiveLines(lines: string[]) {
 }
 
 function checkBasicValidAdminCommands() {
-	checkMatchInSpecificFile(GLOBAL_VARS, 'export const adminCommands = [\'getSockets\', \'help\', \'ref\',')
+	checkMatchInSpecificFile(GLOBAL_VARS_TS, 'export const adminCommands = [\'getSockets\', \'help\', \'ref\',')
 	checkMatchInSpecificFile(TYPES_Z_TS, 'export const zValidAdminCommands = z.enum(adminCommands)')
 }
 
@@ -253,7 +253,7 @@ function checkFilesAndFolderStructure() {
 		'./dev/backups', './dev/transpiled', './dev/checks.ts', './dev/commands.ts',  //1. run dev commands, 2. extend btr's checks
 
 		ESLINT_CJS, GITIGNORE, TSCONFIG_JSON, './.env', './.git', './package-lock.json', './package.json', './TODO.md', //solo-files
-		GLOBAL_VARS, './global/fns.ts',  //functions and constants for both server and client
+		GLOBAL_VARS_TS, GLOBAL_FNS_TS,  //functions and constants for both server and client
 		TYPES_IO_TS, TYPES_Z_TS, './types/types.d.ts',  //types and schemas
 		'./test',	//file for testing transpiled files pre-building
 
@@ -479,7 +479,7 @@ function checkSpecificMatchesInAppVue() {
 }
 
 function checkSpecificMatchesGlobalFnsTs() {
-	checkMatchInSpecificFile(TYPES_IO_TS, asConsecutiveLines([
+	checkMatchInSpecificFile(GLOBAL_FNS_TS, asConsecutiveLines([
 		'/**Shorthand for mongoClient.db(DATABASE).collection(COLLECTION) */',
 		'export function mongoCollection(name: validMongoCollection) { return mongoClient.db('
 	])) //) <--to not mess with colours)
@@ -617,7 +617,7 @@ async function fillCachedFiles() {
 	async function fillCachedFilesVar() {
 		cachedFiles.push(...await getCachedFiles(errors, [
 			clientTsFilePaths, clientVueFilePaths, devFiles, eslintConfigs, GITIGNORE, globalFiles,
-			GLOBAL_VARS, nodeModulesVueTsConfig, serverTsFilePaths, tsConfigs, typeFilePaths,
+			GLOBAL_VARS_TS, nodeModulesVueTsConfig, serverTsFilePaths, tsConfigs, typeFilePaths,
 			tsTemplates.flat(), vueTemplates.flat(),
 			['env.d.ts', 'tsconfig.config.json', 'tsconfig.json', 'vite.config.ts', 'vue.config.js'].
 				map(x => ['./client/' + x, './node_modules/@botoron/utils/templateFiles/' + x]).flat()
@@ -629,7 +629,7 @@ async function fillCachedFiles() {
 		clientTsFiles.push(...getFromCachedFiles([CLIENT_SRC, '.ts']))
 		serverTsFiles.push(
 			...getFromCachedFiles(['./dev/commands.ts']),
-			...getFromCachedFiles(['./global/fns.ts']),
+			...getFromCachedFiles([GLOBAL_FNS_TS]),
 			...getFromCachedFiles(['./server', '.ts']),
 			...getFromCachedFiles([TYPES_Z_TS]),
 		)
