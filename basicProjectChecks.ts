@@ -255,7 +255,7 @@ function checkFilesAndFolderStructure() {
 		ESLINT_CJS, GITIGNORE, TSCONFIG_JSON, './.env', './.git', './package-lock.json', './package.json', './TODO.md', //solo-files
 		GLOBAL_VARS, './global/fns.ts',  //functions and constants for both server and client
 		TYPES_IO_TS, TYPES_Z_TS, './types/types.d.ts',  //types and schemas
-		'./test/run.ts',	//test stuff
+		'./test',	//file for testing transpiled files pre-building
 
 		'./client/env.d.ts', './client/index.html', './client/node_modules', './client/package-lock.json', './client/package.json',
 		'./client/tsconfig.config.json', './client/tsconfig.json', './client/vite.config.ts', './client/vue.config.js', //required client files
@@ -410,7 +410,6 @@ function checkServerEventsTs() {
 /**Check the properties and initialization of server/ref.ts */
 function checkServerRefTs() {
 	[
-		'const mongoClient = await getMongoClient()',
 		'const devOrProd = \'dev\' as \'dev\' | \'prod\'',
 		asConsecutiveLines([
 			'const { debugOptions: debug, debugLog } = getDebugOptionsAndLog(devOrProd, {',
@@ -608,15 +607,18 @@ async function fillCachedFiles() {
 	const serverTsFilePaths = getFilesAndFoldersNames('./server', '.ts')
 	const typeFilePaths = getFilesAndFoldersNames('./types', '.ts')
 	const tsConfigs = [inBtrUtils(TSCONFIG_JSON), TSCONFIG_JSON]
+	const globalFiles = getFilesAndFoldersNames('./dev', '.ts')
 	const eslintConfigs = [inBtrUtils(ESLINT_CJS), ESLINT_CJS]
+	const devFiles = getFilesAndFoldersNames('./dev', '.ts')
 
 	await fillCachedFilesVar()
 	fillCachedFileGroups()
 
 	async function fillCachedFilesVar() {
 		cachedFiles.push(...await getCachedFiles(errors, [
-			clientTsFilePaths, clientVueFilePaths, eslintConfigs, GITIGNORE, GLOBAL_VARS, nodeModulesVueTsConfig,
-			serverTsFilePaths, tsConfigs, tsTemplates.flat(), typeFilePaths, vueTemplates.flat(),
+			clientTsFilePaths, clientVueFilePaths, devFiles, eslintConfigs, GITIGNORE, globalFiles,
+			GLOBAL_VARS, nodeModulesVueTsConfig, serverTsFilePaths, tsConfigs, typeFilePaths,
+			tsTemplates.flat(), vueTemplates.flat(),
 			['env.d.ts', 'tsconfig.config.json', 'tsconfig.json', 'vite.config.ts', 'vue.config.js'].
 				map(x => ['./client/' + x, './node_modules/@botoron/utils/templateFiles/' + x]).flat()
 		].flat()))
@@ -653,7 +655,10 @@ function getFilesAndFoldersNames(directory: string, extension: nullable<'.ts' | 
 function getFromCachedFiles(obligatoryMatches: string[]): cachedFile[] {
 	const foundFiles = cachedFiles.filter(file => obligatoryMatches.every(match => file.path.includes(match)))
 	if (foundFiles.length) { return foundFiles }
-	addToErrors('checks.getFromCachedFiles', `No file cached with the requested obligatory matches(${obligatoryMatches}) was found`)
+	addToErrors(
+		'checks.getFromCachedFiles',
+		`No file cached with the requested obligatory matches(${obligatoryMatches}) was found, was it added by "fillCachedFiles" ?`
+	)
 	return [{ path: 'FAILSAFE', content: '' }]
 }
 

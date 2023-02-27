@@ -249,7 +249,7 @@ export async function asyncForEach(array, asyncFn, resolveSequentially = false) 
         for await (const item of array) {
             await asyncFn(item);
         }
-    }
+    } //@btr-ignore
     if (!resolveSequentially) {
         await Promise.all(array.map(item => asyncFn(item)));
     }
