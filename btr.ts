@@ -37,7 +37,6 @@ _
 import { type Primitive, z, type ZodRawShape, type ZodTypeAny } from 'zod'
 _
 import { fromZodError } from 'zod-validation-error'
-_
 
 _ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
@@ -267,10 +266,6 @@ export function filterMap<T, C, M extends (x: T, y: C) => ReturnType<M>>(
 		return answer ? acc.concat(mapFn(item, carryOver)) : acc
 	}, [] as ReturnType<M>[])
 }
-/**Simple and standard functional programming pipe. Deprecated, use either zPipe (persistenType with zod errors) or pipe_mutableType! */
-export function pipe_persistentType<T>(initialValue: T, ...fns: pipe_persistent_type<T>[]) {
-	return fns.reduce((result, fn) => fn(result), initialValue)
-}
 /**
 * Pipes a value through a number of functions in the order that they appear.
 * Takes between 1 and 12 arguments. `pipe(x, a, b)` is equivalent to `b(a(x))`.
@@ -301,67 +296,6 @@ export async function retryF<F extends (...args: Parameters<F>) => ReturnType<F>
 		await delay(delayBetweenRetries)
 		return await retryF(fn, args, retriesLeft - 1, defaultReturn, delayBetweenRetries)
 	}
-}
-/**
- * Test data against an schema with strict-mode on (no unspecified keys) for objects and handle the error message if any
- * @param schema The schema to test the data against
- * @param data The data to be tested
- * @param errorHandler The handler for the message error
- * @returns 
- */
-export function zGetSafeParseResultAndHandleErrorMessage<T>(schema: zSchema<T>, data: T, errorHandler = <messageHandler>nullAs()) {
-	const result = (schema.strict ? schema.strict() : schema).safeParse(data)
-	if (result.success === false && errorHandler) { errorHandler(fromZodError(result.error).message) }
-	return result
-}
-/**
- * Check data against a provided schema, and execute either the success or error handler
- * @param zSchema The zSchema to test data against
- * @param data The data to be tested against zSchema
- * @param successHandler The function that will execute if data fits zSchema
- * @param args The arguments to be applied to successHandler
- * @param errorHandler The function that will execute if data does NOT fits zSchema
- */
-export function zodCheckAndHandle<D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(zSchema: zSchema<D>,
-	data: D,
-	successHandler: SH,
-	args: Parameters<SH>,
-	errorHandler: messageHandler,
-) {
-	const zResult = zGetSafeParseResultAndHandleErrorMessage(zSchema, data, errorHandler)
-	if (zResult.success === true && successHandler) { successHandler(...args as Parameters<SH>) }
-}
-/**Pipe with schema validation and an basic error tracking */
-/**
- * Pipe with schema validation and basic error tracking/handling
- * 
- */
-
-/**
- * Pipe with schema validation and basic error tracking/handling
- * @param zSchema The schema that must persist through the whole pipe
- * @param initialValue The value/object that will be piped through the functions
- * @param fns The functions that will conform the pipe in order
- * @returns 
- */
-export function zPipe<T>(zSchema: zSchema<T>, initialValue: T, ...fns: pipe_persistent_type<T>[]) {
-
-	const initialPipeState = { value: initialValue, error: <string>nullAs(), failedAt: <string>nullAs() }
-
-	return fns.reduce((pipeState, fn, index) => {
-
-		if (pipeState.error) { return pipeState }
-		pipeState.value = fn(pipeState.value)
-
-		zGetSafeParseResultAndHandleErrorMessage(zSchema, pipeState.value, errorHandler)
-		return pipeState
-
-		function errorHandler(err: string) {
-			pipeState.failedAt = `Step ${index + 1}: ${fn.name}`
-			pipeState.error = err
-		}
-
-	}, initialPipeState)
 }
 
 _ /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
@@ -525,20 +459,8 @@ export function deepClone<T extends object>(originalObject: T) {
 		})
 	}
 }
-/**Dynamically generate a Zod Schema from an array/object */
-export function getZodSchemaFromData(data: unknown) {
-
-	if (!data) { return z.nullable(<ZodTypeAny>nullAs()) }
-	if (typeof data !== 'object') { return z.literal(data as Primitive) }
-	if (Array.isArray(data)) { return z.tuple(data.map(toLiteral) as []) }
-	return z.object(mapObject(data, toLiteral) as ZodRawShape)
-
-	function toLiteral(x: unknown): z.ZodLiteral<unknown> {
-		return typeof x === 'object' ?
-			getZodSchemaFromData(x) as unknown as z.ZodLiteral<unknown> :
-			z.literal(x as never) as z.ZodLiteral<unknown>
-	}
-}
+/**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
+export function getUniqueId(suffix: string) { return suffix + '_' + getUniqueId_generator.next().value }
 /**Because ESlint doesn't like Object(x).hasOwnProperty :p */
 export function hasOwnProperty<T extends object>(x: T, key: keyof T) { return Object.prototype.hasOwnProperty.call(x, key) }
 /**Map an object! (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
@@ -583,8 +505,6 @@ export function stringify<T extends object>(object: T) {
 		return value
 	}, '  ')
 }
-/**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
-export function getUniqueId(suffix: string) { return suffix + '_' + getUniqueId_generator.next().value }
 
 _ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
@@ -774,8 +694,7 @@ _ /********** MISC ******************** MISC ******************** MISC *********
  * @returns 
  */
 export function dataIsEqual(A: unknown, B: unknown, errorHandler = <messageHandler>nullAs()) {
-	const zodSchema = getZodSchemaFromData(A as object)
-	return zGetSafeParseResultAndHandleErrorMessage(zodSchema, B, errorHandler)
+	return zGetSafeParseResultAndHandleErrorMessage(zGetSchemaFromData(A as object), B, errorHandler)
 }
 /**For obligatory callbacks */
 export function doNothing(...args: unknown[]) { args }
@@ -847,6 +766,44 @@ export async function triggerModal(useStore: () => { bvModal: btr_bvModal }, id:
 	function elementExists() { return Boolean(document.getElementById(id)) }
 	function promptError() { alert(`Modal with the '${id}' id was not found. Could not ${action}. Please report this`) }
 }
+
+_ /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
+_ /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
+_ /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
+_ /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
+_ /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
+_ /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
+_ /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
+_ /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
+_ /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
+_ /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
+
+/**
+ * Test data against an schema with strict-mode on (no unspecified keys) for objects and handle the error message if any
+ * @param schema The schema to test the data against
+ * @param data The data to be tested
+ * @param errorHandler The handler for the message error
+ * @returns 
+ */
+export function zGetSafeParseResultAndHandleErrorMessage<T>(schema: zSchema<T>, data: T, errorHandler = <messageHandler>nullAs()) {
+	const result = (schema.strict ? schema.strict() : schema).safeParse(data)
+	if (result.success === false && errorHandler) { errorHandler(fromZodError(result.error).message) }
+	return result
+}
+/**Dynamically generate a Zod Schema from an array/object */
+export function zGetSchemaFromData(data: unknown) {
+
+	if (!data) { return z.nullable(<ZodTypeAny>nullAs()) }
+	if (typeof data !== 'object') { return z.literal(data as Primitive) }
+	if (Array.isArray(data)) { return z.tuple(data.map(toLiteral) as []) }
+	return z.object(mapObject(data, toLiteral) as ZodRawShape)
+
+	function toLiteral(x: unknown): z.ZodLiteral<unknown> {
+		return typeof x === 'object' ?
+			zGetSchemaFromData(x) as unknown as z.ZodLiteral<unknown> :
+			z.literal(x as never) as z.ZodLiteral<unknown>
+	}
+}
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler in case it isn't a fit. */
 export function zodCheck_curry(errorHandler: messageHandler) {
 	return function zodCheck<T>(schema: zSchema<T>, data: T) {
@@ -860,6 +817,47 @@ export function zodCheck_curry(errorHandler: messageHandler) {
 export function zodCheck_simple<T>(schema: zSchema<T>, data: T) {
 	return zGetSafeParseResultAndHandleErrorMessage(schema, data, doNothing).success
 }
+/**
+ * Check data against a provided schema, and execute either the success or error handler
+ * @param zSchema The zSchema to test data against
+ * @param data The data to be tested against zSchema
+ * @param successHandler The function that will execute if data fits zSchema
+ * @param args The arguments to be applied to successHandler
+ * @param errorHandler The function that will execute if data does NOT fits zSchema
+ */
+export function zodCheckAndHandle<D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(zSchema: zSchema<D>,
+	data: D,
+	successHandler: SH,
+	args: Parameters<SH>,
+	errorHandler: messageHandler,
+) {
+	const zResult = zGetSafeParseResultAndHandleErrorMessage(zSchema, data, errorHandler)
+	if (zResult.success === true && successHandler) { successHandler(...args as Parameters<SH>) }
+}
+/**
+ * Pipe with schema validation and basic error tracking/handling
+ * @param zSchema The schema that must persist through the whole pipe
+ * @param initialValue The value/object that will be piped through the functions
+ * @param fns The functions that will conform the pipe in order
+ * @returns 
+ */
+export function zPipe<T>(zSchema: zSchema<T>, initialValue: T, ...fns: pipe_persistent_type<T>[]) {
+	const initialPipeState = { value: initialValue, error: <string>nullAs(), failedAt: <string>nullAs() }
+
+	return fns.reduce((pipeState, fn, index) => {
+		if (pipeState.error) { return pipeState }
+		pipeState.value = fn(pipeState.value)
+
+		zGetSafeParseResultAndHandleErrorMessage(zSchema, pipeState.value, errorHandler)
+		return pipeState
+
+		function errorHandler(err: string) {
+			pipeState.failedAt = `Step ${index + 1}: ${fn.name}`
+			pipeState.error = err
+		}
+	}, initialPipeState)
+}
+
 /**Zod's "record", but all keys are Required instead of Optional as it is the default */
 export function zRecord<T extends z.ZodTypeAny, K extends string>(keys: Readonly<K[]>, schema: T) {
 	return z.object(arrayToObject(keys, () => schema))
@@ -981,6 +979,8 @@ export function copyToClipboard() { doNothing }
 export function doAndRepeat() { doNothing }
 /**@deprecated use "formatDate" instead */
 export function getFormattedTimestamp() { doNothing }
+/** @deprecated use either zPipe (persistenType with zod errors) or pipe_mutableType! */
+export function pipe_persistentType() { doNothing }
 /**@deprecated use "trackVueComponent" instead */
 export function trackVueComponent_curry() { doNothing }
 /**@deprecated use "triggerModal" instead */
