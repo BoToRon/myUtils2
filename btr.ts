@@ -15,6 +15,8 @@ import express from 'express'	//DELETETHISFORCLIENT
 _
 import fetch from 'node-fetch'	//DELETETHISFORCLIENT
 _
+import inquirer from 'inquirer'	//DELETETHISFORCLIENT
+_
 import clipboard from 'clipboardy'	//DELETETHISFORCLIENT
 _
 import { Socket } from 'socket.io'	//DELETETHISFORCLIENT
@@ -698,74 +700,10 @@ export function dataIsEqual(A: unknown, B: unknown, errorHandler = <messageHandl
 }
 /**For obligatory callbacks */
 export function doNothing(...args: unknown[]) { args }
-/**
- * Register into the window's a finder and logger of all vue components, including the main instance and pinia store
- * @example getAppLog(window as never, useStore) //at the bottom of store.ts
- */
-export function getAppLog<T extends string, useStoreT extends () => btr_trackedVueComponent>(
-	window: { appLog: () => { store: { [x: string]: () => void } }, vueComponents: vueComponentsTracker<T> },
-	useStore: useStoreT
-) {
-	delay(1000).then(() => {
-		window.appLog = () => mapObject({
-			store: useStore(),
-			...arrayToObject(
-				objectEntries(window.vueComponents).map(entry => {
-					const components = window.vueComponents[entry.key]
-					return components.map(x => components.length > 1 ? x.id : x.name)
-				}).flat(),
-				idOrName => objectValues(window.vueComponents).flat().find(x => [x.id, x.name].includes(idOrName))
-			)
-		}, component => ({
-			...arrayToObject(
-				sortAlphabetically(objectKeys(component) as string[]).filter(key => ![
-					'$dispose', '$id', '$onAction', '$patch', '$reset', '$subscribe', '_hotUpdate', '_isOptionsAPI', '_r', //<- store, App -v 
-					'_uid', '_isVue', '__v_skip', '_scope', '$options', '_renderProxy', '_self', '$parent', '$root', '$children', '$refs', '_provided',
-					'_watcher', '_inactive', '_directInactive', '_isMounted', '_isDestroyed', '_isBeingDestroyed', '_events', '_hasHookEvent',
-					'_vnode', '_staticTrees', '$vnode', '$slots', '$scopedSlots', '_c', '$createElement', '$attrs', '$listeners', '$pinia',
-					'_bv__modal', '_bv__toast', '_data', '_computedWatchers', '$el', 'name', 'id', 'beforeDestroy'
-				].includes(key)),
-				key => () => console.log(stringify(component[key as keyof typeof component] as unknown as object)) //@btr-ignore
-			)
-		}))
-	})
-}
-/**localStorage, but better */
-export function getLocalStorageAndSetter<T extends Record<string, unknown>>(defaults: T) {
-
-	const storedInfo = getStoredInfo()
-	objectEntries(defaults).forEach(({ key, value }) => { if (!(key in storedInfo)) { localStorageSet(key, value) } })
-	return { myLocalStorage: getStoredInfo(), localStorageSet }
-
-	function getStoredInfo() {
-		return JSON.parse(localStorage['info'] || '{}') as T
-	}
-
-	function localStorageSet<K extends keyof T>(key: K, value: T[K]) {
-		const storedInfo = getStoredInfo()
-		storedInfo[key] = value
-		localStorage['info'] = stringify(storedInfo)
-	}
-}
 /**Margin to make reading logs easier */
 export function logEmptyLine() { console.log('') } //@btr-ignore
 /** @returns null, as the provided type */
 export function nullAs<T>() { return null as T } //@btr-ignore
-//TODO: describe me
-export async function triggerModal(useStore: () => { bvModal: btr_bvModal }, id: string, action: 'show' | 'hide') {
-	if (action === 'show') {
-		useStore().bvModal.show(id) //@btr-ignore
-		for (let i = 0; i < 10; i++) { if (!elementExists()) { await delay(250) } }
-		if (!elementExists()) { promptError() }
-	}
-
-	if (action === 'hide') {
-		elementExists() ? useStore().bvModal.hide(id) : promptError() //@btr-ignore
-	}
-
-	function elementExists() { return Boolean(document.getElementById(id)) }
-	function promptError() { alert(`Modal with the '${id}' id was not found. Could not ${action}. Please report this`) }
-}
 
 _ /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
 _ /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
@@ -857,7 +795,6 @@ export function zPipe<T>(zSchema: zSchema<T>, initialValue: T, ...fns: pipe_pers
 		}
 	}, initialPipeState)
 }
-
 /**Zod's "record", but all keys are Required instead of Optional as it is the default */
 export function zRecord<T extends z.ZodTypeAny, K extends string>(keys: Readonly<K[]>, schema: T) {
 	return z.object(arrayToObject(keys, () => schema))
@@ -920,6 +857,55 @@ export function downloadFile_client(filename: string, fileFormat: '.txt' | '.jso
 	a.download = `${filename}${fileFormat}`
 	a.click()
 }
+/**
+ * Register into the window's a finder and logger of all vue components, including the main instance and pinia store
+ * @example getAppLog(window as never, useStore) //at the bottom of store.ts
+ */
+export function getAppLog<T extends string, useStoreT extends () => btr_trackedVueComponent>(
+	window: { appLog: () => { store: { [x: string]: () => void } }, vueComponents: vueComponentsTracker<T> },
+	useStore: useStoreT
+) {
+	delay(1000).then(() => {
+		window.appLog = () => mapObject({
+			store: useStore(),
+			...arrayToObject(
+				objectEntries(window.vueComponents).map(entry => {
+					const components = window.vueComponents[entry.key]
+					return components.map(x => components.length > 1 ? x.id : x.name)
+				}).flat(),
+				idOrName => objectValues(window.vueComponents).flat().find(x => [x.id, x.name].includes(idOrName))
+			)
+		}, component => ({
+			...arrayToObject(
+				sortAlphabetically(objectKeys(component) as string[]).filter(key => ![
+					'$dispose', '$id', '$onAction', '$patch', '$reset', '$subscribe', '_hotUpdate', '_isOptionsAPI', '_r', //<- store, App -v 
+					'_uid', '_isVue', '__v_skip', '_scope', '$options', '_renderProxy', '_self', '$parent', '$root', '$children', '$refs', '_provided',
+					'_watcher', '_inactive', '_directInactive', '_isMounted', '_isDestroyed', '_isBeingDestroyed', '_events', '_hasHookEvent',
+					'_vnode', '_staticTrees', '$vnode', '$slots', '$scopedSlots', '_c', '$createElement', '$attrs', '$listeners', '$pinia',
+					'_bv__modal', '_bv__toast', '_data', '_computedWatchers', '$el', 'name', 'id', 'beforeDestroy'
+				].includes(key)),
+				key => () => console.log(stringify(component[key as keyof typeof component] as unknown as object)) //@btr-ignore
+			)
+		}))
+	})
+}
+/**localStorage, but better */
+export function getLocalStorageAndSetter<T extends Record<string, unknown>>(defaults: T) {
+
+	const storedInfo = getStoredInfo()
+	objectEntries(defaults).forEach(({ key, value }) => { if (!(key in storedInfo)) { localStorageSet(key, value) } })
+	return { myLocalStorage: getStoredInfo(), localStorageSet }
+
+	function getStoredInfo() {
+		return JSON.parse(localStorage['info'] || '{}') as T
+	}
+
+	function localStorageSet<K extends keyof T>(key: K, value: T[K]) {
+		const storedInfo = getStoredInfo()
+		storedInfo[key] = value
+		localStorage['info'] = stringify(storedInfo)
+	}
+}
 /**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
 export function newToast_client_curry($bvToast: bvToast) {
 	return function body(title: string, message: string, variant: btr_validVariant) {
@@ -960,6 +946,21 @@ export function trackVueComponent<T extends string>(
 		removeItem(window.vueComponents[name], component)
 		logAllComponents()
 	}
+}
+//TODO: describe me
+export async function triggerModal(useStore: () => { bvModal: btr_bvModal }, id: string, action: 'show' | 'hide') {
+	if (action === 'show') {
+		useStore().bvModal.show(id) //@btr-ignore
+		for (let i = 0; i < 10; i++) { if (!elementExists()) { await delay(250) } }
+		if (!elementExists()) { promptError() }
+	}
+
+	if (action === 'hide') {
+		elementExists() ? useStore().bvModal.hide(id) : promptError() //@btr-ignore
+	}
+
+	function elementExists() { return Boolean(document.getElementById(id)) }
+	function promptError() { alert(`Modal with the '${id}' id was not found. Could not ${action}. Please report this`) }
 }
 
 _ /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
@@ -1334,3 +1335,12 @@ export function zodCheck_socket<T>(socket: Socket, schema: zSchema<T>, data: T) 
 
 export const command_package = process.env['npm_config_command_package'] as validNpmCommand_package
 export const command_project = process.env['npm_config_command_project'] as validNpmCommand_project
+
+function inquirePrompt<K extends string>(functions: Record<K, ((...args: never[]) => (void | Promise<void>))>) {
+	inquirer.
+		prompt({ name: 'fn', type: 'list', message: 'Run a function:', choices: objectKeys(functions) }).
+		then(async (choice: { fn: K }) => {
+			await functions[choice.fn]()
+			inquirePrompt(functions)
+		})
+}

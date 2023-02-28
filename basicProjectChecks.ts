@@ -371,6 +371,8 @@ async function checkPackageJsons() {
 			'build-client': z.literal('cd client & npm run build'),
 			'build-all': z.literal('tsc --target esnext server/init.ts --outDir ../dist & cd client & npm run build-only && cd ..'),
 			check: z.literal('npm run npmScript --command_project=check'),
+			dev: z.literal('tsc --target esnext dev/commands.ts --outDir ./dev/transpiled & node dev/transpiled/dev/commands.js'),
+			git: z.literal('npm run npmScript --command_project=git'),
 			localtunnel: z.literal('lt --port 5173'),
 			nodemon: z.literal('nodemon test/server/init.js'),
 			npmScript: z.literal('node node_modules/@botoron/utils/npmRun.js'),
@@ -378,7 +380,6 @@ async function checkPackageJsons() {
 			test: z.literal('ts-node-esm --transpileOnly test.ts'),
 			transpile: z.literal('npm run npmScript --command_project=transpile'),
 			vue: z.literal('cd client & npm run dev'),
-			git: z.literal('npm run npmScript --command_project=git')
 		}).strict(),
 		dependencies: z.object({
 			'@botoron/utils': z.string(),
