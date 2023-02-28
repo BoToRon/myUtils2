@@ -72,9 +72,12 @@ export function addUnrepeatedItems<T>(arr: T[], newItems: T[]) {
  * @returns An object where each key is an item of "arr" and the value is determined by "mappingFn"
  */
 export function arrayToObject<
-	T extends Readonly<Array<string>>,	//@btr-ignore
+	T extends Readonly<string[]>,
 	F extends (...x: (T[number])[]) => ReturnType<F>
->(arr: T, mappingFn: F) {
+>(
+	arr: T,
+	mappingFn: F
+) {
 	type K = typeof arr[number]
 	const object = {} as Record<K, ReturnType<F>>
 	arr.forEach(x => object[x as K] = mappingFn(x))
@@ -523,19 +526,19 @@ export function deepClone<T extends object>(originalObject: T) {
 		})
 	}
 }
-/**Generate a Zod Schema from an array/object */
+/**Dynamically generate a Zod Schema from an array/object */
 export function getZodSchemaFromData(data: unknown) {
+
+	if (!data) { return z.nullable(<ZodTypeAny>nullAs()) }
+	if (typeof data !== 'object') { return z.literal(data as Primitive) }
+	if (Array.isArray(data)) { return z.tuple(data.map(toLiteral) as []) }
+	return z.object(mapObject(data, toLiteral) as ZodRawShape)
 
 	function toLiteral(x: unknown): z.ZodLiteral<unknown> {
 		return typeof x === 'object' ?
 			getZodSchemaFromData(x) as unknown as z.ZodLiteral<unknown> :
 			z.literal(x as never) as z.ZodLiteral<unknown>
 	}
-
-	if (!data) { return z.nullable(<ZodTypeAny>nullAs()) }
-	if (typeof data !== 'object') { return z.literal(data as Primitive) }
-	if (Array.isArray(data)) { return z.tuple(data.map(toLiteral) as []) }
-	return z.object(mapObject(data, toLiteral) as ZodRawShape)
 }
 /**Because ESlint doesn't like Object(x).hasOwnProperty :p */
 export function hasOwnProperty<T extends object>(x: T, key: keyof T) { return Object.prototype.hasOwnProperty.call(x, key) }
@@ -554,7 +557,7 @@ export function objectKeys<K extends string, T extends Record<K, unknown>>(objec
 /**Object.Prototype.values but with proper type-inference */
 export function objectValues<T extends object>(object: T) { return Object.values(object) as T[keyof T] } //@btr-ignore
 /**Create an object with only the specified properties of another base object (references are kept) */
-export function pick<T extends object, K extends keyof T>(theObject: T, properties: readonly K[]) {
+export function pick<T extends object, K extends keyof T>(theObject: T, properties: Readonly<K[]>) {
 	const thePartial = {} as Pick<T, K>
 	objectEntries(theObject).forEach(entry => {
 		const { key, value } = entry
@@ -857,6 +860,10 @@ export function zodCheck_curry(errorHandler: messageHandler, strictModeIfObject:
 /**Simple zodCheck without any kind of error handler */
 export function zodCheck_simple<T>(schema: zSchema<T>, data: T) {
 	return zGetSafeParseResultAndHandleErrorMessage(schema, data, doNothing, true).success
+}
+/**Zod's "record", but all keys are Required instead of Optional as it is the default */
+export function zRecord<T extends z.ZodTypeAny, K extends string>(keys: Readonly<K[]>, schema: T) {
+	return z.object(arrayToObject(keys, () => schema))
 }
 /**
  * Return the regex given with possibly an error indicating it wasn't matched.

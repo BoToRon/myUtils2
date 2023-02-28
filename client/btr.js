@@ -535,13 +535,8 @@ export function deepClone(originalObject) {
         });
     }
 }
-/**Generate a Zod Schema from an array/object */
+/**Dynamically generate a Zod Schema from an array/object */
 export function getZodSchemaFromData(data) {
-    function toLiteral(x) {
-        return typeof x === 'object' ?
-            getZodSchemaFromData(x) :
-            z.literal(x);
-    }
     if (!data) {
         return z.nullable(nullAs());
     }
@@ -552,6 +547,11 @@ export function getZodSchemaFromData(data) {
         return z.tuple(data.map(toLiteral));
     }
     return z.object(mapObject(data, toLiteral));
+    function toLiteral(x) {
+        return typeof x === 'object' ?
+            getZodSchemaFromData(x) :
+            z.literal(x);
+    }
 }
 /**Because ESlint doesn't like Object(x).hasOwnProperty :p */
 export function hasOwnProperty(x, key) { return Object.prototype.hasOwnProperty.call(x, key); }
@@ -844,6 +844,10 @@ export function zodCheck_curry(errorHandler, strictModeIfObject) {
 /**Simple zodCheck without any kind of error handler */
 export function zodCheck_simple(schema, data) {
     return zGetSafeParseResultAndHandleErrorMessage(schema, data, doNothing, true).success;
+}
+/**Zod's "record", but all keys are Required instead of Optional as it is the default */
+export function zRecord(keys, schema) {
+    return z.object(arrayToObject(keys, () => schema));
 }
 /**
  * Return the regex given with possibly an error indicating it wasn't matched.

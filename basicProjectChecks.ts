@@ -250,9 +250,8 @@ function checkFilesAndFolderStructure() {
 
 	const desiredFilesAndFolders = [
 		SERVER_EVENTS_TS, SERVER_REF_TS, './server/__socketOnAdmin.ts', './server/fns.ts', './server/init.ts', './server/login.ts', //server files
-		'./dev/backups', './dev/transpiled', './dev/checks.ts', './dev/commands.ts',  //1. run dev commands, 2. extend btr's checks
-
 		ESLINT_CJS, GITIGNORE, TSCONFIG_JSON, './.env', './.git', './package-lock.json', './package.json', './TODO.md', //solo-files
+		'./dev/checks.ts', './dev/commands.ts',  //2. extend btr's checks, 1. run dev commands
 		GLOBAL_VARS_TS, GLOBAL_FNS_TS,  //functions and constants for both server and client
 		TYPES_IO_TS, TYPES_Z_TS, './types/types.d.ts',  //types and schemas
 		'./test',	//file for testing transpiled files pre-building
@@ -606,8 +605,8 @@ async function fillCachedFiles() {
 	const clientTsFilePaths = getFilesAndFoldersNames(CLIENT_SRC, '.ts')
 	const serverTsFilePaths = getFilesAndFoldersNames('./server', '.ts')
 	const typeFilePaths = getFilesAndFoldersNames('./types', '.ts')
+	const globalFiles = getFilesAndFoldersNames('./global', '.ts')
 	const tsConfigs = [inBtrUtils(TSCONFIG_JSON), TSCONFIG_JSON]
-	const globalFiles = getFilesAndFoldersNames('./dev', '.ts')
 	const eslintConfigs = [inBtrUtils(ESLINT_CJS), ESLINT_CJS]
 	const devFiles = getFilesAndFoldersNames('./dev', '.ts')
 
@@ -644,7 +643,7 @@ function getFilesAndFoldersNames(directory: string, extension: nullable<'.ts' | 
 		file = directory + '/' + file
 		const stat = fs.statSync(file)
 
-		const stopHere = /node_modules|dev|git|test|assets/.test(file) //regexHere
+		const stopHere = /node_modules|git|test|assets/.test(file) //regexHere
 		if (stat && stat.isDirectory() && !stopHere) { results.push(...getFilesAndFoldersNames(file, null)) }
 		else { results.push(file) }
 	})

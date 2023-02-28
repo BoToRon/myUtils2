@@ -226,8 +226,8 @@ function checkFilesAndFolderStructure() {
     const currentFilesAndFolders = getFilesAndFoldersNames('.', null);
     const desiredFilesAndFolders = [
         SERVER_EVENTS_TS, SERVER_REF_TS, './server/__socketOnAdmin.ts', './server/fns.ts', './server/init.ts', './server/login.ts',
-        './dev/backups', './dev/transpiled', './dev/checks.ts', './dev/commands.ts',
         ESLINT_CJS, GITIGNORE, TSCONFIG_JSON, './.env', './.git', './package-lock.json', './package.json', './TODO.md',
+        './dev/checks.ts', './dev/commands.ts',
         GLOBAL_VARS_TS, GLOBAL_FNS_TS,
         TYPES_IO_TS, TYPES_Z_TS, './types/types.d.ts',
         './test',
@@ -573,8 +573,8 @@ async function fillCachedFiles() {
     const clientTsFilePaths = getFilesAndFoldersNames(CLIENT_SRC, '.ts');
     const serverTsFilePaths = getFilesAndFoldersNames('./server', '.ts');
     const typeFilePaths = getFilesAndFoldersNames('./types', '.ts');
+    const globalFiles = getFilesAndFoldersNames('./global', '.ts');
     const tsConfigs = [inBtrUtils(TSCONFIG_JSON), TSCONFIG_JSON];
-    const globalFiles = getFilesAndFoldersNames('./dev', '.ts');
     const eslintConfigs = [inBtrUtils(ESLINT_CJS), ESLINT_CJS];
     const devFiles = getFilesAndFoldersNames('./dev', '.ts');
     await fillCachedFilesVar();
@@ -600,7 +600,7 @@ function getFilesAndFoldersNames(directory, extension) {
     fs.readdirSync(directory).forEach((file) => {
         file = directory + '/' + file;
         const stat = fs.statSync(file);
-        const stopHere = /node_modules|dev|git|test|assets/.test(file); //regexHere
+        const stopHere = /node_modules|git|test|assets/.test(file); //regexHere
         if (stat && stat.isDirectory() && !stopHere) {
             results.push(...getFilesAndFoldersNames(file, null));
         }

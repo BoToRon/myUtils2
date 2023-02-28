@@ -547,13 +547,8 @@ export function deepClone(originalObject) {
         });
     }
 }
-/**Generate a Zod Schema from an array/object */
+/**Dynamically generate a Zod Schema from an array/object */
 export function getZodSchemaFromData(data) {
-    function toLiteral(x) {
-        return typeof x === 'object' ?
-            getZodSchemaFromData(x) :
-            z.literal(x);
-    }
     if (!data) {
         return z.nullable(nullAs());
     }
@@ -564,6 +559,11 @@ export function getZodSchemaFromData(data) {
         return z.tuple(data.map(toLiteral));
     }
     return z.object(mapObject(data, toLiteral));
+    function toLiteral(x) {
+        return typeof x === 'object' ?
+            getZodSchemaFromData(x) :
+            z.literal(x);
+    }
 }
 /**Because ESlint doesn't like Object(x).hasOwnProperty :p */
 export function hasOwnProperty(x, key) { return Object.prototype.hasOwnProperty.call(x, key); }
@@ -858,6 +858,10 @@ export function zodCheck_curry(errorHandler, strictModeIfObject) {
 export function zodCheck_simple(schema, data) {
     return zGetSafeParseResultAndHandleErrorMessage(schema, data, doNothing, true).success;
 }
+/**Zod's "record", but all keys are Required instead of Optional as it is the default */
+export function zRecord(keys, schema) {
+    return z.object(arrayToObject(keys, () => schema));
+}
 /**
  * Return the regex given with possibly an error indicating it wasn't matched.
  * MUST BE USED AS A SPREAD ARGUMENT, eg: zString.regex( ...zRegexGenerator(/hi/, false) )
@@ -1121,7 +1125,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles) {
         checkReplaceableCode(['console.log(stringify'], 'colorLog OR consoleLogFull OR debugLog'); //@btr-ignore
         checkReplaceableCode(['console.log'], 'colorLog OR consoleLogFull OR debugLog'); //@btr-ignore
         checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine'); //@btr-ignore
-        checkReplaceableCode(['Readonly<', 'ReadonlyArray<'], 'readonly '); //@btr-ignore
+        checkReplaceableCode(['readonly ', 'ReadonlyArray<'], 'Readonly<'); //@btr-ignore
         checkReplaceableCode(['//@ts-ignore'], '//@ts-expect-error'); //@btr-ignore
         checkReplaceableCode(['for await'], 'await asyncForEach'); //@btr-ignore
         checkReplaceableCode(['Object.entries'], 'objectEntries'); //@btr-ignore
@@ -1131,6 +1135,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles) {
         checkReplaceableCode(['JSON.stringify'], 'stringify'); //@btr-ignore
         checkReplaceableCode(['Object.keys'], 'objectKeys'); //@btr-ignore
         checkReplaceableCode([' tryF'], 'divine.try'); //@btr-ignore
+        checkReplaceableCode(['z.record'], 'zRecord'); //@btr-ignore
         checkReplaceableCode(['null as'], 'nullAs'); //@btr-ignore
         function checkReplaceableCode(replaceableCodeStrings, suggestedReplacement) {
             replaceableCodeStrings.forEach(replaceableString => {
@@ -1142,7 +1147,12 @@ export function checkCodeThatCouldBeUpdated(cachedFiles) {
                     return;
                 }
                 colorLog('yellow', surroundedString(`${warningsCount_generator.next().value}. WARNING: OUTDATED/REPLACEABLE CODE`, '-', 50));
-                console.log({ matches, replaceableCode: replaceableString, suggestedReplacement, path }); //@btr-ignore
+                console.log({
+                    matches: matches.map(x => surroundedString(x, ' ', 5)),
+                    replaceableCode: surroundedString(replaceableString, ' ', 10),
+                    suggestedReplacement: surroundedString(suggestedReplacement, ' ', 5),
+                    path
+                });
             });
         }
     });
