@@ -43,7 +43,7 @@ export function npmRun_package(npmCommand: validNpmCommand_package) {
 		function tryAgain(error: string) { colorLog('yellow', error); promptVersioning() }
 		const versionIncrement = await questionAsPromise('Type of package version increment (major, minor, patch)?')
 
-		if (!zodCheck_curry(tryAgain, true)(zValidVersionIncrement, versionIncrement)) { return }
+		if (!zodCheck_curry(tryAgain)(zValidVersionIncrement, versionIncrement)) { return }
 		await prompCommitMessageAndPush(utilsRepoName)
 
 		exec(`npm version ${versionIncrement}`, (_err, stdout) => {

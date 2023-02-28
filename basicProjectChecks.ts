@@ -7,7 +7,7 @@ import { cachedFile, messageHandler, nullable, packageJson, zSchema } from './ty
 _
 import {
 	getCachedFiles, checkCodeThatCouldBeUpdated, compareArrays, getEnviromentVariables,
-	importFileFromProject, nullAs, successLog, surroundedString, zodCheck_curry, zRegexGenerator
+	importFileFromProject, nullAs, pick, successLog, surroundedString, zodCheck_curry, zRegexGenerator
 } from './btr.js'
 _
 import {
@@ -230,7 +230,17 @@ function checkClientStoreTs() {
 
 /**Check if all the desired enviroment keys are defined */
 function checkEnviromentVariables() {
-	zodCheck_curry((error: string) => addToErrors('.env', error), false)(zMyEnv, getEnviromentVariables())
+
+	const myEnv = pick(getEnviromentVariables(), ['ADMIN_PASSWORD', 'APP_NAME', 'DEV_OR_PROD', 'ERIS_TOKEN', 'MONGO_URI', 'PORT'])
+
+	zodCheck_curry((error: string) => addToErrors('.env', error))(zMyEnv, myEnv)
+
+	/* DEV_OR_PROD: "DEV" | "PROD";
+	 ADMIN_PASSWORD: string;
+	 PORT: "3000";
+	 ERIS_TOKEN: string;
+	 MONGO_URI: string;
+	 APP_NAME: string; */
 }
 
 function checkFilesAreIdentical(path: string, pathToTemplate: string) {
@@ -662,5 +672,5 @@ function getFromCachedFiles(obligatoryMatches: string[]): cachedFile[] {
 }
 
 function zodCheck_toErrors<T>(path: string, schema: zSchema<T>, data: T) {
-	zodCheck_curry((e: string) => addToErrors(path, e), true)(schema, data)
+	zodCheck_curry((e: string) => addToErrors(path, e))(schema, data)
 }

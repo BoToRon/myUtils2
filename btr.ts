@@ -863,12 +863,12 @@ export async function triggerModal(useStore: () => { bvModal: btr_bvModal }, id:
 	function promptError() { alert(`Modal with the '${id}' id was not found. Could not ${action}. Please report this`) }
 }
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler in case it isn't a fit. */
-export function zodCheck_curry(errorHandler: messageHandler, strictModeIfObject: boolean) {
+export function zodCheck_curry(errorHandler: messageHandler) {
 	return function zodCheck<T>(schema: zSchema<T>, data: T) {
-		function body<T>(errorHandler: messageHandler, schema: zSchema<T>, data: T, strictModeIfObject = true) {
-			return zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler, strictModeIfObject).success
+		function body<T>(errorHandler: messageHandler, schema: zSchema<T>, data: T) {
+			return zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler).success
 		}
-		return body(errorHandler, schema, data, strictModeIfObject)
+		return body(errorHandler, schema, data)
 	}
 }
 /**Simple zodCheck without any kind of error handler */
@@ -940,7 +940,7 @@ export function downloadFile_client(filename: string, fileFormat: '.txt' | '.jso
 /**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
 export function newToast_client_curry($bvToast: bvToast) {
 	return function body(title: string, message: string, variant: btr_validVariant) {
-		if (!zodCheck_curry(alert, true)(zValidVariants, variant)) { return }
+		if (!zodCheck_curry(alert)(zValidVariants, variant)) { return }
 		$bvToast.toast(message, {
 			toaster: 'b-toaster-bottom-right',
 			autoHideDelay: 5000,
@@ -1287,7 +1287,7 @@ export async function prompCommitMessageAndPush(repoName: string): Promise<boole
 	const commitMessage = await questionAsPromise(`Enter commit type ${commitTypes} plus a message:`)
 	copyToClipboard_server(commitMessage)
 
-	if (!zodCheck_curry(tryAgain, true)(get_zValidCommitMessage(), commitMessage)) { return prompCommitMessageAndPush(repoName) }
+	if (!zodCheck_curry(tryAgain)(get_zValidCommitMessage(), commitMessage)) { return prompCommitMessageAndPush(repoName) }
 	return await gitAddCommitPush()
 
 	function get_zValidCommitMessage() {
@@ -1333,7 +1333,7 @@ export async function questionAsPromise(question: string) {
 }
 /**Check the user input in socket.on functions and send error toasts if the validation fails */
 export function zodCheck_socket<T>(socket: Socket, schema: zSchema<T>, data: T) {
-	return zodCheck_curry(errorHandler, true)(schema, data)
+	return zodCheck_curry(errorHandler)(schema, data)
 
 	function caller() {
 		return (
