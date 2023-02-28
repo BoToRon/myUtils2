@@ -303,27 +303,16 @@ export async function retryF<F extends (...args: Parameters<F>) => ReturnType<F>
 	}
 }
 /**
- * Test data against an schema with strict-mode (no unspecified keys) for objects set by default and handle the error message if any
+ * Test data against an schema with strict-mode on (no unspecified keys) for objects and handle the error message if any
  * @param schema The schema to test the data against
  * @param data The data to be tested
  * @param errorHandler The handler for the message error
- * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not
  * @returns 
  */
-export function zGetSafeParseResultAndHandleErrorMessage<T>(
-	schema: zSchema<T>,
-	data: T,
-	errorHandler = <messageHandler>nullAs(),
-	strictModeIfObject = true
-) {
-	const result = getResult()
+export function zGetSafeParseResultAndHandleErrorMessage<T>(schema: zSchema<T>, data: T, errorHandler = <messageHandler>nullAs()) {
+	const result = (schema.strict ? schema.strict() : schema).safeParse(data)
 	if (result.success === false && errorHandler) { errorHandler(fromZodError(result.error).message) }
 	return result
-
-	function getResult() {
-		if (!schema.strict || !strictModeIfObject) { return schema.safeParse(data) }
-		else { return schema.strict().safeParse(data) }
-	}
 }
 /**
  * Check data against a provided schema, and execute either the success or error handler
@@ -332,16 +321,14 @@ export function zGetSafeParseResultAndHandleErrorMessage<T>(
  * @param successHandler The function that will execute if data fits zSchema
  * @param args The arguments to be applied to successHandler
  * @param errorHandler The function that will execute if data does NOT fits zSchema
- * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not * 
  */
 export function zodCheckAndHandle<D, SH extends (...args: Parameters<SH>) => ReturnType<SH>>(zSchema: zSchema<D>,
 	data: D,
 	successHandler: SH,
 	args: Parameters<SH>,
 	errorHandler: messageHandler,
-	strictModeIfObject: boolean
 ) {
-	const zResult = zGetSafeParseResultAndHandleErrorMessage(zSchema, data, errorHandler, strictModeIfObject)
+	const zResult = zGetSafeParseResultAndHandleErrorMessage(zSchema, data, errorHandler)
 	if (zResult.success === true && successHandler) { successHandler(...args as Parameters<SH>) }
 }
 /**Pipe with schema validation and an basic error tracking */
@@ -353,12 +340,11 @@ export function zodCheckAndHandle<D, SH extends (...args: Parameters<SH>) => Ret
 /**
  * Pipe with schema validation and basic error tracking/handling
  * @param zSchema The schema that must persist through the whole pipe
- * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not * 
  * @param initialValue The value/object that will be piped through the functions
  * @param fns The functions that will conform the pipe in order
  * @returns 
  */
-export function zPipe<T>(zSchema: zSchema<T>, strictModeIfObject: boolean, initialValue: T, ...fns: pipe_persistent_type<T>[]) {
+export function zPipe<T>(zSchema: zSchema<T>, initialValue: T, ...fns: pipe_persistent_type<T>[]) {
 
 	const initialPipeState = { value: initialValue, error: <string>nullAs(), failedAt: <string>nullAs() }
 
@@ -367,7 +353,7 @@ export function zPipe<T>(zSchema: zSchema<T>, strictModeIfObject: boolean, initi
 		if (pipeState.error) { return pipeState }
 		pipeState.value = fn(pipeState.value)
 
-		zGetSafeParseResultAndHandleErrorMessage(zSchema, pipeState.value, errorHandler, strictModeIfObject)
+		zGetSafeParseResultAndHandleErrorMessage(zSchema, pipeState.value, errorHandler)
 		return pipeState
 
 		function errorHandler(err: string) {
@@ -785,7 +771,6 @@ _ /********** MISC ******************** MISC ******************** MISC *********
  * @param A The first piece of data
  * @param B The second piece of data
  * @param errorHandler The handler for the message error
- * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not
  * @returns 
  */
 export function dataIsEqual(A: unknown, B: unknown, errorHandler = <messageHandler>nullAs()) {
@@ -873,7 +858,7 @@ export function zodCheck_curry(errorHandler: messageHandler) {
 }
 /**Simple zodCheck without any kind of error handler */
 export function zodCheck_simple<T>(schema: zSchema<T>, data: T) {
-	return zGetSafeParseResultAndHandleErrorMessage(schema, data, doNothing, true).success
+	return zGetSafeParseResultAndHandleErrorMessage(schema, data, doNothing).success
 }
 /**Zod's "record", but all keys are Required instead of Optional as it is the default */
 export function zRecord<T extends z.ZodTypeAny, K extends string>(keys: Readonly<K[]>, schema: T) {

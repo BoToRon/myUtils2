@@ -17,8 +17,8 @@ import {
 } from './btr.js'
 _
 
-if (command_package) { zodCheckAndHandle(zValidNpmCommand_package, command_package, npmRun_package, [command_package], divine.error, true) }
-if (command_project) { zodCheckAndHandle(zValidNpmCommand_project, command_project, npmRun_project, [command_project], divine.error, true) }
+if (command_package) { zodCheckAndHandle(zValidNpmCommand_package, command_package, npmRun_package, [command_package], divine.error) }
+if (command_project) { zodCheckAndHandle(zValidNpmCommand_project, command_project, npmRun_project, [command_project], divine.error) }
 
 /**Easily run the scripts of this (utils) repo's package.json */
 export function npmRun_package(npmCommand: validNpmCommand_package) {
