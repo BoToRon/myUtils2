@@ -23,7 +23,11 @@ const functions: Record<string, { description: string, fn: () => maybePromise<vo
 }
 
 function getPromptableScripts() {
-	return mapObject(functions,)
+	function mapObject<F extends (value: O[keyof O]) => ReturnType<F>, O extends object>(object: O, mappingFn: F) {
+		const newObject = {} as { [key in keyof O]: ReturnType<F> }
+		objectEntries(object).forEach(x => { newObject[x.key] = mappingFn(x.value) })
+		return newObject as { [key in keyof O]: ReturnType<F> }
+	}
 }
 
 inquirePromptCommands(scripts)
