@@ -1,7 +1,7 @@
 let _
 import { type SafeParseReturnType, z } from 'zod'
 _
-import { npmVersionOptions, zMyEnv, zValidNpmCommand_package, zValidNpmCommand_project, zValidVariants } from '../constants/constants.js'
+import { npmVersionOptions, zMyEnv, zValidNpmCommand_project, zValidVariants } from '../constants/constants.js'
 _
 
 /**Generic to get the type of an object/interface while preserving key-value typing */
@@ -32,7 +32,6 @@ export type btr_fieldsForColumnOfTable = string | {
 /**Exclusive for this package */
 
 export type myEnv = z.infer<typeof zMyEnv>
-export type validNpmCommand_package = z.infer<typeof zValidNpmCommand_package>
 export type validNpmCommand_project = z.infer<typeof zValidNpmCommand_project>
 
 export type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: btr_validVariant, title: string }

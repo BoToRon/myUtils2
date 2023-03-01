@@ -5,34 +5,17 @@ import { exec } from 'child_process'	//DELETETHISFORCLIENT
 _
 import { basicProjectChecks } from './basicProjectChecks.js' //DELETETHISFORCLIENT
 _
-import { validNpmCommand_package, validNpmCommand_project } from './types/types.js'
+import { validNpmCommand_project } from './types/types.js'
+_
+import { PACKAGE_DOT_JSON, zValidNpmCommand_project } from './constants/constants.js'
 _
 import {
-	PACKAGE_DOT_JSON, utilsRepoName, zValidNpmCommand_package,
-	zValidNpmCommand_project, zValidVersionIncrement
-} from './constants/constants.js'
-_
-import {
-	colorLog, command_package, command_project, delay, divine, fsReadFileAsync, fsWriteFileAsync, getEnviromentVariables,
-	killProcess, prompCommitMessageAndPush, questionAsPromise, selfFilter, successLog, zodCheckAndHandle, zodCheck_curry
+	command_project, delay, divine, fsReadFileAsync, fsWriteFileAsync, getEnviromentVariables,
+	killProcess, prompCommitMessageAndPush, successLog, zodCheckAndHandle
 } from './btr.js'
 _
 
-if (command_package) { zodCheckAndHandle(zValidNpmCommand_package, command_package, npmRun_package, [command_package], divine.error) }
 if (command_project) { zodCheckAndHandle(zValidNpmCommand_project, command_project, npmRun_project, [command_project], divine.error) }
-
-/**Easily run the scripts of this (utils) repo's package.json */
-export function npmRun_package(npmCommand: validNpmCommand_package) {
-
-	console.log({ npmCommand }) //@btr-ignore
-
-	if (npmCommand === 'transpile-all') { transpileAllFiles(printProcessOver) }
-	if (npmCommand === 'all') { transpileAllFiles(promptVersioning) }
-
-	function printProcessOver() {
-		colorLog('magenta', 'Process over')
-	}
-}
 
 /**Run convenient scripts for and from a project's root folder */
 //TODO: delete the rule-disabling below and move this function into its own file

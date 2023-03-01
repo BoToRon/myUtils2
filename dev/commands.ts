@@ -3,14 +3,14 @@ import inquirer from 'inquirer'
 _
 import { execSync, execFile } from 'child_process'	//DELETETHISFORCLIENT
 _
-import { maybePromise, validNpmVersion } from './types/types.js'
+import { maybePromise, validNpmVersion } from '../types/types.js'
 _
-import { npmVersionOptions, utilsRepoName } from './constants/constants.js'
+import { npmVersionOptions, utilsRepoName } from '../constants/constants.js'
 _
 import {
-	checkCodeThatCouldBeUpdated, colorLog, errorLog, fsReadFileAsync, fsWriteFileAsync,
-	getCachedFiles, inquirePromptCommands, mapObject, prompCommitMessageAndPush, selfFilter, successLog
-} from './btr.js'
+	checkCodeThatCouldBeUpdated, colorLog, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles,
+	inquirePromptCommands, objectEntries, prompCommitMessageAndPush, selfFilter, successLog
+} from '../btr.js'
 
 const warnings: string[] = []
 
@@ -22,15 +22,7 @@ const functions: Record<string, { description: string, fn: () => maybePromise<vo
 	transpileBase: { description: 'Transpile the file bases, NOT for production', fn: transpileBaseFiles },
 }
 
-function getPromptableScripts() {
-	function mapObject<F extends (value: O[keyof O]) => ReturnType<F>, O extends object>(object: O, mappingFn: F) {
-		const newObject = {} as { [key in keyof O]: ReturnType<F> }
-		objectEntries(object).forEach(x => { newObject[x.key] = mappingFn(x.value) })
-		return newObject as { [key in keyof O]: ReturnType<F> }
-	}
-}
-
-inquirePromptCommands(scripts)
+inquirePromptCommands(functionForInquirePrompt())
 
 //TODO: find the filepaths for getCachedFiles DYNAMICALLY
 async function btrCheckPackage() {
@@ -40,6 +32,12 @@ async function btrCheckPackage() {
 async function btrCheckPackageAndReportResult() {
 	await btrCheckPackage()
 	warnings.length ? successLog('No btr-errors detected') : colorLog('red', warnings.length + ' warnings')
+}
+
+function functionForInquirePrompt() {
+	const object = {} as Record<string, () => maybePromise<void>>
+	objectEntries(functions).forEach(({ key, value }) => object[key + ': ' + value.description] = value.fn)
+	return object
 }
 
 async function publish() {

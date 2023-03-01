@@ -30,8 +30,8 @@ _
 import mongodb, { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
 _
 import {
-	arrayPredicate, btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, bvToast, cachedFile, maybePromise, messageHandler, myEnv, nullable, pipe_mutable_type,
-	pipe_persistent_type, timer, validChalkColor, validNpmCommand_package, validNpmCommand_project, vueComponentsTracker, zSchema
+	arrayPredicate, btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, bvToast, cachedFile, maybePromise, messageHandler, myEnv, nullable,
+	pipe_mutable_type, pipe_persistent_type, timer, validChalkColor, validNpmCommand_project, vueComponentsTracker, zSchema
 } from './types/types.js'
 _
 import { getUniqueId_generator, isNode, timers, warningsCount_generator, zValidVariants } from './constants/constants.js'
@@ -1011,7 +1011,7 @@ export const divine = {
 	},
 	init: (() => {
 		delay(1000).then(async () => {
-			if (command_package || command_project) { return }
+			if (command_project) { return }
 
 			const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = getEnviromentVariables()
 			if (DEV_OR_PROD !== 'PROD') { return }
@@ -1353,6 +1353,5 @@ export function zodCheck_socket<T>(socket: Socket, schema: zSchema<T>, data: T) 
 	}
 }
 
-export const command_package = process.env['npm_config_command_package'] as validNpmCommand_package
 export const command_project = process.env['npm_config_command_project'] as validNpmCommand_project
 
