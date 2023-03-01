@@ -7,3 +7,5 @@ make warning against eslint-disable
 
 TODO: 
 make sure "as const" is not present in any file besides types/z.ts and __admin.vue
+
+TODO: edit prompCommitMessageAndPush to use inquire.prompt

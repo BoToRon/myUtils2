@@ -1,7 +1,7 @@
 let _
 import { type SafeParseReturnType, z } from 'zod'
 _
-import { zMyEnv, zValidNpmCommand_package, zValidNpmCommand_project, zValidVariants } from '../constants/constants.js'
+import { npmVersionOptions, zMyEnv, zValidNpmCommand_package, zValidNpmCommand_project, zValidVariants } from '../constants/constants.js'
 _
 
 /**Generic to get the type of an object/interface while preserving key-value typing */
@@ -40,6 +40,7 @@ export type validChalkColor = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 
 export type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 export type vueComponentsTracker<T extends string> = Record<T, btr_trackedVueComponent[]>
 export type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
+export type validNpmVersion = typeof npmVersionOptions[number]
 export type cachedFile = { path: string, content: string }
 export type messageHandler = (message: string) => void
 export type arrayPredicate<T> = (arg1: T) => boolean

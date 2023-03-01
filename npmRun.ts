@@ -13,7 +13,8 @@ import {
 } from './constants/constants.js'
 _
 import {
-	checkCodeThatCouldBeUpdated, colorLog, command_package, command_project, delay, divine, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getEnviromentVariables, killProcess, prompCommitMessageAndPush, questionAsPromise, selfFilter, successLog, zodCheckAndHandle, zodCheck_curry
+	colorLog, command_package, command_project, delay, divine, fsReadFileAsync, fsWriteFileAsync, getEnviromentVariables,
+	killProcess, prompCommitMessageAndPush, questionAsPromise, selfFilter, successLog, zodCheckAndHandle, zodCheck_curry
 } from './btr.js'
 _
 
@@ -24,66 +25,12 @@ if (command_project) { zodCheckAndHandle(zValidNpmCommand_project, command_proje
 export function npmRun_package(npmCommand: validNpmCommand_package) {
 
 	console.log({ npmCommand }) //@btr-ignore
-	cachePackageFilesAndCheckThem()
-	if (npmCommand === 'check') { return }
 
-	if (npmCommand === 'transpile-base') { transpileBaseFiles(printProcessOver) }
 	if (npmCommand === 'transpile-all') { transpileAllFiles(printProcessOver) }
 	if (npmCommand === 'all') { transpileAllFiles(promptVersioning) }
 
-	async function cachePackageFilesAndCheckThem() {
-		checkCodeThatCouldBeUpdated(await getCachedFiles([], ['./basicProjectChecks.ts', './btr.ts', './npmRun.ts']))
-	}
-
 	function printProcessOver() {
 		colorLog('magenta', 'Process over')
-	}
-
-	async function promptVersioning() {
-		function tryAgain(error: string) { colorLog('yellow', error); promptVersioning() }
-		const versionIncrement = await questionAsPromise('Type of package version increment (major, minor, patch)?')
-
-		if (!zodCheck_curry(tryAgain)(zValidVersionIncrement, versionIncrement)) { return }
-		await prompCommitMessageAndPush(utilsRepoName)
-
-		exec(`npm version ${versionIncrement}`, (_err, stdout) => {
-			console.log({ stdout }) //@btr-ignore
-			successLog('package.json up-version\'d')
-		})
-	}
-
-	function transpileAllFiles(followUp: () => void) {
-		transpileBaseFiles(async () => {
-			const filename = 'btr.ts'
-			const indexTs = await fsReadFileAsync(filename)
-			const lines = indexTs.
-				replaceAll('from \'./constants', 'from \'../constants').
-				replaceAll('from \'./types', 'from \'../types').
-				replaceAll('bigConsoleError', 'colorLog').
-				split('\n')
-
-			selfFilter(lines, line => !/DELETETHISFORCLIENT/.test(line)) //regexHere
-
-			const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x)) //regexHere
-			lines.splice(cutPoint, lines.length)
-			lines.push('export const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)') //@btr-ignore
-
-			await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'))
-
-			exec('tsc --target esnext client/btr.ts', async () => {
-				successLog('browser versions emitted')
-				await delay(500)
-				followUp()
-			})
-		})
-	}
-
-	function transpileBaseFiles(followUp: () => void) {
-		exec('tsc --target esnext npmRun.ts', async () => {
-			successLog('Base files transpiled')
-			await delay(500)
-			followUp()
-		})
 	}
 }
 

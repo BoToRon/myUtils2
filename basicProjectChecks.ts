@@ -1,20 +1,17 @@
 let _
-import fs from 'fs'
-_
 import { z } from 'zod'
 _
-import { cachedFile, messageHandler, nullable, packageJson, zSchema } from './types/types.js'
-_
-import {
-	getCachedFiles, checkCodeThatCouldBeUpdated, compareArrays, getEnviromentVariables,
-	importFileFromProject, nullAs, pick, successLog, surroundedString, zodCheck_curry, zRegexGenerator
-} from './btr.js'
+import { cachedFile, messageHandler, packageJson, zSchema } from './types/types.js'
 _
 import {
 	CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_FNS_TS, GLOBAL_VARS_TS,
 	SERVER_EVENTS_TS, SERVER_REF_TS, TSCONFIG_JSON, TYPES_IO_TS, TYPES_Z_TS, zMyEnv
 } from './constants/constants.js'
 _
+import {
+	getCachedFiles, checkCodeThatCouldBeUpdated, compareArrays, getEnviromentVariables, getFilesAndFoldersNames,
+	importFileFromProject, nullAs, pick, successLog, surroundedString, zodCheck_curry, zRegexGenerator
+} from './btr.js'
 
 function addToErrors(path: string, error: string) { errors.push(`(at ${path}): ${error}`) }
 function inBtrUtils(path: string) { return './node_modules/@botoron/utils/' + path }
@@ -644,22 +641,6 @@ async function fillCachedFiles() {
 			...getFromCachedFiles([TYPES_Z_TS]),
 		)
 	}
-}
-
-/**Get all the file and folders within a folder, stopping at predefined folders */
-function getFilesAndFoldersNames(directory: string, extension: nullable<'.ts' | '.vue'>) {
-	const results: string[] = []
-
-	fs.readdirSync(directory).forEach((file) => {
-		file = directory + '/' + file
-		const stat = fs.statSync(file)
-
-		const stopHere = /node_modules|git|test|assets/.test(file) //regexHere
-		if (stat && stat.isDirectory() && !stopHere) { results.push(...getFilesAndFoldersNames(file, null)) }
-		else { results.push(file) }
-	})
-
-	return extension ? results.filter(path => path.includes(extension)) : results
 }
 
 function getFromCachedFiles(obligatoryMatches: string[]): cachedFile[] {

@@ -1136,6 +1136,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[]) {
 		checkReplaceableCode(['Object.values'], 'objectValues')	//@btr-ignore
 		checkReplaceableCode(['JSON.stringify'], 'stringify') //@btr-ignore
 		checkReplaceableCode(['Object.keys'], 'objectKeys')	//@btr-ignore
+		checkReplaceableCode(['exec('], 'execSync(')	//@btr-ignore /)
 		checkReplaceableCode([' tryF'], 'divine.try')	//@btr-ignore
 		checkReplaceableCode(['z.record'], 'zRecord')	//@btr-ignore
 		checkReplaceableCode(['null as'], 'nullAs')	//@btr-ignore
@@ -1207,6 +1208,21 @@ export function getEnviromentVariables() {
 	require('dotenv').config({ path: './.env' })
 	return process.env as myEnv
 }
+/**Get all the file and folders within a folder, stopping at predefined folders */
+export function getFilesAndFoldersNames(directory: string, extension: nullable<'.ts' | '.vue'>) {
+	const results: string[] = []
+
+	fs.readdirSync(directory).forEach((file) => {
+		file = directory + '/' + file
+		const stat = fs.statSync(file)
+
+		const stopHere = /node_modules|git|test|assets/.test(file) //regexHere
+		if (stat && stat.isDirectory() && !stopHere) { results.push(...getFilesAndFoldersNames(file, null)) }
+		else { results.push(file) }
+	})
+
+	return extension ? results.filter(path => path.includes(extension)) : results
+}
 /**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
 export function getSeparatingCommentBlock(message: string) {
 	let line = ''
@@ -1261,9 +1277,18 @@ export async function importFileFromProject<T>(filename: string, extension: 'cjs
 
 	} catch (e) { return e }
 }
+/**Prompt and handle admin/dev commands */
+export function inquirePromptCommands<K extends string, F extends () => maybePromise<void>>(functions: Record<K, F>) {
+	inquirer.
+		prompt({ name: 'fn', type: 'list', message: 'Run a function:', choices: objectKeys(functions) }).
+		then(async (choice: { fn: K }) => {
+			await functions[choice.fn]()
+			inquirePromptCommands(functions)
+		})
+}
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export function killProcess(message: string) { bigConsoleError(message); process.exit() }
-/**Prompt to submit a git commit message and then push */
+/**Prompt to submit a git commit message and then push */ //TODO: edit this to use inquire.prompt
 export async function prompCommitMessageAndPush(repoName: string): Promise<boolean> {
 
 	//order matters with these 3
@@ -1273,7 +1298,7 @@ export async function prompCommitMessageAndPush(repoName: string): Promise<boole
 	const commitMessage = await questionAsPromise(`Enter commit type ${commitTypes} plus a message:`)
 	copyToClipboard_server(commitMessage)
 
-	if (!zodCheck_curry(tryAgain)(get_zValidCommitMessage(), commitMessage)) { return prompCommitMessageAndPush(repoName) }
+	if (!zodCheck_curry(killProcess)(get_zValidCommitMessage(), commitMessage)) { return prompCommitMessageAndPush(repoName) }
 	return await gitAddCommitPush()
 
 	function get_zValidCommitMessage() {
@@ -1304,11 +1329,6 @@ export async function prompCommitMessageAndPush(repoName: string): Promise<boole
 			logEmptyLine()
 		})
 	}
-
-	function tryAgain(error: string) {
-		colorLog('yellow', error)
-		prompCommitMessageAndPush(repoName)
-	}
 }
 /**Prompts a question in the terminal, awaits for the input and returns it */
 export async function questionAsPromise(question: string) {
@@ -1336,11 +1356,3 @@ export function zodCheck_socket<T>(socket: Socket, schema: zSchema<T>, data: T) 
 export const command_package = process.env['npm_config_command_package'] as validNpmCommand_package
 export const command_project = process.env['npm_config_command_project'] as validNpmCommand_project
 
-function inquirePrompt<K extends string>(functions: Record<K, ((...args: never[]) => (void | Promise<void>))>) {
-	inquirer.
-		prompt({ name: 'fn', type: 'list', message: 'Run a function:', choices: objectKeys(functions) }).
-		then(async (choice: { fn: K }) => {
-			await functions[choice.fn]()
-			inquirePrompt(functions)
-		})
-}
