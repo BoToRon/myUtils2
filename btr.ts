@@ -23,14 +23,14 @@ import { Socket } from 'socket.io'	//DELETETHISFORCLIENT
 _
 import getReadLine from 'readline'	//DELETETHISFORCLIENT
 _
-import { exec } from 'child_process'	//DELETETHISFORCLIENT
+import { exec, execSync } from 'child_process'	//DELETETHISFORCLIENT
 _
 import { createRequire } from 'module'	//DELETETHISFORCLIENT
 _
 import mongodb, { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
 _
 import {
-	arrayPredicate, btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, bvToast, cachedFile, maybePromise, messageHandler, myEnv, nullable,
+	arrayPredicate, btr_adminFetch, btr_commands, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, bvToast, cachedFile, maybePromise, messageHandler, myEnv, nullable,
 	pipe_mutable_type, pipe_persistent_type, timer, validChalkColor, validNpmCommand_project, vueComponentsTracker, zSchema
 } from './types/types.js'
 _
@@ -1011,8 +1011,7 @@ export const divine = {
 	},
 	init: (() => {
 		delay(1000).then(async () => {
-			if (command_project) { return }
-
+			if (process.env['prevent_divine_init']) { return }
 			const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = getEnviromentVariables()
 			if (DEV_OR_PROD !== 'PROD') { return }
 
@@ -1123,11 +1122,13 @@ export function bigConsoleError(message: string) {
 export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[]) {
 	cachedFiles.forEach(file => {
 		const { path, content } = file
+
 		checkReplaceableCode(['triggerModalWithValidation, bvModal.show', 'bvModal.hide'], '.triggerModal(modalId, show | hide)')	//@btr-ignore
 		checkReplaceableCode(['console.log(stringify'], 'colorLog OR consoleLogFull OR debugLog')	//@btr-ignore
 		checkReplaceableCode(['console.log'], 'colorLog OR consoleLogFull OR debugLog')	//@btr-ignore
 		checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine')	//@btr-ignore
 		checkReplaceableCode(['readonly ', 'ReadonlyArray<'], 'Readonly<')	//@btr-ignore
+		checkReplaceableCode(['{ description: string,'], ': commands')	//@btr-ignore
 		checkReplaceableCode(['//@ts-ignore'], '//@ts-expect-error')	//@btr-ignore
 		checkReplaceableCode(['for await'], 'await asyncForEach')	//@btr-ignore
 		checkReplaceableCode(['Object.entries'], 'objectEntries')	//@btr-ignore
@@ -1288,6 +1289,12 @@ export function inquirePromptCommands<K extends string, F extends () => maybePro
 }
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export function killProcess(message: string) { bigConsoleError(message); process.exit() }
+//TODO: describe me
+export function mapCommandsForInquirePrompt(commands: btr_commands) {
+	const object = {} as Record<string, () => maybePromise<void>>
+	objectEntries(commands).forEach(({ key, value }) => object[key + ': ' + value.description] = value.fn)
+	return object
+}
 /**Prompt to submit a git commit message and then push */ //TODO: edit this to use inquire.prompt
 export async function prompCommitMessageAndPush(repoName: string): Promise<boolean> {
 
@@ -1336,6 +1343,13 @@ export async function questionAsPromise(question: string) {
 	const input = await new Promise(res => { readline.question(chalk.magenta(question) + '\n', res) }) as string
 	readline.close()
 	return input
+}
+//TODO: describe me
+export function transpileFile(sourceFiles: string[], outputDirectory: string) {
+	colorLog('white', 'Transpiling the following file(s): ' + sourceFiles)
+	const command = `tsc --target esnext ${sourceFiles.join(' ')} --outDir ${outputDirectory}`
+	try { execSync(command) } catch { doNothing() }
+	colorLog('white', 'Done transpiling!')
 }
 /**Check the user input in socket.on functions and send error toasts if the validation fails */
 export function zodCheck_socket<T>(socket: Socket, schema: zSchema<T>, data: T) {

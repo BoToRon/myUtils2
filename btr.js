@@ -15,12 +15,14 @@ import express from 'express'; //DELETETHISFORCLIENT
 _;
 import fetch from 'node-fetch'; //DELETETHISFORCLIENT
 _;
+import inquirer from 'inquirer'; //DELETETHISFORCLIENT
+_;
 import clipboard from 'clipboardy'; //DELETETHISFORCLIENT
 _;
 _;
 import getReadLine from 'readline'; //DELETETHISFORCLIENT
 _;
-import { exec } from 'child_process'; //DELETETHISFORCLIENT
+import { exec, execSync } from 'child_process'; //DELETETHISFORCLIENT
 _;
 import { createRequire } from 'module'; //DELETETHISFORCLIENT
 _;
@@ -32,7 +34,6 @@ _;
 import { z } from 'zod';
 _;
 import { fromZodError } from 'zod-validation-error';
-_;
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
@@ -269,10 +270,6 @@ export function filterMap(arr, filter, mapFn) {
         return answer ? acc.concat(mapFn(item, carryOver)) : acc;
     }, []);
 }
-/**Simple and standard functional programming pipe. Deprecated, use either zPipe (persistenType with zod errors) or pipe_mutableType! */
-export function pipe_persistentType(initialValue, ...fns) {
-    return fns.reduce((result, fn) => fn(result), initialValue);
-}
 /**
 * Pipes a value through a number of functions in the order that they appear.
 * Takes between 1 and 12 arguments. `pipe(x, a, b)` is equivalent to `b(a(x))`.
@@ -301,72 +298,6 @@ export async function retryF(fn, args, retriesLeft, defaultReturn, delayBetweenR
         await delay(delayBetweenRetries);
         return await retryF(fn, args, retriesLeft - 1, defaultReturn, delayBetweenRetries);
     }
-}
-/**
- * Test data against an schema with strict-mode (no unspecified keys) for objects set by default and handle the error message if any
- * @param schema The schema to test the data against
- * @param data The data to be tested
- * @param errorHandler The handler for the message error
- * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not
- * @returns
- */
-export function zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler = nullAs(), strictModeIfObject = true) {
-    const result = getResult();
-    if (result.success === false && errorHandler) {
-        errorHandler(fromZodError(result.error).message);
-    }
-    return result;
-    function getResult() {
-        if (!schema.strict || !strictModeIfObject) {
-            return schema.safeParse(data);
-        }
-        else {
-            return schema.strict().safeParse(data);
-        }
-    }
-}
-/**
- * Check data against a provided schema, and execute either the success or error handler
- * @param zSchema The zSchema to test data against
- * @param data The data to be tested against zSchema
- * @param successHandler The function that will execute if data fits zSchema
- * @param args The arguments to be applied to successHandler
- * @param errorHandler The function that will execute if data does NOT fits zSchema
- * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not *
- */
-export function zodCheckAndHandle(zSchema, data, successHandler, args, errorHandler, strictModeIfObject) {
-    const zResult = zGetSafeParseResultAndHandleErrorMessage(zSchema, data, errorHandler, strictModeIfObject);
-    if (zResult.success === true && successHandler) {
-        successHandler(...args);
-    }
-}
-/**Pipe with schema validation and an basic error tracking */
-/**
- * Pipe with schema validation and basic error tracking/handling
- *
- */
-/**
- * Pipe with schema validation and basic error tracking/handling
- * @param zSchema The schema that must persist through the whole pipe
- * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not *
- * @param initialValue The value/object that will be piped through the functions
- * @param fns The functions that will conform the pipe in order
- * @returns
- */
-export function zPipe(zSchema, strictModeIfObject, initialValue, ...fns) {
-    const initialPipeState = { value: initialValue, error: nullAs(), failedAt: nullAs() };
-    return fns.reduce((pipeState, fn, index) => {
-        if (pipeState.error) {
-            return pipeState;
-        }
-        pipeState.value = fn(pipeState.value);
-        zGetSafeParseResultAndHandleErrorMessage(zSchema, pipeState.value, errorHandler, strictModeIfObject);
-        return pipeState;
-        function errorHandler(err) {
-            pipeState.failedAt = `Step ${index + 1}: ${fn.name}`;
-            pipeState.error = err;
-        }
-    }, initialPipeState);
 }
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
@@ -547,24 +478,8 @@ export function deepClone(originalObject) {
         });
     }
 }
-/**Dynamically generate a Zod Schema from an array/object */
-export function getZodSchemaFromData(data) {
-    if (!data) {
-        return z.nullable(nullAs());
-    }
-    if (typeof data !== 'object') {
-        return z.literal(data);
-    }
-    if (Array.isArray(data)) {
-        return z.tuple(data.map(toLiteral));
-    }
-    return z.object(mapObject(data, toLiteral));
-    function toLiteral(x) {
-        return typeof x === 'object' ?
-            getZodSchemaFromData(x) :
-            z.literal(x);
-    }
-}
+/**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
+export function getUniqueId(suffix) { return suffix + '_' + getUniqueId_generator.next().value; }
 /**Because ESlint doesn't like Object(x).hasOwnProperty :p */
 export function hasOwnProperty(x, key) { return Object.prototype.hasOwnProperty.call(x, key); }
 /**Map an object! (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
@@ -611,8 +526,6 @@ export function stringify(object) {
         return value;
     }, '  ');
 }
-/**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
-export function getUniqueId(suffix) { return suffix + '_' + getUniqueId_generator.next().value; }
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
@@ -773,90 +686,107 @@ _; /********** MISC ******************** MISC ******************** MISC ********
  * @param A The first piece of data
  * @param B The second piece of data
  * @param errorHandler The handler for the message error
- * @param strictModeIfObject Whether to throw an error if an object has properties not specified by the schema or not
  * @returns
  */
 export function dataIsEqual(A, B, errorHandler = nullAs()) {
-    const zodSchema = getZodSchemaFromData(A);
-    return zGetSafeParseResultAndHandleErrorMessage(zodSchema, B, errorHandler);
+    return zGetSafeParseResultAndHandleErrorMessage(zGetSchemaFromData(A), B, errorHandler);
 }
 /**For obligatory callbacks */
 export function doNothing(...args) { args; }
-/**
- * Register into the window's a finder and logger of all vue components, including the main instance and pinia store
- * @example getAppLog(window as never, useStore) //at the bottom of store.ts
- */
-export function getAppLog(window, useStore) {
-    delay(1000).then(() => {
-        window.appLog = () => mapObject({
-            store: useStore(),
-            ...arrayToObject(objectEntries(window.vueComponents).map(entry => {
-                const components = window.vueComponents[entry.key];
-                return components.map(x => components.length > 1 ? x.id : x.name);
-            }).flat(), idOrName => objectValues(window.vueComponents).flat().find(x => [x.id, x.name].includes(idOrName)))
-        }, component => ({
-            ...arrayToObject(sortAlphabetically(objectKeys(component)).filter(key => ![
-                '$dispose', '$id', '$onAction', '$patch', '$reset', '$subscribe', '_hotUpdate', '_isOptionsAPI', '_r',
-                '_uid', '_isVue', '__v_skip', '_scope', '$options', '_renderProxy', '_self', '$parent', '$root', '$children', '$refs', '_provided',
-                '_watcher', '_inactive', '_directInactive', '_isMounted', '_isDestroyed', '_isBeingDestroyed', '_events', '_hasHookEvent',
-                '_vnode', '_staticTrees', '$vnode', '$slots', '$scopedSlots', '_c', '$createElement', '$attrs', '$listeners', '$pinia',
-                '_bv__modal', '_bv__toast', '_data', '_computedWatchers', '$el', 'name', 'id', 'beforeDestroy'
-            ].includes(key)), key => () => console.log(stringify(component[key])) //@btr-ignore
-            )
-        }));
-    });
-}
-/**localStorage, but better */
-export function getLocalStorageAndSetter(defaults) {
-    const storedInfo = getStoredInfo();
-    objectEntries(defaults).forEach(({ key, value }) => { if (!(key in storedInfo)) {
-        localStorageSet(key, value);
-    } });
-    return { myLocalStorage: getStoredInfo(), localStorageSet };
-    function getStoredInfo() {
-        return JSON.parse(localStorage['info'] || '{}');
-    }
-    function localStorageSet(key, value) {
-        const storedInfo = getStoredInfo();
-        storedInfo[key] = value;
-        localStorage['info'] = stringify(storedInfo);
-    }
-}
 /**Margin to make reading logs easier */
 export function logEmptyLine() { console.log(''); } //@btr-ignore
 /** @returns null, as the provided type */
 export function nullAs() { return null; } //@btr-ignore
-//TODO: describe me
-export async function triggerModal(useStore, id, action) {
-    if (action === 'show') {
-        useStore().bvModal.show(id); //@btr-ignore
-        for (let i = 0; i < 10; i++) {
-            if (!elementExists()) {
-                await delay(250);
-            }
-        }
-        if (!elementExists()) {
-            promptError();
-        }
+_; /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
+_; /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
+_; /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
+_; /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
+_; /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
+_; /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
+_; /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
+_; /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
+_; /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
+_; /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
+/**
+ * Test data against an schema with strict-mode on (no unspecified keys) for objects and handle the error message if any
+ * @param schema The schema to test the data against
+ * @param data The data to be tested
+ * @param errorHandler The handler for the message error
+ * @returns
+ */
+export function zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler = nullAs()) {
+    const result = (schema.strict ? schema.strict() : schema).safeParse(data);
+    if (result.success === false && errorHandler) {
+        errorHandler(fromZodError(result.error).message);
     }
-    if (action === 'hide') {
-        elementExists() ? useStore().bvModal.hide(id) : promptError(); //@btr-ignore
+    return result;
+}
+/**Dynamically generate a Zod Schema from an array/object */
+export function zGetSchemaFromData(data) {
+    if (!data) {
+        return z.nullable(nullAs());
     }
-    function elementExists() { return Boolean(document.getElementById(id)); }
-    function promptError() { alert(`Modal with the '${id}' id was not found. Could not ${action}. Please report this`); }
+    if (typeof data !== 'object') {
+        return z.literal(data);
+    }
+    if (Array.isArray(data)) {
+        return z.tuple(data.map(toLiteral));
+    }
+    return z.object(mapObject(data, toLiteral));
+    function toLiteral(x) {
+        return typeof x === 'object' ?
+            zGetSchemaFromData(x) :
+            z.literal(x);
+    }
 }
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler in case it isn't a fit. */
-export function zodCheck_curry(errorHandler, strictModeIfObject) {
+export function zodCheck_curry(errorHandler) {
     return function zodCheck(schema, data) {
-        function body(errorHandler, schema, data, strictModeIfObject = true) {
-            return zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler, strictModeIfObject).success;
+        function body(errorHandler, schema, data) {
+            return zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler).success;
         }
-        return body(errorHandler, schema, data, strictModeIfObject);
+        return body(errorHandler, schema, data);
     };
 }
 /**Simple zodCheck without any kind of error handler */
 export function zodCheck_simple(schema, data) {
-    return zGetSafeParseResultAndHandleErrorMessage(schema, data, doNothing, true).success;
+    return zGetSafeParseResultAndHandleErrorMessage(schema, data, doNothing).success;
+}
+/**
+ * Check data against a provided schema, and execute either the success or error handler
+ * @param zSchema The zSchema to test data against
+ * @param data The data to be tested against zSchema
+ * @param successHandler The function that will execute if data fits zSchema
+ * @param args The arguments to be applied to successHandler
+ * @param errorHandler The function that will execute if data does NOT fits zSchema
+ */
+export function zodCheckAndHandle(zSchema, data, successHandler, args, errorHandler) {
+    const zResult = zGetSafeParseResultAndHandleErrorMessage(zSchema, data, errorHandler);
+    if (zResult.success === true && successHandler) {
+        successHandler(...args);
+    }
+}
+/**
+ * Pipe with schema validation and basic error tracking/handling
+ * @param zSchema The schema that must persist through the whole pipe
+ * @param initialValue The value/object that will be piped through the functions
+ * @param fns The functions that will conform the pipe in order
+ * @returns
+ */
+export function zPipe(zSchema, initialValue, ...fns) {
+    const initialPipeState = { value: initialValue, error: nullAs(), failedAt: nullAs() };
+    return fns.reduce((pipeState, fn, index) => {
+        if (pipeState.error) {
+            return pipeState;
+        }
+        pipeState.value = fn(pipeState.value);
+        zGetSafeParseResultAndHandleErrorMessage(zSchema, pipeState.value, errorHandler);
+        return pipeState;
+        function errorHandler(err) {
+            pipeState.failedAt = `Step ${index + 1}: ${fn.name}`;
+            pipeState.error = err;
+        }
+    }, initialPipeState);
 }
 /**Zod's "record", but all keys are Required instead of Optional as it is the default */
 export function zRecord(keys, schema) {
@@ -916,10 +846,50 @@ export function downloadFile_client(filename, fileFormat, data) {
     a.download = `${filename}${fileFormat}`;
     a.click();
 }
+/**
+ * Register into the window's a finder and logger of all vue components, including the main instance and pinia store
+ * @example getAppLog(window as never, useStore) //at the bottom of store.ts
+ */
+export function getAppLog(window, useStore) {
+    delay(1000).then(() => {
+        window.appLog = () => mapObject({
+            store: useStore(),
+            ...arrayToObject(objectEntries(window.vueComponents).map(entry => {
+                const components = window.vueComponents[entry.key];
+                return components.map(x => components.length > 1 ? x.id : x.name);
+            }).flat(), idOrName => objectValues(window.vueComponents).flat().find(x => [x.id, x.name].includes(idOrName)))
+        }, component => ({
+            ...arrayToObject(sortAlphabetically(objectKeys(component)).filter(key => ![
+                '$dispose', '$id', '$onAction', '$patch', '$reset', '$subscribe', '_hotUpdate', '_isOptionsAPI', '_r',
+                '_uid', '_isVue', '__v_skip', '_scope', '$options', '_renderProxy', '_self', '$parent', '$root', '$children', '$refs', '_provided',
+                '_watcher', '_inactive', '_directInactive', '_isMounted', '_isDestroyed', '_isBeingDestroyed', '_events', '_hasHookEvent',
+                '_vnode', '_staticTrees', '$vnode', '$slots', '$scopedSlots', '_c', '$createElement', '$attrs', '$listeners', '$pinia',
+                '_bv__modal', '_bv__toast', '_data', '_computedWatchers', '$el', 'name', 'id', 'beforeDestroy'
+            ].includes(key)), key => () => console.log(stringify(component[key])) //@btr-ignore
+            )
+        }));
+    });
+}
+/**localStorage, but better */
+export function getLocalStorageAndSetter(defaults) {
+    const storedInfo = getStoredInfo();
+    objectEntries(defaults).forEach(({ key, value }) => { if (!(key in storedInfo)) {
+        localStorageSet(key, value);
+    } });
+    return { myLocalStorage: getStoredInfo(), localStorageSet };
+    function getStoredInfo() {
+        return JSON.parse(localStorage['info'] || '{}');
+    }
+    function localStorageSet(key, value) {
+        const storedInfo = getStoredInfo();
+        storedInfo[key] = value;
+        localStorage['info'] = stringify(storedInfo);
+    }
+}
 /**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
 export function newToast_client_curry($bvToast) {
     return function body(title, message, variant) {
-        if (!zodCheck_curry(alert, true)(zValidVariants, variant)) {
+        if (!zodCheck_curry(alert)(zValidVariants, variant)) {
             return;
         }
         $bvToast.toast(message, {
@@ -954,6 +924,25 @@ export function trackVueComponent(name, component, window) {
         logAllComponents();
     }
 }
+//TODO: describe me
+export async function triggerModal(useStore, id, action) {
+    if (action === 'show') {
+        useStore().bvModal.show(id); //@btr-ignore
+        for (let i = 0; i < 10; i++) {
+            if (!elementExists()) {
+                await delay(250);
+            }
+        }
+        if (!elementExists()) {
+            promptError();
+        }
+    }
+    if (action === 'hide') {
+        elementExists() ? useStore().bvModal.hide(id) : promptError(); //@btr-ignore
+    }
+    function elementExists() { return Boolean(document.getElementById(id)); }
+    function promptError() { alert(`Modal with the '${id}' id was not found. Could not ${action}. Please report this`); }
+}
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
@@ -970,6 +959,8 @@ export function copyToClipboard() { doNothing; }
 export function doAndRepeat() { doNothing; }
 /**@deprecated use "formatDate" instead */
 export function getFormattedTimestamp() { doNothing; }
+/** @deprecated use either zPipe (persistenType with zod errors) or pipe_mutableType! */
+export function pipe_persistentType() { doNothing; }
 /**@deprecated use "trackVueComponent" instead */
 export function trackVueComponent_curry() { doNothing; }
 /**@deprecated use "triggerModal" instead */
@@ -996,7 +987,7 @@ export const divine = {
     },
     init: (() => {
         delay(1000).then(async () => {
-            if (command_package || command_project) {
+            if (process.env['prevent_divine_init']) {
                 return;
             }
             const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = getEnviromentVariables();
@@ -1134,6 +1125,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles) {
         checkReplaceableCode(['Object.values'], 'objectValues'); //@btr-ignore
         checkReplaceableCode(['JSON.stringify'], 'stringify'); //@btr-ignore
         checkReplaceableCode(['Object.keys'], 'objectKeys'); //@btr-ignore
+        checkReplaceableCode(['exec('], 'execSync('); //@btr-ignore /)
         checkReplaceableCode([' tryF'], 'divine.try'); //@btr-ignore
         checkReplaceableCode(['z.record'], 'zRecord'); //@btr-ignore
         checkReplaceableCode(['null as'], 'nullAs'); //@btr-ignore
@@ -1207,6 +1199,22 @@ export function getEnviromentVariables() {
     require('dotenv').config({ path: './.env' });
     return process.env;
 }
+/**Get all the file and folders within a folder, stopping at predefined folders */
+export function getFilesAndFoldersNames(directory, extension) {
+    const results = [];
+    fs.readdirSync(directory).forEach((file) => {
+        file = directory + '/' + file;
+        const stat = fs.statSync(file);
+        const stopHere = /node_modules|git|test|assets/.test(file); //regexHere
+        if (stat && stat.isDirectory() && !stopHere) {
+            results.push(...getFilesAndFoldersNames(file, null));
+        }
+        else {
+            results.push(file);
+        }
+    });
+    return extension ? results.filter(path => path.includes(extension)) : results;
+}
 /**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
 export function getSeparatingCommentBlock(message) {
     let line = '';
@@ -1264,16 +1272,25 @@ export async function importFileFromProject(filename, extension) {
         return e;
     }
 }
+/**Prompt and handle admin/dev commands */
+export function inquirePromptCommands(functions) {
+    inquirer.
+        prompt({ name: 'fn', type: 'list', message: 'Run a function:', choices: objectKeys(functions) }).
+        then(async (choice) => {
+        await functions[choice.fn]();
+        inquirePromptCommands(functions);
+    });
+}
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export function killProcess(message) { bigConsoleError(message); process.exit(); }
-/**Prompt to submit a git commit message and then push */
+/**Prompt to submit a git commit message and then push */ //TODO: edit this to use inquire.prompt
 export async function prompCommitMessageAndPush(repoName) {
     //order matters with these 3
     const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test)';
     logDetailsForPrompt();
     const commitMessage = await questionAsPromise(`Enter commit type ${commitTypes} plus a message:`);
     copyToClipboard_server(commitMessage);
-    if (!zodCheck_curry(tryAgain, true)(get_zValidCommitMessage(), commitMessage)) {
+    if (!zodCheck_curry(killProcess)(get_zValidCommitMessage(), commitMessage)) {
         return prompCommitMessageAndPush(repoName);
     }
     return await gitAddCommitPush();
@@ -1303,10 +1320,6 @@ export async function prompCommitMessageAndPush(repoName) {
             logEmptyLine();
         });
     }
-    function tryAgain(error) {
-        colorLog('yellow', error);
-        prompCommitMessageAndPush(repoName);
-    }
 }
 /**Prompts a question in the terminal, awaits for the input and returns it */
 export async function questionAsPromise(question) {
@@ -1315,9 +1328,17 @@ export async function questionAsPromise(question) {
     readline.close();
     return input;
 }
+//TODO: describe me
+export function transpileFile(sourceFiles, outputDirectory) {
+    colorLog('white', 'Transpiling the following file(s): ' + sourceFiles);
+    const command = `tsc --target esnext ${sourceFiles.join(' ')} --outDir ${outputDirectory}`;
+    console.log(command);
+    execSync(command);
+    colorLog('white', 'Done transpiling!');
+}
 /**Check the user input in socket.on functions and send error toasts if the validation fails */
 export function zodCheck_socket(socket, schema, data) {
-    return zodCheck_curry(errorHandler, true)(schema, data);
+    return zodCheck_curry(errorHandler)(schema, data);
     function caller() {
         return ((getTraceableStack('', 'zodCheck_socket').split('\n') || [])[3]?.match(/at \w{1,}/) || //regexHere
             ['at <unable to identify function caller>'])[0];
@@ -1326,5 +1347,4 @@ export function zodCheck_socket(socket, schema, data) {
         socket.emit('toast', '💀', `${error} - - - (${caller()}, ${{ ...schema._def }})`, 'danger');
     }
 }
-export const command_package = process.env['npm_config_command_package'];
 export const command_project = process.env['npm_config_command_project'];

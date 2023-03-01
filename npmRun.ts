@@ -3,9 +3,9 @@ import fs from 'fs'
 _
 import { exec } from 'child_process'	//DELETETHISFORCLIENT
 _
-import { basicProjectChecks } from './basicProjectChecks.js' //DELETETHISFORCLIENT
-_
 import { validNpmCommand_project } from './types/types.js'
+_
+import { basicProjectChecks } from './basicProjectChecks.js' //DELETETHISFORCLIENT
 _
 import { PACKAGE_DOT_JSON, zValidNpmCommand_project } from './constants/constants.js'
 _
@@ -18,8 +18,6 @@ _
 if (command_project) { zodCheckAndHandle(zValidNpmCommand_project, command_project, npmRun_project, [command_project], divine.error) }
 
 /**Run convenient scripts for and from a project's root folder */
-//TODO: delete the rule-disabling below and move this function into its own file
-// eslint-disable-next-line sonarjs/cognitive-complexity 
 export async function npmRun_project(npmCommand: validNpmCommand_project) {
 	await basicProjectChecks(divine.error)
 	if (npmCommand === 'check') { return }

@@ -25,13 +25,10 @@ export const warningsCount_generator = (function* () { let i = 0; while (true) {
     yield i;
 } })();
 const variants = ['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'];
-const npmPackageCommands = ['all', 'check', 'transpile-all', 'transpile-base'];
 const npmProjectCommands = ['build', 'check', 'git', 'transpile'];
-const npmVersionOptions = ['major', 'minor', 'patch'];
+export const npmVersionOptions = ['major', 'minor', 'patch'];
 export const timers = [];
-export const zValidNpmCommand_package = z.enum(npmPackageCommands);
 export const zValidNpmCommand_project = z.enum(npmProjectCommands);
-export const zValidVersionIncrement = z.enum(npmVersionOptions);
 export const zValidVariants = z.enum(variants);
 export const zMyEnv = z.object({
     DEV_OR_PROD: z.enum(['DEV', 'PROD']),
