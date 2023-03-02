@@ -1,13 +1,13 @@
 let _
 import fs from 'fs'
 _
-import { exec } from 'child_process'	//DELETETHISFORCLIENT
+import { execSync } from 'child_process'	//DELETETHISFORCLIENT
 _
-import { validNpmCommand_project } from './types/types.js'
+import { validNpmCommand_project } from './types.js'
 _
 import { basicProjectChecks } from './basicProjectChecks.js' //DELETETHISFORCLIENT
 _
-import { PACKAGE_DOT_JSON, zValidNpmCommand_project } from './constants/constants.js'
+import { PACKAGE_DOT_JSON, zValidNpmCommand_project } from './constants.js'
 _
 import {
 	command_project, delay, divine, fsReadFileAsync, fsWriteFileAsync, getEnviromentVariables,
@@ -43,12 +43,11 @@ export async function npmRun_project(npmCommand: validNpmCommand_project) {
 			catch { return true }
 		}
 
-		function transpileServerFilesToTestFolder() {
-			exec(`tsc --target esnext server/init.ts --outDir ${serverFolder_src}`, async () => {
-				const packageJson = await fsReadFileAsync(PACKAGE_DOT_JSON)
-				await fsWriteFileAsync('test/package.json', packageJson)
-				successLog(`files transpiled to ${serverFolder_src}`)
-			})
+		async function transpileServerFilesToTestFolder() {
+			execSync(`tsc --target esnext server/init.ts --outDir ${serverFolder_src}`)
+			const packageJson = await fsReadFileAsync(PACKAGE_DOT_JSON)
+			await fsWriteFileAsync('test/package.json', packageJson)
+			successLog(`files transpiled to ${serverFolder_src}`)
 		}
 
 		async function transpileToDistFolder_plusCopyOverOtherFiles() {
@@ -58,10 +57,9 @@ export async function npmRun_project(npmCommand: validNpmCommand_project) {
 			await copyFileToDis('.gitignore')
 			await copyFileToDis(PACKAGE_DOT_JSON) //TODO: make it so the "-src" in the name is replaced with "-dist"
 
-			exec(`tsc --target esnext server/init.ts server/io.ts --outDir ${serverFolder_dist}`, async () => {
-				await checkDevPropsOfRef(serverFolder_dist + '/server/' + fileWithRef + '.js', true)
-				successLog('(server) Build sucessful!')
-			})
+			execSync(`tsc --target esnext server/init.ts server/io.ts --outDir ${serverFolder_dist}`)
+			await checkDevPropsOfRef(serverFolder_dist + '/server/' + fileWithRef + '.js', true)
+			successLog('(server) Build sucessful!')
 
 			async function checkDevPropsOfRef(filePath: string, toggleForProduction: boolean) {
 				let fileContent = await fsReadFileAsync(filePath)
@@ -94,11 +92,10 @@ export async function npmRun_project(npmCommand: validNpmCommand_project) {
 				return await new Promise(resolve => {
 					fsReadFileAsync('types.d.ts').then(typesFile => {
 						fsWriteFileAsync('types.ts', typesFile).then(() => {
-							exec('tsc --target esnext types.ts', () => {
-								successLog('types.d.ts transpiled to root folder!')
-								fs.unlinkSync('types.ts')
-								delay(1000).then(() => resolve(true))
-							})
+							execSync('tsc --target esnext types.ts')
+							successLog('types.d.ts transpiled to root folder!')
+							fs.unlinkSync('types.ts')
+							delay(1000).then(() => resolve(true))
 						})
 					})
 				})

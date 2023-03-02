@@ -1,7 +1,7 @@
 let _
 import { z } from 'zod'
 _
-import { timer } from '../types/types.js'
+import { timer } from './types.js'
 _
 
 export const GITIGNORE = './.gitignore'

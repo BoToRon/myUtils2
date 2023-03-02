@@ -1,40 +1,45 @@
-//				node dev/transpiled/dev/commands.js
+//					tsc --target esnext dev/commands.ts --outDir ./dev/transpiled 
+// 					node dev/transpiled/dev/commands.js
 
 let _
 import inquirer from 'inquirer'
 _
 import { execSync, execFile } from 'child_process'	//DELETETHISFORCLIENT
 _
-import { npmVersionOptions, utilsRepoName } from '../constants/constants.js'
+import { npmVersionOptions, utilsRepoName } from '../constants.js'
 _
-import { btr_commands, validNpmVersion } from '../types/types.js'
+import { btr_commands, validNpmVersion } from '../types.js'
 _
 import {
 	checkCodeThatCouldBeUpdated, colorLog, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles,
-	inquirePromptCommands, mapCommandsForInquirePrompt, prompCommitMessageAndPush, selfFilter, successLog
+	inquirePromptCommands, mapCommandsForInquirePrompt, prompCommitMessageAndPush, selfFilter, successLog, transpileFile
 } from '../btr.js'
 
-const warnings: string[] = []
+const errors: string[] = []
 
 const functions: btr_commands = {
 	check: { description: 'btr-check the files in this very package', fn: btrCheckPackageAndReportResult },
 	publish: { description: '1) Transpile all. 2) Git commit + push. 3) npm version + PUBLISH', fn: publish },
 	test: { description: 'Transpile and run test/run.ts', fn: transpileAndRunTestRunTs },
-	transpileAll: { description: 'Transpile base files, check for btr-warnings and if they pass, emit the client versions', fn: transpileAll },
+	transpileAll: { description: 'Transpile base files, check for btr-errors and if they pass, emit the client versions', fn: transpileAll },
 	transpileBase: { description: 'Transpile the file bases, NOT for production', fn: transpileBaseFiles },
 }
 
 process.env['prevent_divine_init'] = 'true'
 inquirePromptCommands(mapCommandsForInquirePrompt(functions), true)
 
-//TODO: find the filepaths for getCachedFiles DYNAMICALLY
+//function declarations below
+
+function transpileAndRunTestRunTs() { transpileFile(['./test/run.ts'], './test/transpiled'); execFile('./test/transpiled/test/run.ts') }
+function transpileBaseFiles() { transpileFile(['./btr.ts'], '.') }
+
 async function btrCheckPackage() {
-	checkCodeThatCouldBeUpdated(await getCachedFiles(warnings, ['./basicProjectChecks.ts', './btr.ts', './npmRun.ts']))
+	checkCodeThatCouldBeUpdated(await getCachedFiles(errors, ['./basicProjectChecks.ts', './btr.ts', './npmRun.ts']))
 }
 
 async function btrCheckPackageAndReportResult() {
 	await btrCheckPackage()
-	warnings.length ? colorLog('red', warnings.length + ' warnings') : successLog('No btr-errors detected')
+	errors.length ? colorLog('red', errors.length + ' errors') : successLog('No btr-errors detected')
 }
 
 async function publish() {
@@ -60,7 +65,7 @@ async function publish() {
 async function transpileAll() {
 	transpileBaseFiles()
 	btrCheckPackage()
-	if (warnings.length) { errorLog('btr-warnings detected, fix them before attempting to transpile again'); return }
+	if (errors.length) { errorLog('btr-errors detected, fix them before attempting to transpile again'); return }
 
 	const filename = 'btr.ts'
 	const lines = (await fsReadFileAsync(filename)).
@@ -78,19 +83,4 @@ async function transpileAll() {
 
 	transpileFile(['client/btr.ts'], './client')
 	successLog('browser versions emitted')
-}
-
-function transpileAndRunTestRunTs() {
-	transpileFile(['./test/run.ts'], './test/transpiled')
-	execFile('./test/transpiled/test/run.ts')
-}
-
-function transpileBaseFiles() {
-	transpileFile(['./btr.ts'], '.')
-}
-
-function transpileFile(sourceFiles: string[], outputDirectory: string) {
-	colorLog('white', 'Transpiling the following file(s): ' + sourceFiles)
-	execSync(`tsc --target esnext ${sourceFiles.join(' ')} --outDir ${outputDirectory}`)
-	colorLog('white', 'Done transpiling!')
 }

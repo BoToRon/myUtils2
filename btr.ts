@@ -32,9 +32,9 @@ _
 import {
 	arrayPredicate, btr_adminFetch, btr_commands, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, bvToast, cachedFile, maybePromise, messageHandler, myEnv, nullable,
 	pipe_mutable_type, pipe_persistent_type, timer, validChalkColor, validNpmCommand_project, vueComponentsTracker, zSchema
-} from './types/types.js'
+} from './types.js'
 _
-import { getUniqueId_generator, isNode, timers, warningsCount_generator, zValidVariants } from './constants/constants.js'
+import { getUniqueId_generator, isNode, timers, warningsCount_generator, zValidVariants } from './constants.js'
 _
 import { type Primitive, z, type ZodRawShape, type ZodTypeAny } from 'zod'
 _
@@ -1322,17 +1322,13 @@ export async function prompCommitMessageAndPush(repoName: string): Promise<boole
 
 	function gitAddCommitPush(): Promise<boolean> {
 		return new Promise(resolve => {
-			exec('git add .', () => {
-				successLog('git add .')
-				colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.')
-				exec('git commit', () => {
-					successLog('git commit')
-					exec('git push', () => {
-						successLog('git push')
-						resolve(true)
-					})
-				})
-			})
+			execAndLog('git add .')
+			colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.')
+			execSync('git push')
+			execAndLog('git push')
+			resolve(true)
+
+			function execAndLog(command: string) { execSync(command); successLog(command) }
 		})
 	}
 

@@ -5,8 +5,7 @@
 	"description": "Utilities of me for me",
 	"main": "btr.js",
 	"scripts": {
-		"dev": "tsc --target esnext dev/run.ts & node dev/run.js",
-		"devOLD": "tsc --target esnext dev/commands.ts --outDir ./dev/transpiled & node dev/transpiled/dev/commands.js"
+		"dev": "tsc --target esnext dev/commands.ts --outDir ./dev/transpiled & node dev/transpiled/dev/commands.js"
 	},
 	"repository": {
 		"type": "git",

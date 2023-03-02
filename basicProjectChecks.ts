@@ -1,12 +1,12 @@
 let _
 import { z } from 'zod'
 _
-import { cachedFile, messageHandler, packageJson, zSchema } from './types/types.js'
+import { cachedFile, messageHandler, packageJson, zSchema } from './types.js'
 _
 import {
 	CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_FNS_TS, GLOBAL_VARS_TS,
 	SERVER_EVENTS_TS, SERVER_REF_TS, TSCONFIG_JSON, TYPES_IO_TS, TYPES_Z_TS, zMyEnv
-} from './constants/constants.js'
+} from './constants.js'
 _
 import {
 	getCachedFiles, checkCodeThatCouldBeUpdated, compareArrays, getEnviromentVariables, getFilesAndFoldersNames,

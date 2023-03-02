@@ -1,4 +1,5 @@
-//				node dev/transpiled/dev/commands.js
+//					tsc --target esnext dev/commands.ts --outDir ./dev/transpiled 
+// 					node dev/transpiled/dev/commands.js
 let _;
 import inquirer from 'inquirer';
 _;
@@ -7,7 +8,7 @@ _;
 import { npmVersionOptions, utilsRepoName } from '../constants/constants.js';
 _;
 _;
-import { checkCodeThatCouldBeUpdated, colorLog, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, inquirePromptCommands, mapCommandsForInquirePrompt, prompCommitMessageAndPush, selfFilter, successLog } from '../btr.js';
+import { checkCodeThatCouldBeUpdated, colorLog, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, inquirePromptCommands, mapCommandsForInquirePrompt, prompCommitMessageAndPush, selfFilter, successLog, transpileFile } from '../btr.js';
 const warnings = [];
 const functions = {
     check: { description: 'btr-check the files in this very package', fn: btrCheckPackageAndReportResult },
@@ -67,9 +68,4 @@ function transpileAndRunTestRunTs() {
 }
 function transpileBaseFiles() {
     transpileFile(['./btr.ts'], '.');
-}
-function transpileFile(sourceFiles, outputDirectory) {
-    colorLog('white', 'Transpiling the following file(s): ' + sourceFiles);
-    execSync(`tsc --target esnext ${sourceFiles.join(' ')} --outDir ${outputDirectory}`);
-    colorLog('white', 'Done transpiling!');
 }

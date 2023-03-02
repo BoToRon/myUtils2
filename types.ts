@@ -1,7 +1,7 @@
 let _
 import { type SafeParseReturnType, z } from 'zod'
 _
-import { npmVersionOptions, zMyEnv, zValidNpmCommand_project, zValidVariants } from '../constants/constants.js'
+import { npmVersionOptions, zMyEnv, zValidNpmCommand_project, zValidVariants } from './constants.js'
 _
 
 /**Generic to get the type of an object/interface while preserving key-value typing */
