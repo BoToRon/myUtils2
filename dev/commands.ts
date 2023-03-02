@@ -7,11 +7,11 @@ import { execSync, execFile } from 'child_process'	//DELETETHISFORCLIENT
 _
 import { npmVersionOptions, utilsRepoName } from '../constants/constants.js'
 _
-import { btr_commands, maybePromise, validNpmVersion } from '../types/types.js'
+import { btr_commands, validNpmVersion } from '../types/types.js'
 _
 import {
 	checkCodeThatCouldBeUpdated, colorLog, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles,
-	inquirePromptCommands, objectEntries, prompCommitMessageAndPush, selfFilter, successLog
+	inquirePromptCommands, mapCommandsForInquirePrompt, prompCommitMessageAndPush, selfFilter, successLog
 } from '../btr.js'
 
 const warnings: string[] = []
@@ -25,7 +25,7 @@ const functions: btr_commands = {
 }
 
 process.env['prevent_divine_init'] = 'true'
-inquirePromptCommands(functionForInquirePrompt())
+inquirePromptCommands(mapCommandsForInquirePrompt(functions), true)
 
 //TODO: find the filepaths for getCachedFiles DYNAMICALLY
 async function btrCheckPackage() {
@@ -35,12 +35,6 @@ async function btrCheckPackage() {
 async function btrCheckPackageAndReportResult() {
 	await btrCheckPackage()
 	warnings.length ? colorLog('red', warnings.length + ' warnings') : successLog('No btr-errors detected')
-}
-
-function functionForInquirePrompt() {
-	const object = {} as Record<string, () => maybePromise<void>>
-	objectEntries(functions).forEach(({ key, value }) => object[key + ': ' + value.description] = value.fn)
-	return object
 }
 
 async function publish() {

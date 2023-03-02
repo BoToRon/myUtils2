@@ -1279,12 +1279,19 @@ export async function importFileFromProject<T>(filename: string, extension: 'cjs
 	} catch (e) { return e }
 }
 /**Prompt and handle admin/dev commands */
-export function inquirePromptCommands<K extends string, F extends () => maybePromise<void>>(functions: Record<K, F>) {
+export function inquirePromptCommands<
+	K extends string,
+	F extends () => maybePromise<void>
+>(
+	functions: Record<K, F>,
+	promptAgainAfterEachFn: boolean
+) {
 	inquirer.
 		prompt({ name: 'fn', type: 'list', message: 'Run a function:', choices: objectKeys(functions) }).
 		then(async (choice: { fn: K }) => {
 			await functions[choice.fn]()
-			inquirePromptCommands(functions)
+			if (!promptAgainAfterEachFn) { return }
+			inquirePromptCommands(functions, promptAgainAfterEachFn)
 		})
 }
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */

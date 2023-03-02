@@ -1,4 +1,6 @@
+//				npm run dev		
 //				node dev/run.js
+//				tsc --target esnext btr.ts
 
 let _
 import { execSync } from 'child_process'	//DELETETHISFORCLIENT
@@ -14,9 +16,8 @@ const functions: btr_commands = {
 }
 
 process.env['prevent_divine_init'] = 'true'
-inquirePromptCommands(mapCommandsForInquirePrompt(functions))
+inquirePromptCommands(mapCommandsForInquirePrompt(functions), false)
 
 function transpileCommandsTs() { transpileFile(['dev/commands.ts'], './dev/transpiled') }
 function transpileAndRuncommandsTs() { transpileCommandsTs(); runDevCommandsJs() }
 function runDevCommandsJs() { execSync('node dev/transpiled/dev/commands.js') }
-
