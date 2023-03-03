@@ -35,7 +35,7 @@ import {
 	messageHandler, myEnv, nullable, pipe_mutable_type, pipe_persistent_type, timer, validChalkColor, vueComponentsTracker, zSchema
 } from './types.js'
 _
-import { getUniqueId_generator, isNode, timers, warningsCount_generator, zValidVariants } from './constants.js'
+import { getUniqueId_generator, isNode, timers, zValidVariants } from './constants.js'
 _
 import { type Primitive, z, type ZodRawShape, type ZodTypeAny } from 'zod'
 _
@@ -1120,7 +1120,7 @@ export function bigConsoleError(message: string) {
 	logAsterisks(3)
 }
 /**Basically custom ESlint warnings */
-export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[]) {
+export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[], warningsCount: { count: number }) {
 	cachedFiles.forEach(file => {
 		const { path, content } = file
 
@@ -1152,7 +1152,8 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[]) {
 				selfFilter(matches, match => !/@btr-ignore/.test(match)) //regexHere
 				if (!matches.length) { return }
 
-				colorLog('yellow', surroundedString(`${warningsCount_generator.next().value}. WARNING: OUTDATED/REPLACEABLE CODE`, '-', 50))
+				warningsCount.count++
+				colorLog('yellow', surroundedString(warningsCount + ' . WARNING: OUTDATED/REPLACEABLE CODE', '-', 50))
 
 				console.log({ //@btr-ignore
 					matches: matches.map(x => surroundedString(x, ' ', 5)),

@@ -4,15 +4,11 @@
 let _
 import fs from 'fs'
 _
-import inquirer from 'inquirer'
-_
 import { execSync, execFile } from 'child_process'	//DELETETHISFORCLIENT
 _
 import { basicProjectChecks } from '../basicProjectChecks'
 _
-import { btr_commands, validNpmVersion } from '../types.js'
-_
-import { npmVersionOptions, utilsRepoName } from '../constants.js'
+import { btr_commands } from '../types.js'
 _
 import {
 	checkCodeThatCouldBeUpdated, colorLog, delay, divine, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles,
@@ -31,8 +27,9 @@ const tsFilePaths = getFilesAndFoldersNames('.', null).filter(path => path.inclu
 
 const functions: btr_commands = {
 	btr: { description: 'Install/update @botoron/utils', fn: installBtrUtils },
-	'build-client': { description: 'Build the client files onto the ../dist/public', fn: buildClientFilesWitVite },
+	'build-client': { description: 'Build the client files onto the ../dist/public', fn: buildClientFilesWithVite },
 	'build-server': { description: 'Build the server files onto ../dist', fn: buildServerFiles },
+	'build-all': { description: 'Transpile and copy/paste all files needed for ../dist', fn: buildAll },
 	check: { description: 'btr-check the files in this very project', fn: btrCheckProjectAndReportResult },
 	localtunnel: { description: 'Expose vite\'s port through a tunnel', fn: forwardVitesPort },
 	nodemon: { description: 'Init Nodemon', fn: initNodemon },
@@ -40,7 +37,6 @@ const functions: btr_commands = {
 	transpile: { description: 'Transpile the files in ./server onto ./test', fn: btrCheckAndTranspileToTestFolder },
 	vue: { description: 'Move to the client folder and init vite', fn: initVite },
 	EXIT: { description: 'Quit the command line', fn: quitCommandLineProgram },
-	//'build-all': { description: 'Transpile and copy/paste all files needed for ../dist', fn: xxxxxxxxxxxxxxxxxxx },
 }
 
 inquirePromptCommands(mapCommandsForInquirePrompt(functions), true)
@@ -48,11 +44,12 @@ inquirePromptCommands(mapCommandsForInquirePrompt(functions), true)
 function transpileAndRunTestRunTs() { transpileFiles(['./test/run.ts'], './test/transpiled'); execFile('./test/transpiled/test/run.ts') }
 async function btrCheckProject() { checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths), warningsCount) }
 function quitCommandLineProgram() { killProcess('devForProject\'s commands terminated') }
-function buildClientFilesWitVite() { execSync('cd client & npm run build') }
+function buildClientFilesWithVite() { execSync('cd client & npm run build') }
+function buildAll() { buildClientFilesWithVite(); buildServerFiles() }
 function initNodemon() { execSync('nodemon test/server/init.js') }
 function installBtrUtils() { execSync('npm i @botoron/utils') }
-function forwardVitesPort() { execSync('lt --port 5173') }
 function initVite() { execSync('cd client & npm run dev') }
+function forwardVitesPort() { execSync('lt --port 5173') }
 
 async function btrCheckProjectAndReportResult() {
 	await btrCheckProject()
@@ -62,7 +59,6 @@ async function btrCheckProjectAndReportResult() {
 async function btrCheckAndTranspileToTestFolder() {
 	await btrCheckProject()
 	if (errors.length || warningsCount.count > 1) { errorLog('btr-errors detected, fix them before attempting to transpile again'); return }
-	if (!(await checkCanTranspile('dev'))) { return }
 
 	execSync('tsc --target esnext server/init.ts --outDir ./test')
 	const packageJsonContent = await fsReadFileAsync(PACKAGE_DOT_JSON)
@@ -72,32 +68,19 @@ async function btrCheckAndTranspileToTestFolder() {
 
 async function buildServerFiles() {
 	await basicProjectChecks(divine.error)
-	if (!(await checkCanTranspile('prod'))) { return }
-
-	if (!(await check_devOrProd_ofRef('server/' + fileWithRef + '.ts', false))) { return }
 	await transpileTypesFile()
-	await copyFileToDis('.env')
-	await copyFileToDis('.gitignore')
-	await copyFileToDis(PACKAGE_DOT_JSON) //TODO: make it so the "-src" in the name is replaced with "-dist"
+	await copyFileToDist('.env')
+	await copyFileToDist('.gitignore')
+	await copyFileToDist(PACKAGE_DOT_JSON)
 
 	execSync(`tsc --target esnext server/init.ts server/io.ts --outDir ${serverFolder_dist}`)
-	await check_devOrProd_ofRef(serverFolder_dist + '/server/' + fileWithRef + '.js', true)
+
+	await replaceTextInFile(serverFolder_dist + '/server/' + fileWithRef + '.js', 'devOrProd = \'dev\'', 'devOrProd = \'prod\'')
+	await replaceTextInFile(PACKAGE_DOT_JSON, '-src', '-dist')
+
 	successLog('(server) Build sucessful!')
 
-	async function check_devOrProd_ofRef(filePath: string, toggleForProduction: boolean) {
-		let fileContent = await fsReadFileAsync(filePath)
-		if (!checkFor('devOrProd = \'dev\'', 'devOrProd = \'prod\'')) { return }
-		if (toggleForProduction) { await fsWriteFileAsync(filePath, fileContent) }
-		return true
-
-		function checkFor(forSrc: string, forDist: string) {
-			if (!fileContent.includes(forSrc)) { killProcess(`main.ts.ref must include: (${forSrc})`); return }
-			if (toggleForProduction) { fileContent = fileContent.replace(forSrc, forDist) }
-			return true
-		}
-	}
-
-	async function copyFileToDis(filename: string) {
+	async function copyFileToDist(filename: string) {
 		let content = await fsReadFileAsync(filename)
 		if (filename === PACKAGE_DOT_JSON) { deleteAllPackageJsonScriptsExceptStart() }
 		await fsWriteFileAsync('../dist/' + filename, content)
@@ -109,6 +92,10 @@ async function buildServerFiles() {
 		"git": "git add . & git commit & git push",
 	`)
 		}
+	}
+
+	async function replaceTextInFile(filepath: string, ogText: string, newText: string) {
+		await fsWriteFileAsync(filepath, (await fsReadFileAsync(filepath)).replace(ogText, newText))
 	}
 
 	async function transpileTypesFile() {
@@ -123,10 +110,4 @@ async function buildServerFiles() {
 			})
 		})
 	}
-}
-
-async function checkCanTranspile(shouldBe: 'dev' | 'prod') {
-	const answer = (await fsReadFileAsync(`test/server/${fileWithRef}.js`)).includes(`const devOrProd = '${shouldBe}' as 'dev' | 'prod'`)
-	if (!answer) { errorLog(`ref's devOrProd should be set to '${shouldBe}' for this type of transpilation`) }
-	return answer
 }

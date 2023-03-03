@@ -19,13 +19,10 @@ export const CLIENT_SRC_SOCKET = CLIENT_SRC + '/socket.ts'
 
 export const utilsRepoName = 'Utils 🛠️'
 export const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
-
 export const getUniqueId_generator = (function* () { let i = 0; while (true) { i++; yield isNode ? `${Date.now() + i}` : i } })()
-export const warningsCount_generator = (function* () { let i = 0; while (true) { i++; yield i } })()
 
-const variants = ['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'] as const
+export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'])
 export const npmVersionOptions = ['major', 'minor', 'patch'] as const
-export const zValidVariants = z.enum(variants)
 export const timers: timer[] = []
 
 export const zMyEnv = z.object({

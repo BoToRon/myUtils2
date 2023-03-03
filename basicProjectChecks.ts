@@ -20,6 +20,7 @@ let errorHandler = <messageHandler>nullAs()
 let DEV_OR_PROD = <'DEV' | 'PROD'>nullAs()
 
 const errors: string[] = []
+const warningsCount = { count: 0 }
 const cachedFiles: cachedFile[] = []
 
 const clientVueFiles: cachedFile[] = []
@@ -65,7 +66,7 @@ export async function basicProjectChecks(errHandler: messageHandler) {
 	checkSpecificMatchesInTypesTs()
 	checkStructureAndMatchesOfVueFiles()
 
-	checkCodeThatCouldBeUpdated([serverTsFiles, clientTsFiles, clientVueFiles].flat())
+	checkCodeThatCouldBeUpdated([serverTsFiles, clientTsFiles, clientVueFiles].flat(), warningsCount)
 
 	errors.length ? errorHandler('\n\n' + errors.map((e, i) => i + '. ' + e).join('\n\n') + '\n\n') : successLog('all basicProjectChecks passed')
 	return !errors.length

@@ -10,7 +10,7 @@ import { execSync, execFile } from 'child_process'	//DELETETHISFORCLIENT
 _
 import { btr_commands, validNpmVersion } from '../types.js'
 _
-import { npmVersionOptions, utilsRepoName, warningsCount_generator } from '../constants.js'
+import { npmVersionOptions, utilsRepoName } from '../constants.js'
 _
 import {
 	checkCodeThatCouldBeUpdated, colorLog, copyToClipboard_server, delay, errorLog, fsReadFileAsync, fsWriteFileAsync,
@@ -19,6 +19,7 @@ import {
 } from '../btr.js'
 
 const errors: string[] = []
+const warningsCount = { count: 0 }
 const tsFilePaths = getFilesAndFoldersNames('.', null).filter(path => path.includes('.ts'))
 
 const functions: btr_commands = {
@@ -37,7 +38,7 @@ inquirePromptCommands(mapCommandsForInquirePrompt(functions), true)
 //function declarations below
 
 function transpileAndRunTestRunTs() { transpileFiles(['./test/run.ts'], './test/transpiled'); execFile('./test/transpiled/test/run.ts') }
-async function btrCheckPackage() { checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths)) }
+async function btrCheckPackage() { checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths), warningsCount) }
 function transpileBaseFiles() { transpileFiles(tsFilePaths.filter(path => !/\w\//.test(path)), '.') }
 function quitCommandLineProgram() { killProcess('devForPackage\'s commands terminated') }
 
@@ -113,7 +114,7 @@ async function publish() {
 
 async function transpileAll() {
 	await btrCheckPackage()
-	if (thereAreErrorsOrWarnings()) { errorLog('btr-errors detected, fix them before attempting to transpile again'); return }
+	if (errors.length || warningsCount.count > 1) { errorLog('btr-errors detected, fix them before attempting to transpile again'); return }
 	transpileBaseFiles()
 
 	const filename = 'btr.ts'
@@ -135,9 +136,5 @@ async function transpileAll() {
 			replaceAll(/from '\.\/(?=constants|types)/g, 'from \'../').
 			replaceAll(/bigConsoleError/g, 'colorLog').
 			split('\n')
-	}
-
-	function thereAreErrorsOrWarnings() {
-		return errors.length || warningsCount_generator.next().value > 1
 	}
 }
