@@ -47,8 +47,8 @@ _ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ***********
 _ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 
 export {
-	btr_adminFetch, btr_bvModal, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn,
-	btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, nullable, zValidVariants
+	btr_adminFetch, btr_bvModal, btr_commands, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language,
+	btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, nullable, zValidVariants
 }
 
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -1281,7 +1281,7 @@ export async function importFileFromProject<T>(filename: string, extension: 'cjs
 /**Prompt and handle admin/dev commands */
 export function inquirePromptCommands<
 	K extends string,
-	F extends () => maybePromise<void>
+	F extends () => maybePromise<unknown>
 >(
 	functions: Record<K, F>,
 	promptAgainAfterEachFn: boolean
@@ -1298,7 +1298,7 @@ export function inquirePromptCommands<
 export function killProcess(message: string) { bigConsoleError(message); process.exit() }
 //TODO: describe me
 export function mapCommandsForInquirePrompt(commands: btr_commands) {
-	const object = {} as Record<string, () => maybePromise<void>>
+	const object = {} as Record<string, () => maybePromise<unknown>>
 	objectEntries(commands).forEach(({ key, value }) => object[key + ': ' + value.description] = value.fn)
 	return object
 }

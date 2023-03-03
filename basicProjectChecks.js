@@ -349,7 +349,7 @@ async function checkPackageJsons() {
             vue: z.literal('cd client & npm run dev'),
         }).strict(),
         dependencies: zRecord(['@botoron/utils', 'socket.io', 'socket.io-client', 'zod-validation-error'], z.string()),
-        devDependenciesx: zRecord(['@types/express', '@typescript-eslint/eslint-plugin', '@typescript-eslint/parser',
+        devDependencies: zRecord(['@types/express', '@typescript-eslint/eslint-plugin', '@typescript-eslint/parser',
             'dotenv', 'eslint', 'eslint-plugin-sonarjs', 'eslint-plugin-vue', 'inquirer', 'nodemon'], z.string())
     });
     zodCheck_toErrors('./client/package.json', desiredPackageJsonClientSchema, packageJsonOfProjectClient);
@@ -482,6 +482,7 @@ function checkSpecificMatchesInTypesTs() {
             'declare global {',
             '\ttype adminFetch = btr_adminFetch',
             '\ttype bvModal = btr_bvModal',
+            '\ttype commands = btr_commands',
             '\ttype fieldsForColumnOfTable = btr_fieldsForColumnOfTable',
             '\ttype globalAlert = btr_globalAlert',
             '\ttype language = btr_language',

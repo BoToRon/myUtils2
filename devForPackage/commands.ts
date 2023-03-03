@@ -12,7 +12,7 @@ import { npmVersionOptions, utilsRepoName, warningsCount_generator } from '../co
 _
 import {
 	checkCodeThatCouldBeUpdated, colorLog, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getFilesAndFoldersNames,
-	inquirePromptCommands, mapCommandsForInquirePrompt, prompCommitMessageAndPush, selfFilter, successLog, transpileFiles
+	inquirePromptCommands, killProcess, mapCommandsForInquirePrompt, prompCommitMessageAndPush, selfFilter, successLog, transpileFiles
 } from '../btr.js'
 
 const errors: string[] = []
@@ -25,6 +25,7 @@ const functions: btr_commands = {
 	transpileAll: { description: 'Transpile base files, check for btr-errors and if they pass, emit the client versions', fn: transpileAll },
 	transpileBase: { description: 'Transpile the file bases, NOT for production', fn: transpileBaseFiles },
 	transpile_commit_and_PUBLISH: { description: '1) Transpile all. 2) Git commit + push. 3) npm version + PUBLISH', fn: publish },
+	EXIT: { description: 'Quit the command line', fn: quitCommandLineProgram }
 }
 
 process.env['prevent_divine_init'] = 'true'
@@ -35,6 +36,7 @@ inquirePromptCommands(mapCommandsForInquirePrompt(functions), true)
 function transpileAndRunTestRunTs() { transpileFiles(['./test/run.ts'], './test/transpiled'); execFile('./test/transpiled/test/run.ts') }
 async function btrCheckPackage() { checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths)) }
 function transpileBaseFiles() { transpileFiles(tsFilePaths.filter(path => !/\w\//.test(path)), '.') }
+function quitCommandLineProgram() { killProcess('devForPackage\'s commands terminated') }
 
 async function btrCheckPackageAndReportResult() {
 	await btrCheckPackage()
