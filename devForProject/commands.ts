@@ -1,7 +1,6 @@
-//					tsc --target esnext devForPackage/commands.ts --outDir ./devForPackage/transpiled 
-// 					node devForPackage/transpiled/devForPackage/commands.js
-
 let _
+_ //					tsc --target esnext devForPackage/commands.ts --outDir ./devForPackage/transpiled 
+_ // 					node devForPackage/transpiled/devForPackage/commands.js
 import fs from 'fs'
 _
 import { execSync, execFile } from 'child_process'	//DELETETHISFORCLIENT
