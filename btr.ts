@@ -1299,7 +1299,7 @@ export function inquirePromptCommands<
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export function killProcess(message: string) { bigConsoleError(message); process.exit() }
 //TODO: describe me
-export function mapCommandsForInquirePrompt(commands: btr_commands) {
+export function mapCommandsForInquirePrompt<T extends string>(commands: btr_commands<T>) {
 	const object = {} as Record<string, () => maybePromise<unknown>>
 	objectEntries(commands).forEach(({ key, value }) => object[key + ': ' + value.description] = value.fn)
 	return object

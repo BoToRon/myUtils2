@@ -33,7 +33,7 @@ export type btr_fieldsForColumnOfTable = string | {
 
 export type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: btr_validVariant, title: string }
 export type validChalkColor = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'white' | 'grey' | 'magentaBright'	//DELETETHISFORCLIENT
-export type btr_commands = Record<string, { description: string, fn: () => maybePromise<unknown> }> //@btr-ignore
+export type btr_commands<C extends string> = Record<C, { description: string, fn: () => maybePromise<unknown> }> //@btr-ignore
 export type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 export type vueComponentsTracker<T extends string> = Record<T, btr_trackedVueComponent[]>
 export type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }

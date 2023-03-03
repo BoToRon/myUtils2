@@ -13,7 +13,7 @@ import { execSync, execFile } from 'child_process'	//DELETETHISFORCLIENT
 _
 import { basicProjectChecks } from '../basicProjectChecks'
 _
-import { btr_commands, validNpmVersion } from '../types.js'
+import { btr_commands as recordOfCommands, validNpmVersion } from '../types.js'
 _
 import { utilsRepoName, npmVersionOptions } from '../constants'
 _
@@ -21,6 +21,10 @@ import {
 	checkCodeThatCouldBeUpdated, colorLog, copyToClipboard_server, delay, divine, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles,
 	getFilesAndFoldersNames, inquirePromptCommands, killProcess, logEmptyLine, mapCommandsForInquirePrompt, questionAsPromise, selfFilter, successLog, transpileFiles, zodCheck_curry
 } from '../btr.js'
+
+type sharedCommand = 'check' | 'test' | 'EXIT'
+type command_forPackage = sharedCommand | 'publishOnly' | 'transpileAll' | 'transpileBase' | 'transpile_commit_and_PUBLISH'
+type command_forProject = sharedCommand | 'btr' | 'build-client' | 'build-server' | 'build-all' | 'localtunnel' | 'nodemon' | 'transpile' | 'vue'
 
 const fileWithRef = 'ref'
 const serverFolder_dist = '../dist'
@@ -34,21 +38,21 @@ const tsFilePaths = getFilesAndFoldersNames('.', null).filter(path => path.inclu
 
 process.env['prevent_divine_init'] = 'true'
 
-const sharedCommands: btr_commands = {
+const sharedCommands: recordOfCommands<sharedCommand> = {
 	check: { description: 'btr-check the files in this very project', fn: btrCheckFilesAndReportResult },
 	test: { description: 'Transpile and run test/run.ts', fn: transpileAndRunTestRunTs },
 	EXIT: { description: 'Quit the command line', fn: quitCommandLineProgram }
 }
 
-const commands_forPackage: btr_commands = {
+const commands_forPackage: recordOfCommands<command_forPackage> = {
 	...sharedCommands,
 	publishOnly: { description: 'npm version + npm publish', fn: package_publish },
-	transpileAll: { description: 'Transpile base files, check for btr-errors and if they pass, emit the client versions', fn: package_transpileAll },
+	transpileAll: { description: 'Transpile base files if they pass all checks and emit the client versions', fn: package_transpileAll },
 	transpileBase: { description: 'Transpile the file bases, NOT for production', fn: package_transpileBaseFiles },
 	transpile_commit_and_PUBLISH: { description: '1) Transpile all. 2) Git commit + push. 3) npm version + PUBLISH', fn: package_publish },
 }
 
-const commands_forProject: btr_commands = {
+const commands_forProject: recordOfCommands<command_forProject> = {
 	...sharedCommands,
 	btr: { description: 'Install/update @botoron/utils', fn: project_installBtrUtils },
 	'build-client': { description: 'Build the client files onto the ../dist/public', fn: project_buildClientFilesWithVite },
@@ -58,7 +62,6 @@ const commands_forProject: btr_commands = {
 	nodemon: { description: 'Init Nodemon', fn: project_initNodemon },
 	transpile: { description: 'Transpile the files in ./server onto ./test', fn: project_btrCheckAndTranspileToTestFolder },
 	vue: { description: 'Move to the client folder and init vite', fn: project_initVite },
-	EXIT: { description: 'Quit the command line', fn: quitCommandLineProgram },
 }
 
 inquirePromptCommands(mapCommandsForInquirePrompt(isPackage ? commands_forPackage : commands_forProject), true)
