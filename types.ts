@@ -1,7 +1,7 @@
 let _
 import { type SafeParseReturnType, z } from 'zod'
 _
-import { npmVersionOptions, zMyEnv, zValidNpmCommand_project, zValidVariants } from './constants.js'
+import { npmVersionOptions, zMyEnv, zValidVariants } from './constants.js'
 _
 
 /**Generic to get the type of an object/interface while preserving key-value typing */
@@ -37,7 +37,6 @@ export type btr_commands = Record<string, { description: string, fn: () => maybe
 export type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 export type vueComponentsTracker<T extends string> = Record<T, btr_trackedVueComponent[]>
 export type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
-export type validNpmCommand_project = z.infer<typeof zValidNpmCommand_project>
 export type validNpmVersion = typeof npmVersionOptions[number]
 export type cachedFile = { path: string, content: string }
 export type messageHandler = (message: string) => void

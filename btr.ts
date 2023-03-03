@@ -30,8 +30,9 @@ _
 import mongodb, { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
 _
 import {
-	arrayPredicate, btr_adminFetch, btr_commands, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, bvToast, cachedFile, maybePromise, messageHandler, myEnv, nullable,
-	pipe_mutable_type, pipe_persistent_type, timer, validChalkColor, validNpmCommand_project, vueComponentsTracker, zSchema
+	arrayPredicate, btr_adminFetch, btr_commands, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn,
+	btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, bvToast, cachedFile, maybePromise,
+	messageHandler, myEnv, nullable, pipe_mutable_type, pipe_persistent_type, timer, validChalkColor, vueComponentsTracker, zSchema
 } from './types.js'
 _
 import { getUniqueId_generator, isNode, timers, warningsCount_generator, zValidVariants } from './constants.js'
@@ -1302,49 +1303,6 @@ export function mapCommandsForInquirePrompt(commands: btr_commands) {
 	objectEntries(commands).forEach(({ key, value }) => object[key + ': ' + value.description] = value.fn)
 	return object
 }
-/**Prompt to submit a git commit message and then push */ //TODO: edit this to use inquire.prompt
-export async function prompCommitMessageAndPush(repoName: string): Promise<boolean> {
-	const commitType = await getCommitTypeFromPrompt()
-
-	//order for these 3 below matters
-	logDetailsForPrompt()
-	const commitMessage = await questionAsPromise('Enter a commit message:')
-	copyToClipboard_server(commitType + ': ' + commitMessage)
-
-	if (!zodCheck_curry(killProcess)(z.string().min(15).max(50), commitMessage)) { return prompCommitMessageAndPush(repoName) }
-	return await gitAddCommitPush()
-
-	async function getCommitTypeFromPrompt() {
-		return (await inquirer.
-			prompt({
-				name: 'versioning',
-				type: 'list',
-				message: 'Select an NPM versioning:',
-				choices: ['fix', 'feat', 'build', 'chore', 'ci', 'docs', 'refactor', 'style', 'test']
-			})
-		).versioning as string
-	}
-
-	function gitAddCommitPush(): Promise<boolean> {
-		return new Promise(resolve => {
-			execAndLog('git add .')
-			colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.')
-			execSync('git commit')
-			execAndLog('git push')
-			resolve(true)
-
-			function execAndLog(command: string) { execSync(command); successLog(command) }
-		})
-	}
-
-	function logDetailsForPrompt() {
-		delay(500).then(() => {
-			colorLog('yellow', '50-character limits ends at that line: * * * * * |')
-			colorLog('green', repoName)
-			logEmptyLine()
-		})
-	}
-}
 /**Prompts a question in the terminal, awaits for the input and returns it */
 export async function questionAsPromise(question: string) {
 	const readline = getReadLine.createInterface({ input: process.stdin, output: process.stdout })
@@ -1376,6 +1334,3 @@ export function zodCheck_socket<T>(socket: Socket, schema: zSchema<T>, data: T) 
 		socket.emit('toast', '💀', `${error} - - - (${caller()}, ${{ ...schema._def }})`, 'danger')
 	}
 }
-
-export const command_project = process.env['npm_config_command_project'] as validNpmCommand_project
-

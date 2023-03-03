@@ -361,26 +361,12 @@ async function checkPackageJsons() {
 		type: z.literal('module'),
 		version: z.string(),
 		engines: z.object({ node: z.literal('>=18.0.0') }).strict(),
-		scripts: z.object({
-			btr: z.literal('npm i @botoron/utils'),
-			'btr-u': z.literal('npm uninstall @botoron/utils'),
-			'build-server': z.literal('npm run npmScript --command_project=build'),
-			'build-client': z.literal('cd client & npm run build'),
-			'build-all': z.literal('tsc --target esnext server/init.ts --outDir ../dist & cd client & npm run build-only && cd ..'),
-			check: z.literal('npm run npmScript --command_project=check'),
-			dev: z.literal('tsc --target esnext dev/commands.ts --outDir ./dev/transpiled & node dev/transpiled/dev/commands.js'),
-			git: z.literal('npm run npmScript --command_project=git'),
-			localtunnel: z.literal('lt --port 5173'),
-			nodemon: z.literal('nodemon test/server/init.js'),
-			npmScript: z.literal('node node_modules/@botoron/utils/npmRun.js'),
-			start: z.literal('node test/server/init.js'),
-			test: z.literal('ts-node-esm --transpileOnly test.ts'),
-			transpile: z.literal('npm run npmScript --command_project=transpile'),
-			vue: z.literal('cd client & npm run dev'),
-		}).strict(),
 		dependencies: zRecord(['@botoron/utils', 'socket.io', 'socket.io-client', 'zod-validation-error'], z.string()),
 		devDependencies: zRecord(['@types/express', '@typescript-eslint/eslint-plugin', '@typescript-eslint/parser',
-			'dotenv', 'eslint', 'eslint-plugin-sonarjs', 'eslint-plugin-vue', 'inquirer', 'nodemon'], z.string())
+			'dotenv', 'eslint', 'eslint-plugin-sonarjs', 'eslint-plugin-vue', 'inquirer', 'nodemon'], z.string()),
+		scripts: z.object({
+			dev: z.literal('tsc --target esnext dev/commands.ts --outDir ./dev/transpiled & node dev/transpiled/dev/commands.js'),
+		}).strict(),
 	})
 
 	zodCheck_toErrors('./client/package.json', desiredPackageJsonClientSchema, packageJsonOfProjectClient)

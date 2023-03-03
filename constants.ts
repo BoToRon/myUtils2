@@ -24,12 +24,9 @@ export const getUniqueId_generator = (function* () { let i = 0; while (true) { i
 export const warningsCount_generator = (function* () { let i = 0; while (true) { i++; yield i } })()
 
 const variants = ['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'light', 'dark', 'outline-dark'] as const
-const npmProjectCommands = ['build', 'check', 'git', 'transpile'] as const
 export const npmVersionOptions = ['major', 'minor', 'patch'] as const
-export const timers: timer[] = []
-
-export const zValidNpmCommand_project = z.enum(npmProjectCommands)
 export const zValidVariants = z.enum(variants)
+export const timers: timer[] = []
 
 export const zMyEnv = z.object({
 	DEV_OR_PROD: z.enum(['DEV', 'PROD']),

@@ -2,6 +2,8 @@
 // 					node devForPackage/transpiled/devForPackage/commands.js
 
 let _
+import { z } from 'zod'
+_
 import inquirer from 'inquirer'
 _
 import { execSync, execFile } from 'child_process'	//DELETETHISFORCLIENT
@@ -11,8 +13,9 @@ _
 import { npmVersionOptions, utilsRepoName, warningsCount_generator } from '../constants.js'
 _
 import {
-	checkCodeThatCouldBeUpdated, colorLog, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getFilesAndFoldersNames,
-	inquirePromptCommands, killProcess, mapCommandsForInquirePrompt, prompCommitMessageAndPush, selfFilter, successLog, transpileFiles
+	checkCodeThatCouldBeUpdated, colorLog, copyToClipboard_server, delay, errorLog, fsReadFileAsync, fsWriteFileAsync,
+	getCachedFiles, getFilesAndFoldersNames, inquirePromptCommands, killProcess, logEmptyLine, mapCommandsForInquirePrompt,
+	questionAsPromise, selfFilter, successLog, transpileFiles, zodCheck_curry
 } from '../btr.js'
 
 const errors: string[] = []
@@ -63,13 +66,55 @@ async function publish() {
 			})
 		).versioning as validNpmVersion
 	}
+
+	async function prompCommitMessageAndPush(repoName: string): Promise<boolean> {
+		const commitType = await getCommitTypeFromPrompt()
+
+		//order for these 3 below matters
+		logDetailsForPrompt()
+		const commitMessage = await questionAsPromise('Enter a commit message:')
+		copyToClipboard_server(commitType + ': ' + commitMessage)
+
+		if (!zodCheck_curry(killProcess)(z.string().min(15).max(50), commitMessage)) { return prompCommitMessageAndPush(repoName) }
+		return await gitAddCommitPush()
+
+		async function getCommitTypeFromPrompt() {
+			return (await inquirer.
+				prompt({
+					name: 'versioning',
+					type: 'list',
+					message: 'Select an NPM versioning:',
+					choices: ['fix', 'feat', 'build', 'chore', 'ci', 'docs', 'refactor', 'style', 'test']
+				})
+			).versioning as string
+		}
+
+		function gitAddCommitPush(): Promise<boolean> {
+			return new Promise(resolve => {
+				execAndLog('git add .')
+				colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.')
+				execSync('git commit')
+				execAndLog('git push')
+				resolve(true)
+
+				function execAndLog(command: string) { execSync(command); successLog(command) }
+			})
+		}
+
+		function logDetailsForPrompt() {
+			delay(500).then(() => {
+				colorLog('yellow', '50-character limits ends at that line: * * * * * |')
+				colorLog('green', repoName)
+				logEmptyLine()
+			})
+		}
+	}
 }
 
 async function transpileAll() {
-	transpileBaseFiles()
-	btrCheckPackage()
-
+	await btrCheckPackage()
 	if (thereAreErrorsOrWarnings()) { errorLog('btr-errors detected, fix them before attempting to transpile again'); return }
+	transpileBaseFiles()
 
 	const filename = 'btr.ts'
 	const lines = await getLinesInBtrTs()
