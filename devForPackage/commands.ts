@@ -1,5 +1,5 @@
-//					tsc --target esnext dev/commands.ts --outDir ./dev/transpiled 
-// 					node dev/transpiled/dev/commands.js
+//					tsc --target esnext devForPackage/commands.ts --outDir ./devForPackage/transpiled 
+// 					node devForPackage/transpiled/devForPackage/commands.js
 
 let _
 import inquirer from 'inquirer'

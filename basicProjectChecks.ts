@@ -10,7 +10,7 @@ import {
 _
 import {
 	getCachedFiles, checkCodeThatCouldBeUpdated, compareArrays, getEnviromentVariables, getFilesAndFoldersNames,
-	importFileFromProject, nullAs, pick, successLog, surroundedString, zodCheck_curry, zRegexGenerator
+	importFileFromProject, nullAs, pick, successLog, surroundedString, zodCheck_curry, zRegexGenerator, zRecord
 } from './btr.js'
 
 function addToErrors(path: string, error: string) { errors.push(`(at ${path}): ${error}`) }
@@ -378,23 +378,9 @@ async function checkPackageJsons() {
 			transpile: z.literal('npm run npmScript --command_project=transpile'),
 			vue: z.literal('cd client & npm run dev'),
 		}).strict(),
-		dependencies: z.object({
-			'@botoron/utils': z.string(),
-			//'magic-regexp': z.string(),
-			'socket.io': z.string(),
-			'socket.io-client': z.string(),
-			'zod-validation-error': z.string()
-		}),
-		devDependencies: z.object({
-			'@types/express': z.string(),
-			'@typescript-eslint/eslint-plugin': z.string(),
-			'@typescript-eslint/parser': z.string(),
-			dotenv: z.string(),
-			eslint: z.string(),
-			'eslint-plugin-sonarjs': z.string(),
-			'eslint-plugin-vue': z.string(),
-			nodemon: z.string(),
-		})
+		dependencies: zRecord(['@botoron/utils', 'socket.io', 'socket.io-client', 'zod-validation-error'], z.string()),
+		devDependenciesx: zRecord(['@types/express', '@typescript-eslint/eslint-plugin', '@typescript-eslint/parser',
+			'dotenv', 'eslint', 'eslint-plugin-sonarjs', 'eslint-plugin-vue', 'inquirer', 'nodemon'], z.string())
 	})
 
 	zodCheck_toErrors('./client/package.json', desiredPackageJsonClientSchema, packageJsonOfProjectClient)
