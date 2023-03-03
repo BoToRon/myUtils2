@@ -12,10 +12,11 @@ import { checkCodeThatCouldBeUpdated, colorLog, errorLog, fsReadFileAsync, fsWri
 const errors = [];
 const functions = {
     check: { description: 'btr-check the files in this very package', fn: btrCheckPackageAndReportResult },
-    publish: { description: '1) Transpile all. 2) Git commit + push. 3) npm version + PUBLISH', fn: publish },
+    publishOnly: { description: 'npm version + npm publish', fn: publish },
     test: { description: 'Transpile and run test/run.ts', fn: transpileAndRunTestRunTs },
     transpileAll: { description: 'Transpile base files, check for btr-errors and if they pass, emit the client versions', fn: transpileAll },
     transpileBase: { description: 'Transpile the file bases, NOT for production', fn: transpileBaseFiles },
+    transpile_commit_and_PUBLISH: { description: '1) Transpile all. 2) Git commit + push. 3) npm version + PUBLISH', fn: publish },
 };
 process.env['prevent_divine_init'] = 'true';
 inquirePromptCommands(mapCommandsForInquirePrompt(functions), true);
@@ -30,19 +31,21 @@ async function btrCheckPackageAndReportResult() {
     errors.length ? colorLog('red', errors.length + ' errors') : successLog('No btr-errors detected');
 }
 async function publish() {
-    transpileAll();
-    prompCommitMessageAndPush(utilsRepoName);
-    const versioning = (await inquirer.
-        prompt({
-        name: 'versioning',
-        type: 'list',
-        message: 'Select an NPM versioning:',
-        choices: npmVersionOptions
-    })).versioning;
-    execSync(`npm version ${versioning}`);
+    await transpileAll();
+    await prompCommitMessageAndPush(utilsRepoName);
+    execSync(`npm version ${await getVersioningFromPrompt()}`);
     successLog('package version\'d');
     execSync('npm publish');
     successLog('package publish\'d');
+    async function getVersioningFromPrompt() {
+        return (await inquirer.
+            prompt({
+            name: 'versioning',
+            type: 'list',
+            message: 'Select an NPM versioning:',
+            choices: npmVersionOptions
+        })).versioning;
+    }
 }
 async function transpileAll() {
     transpileBaseFiles();
@@ -56,14 +59,14 @@ async function transpileAll() {
     selfFilter(lines, line => !/DELETETHISFORCLIENT/.test(line)); //regexHere
     const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x)); //regexHere
     lines.splice(cutPoint, lines.length);
-    lines.push('export const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)'); //@btr-ignore
+    lines.push('export const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`) //@btr-ignore');
     await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'));
     transpileFile(['client/btr.ts'], './client');
     successLog('browser versions emitted');
     async function getLinesInBtrTs() {
         return (await fsReadFileAsync(filename)).
-            replaceAll(/from '\.\/(?=constants|types)/, 'from \'./').
-            replaceAll('bigConsoleError', 'colorLog').
+            replaceAll(/from '\.\/(?=constants|types)/g, 'from \'./').
+            replaceAll(/bigConsoleError/g, 'colorLog').
             split('\n');
     }
     function thereAreErrorsOrWarnings() {

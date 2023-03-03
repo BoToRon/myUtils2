@@ -22,9 +22,9 @@ _;
 _;
 import getReadLine from 'readline'; //DELETETHISFORCLIENT
 _;
-import { execSync } from 'child_process'; //DELETETHISFORCLIENT
-_;
 import { createRequire } from 'module'; //DELETETHISFORCLIENT
+_;
+import { execSync } from 'child_process'; //DELETETHISFORCLIENT
 _;
 import mongodb from 'mongodb'; //DELETETHISFORCLIENT
 _;
@@ -1295,24 +1295,29 @@ export function mapCommandsForInquirePrompt(commands) {
 }
 /**Prompt to submit a git commit message and then push */ //TODO: edit this to use inquire.prompt
 export async function prompCommitMessageAndPush(repoName) {
-    //order matters with these 3
-    const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test)';
+    const commitType = await getCommitTypeFromPrompt();
+    //order for these 3 below matters
     logDetailsForPrompt();
-    const commitMessage = await questionAsPromise(`Enter commit type ${commitTypes} plus a message:`);
-    copyToClipboard_server(commitMessage);
-    if (!zodCheck_curry(killProcess)(get_zValidCommitMessage(), commitMessage)) {
-        return prompCommitMessageAndPush(repoName);
+    const commitMessage = await questionAsPromise('Enter a commit message:');
+    copyToClipboard_server(commitType + ': ' + commitMessage);
+    if (!zodCheck_curry(killProcess)(z.string().min(15).max(50), commitMessage)) {
+        return killProcess();
     }
     return await gitAddCommitPush();
-    function get_zValidCommitMessage() {
-        const commitRegex = new RegExp(`(?<!.)${commitTypes}:`);
-        return z.string().min(15).max(50).regex(commitRegex, `String must start with ${commitTypes}:`);
+    async function getCommitTypeFromPrompt() {
+        return (await inquirer.
+            prompt({
+            name: 'versioning',
+            type: 'list',
+            message: 'Select an NPM versioning:',
+            choices: ['fix', 'feat', 'build', 'chore', 'ci', 'docs', 'refactor', 'style', 'test']
+        })).versioning;
     }
     function gitAddCommitPush() {
         return new Promise(resolve => {
             execAndLog('git add .');
             colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.');
-            execSync('git push');
+            execSync('git commit');
             execAndLog('git push');
             resolve(true);
             function execAndLog(command) { execSync(command); successLog(command); }

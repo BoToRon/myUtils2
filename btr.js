@@ -22,14 +22,14 @@ _;
 _;
 import getReadLine from 'readline'; //DELETETHISFORCLIENT
 _;
-import { exec, execSync } from 'child_process'; //DELETETHISFORCLIENT
-_;
 import { createRequire } from 'module'; //DELETETHISFORCLIENT
+_;
+import { execSync } from 'child_process'; //DELETETHISFORCLIENT
 _;
 import mongodb from 'mongodb'; //DELETETHISFORCLIENT
 _;
 _;
-import { getUniqueId_generator, isNode, timers, warningsCount_generator, zValidVariants } from './constants/constants.js';
+import { getUniqueId_generator, isNode, timers, warningsCount_generator, zValidVariants } from './constants.js';
 _;
 import { z } from 'zod';
 _;
@@ -1200,7 +1200,7 @@ export function getEnviromentVariables() {
     require('dotenv').config({ path: './.env' });
     return process.env;
 }
-/**Get all the file and folders within a folder, stopping at predefined folders */
+/**Get all the file and folders within a folder, stopping at predefined folders (assets, git, node_modules, test) */
 export function getFilesAndFoldersNames(directory, extension) {
     const results = [];
     fs.readdirSync(directory).forEach((file) => {
@@ -1295,32 +1295,32 @@ export function mapCommandsForInquirePrompt(commands) {
 }
 /**Prompt to submit a git commit message and then push */ //TODO: edit this to use inquire.prompt
 export async function prompCommitMessageAndPush(repoName) {
-    //order matters with these 3
-    const commitTypes = '(fix|feat|build|chore|ci|docs|refactor|style|test)';
+    const commitType = await getCommitTypeFromPrompt();
+    //order for these 3 below matters
     logDetailsForPrompt();
-    const commitMessage = await questionAsPromise(`Enter commit type ${commitTypes} plus a message:`);
-    copyToClipboard_server(commitMessage);
-    if (!zodCheck_curry(killProcess)(get_zValidCommitMessage(), commitMessage)) {
+    const commitMessage = await questionAsPromise('Enter a commit message:');
+    copyToClipboard_server(commitType + ': ' + commitMessage);
+    if (!zodCheck_curry(killProcess)(z.string().min(15).max(50), commitMessage)) {
         return prompCommitMessageAndPush(repoName);
     }
     return await gitAddCommitPush();
-    function get_zValidCommitMessage() {
-        const commitRegex = new RegExp(`(?<!.)${commitTypes}:`);
-        return z.string().min(15).max(50).regex(commitRegex, `String must start with ${commitTypes}:`);
+    async function getCommitTypeFromPrompt() {
+        return (await inquirer.
+            prompt({
+            name: 'versioning',
+            type: 'list',
+            message: 'Select an NPM versioning:',
+            choices: ['fix', 'feat', 'build', 'chore', 'ci', 'docs', 'refactor', 'style', 'test']
+        })).versioning;
     }
     function gitAddCommitPush() {
         return new Promise(resolve => {
-            exec('git add .', () => {
-                successLog('git add .');
-                colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.');
-                exec('git commit', () => {
-                    successLog('git commit');
-                    exec('git push', () => {
-                        successLog('git push');
-                        resolve(true);
-                    });
-                });
-            });
+            execAndLog('git add .');
+            colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.');
+            execSync('git commit');
+            execAndLog('git push');
+            resolve(true);
+            function execAndLog(command) { execSync(command); successLog(command); }
         });
     }
     function logDetailsForPrompt() {

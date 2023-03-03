@@ -19,10 +19,11 @@ const errors: string[] = []
 
 const functions: btr_commands = {
 	check: { description: 'btr-check the files in this very package', fn: btrCheckPackageAndReportResult },
-	publish: { description: '1) Transpile all. 2) Git commit + push. 3) npm version + PUBLISH', fn: publish },
+	publishOnly: { description: 'npm version + npm publish', fn: publish },
 	test: { description: 'Transpile and run test/run.ts', fn: transpileAndRunTestRunTs },
 	transpileAll: { description: 'Transpile base files, check for btr-errors and if they pass, emit the client versions', fn: transpileAll },
 	transpileBase: { description: 'Transpile the file bases, NOT for production', fn: transpileBaseFiles },
+	transpile_commit_and_PUBLISH: { description: '1) Transpile all. 2) Git commit + push. 3) npm version + PUBLISH', fn: publish },
 }
 
 process.env['prevent_divine_init'] = 'true'
@@ -43,23 +44,25 @@ async function btrCheckPackageAndReportResult() {
 }
 
 async function publish() {
-	transpileAll()
-	prompCommitMessageAndPush(utilsRepoName)
+	await transpileAll()
+	await prompCommitMessageAndPush(utilsRepoName)
 
-	const versioning = (await inquirer.
-		prompt({
-			name: 'versioning',
-			type: 'list',
-			message: 'Select an NPM versioning:',
-			choices: npmVersionOptions
-		})
-	).versioning as validNpmVersion
-
-	execSync(`npm version ${versioning}`)
+	execSync(`npm version ${await getVersioningFromPrompt()}`)
 	successLog('package version\'d')
 
 	execSync('npm publish')
 	successLog('package publish\'d')
+
+	async function getVersioningFromPrompt() {
+		return (await inquirer.
+			prompt({
+				name: 'versioning',
+				type: 'list',
+				message: 'Select an NPM versioning:',
+				choices: npmVersionOptions
+			})
+		).versioning as validNpmVersion
+	}
 }
 
 async function transpileAll() {
@@ -84,8 +87,8 @@ async function transpileAll() {
 
 	async function getLinesInBtrTs() {
 		return (await fsReadFileAsync(filename)).
-			replaceAll(/from '\.\/(?=constants|types)/, 'from \'./').
-			replaceAll('bigConsoleError', 'colorLog').
+			replaceAll(/from '\.\/(?=constants|types)/g, 'from \'./').
+			replaceAll(/bigConsoleError/g, 'colorLog').
 			split('\n')
 	}
 
