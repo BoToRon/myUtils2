@@ -1,5 +1,5 @@
-//					tsc --target esnext dev/commands.ts --outDir ./dev/transpiled 
-// 					node dev/transpiled/dev/commands.js
+//					tsc --target esnext devForPackage/commands.ts --outDir ./devForPackage/transpiled 
+// 					node devForPackage/transpiled/devForPackage/commands.js
 let _;
 import inquirer from 'inquirer';
 _;
@@ -8,8 +8,9 @@ _;
 _;
 import { npmVersionOptions, utilsRepoName, warningsCount_generator } from '../constants.js';
 _;
-import { checkCodeThatCouldBeUpdated, colorLog, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getFilesAndFoldersNames, inquirePromptCommands, mapCommandsForInquirePrompt, prompCommitMessageAndPush, selfFilter, successLog, transpileFile } from '../btr.js';
+import { checkCodeThatCouldBeUpdated, colorLog, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getFilesAndFoldersNames, inquirePromptCommands, mapCommandsForInquirePrompt, prompCommitMessageAndPush, selfFilter, successLog, transpileFiles } from '../btr.js';
 const errors = [];
+const tsFilePaths = getFilesAndFoldersNames('.', null).filter(path => path.includes('.ts'));
 const functions = {
     check: { description: 'btr-check the files in this very package', fn: btrCheckPackageAndReportResult },
     publishOnly: { description: 'npm version + npm publish', fn: publish },
@@ -21,11 +22,9 @@ const functions = {
 process.env['prevent_divine_init'] = 'true';
 inquirePromptCommands(mapCommandsForInquirePrompt(functions), true);
 //function declarations below
-function transpileAndRunTestRunTs() { transpileFile(['./test/run.ts'], './test/transpiled'); execFile('./test/transpiled/test/run.ts'); }
-function transpileBaseFiles() { transpileFile(['./btr.ts'], '.'); }
-async function btrCheckPackage() {
-    checkCodeThatCouldBeUpdated(await getCachedFiles(errors, getFilesAndFoldersNames('.', null).filter(path => path.includes('ts'))));
-}
+function transpileAndRunTestRunTs() { transpileFiles(['./test/run.ts'], './test/transpiled'); execFile('./test/transpiled/test/run.ts'); }
+async function btrCheckPackage() { checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths)); }
+function transpileBaseFiles() { transpileFiles(tsFilePaths.filter(path => !/\w\//.test(path)), '.'); }
 async function btrCheckPackageAndReportResult() {
     await btrCheckPackage();
     errors.length ? colorLog('red', errors.length + ' errors') : successLog('No btr-errors detected');
@@ -61,7 +60,7 @@ async function transpileAll() {
     lines.splice(cutPoint, lines.length);
     lines.push('export const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`) //@btr-ignore');
     await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'));
-    transpileFile(['client/btr.ts'], './client');
+    transpileFiles(['client/btr.ts'], './client');
     successLog('browser versions emitted');
     async function getLinesInBtrTs() {
         return (await fsReadFileAsync(filename)).

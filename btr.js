@@ -1339,7 +1339,10 @@ export async function questionAsPromise(question) {
     return input;
 }
 //TODO: describe me
-export function transpileFile(sourceFiles, outputDirectory) {
+export function transpileFiles(sourceFiles, outputDirectory) {
+    if (!sourceFiles.length) {
+        killProcess('transpileFiles\'s sourceFiles argument should NOT be an empty array!');
+    }
     colorLog('white', 'Transpiling the following file(s): ' + sourceFiles);
     const command = `tsc --target esnext ${sourceFiles.join(' ')} --outDir ${outputDirectory}`;
     try {

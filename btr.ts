@@ -1353,7 +1353,9 @@ export async function questionAsPromise(question: string) {
 	return input
 }
 //TODO: describe me
-export function transpileFile(sourceFiles: string[], outputDirectory: string) {
+export function transpileFiles(sourceFiles: string[], outputDirectory: string) {
+	if (!sourceFiles.length) { killProcess('transpileFiles\'s sourceFiles argument should NOT be an empty array!') }
+
 	colorLog('white', 'Transpiling the following file(s): ' + sourceFiles)
 	const command = `tsc --target esnext ${sourceFiles.join(' ')} --outDir ${outputDirectory}`
 	try { execSync(command) } catch { doNothing() }

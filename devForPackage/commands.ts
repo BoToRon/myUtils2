@@ -12,10 +12,11 @@ import { npmVersionOptions, utilsRepoName, warningsCount_generator } from '../co
 _
 import {
 	checkCodeThatCouldBeUpdated, colorLog, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getFilesAndFoldersNames,
-	inquirePromptCommands, mapCommandsForInquirePrompt, prompCommitMessageAndPush, selfFilter, successLog, transpileFile
+	inquirePromptCommands, mapCommandsForInquirePrompt, prompCommitMessageAndPush, selfFilter, successLog, transpileFiles
 } from '../btr.js'
 
 const errors: string[] = []
+const tsFilePaths = getFilesAndFoldersNames('.', null).filter(path => path.includes('.ts'))
 
 const functions: btr_commands = {
 	check: { description: 'btr-check the files in this very package', fn: btrCheckPackageAndReportResult },
@@ -31,12 +32,9 @@ inquirePromptCommands(mapCommandsForInquirePrompt(functions), true)
 
 //function declarations below
 
-function transpileAndRunTestRunTs() { transpileFile(['./test/run.ts'], './test/transpiled'); execFile('./test/transpiled/test/run.ts') }
-function transpileBaseFiles() { transpileFile(['./btr.ts'], '.') }
-
-async function btrCheckPackage() {
-	checkCodeThatCouldBeUpdated(await getCachedFiles(errors, getFilesAndFoldersNames('.', null).filter(path => path.includes('ts'))))
-}
+function transpileAndRunTestRunTs() { transpileFiles(['./test/run.ts'], './test/transpiled'); execFile('./test/transpiled/test/run.ts') }
+async function btrCheckPackage() { checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths)) }
+function transpileBaseFiles() { transpileFiles(tsFilePaths.filter(path => !/\w\//.test(path)), '.') }
 
 async function btrCheckPackageAndReportResult() {
 	await btrCheckPackage()
@@ -82,7 +80,7 @@ async function transpileAll() {
 
 	await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'))
 
-	transpileFile(['client/btr.ts'], './client')
+	transpileFiles(['client/btr.ts'], './client')
 	successLog('browser versions emitted')
 
 	async function getLinesInBtrTs() {

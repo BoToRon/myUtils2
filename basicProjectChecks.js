@@ -1,13 +1,10 @@
 let _;
-import fs from 'fs';
-_;
 import { z } from 'zod';
 _;
 _;
-import { getCachedFiles, checkCodeThatCouldBeUpdated, compareArrays, getEnviromentVariables, importFileFromProject, nullAs, successLog, surroundedString, zodCheck_curry, zRegexGenerator } from './btr.js';
+import { CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_FNS_TS, GLOBAL_VARS_TS, SERVER_EVENTS_TS, SERVER_REF_TS, TSCONFIG_JSON, TYPES_IO_TS, TYPES_Z_TS, zMyEnv } from './constants.js';
 _;
-import { CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_FNS_TS, GLOBAL_VARS_TS, SERVER_EVENTS_TS, SERVER_REF_TS, TSCONFIG_JSON, TYPES_IO_TS, TYPES_Z_TS, zMyEnv } from './constants/constants.js';
-_;
+import { getCachedFiles, checkCodeThatCouldBeUpdated, compareArrays, getEnviromentVariables, getFilesAndFoldersNames, importFileFromProject, nullAs, pick, successLog, surroundedString, zodCheck_curry, zRegexGenerator, zRecord } from './btr.js';
 function addToErrors(path, error) { errors.push(`(at ${path}): ${error}`); }
 function inBtrUtils(path) { return './node_modules/@botoron/utils/' + path; }
 let errorHandler = nullAs();
@@ -210,7 +207,14 @@ function checkClientStoreTs() {
 }
 /**Check if all the desired enviroment keys are defined */
 function checkEnviromentVariables() {
-    zodCheck_curry((error) => addToErrors('.env', error), false)(zMyEnv, getEnviromentVariables());
+    const myEnv = pick(getEnviromentVariables(), ['ADMIN_PASSWORD', 'APP_NAME', 'DEV_OR_PROD', 'ERIS_TOKEN', 'MONGO_URI', 'PORT']);
+    zodCheck_curry((error) => addToErrors('.env', error))(zMyEnv, myEnv);
+    /* DEV_OR_PROD: "DEV" | "PROD";
+     ADMIN_PASSWORD: string;
+     PORT: "3000";
+     ERIS_TOKEN: string;
+     MONGO_URI: string;
+     APP_NAME: string; */
 }
 function checkFilesAreIdentical(path, pathToTemplate) {
     const file = getFromCachedFiles([path]).find(x => !x.path.includes('@botoron'));
@@ -334,6 +338,8 @@ async function checkPackageJsons() {
             'build-client': z.literal('cd client & npm run build'),
             'build-all': z.literal('tsc --target esnext server/init.ts --outDir ../dist & cd client & npm run build-only && cd ..'),
             check: z.literal('npm run npmScript --command_project=check'),
+            dev: z.literal('tsc --target esnext dev/commands.ts --outDir ./dev/transpiled & node dev/transpiled/dev/commands.js'),
+            git: z.literal('npm run npmScript --command_project=git'),
             localtunnel: z.literal('lt --port 5173'),
             nodemon: z.literal('nodemon test/server/init.js'),
             npmScript: z.literal('node node_modules/@botoron/utils/npmRun.js'),
@@ -341,25 +347,10 @@ async function checkPackageJsons() {
             test: z.literal('ts-node-esm --transpileOnly test.ts'),
             transpile: z.literal('npm run npmScript --command_project=transpile'),
             vue: z.literal('cd client & npm run dev'),
-            git: z.literal('npm run npmScript --command_project=git')
         }).strict(),
-        dependencies: z.object({
-            '@botoron/utils': z.string(),
-            //'magic-regexp': z.string(),
-            'socket.io': z.string(),
-            'socket.io-client': z.string(),
-            'zod-validation-error': z.string()
-        }),
-        devDependencies: z.object({
-            '@types/express': z.string(),
-            '@typescript-eslint/eslint-plugin': z.string(),
-            '@typescript-eslint/parser': z.string(),
-            dotenv: z.string(),
-            eslint: z.string(),
-            'eslint-plugin-sonarjs': z.string(),
-            'eslint-plugin-vue': z.string(),
-            nodemon: z.string(),
-        })
+        dependencies: zRecord(['@botoron/utils', 'socket.io', 'socket.io-client', 'zod-validation-error'], z.string()),
+        devDependenciesx: zRecord(['@types/express', '@typescript-eslint/eslint-plugin', '@typescript-eslint/parser',
+            'dotenv', 'eslint', 'eslint-plugin-sonarjs', 'eslint-plugin-vue', 'inquirer', 'nodemon'], z.string())
     });
     zodCheck_toErrors('./client/package.json', desiredPackageJsonClientSchema, packageJsonOfProjectClient);
     zodCheck_toErrors('./package.json', desiredPackageJsonRootSchema, packageJsonOfProjectRoot);
@@ -594,22 +585,6 @@ async function fillCachedFiles() {
         serverTsFiles.push(...getFromCachedFiles(['./dev/commands.ts']), ...getFromCachedFiles([GLOBAL_FNS_TS]), ...getFromCachedFiles(['./server', '.ts']), ...getFromCachedFiles([TYPES_Z_TS]));
     }
 }
-/**Get all the file and folders within a folder, stopping at predefined folders */
-function getFilesAndFoldersNames(directory, extension) {
-    const results = [];
-    fs.readdirSync(directory).forEach((file) => {
-        file = directory + '/' + file;
-        const stat = fs.statSync(file);
-        const stopHere = /node_modules|git|test|assets/.test(file); //regexHere
-        if (stat && stat.isDirectory() && !stopHere) {
-            results.push(...getFilesAndFoldersNames(file, null));
-        }
-        else {
-            results.push(file);
-        }
-    });
-    return extension ? results.filter(path => path.includes(extension)) : results;
-}
 function getFromCachedFiles(obligatoryMatches) {
     const foundFiles = cachedFiles.filter(file => obligatoryMatches.every(match => file.path.includes(match)));
     if (foundFiles.length) {
@@ -619,5 +594,5 @@ function getFromCachedFiles(obligatoryMatches) {
     return [{ path: 'FAILSAFE', content: '' }];
 }
 function zodCheck_toErrors(path, schema, data) {
-    zodCheck_curry((e) => addToErrors(path, e), true)(schema, data);
+    zodCheck_curry((e) => addToErrors(path, e))(schema, data);
 }
