@@ -15,8 +15,6 @@ import {
 	getFilesAndFoldersNames, inquirePromptCommands, killProcess, mapCommandsForInquirePrompt, successLog, transpileFiles
 } from '../btr.js'
 
-process.env['prevent_divine_init'] = 'true'
-
 const PACKAGE_DOT_JSON = 'package.json'
 const serverFolder_dist = '../dist'
 const fileWithRef = 'ref'
@@ -24,6 +22,8 @@ const fileWithRef = 'ref'
 const errors: string[] = []
 const warningsCount = { count: 0 }
 const tsFilePaths = getFilesAndFoldersNames('.', null).filter(path => path.includes('.ts'))
+
+process.env['prevent_divine_init'] = 'true'
 
 const functions: btr_commands = {
 	btr: { description: 'Install/update @botoron/utils', fn: installBtrUtils },
@@ -74,28 +74,28 @@ async function buildServerFiles() {
 	await copyFileToDist(PACKAGE_DOT_JSON)
 
 	execSync(`tsc --target esnext server/init.ts server/io.ts --outDir ${serverFolder_dist}`)
-
-	await replaceTextInFile(serverFolder_dist + '/server/' + fileWithRef + '.js', 'devOrProd = \'dev\'', 'devOrProd = \'prod\'')
-	await replaceTextInFile(PACKAGE_DOT_JSON, '-src', '-dist')
-
+	await toggle_devOrProd_inRef()
 	successLog('(server) Build sucessful!')
 
 	async function copyFileToDist(filename: string) {
 		let content = await fsReadFileAsync(filename)
-		if (filename === PACKAGE_DOT_JSON) { deleteAllPackageJsonScriptsExceptStart() }
+		if (filename === PACKAGE_DOT_JSON) { deleteAllPackageJsonScriptsExceptStart_andReplaceSlashSrcWithSlashDist() }
 		await fsWriteFileAsync('../dist/' + filename, content)
 
-		function deleteAllPackageJsonScriptsExceptStart() {
+		function deleteAllPackageJsonScriptsExceptStart_andReplaceSlashSrcWithSlashDist() {
 			//TODO: automatically git push and install npm dependencies when transpiling?
-			content = content.replace(/"scripts": {[^}]{1,}/, `"scripts": { //regexHere
+			content = content.
+				replace('-src', '-dist').
+				replace(/"scripts": {[^}]{1,}/, `"scripts": { //regexHere
 		"start": "node server/init.js",
 		"git": "git add . & git commit & git push",
 	`)
 		}
 	}
 
-	async function replaceTextInFile(filepath: string, ogText: string, newText: string) {
-		await fsWriteFileAsync(filepath, (await fsReadFileAsync(filepath)).replace(ogText, newText))
+	async function toggle_devOrProd_inRef() {
+		const filepath = serverFolder_dist + '/server/' + fileWithRef + '.js'
+		await fsWriteFileAsync(filepath, (await fsReadFileAsync(filepath)).replace('devOrProd = \'dev\'', 'devOrProd = \'prod\''))
 	}
 
 	async function transpileTypesFile() {
