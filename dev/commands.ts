@@ -6,12 +6,12 @@ import inquirer from 'inquirer'
 _
 import { execSync, execFile } from 'child_process'	//DELETETHISFORCLIENT
 _
-import { npmVersionOptions, utilsRepoName } from '../constants.js'
-_
 import { btr_commands, validNpmVersion } from '../types.js'
 _
+import { npmVersionOptions, utilsRepoName, warningsCount_generator } from '../constants.js'
+_
 import {
-	checkCodeThatCouldBeUpdated, colorLog, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles,
+	checkCodeThatCouldBeUpdated, colorLog, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getFilesAndFoldersNames,
 	inquirePromptCommands, mapCommandsForInquirePrompt, prompCommitMessageAndPush, selfFilter, successLog, transpileFile
 } from '../btr.js'
 
@@ -34,7 +34,7 @@ function transpileAndRunTestRunTs() { transpileFile(['./test/run.ts'], './test/t
 function transpileBaseFiles() { transpileFile(['./btr.ts'], '.') }
 
 async function btrCheckPackage() {
-	checkCodeThatCouldBeUpdated(await getCachedFiles(errors, ['./basicProjectChecks.ts', './btr.ts', './npmRun.ts']))
+	checkCodeThatCouldBeUpdated(await getCachedFiles(errors, getFilesAndFoldersNames('.', null).filter(path => path.includes('ts'))))
 }
 
 async function btrCheckPackageAndReportResult() {
@@ -65,22 +65,31 @@ async function publish() {
 async function transpileAll() {
 	transpileBaseFiles()
 	btrCheckPackage()
-	if (errors.length) { errorLog('btr-errors detected, fix them before attempting to transpile again'); return }
+
+	if (thereAreErrorsOrWarnings()) { errorLog('btr-errors detected, fix them before attempting to transpile again'); return }
 
 	const filename = 'btr.ts'
-	const lines = (await fsReadFileAsync(filename)).
-		replaceAll(/from '\.\/(?=constants|types)/, 'from \'./').
-		replaceAll('bigConsoleError', 'colorLog').
-		split('\n')
+	const lines = await getLinesInBtrTs()
 
 	selfFilter(lines, line => !/DELETETHISFORCLIENT/.test(line)) //regexHere
 
 	const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x)) //regexHere
 	lines.splice(cutPoint, lines.length)
-	lines.push('export const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`)') //@btr-ignore
+	lines.push('export const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`) //@btr-ignore')
 
 	await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'))
 
 	transpileFile(['client/btr.ts'], './client')
 	successLog('browser versions emitted')
+
+	async function getLinesInBtrTs() {
+		return (await fsReadFileAsync(filename)).
+			replaceAll(/from '\.\/(?=constants|types)/, 'from \'./').
+			replaceAll('bigConsoleError', 'colorLog').
+			split('\n')
+	}
+
+	function thereAreErrorsOrWarnings() {
+		return errors.length || warningsCount_generator.next().value > 1
+	}
 }

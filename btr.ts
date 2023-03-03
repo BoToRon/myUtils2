@@ -1209,7 +1209,7 @@ export function getEnviromentVariables() {
 	require('dotenv').config({ path: './.env' })
 	return process.env as myEnv
 }
-/**Get all the file and folders within a folder, stopping at predefined folders */
+/**Get all the file and folders within a folder, stopping at predefined folders (assets, git, node_modules, test) */
 export function getFilesAndFoldersNames(directory: string, extension: nullable<'.ts' | '.vue'>) {
 	const results: string[] = []
 

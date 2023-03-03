@@ -5,27 +5,29 @@ import inquirer from 'inquirer';
 _;
 import { execSync, execFile } from 'child_process'; //DELETETHISFORCLIENT
 _;
-import { npmVersionOptions, utilsRepoName } from '../constants/constants.js';
 _;
+import { npmVersionOptions, utilsRepoName, warningsCount_generator } from '../constants.js';
 _;
-import { checkCodeThatCouldBeUpdated, colorLog, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, inquirePromptCommands, mapCommandsForInquirePrompt, prompCommitMessageAndPush, selfFilter, successLog, transpileFile } from '../btr.js';
-const warnings = [];
+import { checkCodeThatCouldBeUpdated, colorLog, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getFilesAndFoldersNames, inquirePromptCommands, mapCommandsForInquirePrompt, prompCommitMessageAndPush, selfFilter, successLog, transpileFile } from '../btr.js';
+const errors = [];
 const functions = {
     check: { description: 'btr-check the files in this very package', fn: btrCheckPackageAndReportResult },
     publish: { description: '1) Transpile all. 2) Git commit + push. 3) npm version + PUBLISH', fn: publish },
     test: { description: 'Transpile and run test/run.ts', fn: transpileAndRunTestRunTs },
-    transpileAll: { description: 'Transpile base files, check for btr-warnings and if they pass, emit the client versions', fn: transpileAll },
+    transpileAll: { description: 'Transpile base files, check for btr-errors and if they pass, emit the client versions', fn: transpileAll },
     transpileBase: { description: 'Transpile the file bases, NOT for production', fn: transpileBaseFiles },
 };
 process.env['prevent_divine_init'] = 'true';
 inquirePromptCommands(mapCommandsForInquirePrompt(functions), true);
-//TODO: find the filepaths for getCachedFiles DYNAMICALLY
+//function declarations below
+function transpileAndRunTestRunTs() { transpileFile(['./test/run.ts'], './test/transpiled'); execFile('./test/transpiled/test/run.ts'); }
+function transpileBaseFiles() { transpileFile(['./btr.ts'], '.'); }
 async function btrCheckPackage() {
-    checkCodeThatCouldBeUpdated(await getCachedFiles(warnings, ['./basicProjectChecks.ts', './btr.ts', './npmRun.ts']));
+    checkCodeThatCouldBeUpdated(await getCachedFiles(errors, getFilesAndFoldersNames('.', null).filter(path => path.includes('ts'))));
 }
 async function btrCheckPackageAndReportResult() {
     await btrCheckPackage();
-    warnings.length ? colorLog('red', warnings.length + ' warnings') : successLog('No btr-errors detected');
+    errors.length ? colorLog('red', errors.length + ' errors') : successLog('No btr-errors detected');
 }
 async function publish() {
     transpileAll();
@@ -45,15 +47,12 @@ async function publish() {
 async function transpileAll() {
     transpileBaseFiles();
     btrCheckPackage();
-    if (warnings.length) {
-        errorLog('btr-warnings detected, fix them before attempting to transpile again');
+    if (thereAreErrorsOrWarnings()) {
+        errorLog('btr-errors detected, fix them before attempting to transpile again');
         return;
     }
     const filename = 'btr.ts';
-    const lines = (await fsReadFileAsync(filename)).
-        replaceAll(/from '\.\/(?=constants|types)/, 'from \'./').
-        replaceAll('bigConsoleError', 'colorLog').
-        split('\n');
+    const lines = await getLinesInBtrTs();
     selfFilter(lines, line => !/DELETETHISFORCLIENT/.test(line)); //regexHere
     const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x)); //regexHere
     lines.splice(cutPoint, lines.length);
@@ -61,11 +60,13 @@ async function transpileAll() {
     await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'));
     transpileFile(['client/btr.ts'], './client');
     successLog('browser versions emitted');
-}
-function transpileAndRunTestRunTs() {
-    transpileFile(['./test/run.ts'], './test/transpiled');
-    execFile('./test/transpiled/test/run.ts');
-}
-function transpileBaseFiles() {
-    transpileFile(['./btr.ts'], '.');
+    async function getLinesInBtrTs() {
+        return (await fsReadFileAsync(filename)).
+            replaceAll(/from '\.\/(?=constants|types)/, 'from \'./').
+            replaceAll('bigConsoleError', 'colorLog').
+            split('\n');
+    }
+    function thereAreErrorsOrWarnings() {
+        return errors.length || warningsCount_generator.next().value > 1;
+    }
 }

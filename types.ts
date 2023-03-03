@@ -9,7 +9,7 @@ export type objectEntriesT<T, amount extends 'plural' | 'single'> = { [K in keyo
 /**Generic to get the type of an object/interface while preserving key-value typing */
 export type zSchema<T> = { _def: object, safeParse: (x: T) => SafeParseReturnType<T, T>, strict?: () => zSchema<T> }
 /**Syntaxic-sugar */
-export type nullable<T> = T | null
+export type nullable<T> = T | null //@btr-ignore
 
 //^^ EXPORTABLE GENERICS ABOVE ^^ vv EXPORTABLE "btr_" TYPES BELOW vv
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void
@@ -33,7 +33,7 @@ export type btr_fieldsForColumnOfTable = string | {
 
 export type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: btr_validVariant, title: string }
 export type validChalkColor = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'white' | 'grey' | 'magentaBright'	//DELETETHISFORCLIENT
-export type btr_commands = Record<string, { description: string, fn: () => maybePromise<void> }>
+export type btr_commands = Record<string, { description: string, fn: () => maybePromise<void> }> //@btr-ignore
 export type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 export type vueComponentsTracker<T extends string> = Record<T, btr_trackedVueComponent[]>
 export type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
@@ -69,9 +69,9 @@ export type timer = {
 		timerId: string
 		startedAt: string
 		intendedRunAt: string
-		cancelledAt: string | null
-		timeElapsedBeforeCancelation: string | null
-		timeLeftBeforeCancelation: string | null
+		cancelledAt: nullable<string>
+		timeElapsedBeforeCancelation: nullable<string>
+		timeLeftBeforeCancelation: nullable<string>
 		onCompleteFn: string
 		onCancelFn: string
 		cancelStack: string

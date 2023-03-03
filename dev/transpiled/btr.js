@@ -22,14 +22,14 @@ _;
 _;
 import getReadLine from 'readline'; //DELETETHISFORCLIENT
 _;
-import { exec, execSync } from 'child_process'; //DELETETHISFORCLIENT
+import { execSync } from 'child_process'; //DELETETHISFORCLIENT
 _;
 import { createRequire } from 'module'; //DELETETHISFORCLIENT
 _;
 import mongodb from 'mongodb'; //DELETETHISFORCLIENT
 _;
 _;
-import { getUniqueId_generator, isNode, timers, warningsCount_generator, zValidVariants } from './constants/constants.js';
+import { getUniqueId_generator, isNode, timers, warningsCount_generator, zValidVariants } from './constants.js';
 _;
 import { z } from 'zod';
 _;
@@ -1200,7 +1200,7 @@ export function getEnviromentVariables() {
     require('dotenv').config({ path: './.env' });
     return process.env;
 }
-/**Get all the file and folders within a folder, stopping at predefined folders */
+/**Get all the file and folders within a folder, stopping at predefined folders (assets, git, node_modules, test) */
 export function getFilesAndFoldersNames(directory, extension) {
     const results = [];
     fs.readdirSync(directory).forEach((file) => {
@@ -1310,17 +1310,12 @@ export async function prompCommitMessageAndPush(repoName) {
     }
     function gitAddCommitPush() {
         return new Promise(resolve => {
-            exec('git add .', () => {
-                successLog('git add .');
-                colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.');
-                exec('git commit', () => {
-                    successLog('git commit');
-                    exec('git push', () => {
-                        successLog('git push');
-                        resolve(true);
-                    });
-                });
-            });
+            execAndLog('git add .');
+            colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.');
+            execSync('git push');
+            execAndLog('git push');
+            resolve(true);
+            function execAndLog(command) { execSync(command); successLog(command); }
         });
     }
     function logDetailsForPrompt() {
