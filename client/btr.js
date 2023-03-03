@@ -40,29 +40,31 @@ _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** F
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 /**Adds an item to an array, or removes it if it already was added. Returns the array and the action applied */
 export function addOrRemoveItem(arr, item) {
-    let x;
-    const isInArray = arr.includes(item);
-    if (!isInArray) {
-        arr.push(item);
-        x = 'added';
-    }
-    else {
-        removeItem(arr, item);
-        x = 'removed';
-    }
-    return { action: x, arr };
+	let x;
+	const isInArray = arr.includes(item);
+	if (!isInArray) {
+		arr.push(item);
+		x = 'added';
+	}
+	else {
+		removeItem(arr, item);
+		x = 'removed';
+	}
+	return { action: x, arr };
 }
 /**Adds an item to an array, or replaces the first one if found. WARNING: make sure the predicate can only find ONE item */
 export function addOrReplaceItem(arr, newItem, predicate) {
-    const replaceableItem = arr.find(x => predicate(x));
-    replaceableItem ? arr[arr.indexOf(replaceableItem)] = newItem : arr.push(newItem);
+	const replaceableItem = arr.find(x => predicate(x));
+	replaceableItem ? arr[arr.indexOf(replaceableItem)] = newItem : arr.push(newItem);
 }
 /**Add to arrayA items from array B that it doesn't already have */
 export function addUnrepeatedItems(arr, newItems) {
-    newItems.forEach(x => { if (!arr.includes(x)) {
-        arr.push(x);
-    } });
-    return arr;
+	newItems.forEach(x => {
+		if (!arr.includes(x)) {
+			arr.push(x);
+		}
+	});
+	return arr;
 }
 /**
  * @param arr The array (tuple) of strings that each will become a key
@@ -70,45 +72,45 @@ export function addUnrepeatedItems(arr, newItems) {
  * @returns An object where each key is an item of "arr" and the value is determined by "mappingFn"
  */
 export function arrayToObject(arr, mappingFn) {
-    const object = {};
-    arr.forEach(x => object[x] = mappingFn(x));
-    return object;
+	const object = {};
+	arr.forEach(x => object[x] = mappingFn(x));
+	return object;
 }
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
 export function asFormattedList(arr, useAndForTheLastItem) {
-    let string = '';
-    arr.forEach((item, index) => {
-        const isLastItem = index === arr.length - 1;
-        const isSemiLastItem = index === arr.length - 2;
-        if (isSemiLastItem && useAndForTheLastItem) {
-            string += item + ' and ';
-        }
-        else if (isLastItem) {
-            string += item;
-        }
-        else {
-            string += item + ', ';
-        }
-    });
-    return string;
+	let string = '';
+	arr.forEach((item, index) => {
+		const isLastItem = index === arr.length - 1;
+		const isSemiLastItem = index === arr.length - 2;
+		if (isSemiLastItem && useAndForTheLastItem) {
+			string += item + ' and ';
+		}
+		else if (isLastItem) {
+			string += item;
+		}
+		else {
+			string += item + ', ';
+		}
+	});
+	return string;
 }
 /**Return an array of sub-arrays with the items of the passed array, where each sub-array's max lenght is the passed size*/
 export function chunk(arr, chunkSize) {
-    const results = [[]];
-    arr.forEach(item => {
-        const lastSubArray = lastItem(results);
-        lastSubArray.length < chunkSize ? lastSubArray.push(item) : results.push([item]);
-    });
-    return results.reverse();
+	const results = [[]];
+	arr.forEach(item => {
+		const lastSubArray = lastItem(results);
+		lastSubArray.length < chunkSize ? lastSubArray.push(item) : results.push([item]);
+	});
+	return results.reverse();
 }
 /**Compare array A to array B and return the details */
 export function compareArrays(baseArray, testArray) {
-    const nonDesiredItems = testArray.filter(x => !baseArray.includes(x));
-    const missingItems = baseArray.filter(x => !testArray.includes(x));
-    const lengthDifference = baseArray.length - testArray.length;
-    const arraysHaveTheSameItems = !nonDesiredItems.length && !missingItems.length;
-    const arraysAreEqual = arraysHaveTheSameItems && !lengthDifference;
-    return { arraysAreEqual, arraysHaveTheSameItems, lengthDifference, missingItems, nonDesiredItems };
+	const nonDesiredItems = testArray.filter(x => !baseArray.includes(x));
+	const missingItems = baseArray.filter(x => !testArray.includes(x));
+	const lengthDifference = baseArray.length - testArray.length;
+	const arraysHaveTheSameItems = !nonDesiredItems.length && !missingItems.length;
+	const arraysAreEqual = arraysHaveTheSameItems && !lengthDifference;
+	return { arraysAreEqual, arraysHaveTheSameItems, lengthDifference, missingItems, nonDesiredItems };
 }
 /**syntax sugar for arr[arr.length - 1] */
 export function getLastItem(arr) { return arr[arr.length - 1]; }
@@ -116,11 +118,13 @@ export function getLastItem(arr) { return arr[arr.length - 1]; }
 export function getRandomItem(arr) { const r = roll(arr.length); return { item: arr[r], index: r }; }
 /**getRandomItem, but each items has custom chances to be selected */
 export function getRandomItem_withCustomChances(items, chancesDefininingFunction) {
-    const chancesAdjustItems = [];
-    items.forEach(item => { for (let i = 0; i < chancesDefininingFunction(item); i++) {
-        chancesAdjustItems.push(item);
-    } });
-    return getRandomItem(chancesAdjustItems).item;
+	const chancesAdjustItems = [];
+	items.forEach(item => {
+		for (let i = 0; i < chancesDefininingFunction(item); i++) {
+			chancesAdjustItems.push(item);
+		}
+	});
+	return getRandomItem(chancesAdjustItems).item;
 }
 /**@returns a version of the provided array without repeating items */
 export function getUniqueValues(arr) { return [...new Set(arr)]; }
@@ -130,20 +134,20 @@ export function isLastItem(arr, item) { return item === arr.at(-1); }
 export function lastItem(arr) { return arr[arr.length - 1]; }
 /**Apply multiple mapping functions to a single array at once and return an object with all the result */
 export function multiMap(arr, f1, f2, f3 = doNothing, f4 = doNothing, f5 = doNothing) {
-    return arr.reduce((acc, item) => {
-        acc.map1.push(f1(item));
-        acc.map2.push(f2(item));
-        acc.map3.push(f3(item));
-        acc.map4.push(f4(item));
-        acc.map5.push(f5(item));
-        return acc;
-    }, {
-        map1: [],
-        map2: [],
-        map3: [],
-        map4: [],
-        map5: [],
-    });
+	return arr.reduce((acc, item) => {
+		acc.map1.push(f1(item));
+		acc.map2.push(f2(item));
+		acc.map3.push(f3(item));
+		acc.map4.push(f4(item));
+		acc.map5.push(f5(item));
+		return acc;
+	}, {
+		map1: [],
+		map2: [],
+		map3: [],
+		map4: [],
+		map5: [],
+	});
 }
 /*Remove a single item from an array, or all copies of that item if its a primitive value and return the removedCount */
 export function removeItem(arr, item) { return selfFilter(arr, (x) => x !== item).removedCount; }
@@ -152,65 +156,65 @@ export function removeItem(arr, item) { return selfFilter(arr, (x) => x !== item
  * see filterMap for a faster (single rather than double loop) but more complex version)
  */
 export function safeMap(arr, mapFn) {
-    return arr.map(x => mapFn(x)).filter(x => x);
+	return arr.map(x => mapFn(x)).filter(x => x);
 }
 /**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
 export function selfFilter(arr, predicate) {
-    let removedCount = 0;
-    const removedItems = [];
-    for (let i = 0; i < arr.length; i++) {
-        const item = arr[i];
-        if (predicate(item)) {
-            continue;
-        }
-        removedItems.push(arr.splice(i, 1)[0]);
-        removedCount++;
-        i--;
-    }
-    return { removedItems, removedCount };
+	let removedCount = 0;
+	const removedItems = [];
+	for (let i = 0; i < arr.length; i++) {
+		const item = arr[i];
+		if (predicate(item)) {
+			continue;
+		}
+		removedItems.push(arr.splice(i, 1)[0]);
+		removedCount++;
+		i--;
+	}
+	return { removedItems, removedCount };
 }
 /**Sort an array of numbers either upwards (A-scending) or downwards (D-escending)*/
 export function sortNumbers(numbers, direction) {
-    numbers.sort((a, b) => a > b ? 1 : -1);
-    if (direction === 'D') {
-        numbers.reverse();
-    }
-    return numbers;
+	numbers.sort((a, b) => a > b ? 1 : -1);
+	if (direction === 'D') {
+		numbers.reverse();
+	}
+	return numbers;
 }
 /**Randomizes the order of the items in the array */
 export function shuffle(arr) {
-    for (let i = arr.length - 1; i > 0; i--) {
-        const rand = roll(i + 1);
-        [arr[i], arr[rand]] = [arr[rand], arr[i]];
-    }
-    return arr;
+	for (let i = arr.length - 1; i > 0; i--) {
+		const rand = roll(i + 1);
+		[arr[i], arr[rand]] = [arr[rand], arr[i]];
+	}
+	return arr;
 }
 /**Sort an array alphabetically, optionally backwards */
 export function sortAlphabetically(arr, reverseArr) {
-    arr.sort((a, b) => a > b ? 1 : -1);
-    if (reverseArr) {
-        arr.reverse();
-    }
-    return arr;
+	arr.sort((a, b) => a > b ? 1 : -1);
+	if (reverseArr) {
+		arr.reverse();
+	}
+	return arr;
 }
 /**Sort an array of objects based on the value a property. A: Ascending, D: Descesding. Chainable */
 export function sortBy(arr, keyWithDir, ...extraKeysWithDir) {
-    if (!arr.length) {
-        return arr;
-    }
-    [keyWithDir].concat(extraKeysWithDir).forEach(keyDirection => {
-        const [key, direction] = keyDirection;
-        if (typeof arr[0] === 'string') {
-            arr.sort((a, b) => (a > b) ? 1 : -1);
-        }
-        else {
-            arr.sort((a, b) => (a[key] > b[key]) ? 1 : -1);
-        }
-        if (direction === 'D') {
-            arr.reverse();
-        }
-    });
-    return arr;
+	if (!arr.length) {
+		return arr;
+	}
+	[keyWithDir].concat(extraKeysWithDir).forEach(keyDirection => {
+		const [key, direction] = keyDirection;
+		if (typeof arr[0] === 'string') {
+			arr.sort((a, b) => (a > b) ? 1 : -1);
+		}
+		else {
+			arr.sort((a, b) => (a[key] > b[key]) ? 1 : -1);
+		}
+		if (direction === 'D') {
+			arr.reverse();
+		}
+	});
+	return arr;
 }
 /** */
 /**syntactic sugar for selfFilter(arr, predicate).removedItems */
@@ -219,9 +223,9 @@ export function spliceIf(arr, predicate) { return selfFilter(arr, predicate).rem
 export function spliceLast(arr, count) { return arr.splice(-count); }
 /**Transfer items that meet a given condition from one array to another */
 export function transferItems(origin, destination, predicate) {
-    const x = selfFilter(origin, predicate);
-    destination.push(...x.removedItems);
-    return { transferedCount: x.removedCount };
+	const x = selfFilter(origin, predicate);
+	destination.push(...x.removedItems);
+	return { transferedCount: x.removedCount };
 }
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
@@ -234,14 +238,14 @@ _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ****************
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 export async function asyncForEach(array, asyncFn, resolveSequentially = false) {
-    if (resolveSequentially) {
-        for await (const item of array) {
-            await asyncFn(item);
-        }
-    } //@btr-ignore
-    if (!resolveSequentially) {
-        await Promise.all(array.map(item => asyncFn(item)));
-    }
+	if (resolveSequentially) {
+		for await (const item of array) {
+			await asyncFn(item);
+		}
+	} //@btr-ignore
+	if (!resolveSequentially) {
+		await Promise.all(array.map(item => asyncFn(item)));
+	}
 }
 /**Set interval with try-catch and called immediately*/
 export function doAndRepeat_server(fn, interval) { divine.try(fn, []); setInterval(() => divine.try(fn, []), interval); }
@@ -253,10 +257,10 @@ export function doAndRepeat_server(fn, interval) { divine.try(fn, []); setInterv
  * @returns The provided array, filtered and mapped
  */
 export function filterMap(arr, filter, mapFn) {
-    return arr.reduce((acc, item) => {
-        const { answer, carryOver } = filter(item);
-        return answer ? acc.concat(mapFn(item, carryOver)) : acc;
-    }, []);
+	return arr.reduce((acc, item) => {
+		const { answer, carryOver } = filter(item);
+		return answer ? acc.concat(mapFn(item, carryOver)) : acc;
+	}, []);
 }
 /**
 * Pipes a value through a number of functions in the order that they appear.
@@ -275,17 +279,17 @@ export const pipe_mutableType = (source, ...project) => project.reduce((accumula
  * @returns
  */
 export async function retryF(fn, args, retriesLeft, defaultReturn, delayBetweenRetries) {
-    try {
-        return { data: fn(...args), was: 'success' };
-    }
-    catch (error) {
-        colorLog('yellow', `retryF > ${fn.name} > ${retriesLeft} retriesLeft. {${error}}`);
-        if (!retriesLeft) {
-            return { data: defaultReturn, was: 'failure' };
-        }
-        await delay(delayBetweenRetries);
-        return await retryF(fn, args, retriesLeft - 1, defaultReturn, delayBetweenRetries);
-    }
+	try {
+		return { data: fn(...args), was: 'success' };
+	}
+	catch (error) {
+		colorLog('yellow', `retryF > ${fn.name} > ${retriesLeft} retriesLeft. {${error}}`);
+		if (!retriesLeft) {
+			return { data: defaultReturn, was: 'failure' };
+		}
+		await delay(delayBetweenRetries);
+		return await retryF(fn, args, retriesLeft - 1, defaultReturn, delayBetweenRetries);
+	}
 }
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
@@ -299,51 +303,51 @@ _; /********** FOR NUMBERS ******************** FOR NUMBERS ********************
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 /**Promise-based delay that BREAKS THE LIMIT OF setTimeOut*/
 export function delay(x) {
-    return new Promise(resolve => {
-        const maxTimeOut = 1000 * 60 * 60 * 24;
-        const loopsNeeded = Math.floor(x / maxTimeOut);
-        const leftOverTime = x % maxTimeOut;
-        interval(loopsNeeded, leftOverTime);
-        function interval(i, ms) { setTimeout(() => i ? interval(i - 1, maxTimeOut) : resolve(true), ms); }
-    });
+	return new Promise(resolve => {
+		const maxTimeOut = 1000 * 60 * 60 * 24;
+		const loopsNeeded = Math.floor(x / maxTimeOut);
+		const leftOverTime = x % maxTimeOut;
+		interval(loopsNeeded, leftOverTime);
+		function interval(i, ms) { setTimeout(() => i ? interval(i - 1, maxTimeOut) : resolve(true), ms); }
+	});
 }
 /**Return the time left to make a move in a compacted form and with a variant corresponding to how much of it left */
 export function getDisplayableTimeLeft(deadline) {
-    const time = (deadline - Date.now()) / 1000;
-    let message = '';
-    const twoMinutes = 60 * 2;
-    const twoHours = twoMinutes * 2;
-    const twoDays = twoHours * 2;
-    if (time < twoMinutes) {
-        message = String(time);
-    }
-    else if (time < twoHours) {
-        message = `${Math.round(time / 60)} Minutes`;
-    }
-    else if (time < twoDays) {
-        message = `${Math.round(time / 60 / 60)} Hours`;
-    }
-    else if (time > twoDays) {
-        message = `${Math.round(time / 60 / 60 / 24)} Days`;
-    }
-    message = message.replace(/\.[0-9]{0,}/g, ''); //regexHere
-    return { time: message, variant: getVariant() };
-    function getVariant() {
-        let variant = nullAs();
-        if (/Minutes|Hours|Days/.test(message)) {
-            variant = 'info';
-        } //regexHere
-        else if (time > 20) {
-            variant = 'primary';
-        }
-        else if (time < 21) {
-            variant = 'warning';
-        }
-        else {
-            variant = 'danger';
-        }
-        return variant;
-    }
+	const time = (deadline - Date.now()) / 1000;
+	let message = '';
+	const twoMinutes = 60 * 2;
+	const twoHours = twoMinutes * 2;
+	const twoDays = twoHours * 2;
+	if (time < twoMinutes) {
+		message = String(time);
+	}
+	else if (time < twoHours) {
+		message = `${Math.round(time / 60)} Minutes`;
+	}
+	else if (time < twoDays) {
+		message = `${Math.round(time / 60 / 60)} Hours`;
+	}
+	else if (time > twoDays) {
+		message = `${Math.round(time / 60 / 60 / 24)} Days`;
+	}
+	message = message.replace(/\.[0-9]{0,}/g, ''); //regexHere
+	return { time: message, variant: getVariant() };
+	function getVariant() {
+		let variant = nullAs();
+		if (/Minutes|Hours|Days/.test(message)) {
+			variant = 'info';
+		} //regexHere
+		else if (time > 20) {
+			variant = 'primary';
+		}
+		else if (time < 21) {
+			variant = 'warning';
+		}
+		else {
+			variant = 'danger';
+		}
+		return variant;
+	}
 }
 /**
  *Formate a timestamp with Intl.DateTimeFormt. Options: short/medium/long (add +hour to include Hour) or hOnly (hour only)
@@ -355,20 +359,20 @@ export function getDisplayableTimeLeft(deadline) {
  { short: '01/01/23', medium: 'Jan 01, 2023', long: 'January 01, 2023' }
  */
 export function formatDate(timestamp, language, type) {
-    return new Intl.DateTimeFormat({ English: 'en', Español: 'es' }[language], getOptions()).format(timestamp);
-    function getOptions() {
-        switch (type) {
-            default:
-            case 'short': return { dateStyle: 'short' };
-            case 'medium': return { dateStyle: 'medium' };
-            case 'long': return { dateStyle: 'long' };
-            case 'hourOnly': return { timeStyle: 'short' };
-            // eslint-disable-next-line sonarjs/no-duplicate-string
-            case 'medium+hour': return { dateStyle: 'medium', timeStyle: 'short' };
-            case 'short+hour': return { dateStyle: 'short', timeStyle: 'short' };
-            case 'long+hour': return { dateStyle: 'long', timeStyle: 'short' };
-        }
-    }
+	return new Intl.DateTimeFormat({ English: 'en', Español: 'es' }[language], getOptions()).format(timestamp);
+	function getOptions() {
+		switch (type) {
+			default:
+			case 'short': return { dateStyle: 'short' };
+			case 'medium': return { dateStyle: 'medium' };
+			case 'long': return { dateStyle: 'long' };
+			case 'hourOnly': return { timeStyle: 'short' };
+			// eslint-disable-next-line sonarjs/no-duplicate-string
+			case 'medium+hour': return { dateStyle: 'medium', timeStyle: 'short' };
+			case 'short+hour': return { dateStyle: 'short', timeStyle: 'short' };
+			case 'long+hour': return { dateStyle: 'long', timeStyle: 'short' };
+		}
+	}
 }
 /**Self-explanatory */
 export function isEven(number) { return !isOdd(number); }
@@ -376,58 +380,58 @@ export function isEven(number) { return !isOdd(number); }
 export function isOdd(number) { return Boolean(Number(number) % 2); }
 /**@returns whether a number is either the minimum provided, the maximum provided or any number in-between */
 export function isWithinRange(number, max, min) {
-    if (min > max) {
-        divine.ping('"min" should be lower than "max"!');
-    }
-    return number <= max && number >= min;
+	if (min > max) {
+		divine.ping('"min" should be lower than "max"!');
+	}
+	return number <= max && number >= min;
 }
 /**Math.max and Math.min merged into one */
 export function mathMaxMin(max, min, number) {
-    if (min > max) {
-        divine.ping('"min" should be lower than "max"!');
-    }
-    if (number > max) {
-        return max;
-    }
-    if (min > number) {
-        return min;
-    }
-    return number;
+	if (min > max) {
+		divine.ping('"min" should be lower than "max"!');
+	}
+	if (number > max) {
+		return max;
+	}
+	if (min > number) {
+		return min;
+	}
+	return number;
 }
 /**@returns a number up to (but not included) provided max, eg: roll(1) will ALWAYS return zero */
 export function roll(maxRoll) { return Math.floor(Math.random() * Number(maxRoll)); }
 /**Convert duration as a timestamp to clock format (xx:xx:xx.xxx) with selectable amount of decimals */
 export function toClockDuration(timestamp, decimalAfterSeconds) {
-    const second = 1000;
-    const minute = second * 60;
-    const hour = minute * 60;
-    return `${getClockField(hour)}:${getClockField(minute)}:${getClockField(second)}${getDecimals()}`;
-    function getClockField(timeUnit) {
-        let x = 0;
-        while (timestamp >= timeUnit) {
-            timestamp -= timeUnit;
-            x++;
-        }
-        const asString = `${x}`;
-        return asString.length === 1 ? `0${asString}` : asString;
-    }
-    function getDecimals() {
-        return decimalAfterSeconds ? `.${getClockField(1).slice(0, decimalAfterSeconds)}` : '';
-    }
+	const second = 1000;
+	const minute = second * 60;
+	const hour = minute * 60;
+	return `${getClockField(hour)}:${getClockField(minute)}:${getClockField(second)}${getDecimals()}`;
+	function getClockField(timeUnit) {
+		let x = 0;
+		while (timestamp >= timeUnit) {
+			timestamp -= timeUnit;
+			x++;
+		}
+		const asString = `${x}`;
+		return asString.length === 1 ? `0${asString}` : asString;
+	}
+	function getDecimals() {
+		return decimalAfterSeconds ? `.${getClockField(1).slice(0, decimalAfterSeconds)}` : '';
+	}
 }
 /**1 becomes '1st' , 2 becomes '2nd', 3 becomes '3rd' and so on */
 export function toOrdinal(number) {
-    const asString = String(number);
-    const lastDigit = asString[asString.length - 1];
-    if ([11, 12, 13].includes(Number(number))) {
-        return `${number}th`;
-    }
-    switch (lastDigit) {
-        case '1': return `${number}st`;
-        case '2': return `${number}nd`;
-        case '3': return `${number}rd`;
-        default: return `${number}th`;
-    }
+	const asString = String(number);
+	const lastDigit = asString[asString.length - 1];
+	if ([11, 12, 13].includes(Number(number))) {
+		return `${number}th`;
+	}
+	switch (lastDigit) {
+		case '1': return `${number}st`;
+		case '2': return `${number}nd`;
+		case '3': return `${number}rd`;
+		default: return `${number}th`;
+	}
 }
 _; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 _; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
@@ -441,30 +445,32 @@ _; /********** FOR OBJECTS ******************** FOR OBJECTS ********************
 _; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 /**Add all default properties missing in an object*/
 export function addMissingPropsToObjects(original, defaults) {
-    objectKeys(defaults).forEach(key => { if (!Object.prototype.hasOwnProperty.call(original, key)) {
-        original[key] = defaults[key];
-    } });
-    return original;
+	objectKeys(defaults).forEach(key => {
+		if (!Object.prototype.hasOwnProperty.call(original, key)) {
+			original[key] = defaults[key];
+		}
+	});
+	return original;
 }
 /**Console log an object to its full depth */
 export function consoleLogFull(data) { console.log(util.inspect(data, { showHidden: false, depth: null, colors: true })); } //@btr-ignore
 /**Return a copy that can be altered without having to worry about modifying the original */
 export function deepClone(originalObject) {
-    const copy = JSON.parse(stringify(originalObject));
-    ifObject_copyRebindedMethods();
-    return copy;
-    function ifObject_copyRebindedMethods() {
-        if (Array.isArray(originalObject)) {
-            return;
-        }
-        objectEntries(originalObject).forEach(entry => {
-            const { key, value } = entry;
-            if (typeof value !== 'function') {
-                return;
-            }
-            copy[key] = value.bind(copy);
-        });
-    }
+	const copy = JSON.parse(stringify(originalObject));
+	ifObject_copyRebindedMethods();
+	return copy;
+	function ifObject_copyRebindedMethods() {
+		if (Array.isArray(originalObject)) {
+			return;
+		}
+		objectEntries(originalObject).forEach(entry => {
+			const { key, value } = entry;
+			if (typeof value !== 'function') {
+				return;
+			}
+			copy[key] = value.bind(copy);
+		});
+	}
 }
 /**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
 export function getUniqueId(suffix) { return suffix + '_' + getUniqueId_generator.next().value; }
@@ -472,13 +478,13 @@ export function getUniqueId(suffix) { return suffix + '_' + getUniqueId_generato
 export function hasOwnProperty(x, key) { return Object.prototype.hasOwnProperty.call(x, key); }
 /**Map an object! (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
 export function mapObject(object, mappingFn) {
-    const newObject = {};
-    objectEntries(object).forEach(x => { newObject[x.key] = mappingFn(x.value); });
-    return newObject;
+	const newObject = {};
+	objectEntries(object).forEach(x => { newObject[x.key] = mappingFn(x.value); });
+	return newObject;
 }
 /**Object.Prototype.entries but with proper type-inference */
 export function objectEntries(object) {
-    return Object.entries(object).map(entry => ({ key: entry[0], value: entry[1] })); //@btr-ignore
+	return Object.entries(object).map(entry => ({ key: entry[0], value: entry[1] })); //@btr-ignore
 }
 /**Object.keys but with proper type-inference */ //@btr-ignore
 export function objectKeys(object) { return Object.keys(object); } //@btr-ignore
@@ -486,33 +492,33 @@ export function objectKeys(object) { return Object.keys(object); } //@btr-ignore
 export function objectValues(object) { return Object.values(object); } //@btr-ignore
 /**Create an object with only the specified properties of another base object (references are kept) */
 export function pick(theObject, properties) {
-    const thePartial = {};
-    objectEntries(theObject).forEach(entry => {
-        const { key, value } = entry;
-        if (properties.includes(key)) {
-            //@ts-expect-error because object/key types are weird, but it workds
-            thePartial[key] = value;
-        }
-    });
-    return thePartial;
+	const thePartial = {};
+	objectEntries(theObject).forEach(entry => {
+		const { key, value } = entry;
+		if (properties.includes(key)) {
+			//@ts-expect-error because object/key types are weird, but it workds
+			thePartial[key] = value;
+		}
+	});
+	return thePartial;
 }
 /**Replace the values of an object with those of another that shares the schema*/
 export function replaceObject(originalObject, newObject) {
-    objectKeys(originalObject).forEach(key => delete originalObject[key]);
-    objectKeys(newObject).forEach(key => originalObject[key] = newObject[key]);
+	objectKeys(originalObject).forEach(key => delete originalObject[key]);
+	objectKeys(newObject).forEach(key => originalObject[key] = newObject[key]);
 }
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods, see deepClone) */
 export function stringify(object) {
-    const seen = new WeakSet();
-    return JSON.stringify(object, (_key, value) => {
-        if (typeof value === 'object' && value !== null) {
-            if (seen.has(value)) {
-                return '< Circular >';
-            }
-            seen.add(value);
-        }
-        return value;
-    }, '  ');
+	const seen = new WeakSet();
+	return JSON.stringify(object, (_key, value) => {
+		if (typeof value === 'object' && value !== null) {
+			if (seen.has(value)) {
+				return '< Circular >';
+			}
+			seen.add(value);
+		}
+		return value;
+	}, '  ');
 }
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
@@ -536,24 +542,24 @@ _; /********** FOR TIMERS ******************** FOR TIMERS ******************** F
  * @returns initializeTimer's resolveInfo with the return of onKill as the value (since onEach never resolves, just keeps going)
  */
 export async function initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully) {
-    const doContinue = await stayAliveChecker();
-    return { timesRanSucessfully, ...await getResult() };
-    async function getResult() {
-        return await new Promise(resolve => {
-            if (doContinue) {
-                initializeTimer(id, Date.now() + intervalInMs, onEach, onKill).then(result => {
-                    if (result.wasCancelled) {
-                        return resolve(result);
-                    }
-                    initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1).then(result => resolve(result));
-                });
-            }
-            else {
-                initializeTimer(id, Date.now() + intervalInMs, onEach, onKill).then(result => resolve(result));
-                killTimer(id, `stayAliveChecker (${stayAliveChecker.name}) = false`);
-            }
-        });
-    }
+	const doContinue = await stayAliveChecker();
+	return { timesRanSucessfully, ...await getResult() };
+	async function getResult() {
+		return await new Promise(resolve => {
+			if (doContinue) {
+				initializeTimer(id, Date.now() + intervalInMs, onEach, onKill).then(result => {
+					if (result.wasCancelled) {
+						return resolve(result);
+					}
+					initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1).then(result => resolve(result));
+				});
+			}
+			else {
+				initializeTimer(id, Date.now() + intervalInMs, onEach, onKill).then(result => resolve(result));
+				killTimer(id, `stayAliveChecker (${stayAliveChecker.name}) = false`);
+			}
+		});
+	}
 }
 /**
  * Set a cancellable timer that runs at the specified time
@@ -564,63 +570,63 @@ export async function initializeInterval(id, intervalInMs, stayAliveChecker, onE
  * @returns the return of "onComplete" if it was completed, or all info revelant to cancellation along with the value of "onCancel"
  */
 export async function initializeTimer(id, runAt, onComplete, onCancel) {
-    const timer = {
-        id, runAt, onComplete, onCancel,
-        value_onComplete: nullAs(),
-        value_onCancel: nullAs(),
-        resolveInfo: nullAs(),
-        startedAt: Date.now(),
-        wasCancelled: false,
-        cancelStack: '',
-        cancelledAt: 0,
-    };
-    timers.push(timer);
-    return await interval();
-    async function getResolvedTimer() {
-        const { id, startedAt, runAt, onComplete, onCancel, cancelledAt, cancelStack, wasCancelled } = timer;
-        if (!timer.wasCancelled) {
-            timer.value_onComplete = await timer.onComplete();
-        }
-        else {
-            doNothing;
-        } /**timer.value_onCancel should have been set in killTimer */
-        timer.resolveInfo = {
-            timerId: id,
-            startedAt: formatDate(startedAt, 'English', 'medium+hour'),
-            intendedRunAt: formatDate(runAt, 'English', 'medium+hour'),
-            cancelledAt: wasCancelled ? formatDate(cancelledAt, 'English', 'medium+hour') : null,
-            timeElapsedBeforeCancelation: wasCancelled ? `${(cancelledAt - startedAt) / 1000} seconds` : null,
-            timeLeftBeforeCancelation: wasCancelled ? `${(runAt - timer.cancelledAt) / 1000} seconds` : null,
-            onCompleteFn: onComplete.name,
-            onCancelFn: onCancel.name,
-            cancelStack,
-        };
-        return timer;
-    }
-    async function interval() {
-        const maxInterval = 1000;
-        const timeLeft = Math.max(runAt - Date.now(), 0);
-        const isTheLastInterval = maxInterval >= timeLeft;
-        await delay(isTheLastInterval ? timeLeft : maxInterval);
-        if (isTheLastInterval) {
-            removeItem(timers, timer);
-        }
-        return timer.wasCancelled ? timer : isTheLastInterval ? getResolvedTimer() : interval();
-    }
+	const timer = {
+		id, runAt, onComplete, onCancel,
+		value_onComplete: nullAs(),
+		value_onCancel: nullAs(),
+		resolveInfo: nullAs(),
+		startedAt: Date.now(),
+		wasCancelled: false,
+		cancelStack: '',
+		cancelledAt: 0,
+	};
+	timers.push(timer);
+	return await interval();
+	async function getResolvedTimer() {
+		const { id, startedAt, runAt, onComplete, onCancel, cancelledAt, cancelStack, wasCancelled } = timer;
+		if (!timer.wasCancelled) {
+			timer.value_onComplete = await timer.onComplete();
+		}
+		else {
+			doNothing;
+		} /**timer.value_onCancel should have been set in killTimer */
+		timer.resolveInfo = {
+			timerId: id,
+			startedAt: formatDate(startedAt, 'English', 'medium+hour'),
+			intendedRunAt: formatDate(runAt, 'English', 'medium+hour'),
+			cancelledAt: wasCancelled ? formatDate(cancelledAt, 'English', 'medium+hour') : null,
+			timeElapsedBeforeCancelation: wasCancelled ? `${(cancelledAt - startedAt) / 1000} seconds` : null,
+			timeLeftBeforeCancelation: wasCancelled ? `${(runAt - timer.cancelledAt) / 1000} seconds` : null,
+			onCompleteFn: onComplete.name,
+			onCancelFn: onCancel.name,
+			cancelStack,
+		};
+		return timer;
+	}
+	async function interval() {
+		const maxInterval = 1000;
+		const timeLeft = Math.max(runAt - Date.now(), 0);
+		const isTheLastInterval = maxInterval >= timeLeft;
+		await delay(isTheLastInterval ? timeLeft : maxInterval);
+		if (isTheLastInterval) {
+			removeItem(timers, timer);
+		}
+		return timer.wasCancelled ? timer : isTheLastInterval ? getResolvedTimer() : interval();
+	}
 }
 /**Kill a timer created with initializeTimer/Interval, the reason provided will become a divine stack */
 export async function killTimer(timerId, reason) {
-    const theTimer = timers.find(x => x.id === timerId);
-    if (!theTimer) {
-        divine.error('Unable to cancel, no timer was found with this id: ' + timerId);
-        return;
-    }
-    removeItem(timers, theTimer);
-    theTimer.value_onCancel = await theTimer.onCancel();
-    theTimer.cancelStack = getTraceableStack(reason, 'killTimer');
-    theTimer.cancelledAt = Date.now();
-    theTimer.wasCancelled = true;
-    return theTimer;
+	const theTimer = timers.find(x => x.id === timerId);
+	if (!theTimer) {
+		divine.error('Unable to cancel, no timer was found with this id: ' + timerId);
+		return;
+	}
+	removeItem(timers, theTimer);
+	theTimer.value_onCancel = await theTimer.onCancel();
+	theTimer.cancelStack = getTraceableStack(reason, 'killTimer');
+	theTimer.cancelledAt = Date.now();
+	theTimer.wasCancelled = true;
+	return theTimer;
 }
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
@@ -639,11 +645,11 @@ export function asSingularOrPlural(noun, amount) { return noun + `${amount === 1
 export function errorLog(message) { return colorLog('red', message + ' 💀'); }
 /**TODO: describe me */
 export function getTraceableStack(error, type) {
-    const { stack } = (typeof error === 'string' ? new Error(error) : error);
-    return `${stack}`.
-        replace(/\(node:3864\).{0,}\n.{0,}exit code./, ''). //regexHere
-        replace(/\n {4}at/g, `\n ${' * '.repeat(5)} at`). //regexHere
-        replace(/^Error/, type); //regexHere
+	const { stack } = (typeof error === 'string' ? new Error(error) : error);
+	return `${stack}`.
+		replace(/\(node:3864\).{0,}\n.{0,}exit code./, ''). //regexHere
+		replace(/\n {4}at/g, `\n ${' * '.repeat(5)} at`). //regexHere
+		replace(/^Error/, type); //regexHere
 }
 /**@returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export function isGuest(username) { return /Guest[0-9]{13}/i.test(`${username}`); } //regexHere
@@ -655,8 +661,8 @@ export function successLog(message) { return colorLog('green', message + ' ✔�
 export function toSingleLine(sentence) { return `${sentence}`.replace(/ {0,}\n {0,}/g, ' '); } //regexHere
 /**Return an string with X amount of (character) as margin per side */
 export function surroundedString(string, margin, perSide) {
-    const x = margin.repeat(perSide);
-    return x + string + x;
+	const x = margin.repeat(perSide);
+	return x + string + x;
 }
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
@@ -676,7 +682,7 @@ _; /********** MISC ******************** MISC ******************** MISC ********
  * @returns
  */
 export function dataIsEqual(A, B, errorHandler = nullAs()) {
-    return zGetSafeParseResultAndHandleErrorMessage(zGetSchemaFromData(A), B, errorHandler);
+	return zGetSafeParseResultAndHandleErrorMessage(zGetSchemaFromData(A), B, errorHandler);
 }
 /**For obligatory callbacks */
 export function doNothing(...args) { args; }
@@ -702,42 +708,42 @@ _; /********** ZOD ******************** ZOD ******************** ZOD ***********
  * @returns
  */
 export function zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler = nullAs()) {
-    const result = (schema.strict ? schema.strict() : schema).safeParse(data);
-    if (result.success === false && errorHandler) {
-        errorHandler(fromZodError(result.error).message);
-    }
-    return result;
+	const result = (schema.strict ? schema.strict() : schema).safeParse(data);
+	if (result.success === false && errorHandler) {
+		errorHandler(fromZodError(result.error).message);
+	}
+	return result;
 }
 /**Dynamically generate a Zod Schema from an array/object */
 export function zGetSchemaFromData(data) {
-    if (!data) {
-        return z.nullable(nullAs());
-    }
-    if (typeof data !== 'object') {
-        return z.literal(data);
-    }
-    if (Array.isArray(data)) {
-        return z.tuple(data.map(toLiteral));
-    }
-    return z.object(mapObject(data, toLiteral));
-    function toLiteral(x) {
-        return typeof x === 'object' ?
-            zGetSchemaFromData(x) :
-            z.literal(x);
-    }
+	if (!data) {
+		return z.nullable(nullAs());
+	}
+	if (typeof data !== 'object') {
+		return z.literal(data);
+	}
+	if (Array.isArray(data)) {
+		return z.tuple(data.map(toLiteral));
+	}
+	return z.object(mapObject(data, toLiteral));
+	function toLiteral(x) {
+		return typeof x === 'object' ?
+			zGetSchemaFromData(x) :
+			z.literal(x);
+	}
 }
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler in case it isn't a fit. */
 export function zodCheck_curry(errorHandler) {
-    return function zodCheck(schema, data) {
-        function body(errorHandler, schema, data) {
-            return zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler).success;
-        }
-        return body(errorHandler, schema, data);
-    };
+	return function zodCheck(schema, data) {
+		function body(errorHandler, schema, data) {
+			return zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler).success;
+		}
+		return body(errorHandler, schema, data);
+	};
 }
 /**Simple zodCheck without any kind of error handler */
 export function zodCheck_simple(schema, data) {
-    return zGetSafeParseResultAndHandleErrorMessage(schema, data, doNothing).success;
+	return zGetSafeParseResultAndHandleErrorMessage(schema, data, doNothing).success;
 }
 /**
  * Check data against a provided schema, and execute either the success or error handler
@@ -748,10 +754,10 @@ export function zodCheck_simple(schema, data) {
  * @param errorHandler The function that will execute if data does NOT fits zSchema
  */
 export function zodCheckAndHandle(zSchema, data, successHandler, args, errorHandler) {
-    const zResult = zGetSafeParseResultAndHandleErrorMessage(zSchema, data, errorHandler);
-    if (zResult.success === true && successHandler) {
-        successHandler(...args);
-    }
+	const zResult = zGetSafeParseResultAndHandleErrorMessage(zSchema, data, errorHandler);
+	if (zResult.success === true && successHandler) {
+		successHandler(...args);
+	}
 }
 /**
  * Pipe with schema validation and basic error tracking/handling
@@ -761,23 +767,23 @@ export function zodCheckAndHandle(zSchema, data, successHandler, args, errorHand
  * @returns
  */
 export function zPipe(zSchema, initialValue, ...fns) {
-    const initialPipeState = { value: initialValue, error: nullAs(), failedAt: nullAs() };
-    return fns.reduce((pipeState, fn, index) => {
-        if (pipeState.error) {
-            return pipeState;
-        }
-        pipeState.value = fn(pipeState.value);
-        zGetSafeParseResultAndHandleErrorMessage(zSchema, pipeState.value, errorHandler);
-        return pipeState;
-        function errorHandler(err) {
-            pipeState.failedAt = `Step ${index + 1}: ${fn.name}`;
-            pipeState.error = err;
-        }
-    }, initialPipeState);
+	const initialPipeState = { value: initialValue, error: nullAs(), failedAt: nullAs() };
+	return fns.reduce((pipeState, fn, index) => {
+		if (pipeState.error) {
+			return pipeState;
+		}
+		pipeState.value = fn(pipeState.value);
+		zGetSafeParseResultAndHandleErrorMessage(zSchema, pipeState.value, errorHandler);
+		return pipeState;
+		function errorHandler(err) {
+			pipeState.failedAt = `Step ${index + 1}: ${fn.name}`;
+			pipeState.error = err;
+		}
+	}, initialPipeState);
 }
 /**Zod's "record", but all keys are Required instead of Optional as it is the default */
 export function zRecord(keys, schema) {
-    return z.object(arrayToObject(keys, () => schema));
+	return z.object(arrayToObject(keys, () => schema));
 }
 /**
  * Return the regex given with possibly an error indicating it wasn't matched.
@@ -787,12 +793,12 @@ export function zRecord(keys, schema) {
  * @returns Arguments for zod's regex string method (theRegex, theErrorMesssage)
  */
 export function zRegexGenerator(regex, exactPhrase) {
-    if (exactPhrase) {
-        let asString = String(regex);
-        asString = asString.slice(1, asString.length - 1);
-        regex = new RegExp('^' + asString + '$');
-    }
-    return [regex, 'Regex not matched: ' + regex];
+	if (exactPhrase) {
+		let asString = String(regex);
+		asString = asString.slice(1, asString.length - 1);
+		regex = new RegExp('^' + asString + '$');
+	}
+	return [regex, 'Regex not matched: ' + regex];
 }
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
@@ -806,129 +812,131 @@ _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ************
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 /**Log every socket.io event with the data received for debugging purposes */
 export function clientSocketLogOnAny(useStore) {
-    useStore().socket.onAny((eventName, ...args) => {
-        const eventInfo = { event: eventName, timestamp: Date.now(), data: args };
-        colorLog('red', stringify(eventInfo));
-        useStore().socketEvents.unshift(eventInfo);
-    });
+	useStore().socket.onAny((eventName, ...args) => {
+		const eventInfo = { event: eventName, timestamp: Date.now(), data: args };
+		colorLog('red', stringify(eventInfo));
+		useStore().socketEvents.unshift(eventInfo);
+	});
 }
 /**Copy to clipboard, objects arrays get stringify'd */
 export function copyToClipboard_client(x) {
-    const text = stringify(x);
-    const a = document.createElement('textarea');
-    a.innerHTML = text;
-    document.body.appendChild(a);
-    a.select();
-    document.execCommand('copy');
-    document.body.removeChild(a);
+	const text = stringify(x);
+	const a = document.createElement('textarea');
+	a.innerHTML = text;
+	document.body.appendChild(a);
+	a.select();
+	document.execCommand('copy');
+	document.body.removeChild(a);
 }
 /**Stringifies and downloads the provided data*/
 export function downloadFile_client(filename, fileFormat, data) {
-    if (isNode) {
-        colorLog('downloadFile_client can only be run clientside!');
-        return;
-    }
-    const a = document.createElement('a');
-    a.href = window.URL.createObjectURL(new Blob([data], { type: 'text/plain' }));
-    a.download = `${filename}${fileFormat}`;
-    a.click();
+	if (isNode) {
+		colorLog('downloadFile_client can only be run clientside!');
+		return;
+	}
+	const a = document.createElement('a');
+	a.href = window.URL.createObjectURL(new Blob([data], { type: 'text/plain' }));
+	a.download = `${filename}${fileFormat}`;
+	a.click();
 }
 /**
  * Register into the window's a finder and logger of all vue components, including the main instance and pinia store
  * @example getAppLog(window as never, useStore) //at the bottom of store.ts
  */
 export function getAppLog(window, useStore) {
-    delay(1000).then(() => {
-        window.appLog = () => mapObject({
-            store: useStore(),
-            ...arrayToObject(objectEntries(window.vueComponents).map(entry => {
-                const components = window.vueComponents[entry.key];
-                return components.map(x => components.length > 1 ? x.id : x.name);
-            }).flat(), idOrName => objectValues(window.vueComponents).flat().find(x => [x.id, x.name].includes(idOrName)))
-        }, component => ({
-            ...arrayToObject(sortAlphabetically(objectKeys(component)).filter(key => ![
-                '$dispose', '$id', '$onAction', '$patch', '$reset', '$subscribe', '_hotUpdate', '_isOptionsAPI', '_r',
-                '_uid', '_isVue', '__v_skip', '_scope', '$options', '_renderProxy', '_self', '$parent', '$root', '$children', '$refs', '_provided',
-                '_watcher', '_inactive', '_directInactive', '_isMounted', '_isDestroyed', '_isBeingDestroyed', '_events', '_hasHookEvent',
-                '_vnode', '_staticTrees', '$vnode', '$slots', '$scopedSlots', '_c', '$createElement', '$attrs', '$listeners', '$pinia',
-                '_bv__modal', '_bv__toast', '_data', '_computedWatchers', '$el', 'name', 'id', 'beforeDestroy'
-            ].includes(key)), key => () => console.log(stringify(component[key])) //@btr-ignore
-            )
-        }));
-    });
+	delay(1000).then(() => {
+		window.appLog = () => mapObject({
+			store: useStore(),
+			...arrayToObject(objectEntries(window.vueComponents).map(entry => {
+				const components = window.vueComponents[entry.key];
+				return components.map(x => components.length > 1 ? x.id : x.name);
+			}).flat(), idOrName => objectValues(window.vueComponents).flat().find(x => [x.id, x.name].includes(idOrName)))
+		}, component => ({
+			...arrayToObject(sortAlphabetically(objectKeys(component)).filter(key => ![
+				'$dispose', '$id', '$onAction', '$patch', '$reset', '$subscribe', '_hotUpdate', '_isOptionsAPI', '_r',
+				'_uid', '_isVue', '__v_skip', '_scope', '$options', '_renderProxy', '_self', '$parent', '$root', '$children', '$refs', '_provided',
+				'_watcher', '_inactive', '_directInactive', '_isMounted', '_isDestroyed', '_isBeingDestroyed', '_events', '_hasHookEvent',
+				'_vnode', '_staticTrees', '$vnode', '$slots', '$scopedSlots', '_c', '$createElement', '$attrs', '$listeners', '$pinia',
+				'_bv__modal', '_bv__toast', '_data', '_computedWatchers', '$el', 'name', 'id', 'beforeDestroy'
+			].includes(key)), key => () => console.log(stringify(component[key])) //@btr-ignore
+			)
+		}));
+	});
 }
 /**localStorage, but better */
 export function getLocalStorageAndSetter(defaults) {
-    const storedInfo = getStoredInfo();
-    objectEntries(defaults).forEach(({ key, value }) => { if (!(key in storedInfo)) {
-        localStorageSet(key, value);
-    } });
-    return { myLocalStorage: getStoredInfo(), localStorageSet };
-    function getStoredInfo() {
-        return JSON.parse(localStorage['info'] || '{}');
-    }
-    function localStorageSet(key, value) {
-        const storedInfo = getStoredInfo();
-        storedInfo[key] = value;
-        localStorage['info'] = stringify(storedInfo);
-    }
+	const storedInfo = getStoredInfo();
+	objectEntries(defaults).forEach(({ key, value }) => {
+		if (!(key in storedInfo)) {
+			localStorageSet(key, value);
+		}
+	});
+	return { myLocalStorage: getStoredInfo(), localStorageSet };
+	function getStoredInfo() {
+		return JSON.parse(localStorage['info'] || '{}');
+	}
+	function localStorageSet(key, value) {
+		const storedInfo = getStoredInfo();
+		storedInfo[key] = value;
+		localStorage['info'] = stringify(storedInfo);
+	}
 }
 /**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
 export function newToast_client_curry($bvToast) {
-    return function body(title, message, variant) {
-        if (!zodCheck_curry(alert)(zValidVariants, variant)) {
-            return;
-        }
-        $bvToast.toast(message, {
-            toaster: 'b-toaster-bottom-right',
-            autoHideDelay: 5000,
-            solid: true,
-            variant,
-            title
-        });
-    };
+	return function body(title, message, variant) {
+		if (!zodCheck_curry(alert)(zValidVariants, variant)) {
+			return;
+		}
+		$bvToast.toast(message, {
+			toaster: 'b-toaster-bottom-right',
+			autoHideDelay: 5000,
+			solid: true,
+			variant,
+			title
+		});
+	};
 }
 /**Add/remove a vue component to the window for easy access/debugging */
 export function trackVueComponent(name, component, window) {
-    component.name = name;
-    component.id = getUniqueId(name);
-    component.beforeDestroy = onDestroy;
-    if (!window.vueComponents) {
-        window.vueComponents = {};
-    }
-    if (!window.vueComponents[name]) {
-        window.vueComponents[name] = [];
-    }
-    successLog(`Component '${name}' added to window.vueComponents [${window.vueComponents[name].length}]`);
-    window.vueComponents[name].push(component);
-    logAllComponents();
-    function logAllComponents() {
-        colorLog('blue', `window.vueComponents: ${stringify(mapObject(window.vueComponents, value => value.length))}`);
-    }
-    function onDestroy() {
-        errorLog(`Component '${name}' (id: ${component.id}) removed from window.vueComponents`);
-        removeItem(window.vueComponents[name], component);
-        logAllComponents();
-    }
+	component.name = name;
+	component.id = getUniqueId(name);
+	component.beforeDestroy = onDestroy;
+	if (!window.vueComponents) {
+		window.vueComponents = {};
+	}
+	if (!window.vueComponents[name]) {
+		window.vueComponents[name] = [];
+	}
+	successLog(`Component '${name}' added to window.vueComponents [${window.vueComponents[name].length}]`);
+	window.vueComponents[name].push(component);
+	logAllComponents();
+	function logAllComponents() {
+		colorLog('blue', `window.vueComponents: ${stringify(mapObject(window.vueComponents, value => value.length))}`);
+	}
+	function onDestroy() {
+		errorLog(`Component '${name}' (id: ${component.id}) removed from window.vueComponents`);
+		removeItem(window.vueComponents[name], component);
+		logAllComponents();
+	}
 }
 //TODO: describe me
 export async function triggerModal(useStore, id, action) {
-    if (action === 'show') {
-        useStore().bvModal.show(id); //@btr-ignore
-        for (let i = 0; i < 10; i++) {
-            if (!elementExists()) {
-                await delay(250);
-            }
-        }
-        if (!elementExists()) {
-            promptError();
-        }
-    }
-    if (action === 'hide') {
-        elementExists() ? useStore().bvModal.hide(id) : promptError(); //@btr-ignore
-    }
-    function elementExists() { return Boolean(document.getElementById(id)); }
-    function promptError() { alert(`Modal with the '${id}' id was not found. Could not ${action}. Please report this`); }
+	if (action === 'show') {
+		useStore().bvModal.show(id); //@btr-ignore
+		for (let i = 0; i < 10; i++) {
+			if (!elementExists()) {
+				await delay(250);
+			}
+		}
+		if (!elementExists()) {
+			promptError();
+		}
+	}
+	if (action === 'hide') {
+		elementExists() ? useStore().bvModal.hide(id) : promptError(); //@btr-ignore
+	}
+	function elementExists() { return Boolean(document.getElementById(id)); }
+	function promptError() { alert(`Modal with the '${id}' id was not found. Could not ${action}. Please report this`); }
 }
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/

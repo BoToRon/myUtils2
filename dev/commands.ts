@@ -11,11 +11,11 @@ import inquirer from 'inquirer'
 _
 import { execSync, execFile } from 'child_process'	//DELETETHISFORCLIENT
 _
-import { basicProjectChecks } from '../basicProjectChecks'
+import { basicProjectChecks } from '../basicProjectChecks.js'
+_
+import { utilsRepoName, npmVersionOptions } from '../constants.js'
 _
 import { btr_commands as recordOfCommands, validNpmVersion } from '../types.js'
-_
-import { utilsRepoName, npmVersionOptions } from '../constants'
 _
 import {
 	checkCodeThatCouldBeUpdated, colorLog, copyToClipboard_server, delay, divine, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles,
@@ -158,7 +158,8 @@ async function package_transpileAll() {
 
 	const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x)) //regexHere
 	lines.splice(cutPoint, lines.length)
-	lines.push('export const colorLog = (color: string, message: string) => console.log(`%c${message}`, `color: ${color};`) //@btr-ignore')
+
+	lines.push('export function colorLog(color: string, message: string) => console.log(`%c${message}`, `color: ${color};`); //@btr-ignore')
 
 	await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'))
 

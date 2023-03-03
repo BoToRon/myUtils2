@@ -842,6 +842,7 @@ export function clientSocketLogOnAny(
 }
 /**Copy to clipboard, objects arrays get stringify'd */
 export function copyToClipboard_client(x: unknown) {
+	if (isNode) { divine.error('copyToClipboard_client can only be run clientside!'); return }
 	const text = stringify(x as object)
 	const a = document.createElement('textarea')
 	a.innerHTML = text
@@ -852,7 +853,7 @@ export function copyToClipboard_client(x: unknown) {
 }
 /**Stringifies and downloads the provided data*/
 export function downloadFile_client(filename: string, fileFormat: '.txt' | '.json', data: unknown) {
-	if (isNode) { bigConsoleError('downloadFile_client can only be run clientside!'); return }
+	if (isNode) { divine.error('downloadFile_client can only be run clientside!'); return }
 	const a = document.createElement('a')
 	a.href = window.URL.createObjectURL(new Blob([data as BlobPart], { type: 'text/plain' }))
 	a.download = `${filename}${fileFormat}`
