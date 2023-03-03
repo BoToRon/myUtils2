@@ -87,7 +87,7 @@ async function transpileAll() {
 
 	async function getLinesInBtrTs() {
 		return (await fsReadFileAsync(filename)).
-			replaceAll(/from '\.\/(?=constants|types)/g, 'from \'./').
+			replaceAll(/from '\.\/(?=constants|types)/g, 'from \'../').
 			replaceAll(/bigConsoleError/g, 'colorLog').
 			split('\n')
 	}
