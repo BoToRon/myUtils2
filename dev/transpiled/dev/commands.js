@@ -1,5 +1,5 @@
 let _;
-_; //			tsc --target esnext dev/commands.ts --outDir ./dev/transpiled 
+_; //			tsc --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
 _; // 			node dev/transpiled/dev/commands.js
 import fs from 'fs';
 _;
@@ -54,9 +54,16 @@ else {
     inquirePromptCommands(mapCommandsForInquirePrompt(commands_forProject), true);
 }
 //GENERAL USE
-function transpileAndRunTestRunTs() { transpileFiles(['./test/run.ts'], './test/transpiled'); execFile('./test/transpiled/test/run.ts'); }
-async function btrCheck() { checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths), warningsCount); }
-function quitCommandLineProgram() { killProcess('devForProject\'s commands terminated'); }
+function transpileAndRunTestRunTs() {
+    transpileFiles(['./test/run.ts'], './test/transpiled');
+    execFile('./test/transpiled/test/run.ts');
+}
+async function btrCheck() {
+    checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths), warningsCount);
+}
+function quitCommandLineProgram() {
+    killProcess('devForProject\'s commands terminated');
+}
 async function btrCheckFilesAndReportResult() {
     await btrCheck();
     errors.length ? colorLog('red', errors.length + ' errors') : successLog('No btr-errors detected');
@@ -154,8 +161,8 @@ async function package_transpileAll() {
     }
 }
 //FOR PROJECT ONLY
-function project_buildClientFilesWithVite() { execSync('cd client & npm run build'); }
 function project_buildAll() { project_buildClientFilesWithVite(); project_buildServerFiles(); }
+function project_buildClientFilesWithVite() { execSync('cd client & npm run build'); }
 function project_initNodemon() { execSync('nodemon test/server/init.js'); }
 function project_installBtrUtils() { execSync('npm i @botoron/utils'); }
 function project_initVite() { execSync('cd client & npm run dev'); }
@@ -166,7 +173,7 @@ async function project_btrCheckAndTranspileToTestFolder() {
         errorLog('btr-errors detected, fix them before attempting to transpile again');
         return;
     }
-    execSync('tsc --target esnext server/init.ts --outDir ./test');
+    transpileFiles(['server/init.ts'], './test');
     await fsWriteFileAsync('test/package.json', packageJsonContent);
     successLog('files transpiled to ./test');
 }
@@ -176,7 +183,7 @@ async function project_buildServerFiles() {
     await copyFileToDist('.env');
     await copyFileToDist('.gitignore');
     await copyFileToDist(PACKAGE_DOT_JSON);
-    execSync(`tsc --target esnext server/init.ts server/io.ts --outDir ${serverFolder_dist}`);
+    transpileFiles(['server/init.ts', 'server/io.ts'], serverFolder_dist);
     await toggle_devOrProd_inRef();
     successLog('(server) Build sucessful!');
     async function copyFileToDist(filename) {
@@ -200,15 +207,12 @@ async function project_buildServerFiles() {
         await fsWriteFileAsync(filepath, (await fsReadFileAsync(filepath)).replace('devOrProd = \'dev\'', 'devOrProd = \'prod\''));
     }
     async function transpileTypesFile() {
-        return await new Promise(resolve => {
-            fsReadFileAsync('types.d.ts').then(typesFile => {
-                fsWriteFileAsync('types.ts', typesFile).then(() => {
-                    execSync('tsc --target esnext types.ts');
-                    successLog('types.d.ts transpiled to root folder!');
-                    fs.unlinkSync('types.ts');
-                    delay(1000).then(() => resolve(true));
-                });
-            });
-        });
+        const typesFile = await fsReadFileAsync('types.d.ts');
+        fsWriteFileAsync('types.ts', typesFile);
+        transpileFiles(['types.ts'], '.');
+        successLog('types.d.ts transpiled to root folder!');
+        fs.unlinkSync('types.ts');
+        await delay(1000);
+        return true;
     }
 }

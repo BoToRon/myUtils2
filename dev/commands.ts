@@ -1,5 +1,5 @@
 let _
-_ //			tsc --target esnext dev/commands.ts --outDir ./dev/transpiled 
+_ //			tsc --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
 _ // 			node dev/transpiled/dev/commands.js
 import fs from 'fs'
 _
@@ -203,7 +203,7 @@ async function project_btrCheckAndTranspileToTestFolder() {
 	await btrCheck()
 	if (errors.length || warningsCount.count > 1) { errorLog('btr-errors detected, fix them before attempting to transpile again'); return }
 
-	execSync('tsc --target esnext server/init.ts --outDir ./test')
+	transpileFiles(['server/init.ts'], './test')
 	await fsWriteFileAsync('test/package.json', packageJsonContent)
 	successLog('files transpiled to ./test')
 }
@@ -215,7 +215,7 @@ async function project_buildServerFiles() {
 	await copyFileToDist('.gitignore')
 	await copyFileToDist(PACKAGE_DOT_JSON)
 
-	execSync(`tsc --target esnext server/init.ts server/io.ts --outDir ${serverFolder_dist}`)
+	transpileFiles(['server/init.ts', 'server/io.ts'], serverFolder_dist)
 	await toggle_devOrProd_inRef()
 	successLog('(server) Build sucessful!')
 
@@ -241,15 +241,12 @@ async function project_buildServerFiles() {
 	}
 
 	async function transpileTypesFile() {
-		return await new Promise(resolve => {
-			fsReadFileAsync('types.d.ts').then(typesFile => {
-				fsWriteFileAsync('types.ts', typesFile).then(() => {
-					execSync('tsc --target esnext types.ts')
-					successLog('types.d.ts transpiled to root folder!')
-					fs.unlinkSync('types.ts')
-					delay(1000).then(() => resolve(true))
-				})
-			})
-		})
+		const typesFile = await fsReadFileAsync('types.d.ts')
+		fsWriteFileAsync('types.ts', typesFile)
+		transpileFiles(['types.ts'], '.')
+		successLog('types.d.ts transpiled to root folder!')
+		fs.unlinkSync('types.ts')
+		await delay(1000)
+		return true
 	}
 }

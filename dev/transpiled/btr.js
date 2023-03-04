@@ -1140,6 +1140,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
         checkReplaceableCode(['//@ts-ignore'], '//@ts-expect-error'); //@btr-ignore
         checkReplaceableCode(['for await'], 'await asyncForEach'); //@btr-ignore
         checkReplaceableCode(['Object.entries'], 'objectEntries'); //@btr-ignore
+        checkReplaceableCode(['tsc --target'], 'transpileFiles'); //@btr-ignore
         checkReplaceableCode(['| null', 'null |'], 'nullable'); //@btr-ignore
         checkReplaceableCode(['autologin'], 'useStore().login'); //@btr-ignore
         checkReplaceableCode(['Object.values'], 'objectValues'); //@btr-ignore
@@ -1149,6 +1150,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
         checkReplaceableCode([' tryF'], 'divine.try'); //@btr-ignore
         checkReplaceableCode(['z.record'], 'zRecord'); //@btr-ignore
         checkReplaceableCode(['null as'], 'nullAs'); //@btr-ignore
+        checkReplaceableCode([').then('], 'await'); //@btr-ignore
         function checkReplaceableCode(replaceableCodeStrings, suggestedReplacement) {
             replaceableCodeStrings.forEach(replaceableString => {
                 const withEscapedCharacters = replaceableString.replace(/(?=\W{1,1})/g, '\\'); //regexHere
@@ -1159,7 +1161,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
                     return;
                 }
                 warningsCount.count++;
-                colorLog('yellow', surroundedString(warningsCount + ' . WARNING: OUTDATED/REPLACEABLE CODE', '-', 50));
+                colorLog('yellow', surroundedString(warningsCount.count + ' . WARNING: OUTDATED/REPLACEABLE CODE', '-', 50));
                 console.log({
                     matches: matches.map(x => surroundedString(x, ' ', 5)),
                     replaceableCode: surroundedString(replaceableString, ' ', 10),

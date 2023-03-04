@@ -1155,6 +1155,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[], warningsC
 		checkReplaceableCode(['//@ts-ignore'], '//@ts-expect-error')	//@btr-ignore
 		checkReplaceableCode(['for await'], 'await asyncForEach')	//@btr-ignore
 		checkReplaceableCode(['Object.entries'], 'objectEntries')	//@btr-ignore
+		checkReplaceableCode(['tsc --target'], 'transpileFiles') //@btr-ignore
 		checkReplaceableCode(['| null', 'null |'], 'nullable')	//@btr-ignore
 		checkReplaceableCode(['autologin'], 'useStore().login')	//@btr-ignore
 		checkReplaceableCode(['Object.values'], 'objectValues')	//@btr-ignore
@@ -1164,6 +1165,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[], warningsC
 		checkReplaceableCode([' tryF'], 'divine.try')	//@btr-ignore
 		checkReplaceableCode(['z.record'], 'zRecord')	//@btr-ignore
 		checkReplaceableCode(['null as'], 'nullAs')	//@btr-ignore
+		checkReplaceableCode([').then('], 'await') //@btr-ignore
 
 		function checkReplaceableCode(replaceableCodeStrings: string[], suggestedReplacement: string) {
 			replaceableCodeStrings.forEach(replaceableString => {
@@ -1175,7 +1177,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[], warningsC
 				if (!matches.length) { return }
 
 				warningsCount.count++
-				colorLog('yellow', surroundedString(warningsCount + ' . WARNING: OUTDATED/REPLACEABLE CODE', '-', 50))
+				colorLog('yellow', surroundedString(warningsCount.count + ' . WARNING: OUTDATED/REPLACEABLE CODE', '-', 50))
 
 				console.log({ //@btr-ignore
 					matches: matches.map(x => surroundedString(x, ' ', 5)),
@@ -1322,7 +1324,7 @@ export function transpileFiles(sourceFiles: string[], outputDirectory: string) {
 	if (!sourceFiles.length) { killProcess('transpileFiles\'s sourceFiles argument should NOT be an empty array!') }
 
 	colorLog('white', 'Transpiling the following file(s): ' + sourceFiles)
-	const command = `tsc --target esnext ${sourceFiles.join(' ')} --outDir ${outputDirectory}`
+	const command = `tsc --target esnext ${sourceFiles.join(' ')} --outDir ${outputDirectory}` //@btr-ignore
 	try { execSync(command) } catch { doNothing() }
 	colorLog('white', 'Done transpiling!')
 }
