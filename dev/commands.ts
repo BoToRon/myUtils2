@@ -18,7 +18,7 @@ _
 import { btr_commands as recordOfCommands, validNpmVersion } from '../types.js'
 _
 import {
-	checkCodeThatCouldBeUpdated, colorLog, copyToClipboard_server, delay, divine, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles,
+	checkCodeThatCouldBeUpdated, colorLog, copyToClipboard, delay, divine, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles,
 	getFilesAndFoldersNames, inquirePromptCommands, killProcess, logEmptyLine, mapCommandsForInquirePrompt, questionAsPromise, selfFilter, successLog, transpileFiles, zodCheck_curry
 } from '../btr.js'
 
@@ -64,7 +64,8 @@ const commands_forProject: recordOfCommands<command_forProject> = {
 	vue: { description: 'Move to the client folder and init vite', fn: project_initVite },
 }
 
-inquirePromptCommands(mapCommandsForInquirePrompt(isPackage ? commands_forPackage : commands_forProject), true)
+if (isPackage) { inquirePromptCommands(mapCommandsForInquirePrompt(commands_forPackage), true) }
+else { inquirePromptCommands(mapCommandsForInquirePrompt(commands_forProject), true) }
 
 //GENERAL USE
 
@@ -104,7 +105,7 @@ async function package_publish() {
 		//order for these 3 below matters
 		logDetailsForPrompt()
 		const commitMessage = await questionAsPromise('Enter a commit message:')
-		copyToClipboard_server(commitType + ': ' + commitMessage)
+		copyToClipboard(commitType + ': ' + commitMessage)
 
 		if (!zodCheck_curry(killProcess)(z.string().min(15).max(50), commitMessage)) { return prompCommitMessageAndPush(repoName) }
 		return await gitAddCommitPush()
@@ -159,7 +160,15 @@ async function package_transpileAll() {
 	const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x)) //regexHere
 	lines.splice(cutPoint, lines.length)
 
-	lines.push('export function colorLog(color: string, message: string) => console.log(`%c${message}`, `color: ${color};`); //@btr-ignore')
+	lines.push('export function colorLog(color: string, message: string) { console.log(`%c${message}`, `color: ${color};`) } //@btr-ignore')
+	lines.push(`const divine = {
+	error: (err: string | Error) => { alert(err + '\n Please report this') },
+	ping: (message: string) => { divine.error(message) },
+	try: async <T extends (...args: Parameters<T>) => maybePromise<ReturnType<T>>>(fn: T, args: Parameters<T>) => {
+		try { return await fn(...args) }
+		catch (err) { divine.error(err as string) }
+	},
+}`)
 
 	await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'))
 
@@ -169,6 +178,7 @@ async function package_transpileAll() {
 	async function getLinesInBtrTs() {
 		return (await fsReadFileAsync(filename)).
 			replaceAll(/from '\.\/(?=constants|types)/g, 'from \'../').
+			replaceAll(/(cachedFile|myEnv|validChalkColor),/g, '').
 			replaceAll(/bigConsoleError/g, 'colorLog').
 			split('\n')
 	}

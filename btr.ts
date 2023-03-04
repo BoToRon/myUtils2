@@ -252,8 +252,9 @@ export async function asyncForEach<T>(array: T[], asyncFn: (item: T) => Promise<
 	if (resolveSequentially) { for await (const item of array) { await asyncFn(item) } }  //@btr-ignore
 	if (!resolveSequentially) { await Promise.all(array.map(item => asyncFn(item))) }
 }
-/**Set interval with try-catch and called immediately*/
-export function doAndRepeat_server(fn: () => void, interval: number) { divine.try(fn, []); setInterval(() => divine.try(fn, []), interval) }
+/**Set interval with try-catch and call it immediately*/
+export function doAndRepeat(fn: () => void, interval: number) { divine.try(fn, []); setInterval(() => divine.try(fn, []), interval) }
+
 /**
  * Filter and map an array in a single loop
  * @param arr The array to be filterMap'd
@@ -689,6 +690,18 @@ _ /********** MISC ******************** MISC ******************** MISC *********
 _ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 
+/**Copy content to the clipboard, works for both client and server side */
+export function copyToClipboard(x: unknown) {
+	if (isNode) { clipboard.write(stringify(x as object)); return }
+
+	const text = stringify(x as object)
+	const a = document.createElement('textarea')
+	a.innerHTML = text
+	document.body.appendChild(a)
+	a.select()
+	document.execCommand('copy')
+	document.body.removeChild(a)
+}
 /**
  * Compare data B against an schema created from data A 
  * @param A The first piece of data
@@ -840,24 +853,30 @@ export function clientSocketLogOnAny(
 		useStore().socketEvents.unshift(eventInfo)
 	})
 }
-/**Copy to clipboard, objects arrays get stringify'd */
-export function copyToClipboard_client(x: unknown) {
-	if (isNode) { divine.error('copyToClipboard_client can only be run clientside!'); return }
-	const text = stringify(x as object)
-	const a = document.createElement('textarea')
-	a.innerHTML = text
-	document.body.appendChild(a)
-	a.select()
-	document.execCommand('copy')
-	document.body.removeChild(a)
-}
-/**Stringifies and downloads the provided data*/
-export function downloadFile_client(filename: string, fileFormat: '.txt' | '.json', data: unknown) {
-	if (isNode) { divine.error('downloadFile_client can only be run clientside!'); return }
-	const a = document.createElement('a')
-	a.href = window.URL.createObjectURL(new Blob([data as BlobPart], { type: 'text/plain' }))
-	a.download = `${filename}${fileFormat}`
-	a.click()
+/**Stringify and download the provided data */
+export async function downloadFile(filename: string, fileFormat: '.txt' | '.json', data: unknown) {
+
+	if (isNode) { await downloadFile_node() }
+	else { downloadFile_client() }
+
+	isNode ? downloadFile_node() : downloadFile_client()
+
+	function downloadFile_client() {
+		const a = document.createElement('a')
+		a.href = window.URL.createObjectURL(new Blob([data as BlobPart], { type: 'text/plain' }))
+		a.download = `${filename}${fileFormat}`
+		a.click()
+	}
+
+	async function downloadFile_node() {
+		const formatted = stringify(data as object)
+		const dateForFilename = formatDate(Date.now(), 'English', 'short').replace(/\/| |:/g, '_') //regexHere
+		const completeFilename = filename + '_' + dateForFilename + fileFormat
+
+		colorLog('cyan', `Downloading ${completeFilename}..`)
+		await fsWriteFileAsync(completeFilename, formatted)
+		successLog('Done!')
+	}
 }
 /**
  * Register into the window's a finder and logger of all vue components, including the main instance and pinia store
@@ -976,10 +995,12 @@ _ /********** DEPRECATED ******************** DEPRECATED ******************** DE
 _ /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 _ /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 
-/**@deprecated use "copyToClipboard_server" or "copyToClipboard_client" instead */
-export function copyToClipboard() { doNothing }
-/**@deprecated use "doAndRepeat_server" instead (no doAndRepeat_client as there hasn't been a need for it yet) */
-export function doAndRepeat() { doNothing }
+/**@deprecated use "copyToClipboardr" instead */
+export function copyToClipboard_client() { doNothing }
+/**@deprecated use "copyToClipboardr" instead */
+export function copyToClipboard_server() { doNothing }
+/**@deprecated use "doAndRepeat" instead */
+export function doAndRepeat_server() { doNothing }
 /**@deprecated use "formatDate" instead */
 export function getFormattedTimestamp() { doNothing }
 /** @deprecated use either zPipe (persistenType with zod errors) or pipe_mutableType! */
@@ -1165,22 +1186,6 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[], warningsC
 			})
 		}
 	})
-}
-/**Copy to clipboard while running node */
-export function copyToClipboard_server(x: unknown) { return clipboard.write(stringify(x as object)) }
-/**FOR NODE-DEBUGGING ONLY. Stringifies and downloads the provided data*/
-export async function downloadFile_node(filename: string, fileFormat: '.txt' | '.json', data: unknown, killProcessAfterwards: boolean) {
-	const formatted = stringify(data as object)
-	const dateForFilename = formatDate(Date.now(), 'English', 'short').replace(/\/| |:/g, '_') //regexHere
-	const completeFilename = filename + '_' + dateForFilename + fileFormat
-
-	colorLog('cyan', `Downloading ${completeFilename}..`)
-	await fsWriteFileAsync(completeFilename, formatted)
-	successLog('Done!')
-
-	if (!killProcessAfterwards) { return }
-	if (process.env['quokka']) { return }
-	process.exit()
 }
 /**Wrapper for fs.promise.readFile that announces the start of the file-reading */
 export async function fsReadFileAsync(filePath: string) {
