@@ -4,10 +4,7 @@ _;
 _;
 import { CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_FNS_TS, GLOBAL_VARS_TS, SERVER_EVENTS_TS, SERVER_REF_TS, TSCONFIG_JSON, TYPES_IO_TS, TYPES_Z_TS, zMyEnv } from './constants.js';
 _;
-import { getCachedFiles, checkCodeThatCouldBeUpdated, compareArrays, getEnviromentVariables, getFilesAndFoldersNames, importFileFromProject, nullAs, pick, successLog, surroundedString, zodCheck_curry, zRegexGenerator, zRecord } from './btr.js';
-function addToErrors(path, error) { errors.push(`(at ${path}): ${error}`); }
-function inBtrUtils(path) { return './node_modules/@botoron/utils/' + path; }
-let errorHandler = nullAs();
+import { getCachedFiles, checkCodeThatCouldBeUpdated, compareArrays, getEnviromentVariables, getFilesAndFoldersNames, importFileFromProject, logBtrErrors, nullAs, pick, successLog, surroundedString, zodCheck_curry, zRegexGenerator, zRecord, killProcess } from './btr.js';
 let DEV_OR_PROD = nullAs();
 const errors = [];
 const warningsCount = { count: 0 };
@@ -16,8 +13,7 @@ const clientVueFiles = [];
 const clientTsFiles = [];
 const serverTsFiles = [];
 /** Check the version of @botoron/utils, the enviroment variables and various config files */
-export async function basicProjectChecks(errHandler) {
-    errorHandler = errHandler;
+export async function basicProjectChecks() {
     DEV_OR_PROD = getEnviromentVariables().DEV_OR_PROD;
     await fillCachedFiles();
     await checkUtilsVersion();
@@ -52,9 +48,11 @@ export async function basicProjectChecks(errHandler) {
     checkSpecificMatchesInTypesTs();
     checkStructureAndMatchesOfVueFiles();
     checkCodeThatCouldBeUpdated([serverTsFiles, clientTsFiles, clientVueFiles].flat(), warningsCount);
-    errors.length ? errorHandler('\n\n' + errors.map((e, i) => i + '. ' + e).join('\n\n') + '\n\n') : successLog('all basicProjectChecks passed');
+    errors.length ? logBtrErrors(errors) : successLog('all basicProjectChecks passed');
     return !errors.length;
 }
+function addToErrors(path, error) { errors.push(`(at ${path}): ${error}`); }
+function inBtrUtils(path) { return './node_modules/@botoron/utils/' + path; }
 function asConsecutiveLines(lines) {
     return lines.join('\r\n');
 }
@@ -500,7 +498,7 @@ async function checkUtilsVersion() {
     const installedVersion = (await import('./package.json', { assert: { type: 'json' } })).default.version;
     const isOutdated = versionValue(latestVersion) > versionValue(installedVersion);
     if (isOutdated) {
-        errorHandler(`Outdated "utils" package. (${installedVersion} vs ${latestVersion}) PLEASE UPDATE: npm run btr`);
+        killProcess(`Outdated "utils" package. (${installedVersion} vs ${latestVersion}) PLEASE UPDATE: npm run btr`);
     }
     /**Check if the project is using the latest version of "@botoron/utils" */
     async function getLatestVersion() {

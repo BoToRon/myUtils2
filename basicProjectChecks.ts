@@ -1,7 +1,7 @@
 let _
 import { z } from 'zod'
 _
-import { cachedFile, messageHandler, packageJson, zSchema } from './types.js'
+import { cachedFile, packageJson, zSchema } from './types.js'
 _
 import {
 	CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_FNS_TS, GLOBAL_VARS_TS,
@@ -9,14 +9,10 @@ import {
 } from './constants.js'
 _
 import {
-	getCachedFiles, checkCodeThatCouldBeUpdated, compareArrays, getEnviromentVariables, getFilesAndFoldersNames,
-	importFileFromProject, nullAs, pick, successLog, surroundedString, zodCheck_curry, zRegexGenerator, zRecord
+	getCachedFiles, checkCodeThatCouldBeUpdated, compareArrays, getEnviromentVariables, getFilesAndFoldersNames, importFileFromProject,
+	logBtrErrors, nullAs, pick, successLog, surroundedString, zodCheck_curry, zRegexGenerator, zRecord, killProcess
 } from './btr.js'
 
-function addToErrors(path: string, error: string) { errors.push(`(at ${path}): ${error}`) }
-function inBtrUtils(path: string) { return './node_modules/@botoron/utils/' + path }
-
-let errorHandler = <messageHandler>nullAs()
 let DEV_OR_PROD = <'DEV' | 'PROD'>nullAs()
 
 const errors: string[] = []
@@ -28,8 +24,7 @@ const clientTsFiles: cachedFile[] = []
 const serverTsFiles: cachedFile[] = []
 
 /** Check the version of @botoron/utils, the enviroment variables and various config files */
-export async function basicProjectChecks(errHandler: messageHandler) {
-	errorHandler = errHandler
+export async function basicProjectChecks() {
 	DEV_OR_PROD = getEnviromentVariables().DEV_OR_PROD
 	await fillCachedFiles()
 
@@ -38,43 +33,48 @@ export async function basicProjectChecks(errHandler: messageHandler) {
 	await checkVueDevFiles()
 	await checkVsCodeSettings()
 
-	checkAllExportedFunctionsAreDescribed()
-	checkBasicValidAdminCommands()
-	checkClientFilesDontReferenceLocalStorageDirectly()
-	checkClientIndexTs()
-	checkClientSocketTs()
-	checkClientStoreTs()
-	checkEnviromentVariables()
+	//IMPORTANCE: 10 (obligatory project structure)
 	checkFilesAndFolderStructure()
-	checkFilesAreIdentical(ESLINT_CJS, inBtrUtils(ESLINT_CJS))
-	checkFilesAreIdentical(TSCONFIG_JSON, inBtrUtils(TSCONFIG_JSON))
-	checkFilesAreIdentical('./client/src/__admin.vue', externalTemplatePath('__admin.vue'))
-	checkFilesAreIdentical('./client/src/__chartJs.ts', externalTemplatePath('__chartJs.ts'))
-	checkFilesAreIdentical('./client/src/__simpleConfirmationModal.vue', externalTemplatePath('__simpleConfirmationModal.vue'))
-	checkGitIgnore()
+	checkObligatoryTemplateFilesAreIdentical()
+
+	//IMPORTANCE: 5 (obligatory specific-files matches)
+	checkSpecificMatches_AppVue()
+	checkSpecificMatches_clientIndexTs()
+	checkSpecificMatches_clientSocketTs()
+	checkSpecificMatches_clientStoreTs()
+	checkSpecificMatches_GlobalFnsTs()
+	checkSpecificMatches_typesIoTs()
+	checkSpecificMatches_typesTypesTs()
+	checkSpecificMatches_serverEventsTs()
+	checkSpecificMatches_serverInitTs()
+	checkSpecificMatches_serverLoginTs()
+	checkSpecificMatches_serverRefTs()
+	checkBasicValidAdminCommands()
+
+	//IMPORTANCE: 3 (help prevent bugs)
+	checkClientFilesDontReferenceLocalStorageDirectly()
+	checkEnviromentVariables()
 	checkImportsAreFromTheRightBtrFile()
-	checkInitTsCallsRefTsAndIoTs()
 	checkLocalImportsHaveJsExtention()
-	checkLoginTsEmitsInitData()
-	checkServerEventsTs()
-	checkServerRefTs()
 	checkSocketEvents()
-	checkServerAndClientFilesLogTheirInitialization()
-	checkSpecificMatchesInAppVue()
-	checkSpecificMatchesGlobalFnsTs()
-	checkSpecificMatchesInTypesIoTs()
-	checkSpecificMatchesInTypesTs()
-	checkStructureAndMatchesOfVueFiles()
+	checkGitIgnore()
 
+	//IMPORTANCE: 1 (preferences)
+	checkAllExportedFunctionsAreDescribed()
 	checkCodeThatCouldBeUpdated([serverTsFiles, clientTsFiles, clientVueFiles].flat(), warningsCount)
+	checkServerAndClientFilesLogTheirInitialization()
+	checkTrackabilityAndStyleScopeOfVueFiles()
 
-	errors.length ? errorHandler('\n\n' + errors.map((e, i) => i + '. ' + e).join('\n\n') + '\n\n') : successLog('all basicProjectChecks passed')
+	errors.length ? logBtrErrors(errors) : successLog('all basicProjectChecks passed')
 	return !errors.length
 }
 
-function asConsecutiveLines(lines: string[]) {
-	return lines.join('\r\n')
-}
+function zodCheck_toErrors<T>(path: string, schema: zSchema<T>, data: T) { zodCheck_curry((e: string) => addToErrors(path, e))(schema, data) }
+function checkSpecificMatches_serverLoginTs() { checkMatchInSpecificFile('./server/login.ts', 'socket.emit(\'initData\',') }
+function externalTemplatePath(filename: string) { return '../../_templateFiles/' + filename }
+function addToErrors(path: string, error: string) { errors.push(`(at ${path}): ${error}`) }
+function inBtrUtils(path: string) { return './node_modules/@botoron/utils/' + path }
+function asConsecutiveLines(lines: string[]) { return lines.join('\r\n') }
 
 function checkBasicValidAdminCommands() {
 	checkMatchInSpecificFile(GLOBAL_VARS_TS, 'export const adminCommands = [\'getSockets\', \'help\', \'ref\',')
@@ -104,126 +104,12 @@ function checkAllExportedFunctionsAreDescribed() {
 	})
 }
 
-/**Check all the vue components are trackable by the window */
-function checkStructureAndMatchesOfVueFiles() {
-	if (DEV_OR_PROD !== 'DEV') { return true }
-
-	clientVueFiles.forEach(file => {
-		[
-			asConsecutiveLines([
-				'export default defineComponent({',
-				'\tmounted() {',
-				`\t\ttrackVueComponent('${filepathToComponentName()}', this as never, window as never)`
-			]),
-			'<style scoped>'
-		].forEach(wantedMatch => checkMatchInSpecificFile(file.path, wantedMatch))
-
-		function filepathToComponentName() { return file.path.replace(/\.\/client\/src\/_?/, '').replace('.vue', '') }
-	})
-}
-
 function checkClientFilesDontReferenceLocalStorageDirectly() {
 	[clientTsFiles, clientVueFiles].flat().forEach(file => {
 		const { path, content } = file
 		if (!content.includes('localStorage.')) { return }
 		addToErrors(path, 'use updateStoreAndLocalStorageKey (with updateStoreAndLocalStorageKey) instead of referencing localStorage directly')
 	})
-}
-
-function checkClientIndexTs() {
-	[
-		asConsecutiveLines([
-			'let _',
-			'import Vue from \'vue\'',
-			'_',
-			'import App from \'./App.vue\'',
-			'_',
-			'import { useStore } from \'./store.js\'',
-			'_',
-			'import \'bootstrap/dist/css/bootstrap.css\'',
-			'_',
-			'import \'bootstrap-vue/dist/bootstrap-vue.css\'',
-			'_',
-			'import { createPinia, PiniaVuePlugin } from \'pinia\'',
-			'_',
-			'import { BootstrapVue, IconsPlugin } from \'bootstrap-vue\'',
-			'_',
-			'import { clientSocketLogOnAny, getAppLog, logInitialization, newToast_client_curry } from \'@botoron/utils/client/btr.js\'',
-			'_',
-			'logInitialization(\'./client/src/index.ts\')',
-			'',
-			'//components',
-		]),
-		'import admin from \'./__admin.vue\'',
-		'import simpleConfirmationModal from \'./__simpleConfirmationModal.vue\'',
-		'Vue.component(\'component_simpleConfirmationModal\', simpleConfirmationModal)',
-		'Vue.component(\'component_admin\', admin)',
-		asConsecutiveLines([
-			'Vue.use(PiniaVuePlugin)',
-			'Vue.use(BootstrapVue)',
-			'Vue.use(IconsPlugin)',
-			'',
-			'const vueApp = new Vue({ pinia: createPinia(), render: (h) => h(App), }).$mount(\'#app\')',
-			'useStore().newToast = newToast_client_curry(vueApp.$bvToast)',
-			'useStore().bvModal = vueApp.$bvModal',
-			'',
-			'if (import.meta.env.DEV) { clientSocketLogOnAny(useStore) }',
-			'getAppLog(window as never, useStore as never)',
-			'useStore().login()',
-		])
-	].forEach(x => checkMatchInSpecificFile(CLIENT_SRC + '/index.ts', x))
-}
-
-function checkClientSocketTs() {
-	[
-		asConsecutiveLines([
-			'export const socket: clientSocket = import.meta.env.PROD ? io() : io(\'http://localhost:3000/\')',
-			'socket.on(\'globalAlert\', globalAlert => useStore().globalAlert = globalAlert)',
-			'socket.on(\'initData\','
-		])
-	].forEach(x => checkMatchInSpecificFile(CLIENT_SRC_SOCKET, x))
-}
-
-function checkClientStoreTs() {
-	[
-		asConsecutiveLines([
-			'declare global {',
-			'\tinterface Window {',
-			'\t\tappLog: ReturnType<typeof getAppLog>',
-			'\t\tvueComponents: Record<'
-		]),
-		'const { myLocalStorage, localStorageSet } = getLocalStorageAndSetter({',
-		asConsecutiveLines([
-			'export const useStore = defineStore(\'data\', {',
-			'\tstate: () => ({',
-			'\t\tsocket,',
-			'\t\t...myLocalStorage,',
-			'\t\tview: \'main\' as validView,',
-			'\t\tbvModal: <bvModal>nullAs(),',
-			'\t\tnewToast: <newToastFn>nullAs(),',
-			'\t\tsocketEvents: [] as socketEventInfo[],',
-			'\t\tadminFetch: { command: \'\', data: null } as adminFetch,',
-			'\t\tglobalAlert: { message: \'\', show: false } as globalAlert,',
-			'',
-			'\t\tsimpleConfirmationModal: {',
-			'\t\t\ttitle: \'\',',
-			'\t\t\tconfirmFn: doNothing,',
-			'\t\t\tconfirmationType: \'positive\' as \'positive\' | \'negative\',',
-			'\t\t\topen(title: string, confirmFn: () => void) { this.title = title; this.confirmFn = confirmFn }',
-			'\t\t},'
-		]),
-		asConsecutiveLines([
-			'\tactions: {',
-			'\t\tlogin() { socket.emit',
-		]),
-		asConsecutiveLines([
-			'\t\ttriggerModal(id: validModalId, action: \'show\' | \'hide\') { triggerModal(useStore, id, action) },',
-			'\t\tupdateStoreAndLocalStorageKey<K extends keyof T, T extends typeof myLocalStorage>(key: K, value: T[K]) {',
-			'\t\t\t//@ts-expect-error ts doesn\'t automatically realize all keys of myLocalStorage also are present in useStore()',
-			'\t\t\tuseStore()[key] = value; localStorageSet(key, value)',
-			'\t\t},'
-		])
-	].forEach(x => checkMatchInSpecificFile('./client/src/store.ts', x))
 }
 
 /**Check if all the desired enviroment keys are defined */
@@ -302,10 +188,6 @@ function checkImportsAreFromTheRightBtrFile() {
 	}
 }
 
-function checkInitTsCallsRefTsAndIoTs() {
-	checkMatchInSpecificFile('./server/init.ts', 'successLog(stringify({ refInitialized: true, ioInitialized }))')
-}
-
 function checkLocalImportsHaveJsExtention() {
 	[serverTsFiles, clientTsFiles, clientVueFiles].flat().forEach(file => {
 		const { path, content } = file
@@ -320,13 +202,17 @@ function checkLocalImportsHaveJsExtention() {
 	})
 }
 
-function checkLoginTsEmitsInitData() {
-	checkMatchInSpecificFile('./server/login.ts', 'socket.emit(\'initData\',')
-}
-
 function checkMatchInSpecificFile(filepath: string, wantedMatch: string) {
 	const { content } = (getFromCachedFiles([filepath])[0] as cachedFile)
 	if (!content.includes(wantedMatch)) { addToErrors(filepath, `"${surroundedString(wantedMatch, ' ', 10)}" is missing)`) }
+}
+
+function checkObligatoryTemplateFilesAreIdentical() {
+	checkFilesAreIdentical(ESLINT_CJS, inBtrUtils(ESLINT_CJS))
+	checkFilesAreIdentical(TSCONFIG_JSON, inBtrUtils(TSCONFIG_JSON))
+
+	const obligatoryClientSrcFiles = ['__admin.vue', '__chartJs.ts', '__simpleConfirmationModal.vue']
+	obligatoryClientSrcFiles.forEach(filename => checkFilesAreIdentical(CLIENT_SRC + '/' + filename, externalTemplatePath(filename)))
 }
 
 /**Check the scripts in a project's package json all fit the established schema */
@@ -374,38 +260,6 @@ async function checkPackageJsons() {
 	zodCheck_toErrors('./package.json', desiredPackageJsonRootSchema, packageJsonOfProjectRoot)
 }
 
-function checkServerEventsTs() {
-	[
-		asConsecutiveLines([
-			'io.on(\'connection\', x => {',
-			'\tconst socket = x as serverSocket',
-			'\tref.DB_misc.updateOne({}, { $inc: { pageVisits: 1 } }).then(() => ref.pageVisits++) //@btr-ignore',
-			'\tsocket.onAny(args => ref.debugLog(\'logSocketOnAny\', { args }))',
-			'\tref.debugLog(\'logWhenSocketConnects\', { id: x.id })',
-		]),
-		'export const ioInitialized = true'
-	].forEach(line => checkMatchInSpecificFile(SERVER_EVENTS_TS, line))
-}
-
-/**Check the properties and initialization of server/ref.ts */
-function checkServerRefTs() {
-	[
-		'const devOrProd = \'dev\' as \'dev\' | \'prod\'',
-		asConsecutiveLines([
-			'const { debugOptions: debug, debugLog } = getDebugOptionsAndLog(devOrProd, {',
-			'\tlogSocketOnAny: [true, false],',
-			'\tlogWhenSocketConnects: [true, false],'
-		]),
-		'export const ref = {',
-		'temp: {} as Record<string, unknown>, //for admin-debugging purposes',
-		'debug, debugLog, devOrProd,',
-		'sockets: [] as serverSocket[],',
-		'alert: { message: \'\', show: false } as globalAlert,',
-		'DB_misc: mongoCollection(\'misc\'),',
-		'pageVisits: (await mongoCollection(\'misc\').findOne({}) as unknown as mongoMisc).pageVisits,',
-	].forEach(line => checkMatchInSpecificFile(SERVER_REF_TS, line))
-}
-
 /**Check all socket events are handled aka socket.on(<EVENTNAME>) */
 function checkSocketEvents() {
 	const filepath = TYPES_IO_TS
@@ -441,7 +295,7 @@ function checkServerAndClientFilesLogTheirInitialization() {
 		})
 }
 
-function checkSpecificMatchesInAppVue() {
+function checkSpecificMatches_AppVue() {
 	[
 		asConsecutiveLines([
 			'<template>',
@@ -458,14 +312,146 @@ function checkSpecificMatchesInAppVue() {
 	].forEach(x => checkMatchInSpecificFile(CLIENT_SRC + '/App.vue', x))
 }
 
-function checkSpecificMatchesGlobalFnsTs() {
+function checkSpecificMatches_clientIndexTs() {
+	[
+		asConsecutiveLines([
+			'let _',
+			'import Vue from \'vue\'',
+			'_',
+			'import App from \'./App.vue\'',
+			'_',
+			'import { useStore } from \'./store.js\'',
+			'_',
+			'import \'bootstrap/dist/css/bootstrap.css\'',
+			'_',
+			'import \'bootstrap-vue/dist/bootstrap-vue.css\'',
+			'_',
+			'import { createPinia, PiniaVuePlugin } from \'pinia\'',
+			'_',
+			'import { BootstrapVue, IconsPlugin } from \'bootstrap-vue\'',
+			'_',
+			'import { clientSocketLogOnAny, getAppLog, logInitialization, newToast_client_curry } from \'@botoron/utils/client/btr.js\'',
+			'_',
+			'logInitialization(\'./client/src/index.ts\')',
+			'',
+			'//components',
+		]),
+		'import admin from \'./__admin.vue\'',
+		'import simpleConfirmationModal from \'./__simpleConfirmationModal.vue\'',
+		'Vue.component(\'component_simpleConfirmationModal\', simpleConfirmationModal)',
+		'Vue.component(\'component_admin\', admin)',
+		asConsecutiveLines([
+			'Vue.use(PiniaVuePlugin)',
+			'Vue.use(BootstrapVue)',
+			'Vue.use(IconsPlugin)',
+			'',
+			'const vueApp = new Vue({ pinia: createPinia(), render: (h) => h(App), }).$mount(\'#app\')',
+			'useStore().newToast = newToast_client_curry(vueApp.$bvToast)',
+			'useStore().bvModal = vueApp.$bvModal',
+			'',
+			'if (import.meta.env.DEV) { clientSocketLogOnAny(useStore) }',
+			'getAppLog(window as never, useStore as never)',
+			'useStore().login()',
+		])
+	].forEach(x => checkMatchInSpecificFile(CLIENT_SRC + '/index.ts', x))
+}
+
+function checkSpecificMatches_clientSocketTs() {
+	[
+		asConsecutiveLines([
+			'export const socket: clientSocket = import.meta.env.PROD ? io() : io(\'http://localhost:3000/\')',
+			'socket.on(\'globalAlert\', globalAlert => useStore().globalAlert = globalAlert)',
+			'socket.on(\'initData\','
+		])
+	].forEach(x => checkMatchInSpecificFile(CLIENT_SRC_SOCKET, x))
+}
+
+function checkSpecificMatches_clientStoreTs() {
+	[
+		asConsecutiveLines([
+			'declare global {',
+			'\tinterface Window {',
+			'\t\tappLog: ReturnType<typeof getAppLog>',
+			'\t\tvueComponents: Record<'
+		]),
+		'const { myLocalStorage, localStorageSet } = getLocalStorageAndSetter({',
+		asConsecutiveLines([
+			'export const useStore = defineStore(\'data\', {',
+			'\tstate: () => ({',
+			'\t\tsocket,',
+			'\t\t...myLocalStorage,',
+			'\t\tview: \'main\' as validView,',
+			'\t\tbvModal: <bvModal>nullAs(),',
+			'\t\tnewToast: <newToastFn>nullAs(),',
+			'\t\tsocketEvents: [] as socketEventInfo[],',
+			'\t\tadminFetch: { command: \'\', data: null } as adminFetch,',
+			'\t\tglobalAlert: { message: \'\', show: false } as globalAlert,',
+			'',
+			'\t\tsimpleConfirmationModal: {',
+			'\t\t\ttitle: \'\',',
+			'\t\t\tconfirmFn: doNothing,',
+			'\t\t\tconfirmationType: \'positive\' as \'positive\' | \'negative\',',
+			'\t\t\topen(title: string, confirmFn: () => void) { this.title = title; this.confirmFn = confirmFn }',
+			'\t\t},'
+		]),
+		asConsecutiveLines([
+			'\tactions: {',
+			'\t\tlogin() { socket.emit',
+		]),
+		asConsecutiveLines([
+			'\t\ttriggerModal(id: validModalId, action: \'show\' | \'hide\') { triggerModal(useStore, id, action) },',
+			'\t\tupdateStoreAndLocalStorageKey<K extends keyof T, T extends typeof myLocalStorage>(key: K, value: T[K]) {',
+			'\t\t\t//@ts-expect-error ts doesn\'t automatically realize all keys of myLocalStorage also are present in useStore()',
+			'\t\t\tuseStore()[key] = value; localStorageSet(key, value)',
+			'\t\t},'
+		])
+	].forEach(x => checkMatchInSpecificFile('./client/src/store.ts', x))
+}
+
+function checkSpecificMatches_serverEventsTs() {
+	[
+		asConsecutiveLines([
+			'io.on(\'connection\', x => {',
+			'\tconst socket = x as serverSocket',
+			'\tref.DB_misc.updateOne({}, { $inc: { pageVisits: 1 } }).then(() => ref.pageVisits++) //@btr-ignore',
+			'\tsocket.onAny(args => ref.debugLog(\'logSocketOnAny\', { args }))',
+			'\tref.debugLog(\'logWhenSocketConnects\', { id: x.id })',
+		]),
+		'export const ioInitialized = true'
+	].forEach(line => checkMatchInSpecificFile(SERVER_EVENTS_TS, line))
+}
+
+function checkSpecificMatches_GlobalFnsTs() {
 	checkMatchInSpecificFile(GLOBAL_FNS_TS, asConsecutiveLines([
 		'/**Shorthand for mongoClient.db(DATABASE).collection(COLLECTION) */',
 		'export function mongoCollection(name: validMongoCollection) { return mongoClient.db('
 	])) //) <--to not mess with colours)
 }
 
-function checkSpecificMatchesInTypesIoTs() {
+function checkSpecificMatches_serverInitTs() {
+	checkMatchInSpecificFile('./server/init.ts', 'successLog(stringify({ refInitialized: true, ioInitialized }))')
+}
+
+/**Check the properties and initialization of server/ref.ts */
+function checkSpecificMatches_serverRefTs() {
+	[
+		'const devOrProd = \'dev\' as \'dev\' | \'prod\'',
+		asConsecutiveLines([
+			'const { debugOptions: debug, debugLog } = getDebugOptionsAndLog(devOrProd, {',
+			'\tlogSocketOnAny: [true, false],',
+			'\tlogWhenSocketConnects: [true, false],'
+		]),
+		'export const ref = {',
+		'temp: {} as Record<string, unknown>, //for admin-debugging purposes',
+		'debug, debugLog, devOrProd,',
+		'sockets: [] as serverSocket[],',
+		'alert: { message: \'\', show: false } as globalAlert,',
+		'DB_misc: mongoCollection(\'misc\'),',
+		'pageVisits: (await mongoCollection(\'misc\').findOne({}) as unknown as mongoMisc).pageVisits,',
+	].forEach(line => checkMatchInSpecificFile(SERVER_REF_TS, line))
+}
+
+function checkSpecificMatches_typesIoTs() {
 	[
 		asConsecutiveLines([
 			'import { Server, Socket as socket_server } from \'socket.io\'',
@@ -493,7 +479,7 @@ function checkSpecificMatchesInTypesIoTs() {
 	].forEach(event => checkMatchInSpecificFile(TYPES_IO_TS, event))
 }
 
-function checkSpecificMatchesInTypesTs() {
+function checkSpecificMatches_typesTypesTs() {
 	[
 		asConsecutiveLines([
 			'/**imported from utils */',
@@ -526,13 +512,31 @@ function checkSpecificMatchesInTypesTs() {
 	].forEach(x => checkMatchInSpecificFile('./types/types.d.ts', x))
 }
 
+/**Check all the vue components are trackable by the window */
+function checkTrackabilityAndStyleScopeOfVueFiles() {
+	if (DEV_OR_PROD !== 'DEV') { return true }
+
+	clientVueFiles.forEach(file => {
+		[
+			asConsecutiveLines([
+				'export default defineComponent({',
+				'\tmounted() {',
+				`\t\ttrackVueComponent('${filepathToComponentName()}', this as never, window as never)`
+			]),
+			'<style scoped>'
+		].forEach(wantedMatch => checkMatchInSpecificFile(file.path, wantedMatch))
+
+		function filepathToComponentName() { return file.path.replace(/\.\/client\/src\/_?/, '').replace('.vue', '') }
+	})
+}
+
 /**Check if the project is using the latest version of "myUtils" */
 async function checkUtilsVersion() {
 	const latestVersion = await getLatestVersion()
 	const installedVersion = (await import('./package.json', { assert: { type: 'json' } })).default.version
 	const isOutdated = versionValue(latestVersion) > versionValue(installedVersion)
 
-	if (isOutdated) { errorHandler(`Outdated "utils" package. (${installedVersion} vs ${latestVersion}) PLEASE UPDATE: npm run btr`) }
+	if (isOutdated) { killProcess(`Outdated "utils" package. (${installedVersion} vs ${latestVersion}) PLEASE UPDATE: npm run btr`) }
 
 	/**Check if the project is using the latest version of "@botoron/utils" */
 	async function getLatestVersion() {
@@ -568,10 +572,6 @@ async function checkVueDevFiles() {
 		const pathToTemplate = 'node_modules/@botoron/utils/templateFiles/' + filename
 		return checkFilesAreIdentical(fullpath, pathToTemplate)
 	}))
-}
-
-function externalTemplatePath(filename: string) {
-	return '../../_templateFiles/' + filename
 }
 
 async function fillCachedFiles() {
@@ -620,8 +620,4 @@ function getFromCachedFiles(obligatoryMatches: string[]): cachedFile[] {
 		`No file cached with the requested obligatory matches(${obligatoryMatches}) was found, was it added by "fillCachedFiles" ?`
 	)
 	return [{ path: 'FAILSAFE', content: '' }]
-}
-
-function zodCheck_toErrors<T>(path: string, schema: zSchema<T>, data: T) {
-	zodCheck_curry((e: string) => addToErrors(path, e))(schema, data)
 }

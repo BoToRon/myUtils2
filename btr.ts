@@ -238,16 +238,17 @@ export function transferItems<T>(origin: T[], destination: T[], predicate: array
 	destination.push(...x.removedItems)
 	return { transferedCount: x.removedCount }
 }
-_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+
 export async function asyncForEach<T>(array: T[], asyncFn: (item: T) => Promise<unknown>, resolveSequentially = false) {
 	if (resolveSequentially) { for await (const item of array) { await asyncFn(item) } }  //@btr-ignore
 	if (!resolveSequentially) { await Promise.all(array.map(item => asyncFn(item))) }
@@ -520,7 +521,6 @@ _ /********** FOR TIMERS ******************** FOR TIMERS ******************** FO
 _ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
-_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 
 /**
  * Set an interval that is automatically killed when the stay-alive-checker fails but can also be manually killed with killTimer
@@ -676,16 +676,16 @@ export function surroundedString(string: string, margin: string, perSide: number
 	const x = margin.repeat(perSide)
 	return x + string + x
 }
-_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 
 /**Copy content to the clipboard, works for both client and server side */
 export function copyToClipboard(x: unknown) {
@@ -1011,16 +1011,16 @@ export function tryF() { doNothing } //@btr-ignore
 
 // ! DELETEEVERYTHINGBELOW, as it is only meant for server-side use
 
-_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
 
 export const divine = {
 	bot: <eris.Client>nullAs(),
@@ -1095,40 +1095,17 @@ export const divine = {
 	}
 }
 
-_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_ /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
+_ /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_ /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_ /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_ /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_ /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_ /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_ /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_ /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_ /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_ /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
 
-/**Batch-load files for checking purposes */
-export async function getCachedFiles(errors: string[], filepaths: string[]) {
-
-	const cachedFiles: cachedFile[] = []
-	await asyncForEach(filepaths, addToCachedFiles)
-	return cachedFiles
-
-	async function addToCachedFiles(filepath: string) {
-		if (!fileExists(filepath)) { addToErrors(`File not found at '${filepath}'`); return }
-		cachedFiles.some(x => x.path === filepath) ?
-			addToErrors(`File readed more than once by fsReadFileAsync: >>> (${filepath}) << <`) :
-			cachedFiles.push({ path: filepath, content: await fsReadFileAsync(filepath) })
-	}
-
-	function addToErrors(error: string) {
-		errors.push(error)
-	}
-
-	async function fileExists(path: string) {
-		try { await fs.promises.access(path); return true }
-		catch { addToErrors('Missing file, couldn\'t read: ' + path); return false }
-	}
-}
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
 export function bigConsoleError(message: string) {
 	function logAsterisks(lines: number) { for (let i = 0; i < lines; i++) { log('*'.repeat(150)) } }
@@ -1195,6 +1172,29 @@ export async function fsReadFileAsync(filePath: string) {
 export async function fsWriteFileAsync(filePath: string, content: string) {
 	colorLog('white', `writing to '${filePath}'..`)
 	return await fs.promises.writeFile(filePath, content)
+}
+/**Batch-load files for checking purposes */
+export async function getCachedFiles(errors: string[], filepaths: string[]) {
+
+	const cachedFiles: cachedFile[] = []
+	await asyncForEach(filepaths, addToCachedFiles)
+	return cachedFiles
+
+	async function addToCachedFiles(filepath: string) {
+		if (!fileExists(filepath)) { addToErrors(`File not found at '${filepath}'`); return }
+		cachedFiles.some(x => x.path === filepath) ?
+			addToErrors(`File readed more than once by fsReadFileAsync: >>> (${filepath}) << <`) :
+			cachedFiles.push({ path: filepath, content: await fsReadFileAsync(filepath) })
+	}
+
+	function addToErrors(error: string) {
+		errors.push(error)
+	}
+
+	async function fileExists(path: string) {
+		try { await fs.promises.access(path); return true }
+		catch { addToErrors('Missing file, couldn\'t read: ' + path); return false }
+	}
 }
 /**For a project's debugging purposes */
 export function getDebugOptionsAndLog<K extends string>(devOrProd: 'dev' | 'prod', options: Record<K, [boolean, boolean]>) {
@@ -1296,6 +1296,8 @@ export function inquirePromptCommands<
 }
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export function killProcess(message: string) { bigConsoleError(message); process.exit() }
+//TODO: describe me
+export function logBtrErrors(errors: string[]) { killProcess('\n\n' + errors.map((err, i) => (i + 1) + '. ' + err).join('\n\n') + '\n\n') }
 //TODO: describe me
 export function mapCommandsForInquirePrompt<T extends string>(commands: btr_commands<T>) {
 	const object = {} as Record<string, () => maybePromise<unknown>>

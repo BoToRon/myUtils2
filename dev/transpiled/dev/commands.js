@@ -12,7 +12,7 @@ _;
 import { utilsRepoName, npmVersionOptions } from '../constants.js';
 _;
 _;
-import { checkCodeThatCouldBeUpdated, colorLog, copyToClipboard, delay, divine, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getFilesAndFoldersNames, inquirePromptCommands, killProcess, logEmptyLine, mapCommandsForInquirePrompt, questionAsPromise, selfFilter, successLog, transpileFiles } from '../btr.js';
+import { checkCodeThatCouldBeUpdated, colorLog, copyToClipboard, delay, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getFilesAndFoldersNames, inquirePromptCommands, killProcess, logBtrErrors, logEmptyLine, mapCommandsForInquirePrompt, questionAsPromise, selfFilter, successLog, transpileFiles } from '../btr.js';
 const fileWithRef = 'ref';
 const serverFolder_dist = '../dist';
 const PACKAGE_DOT_JSON = 'package.json';
@@ -64,7 +64,10 @@ function project_forwardVitesPort() { execSync('lt --port 5173'); }
 async function btrCheck() {
     const warningsCount = { count: 0 };
     checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths), warningsCount);
-    const checksPassed = errors.length || warningsCount.count > 1;
+    const checksPassed = !errors.length && !warningsCount.count;
+    if (errors.length) {
+        logBtrErrors(errors);
+    }
     if (!checksPassed) {
         errorLog('btr-errors/warnings detected, fix them before attempting to transpile again');
     }
@@ -128,7 +131,7 @@ async function project_btrCheckAndTranspileToTestFolder() {
     successLog('files transpiled to ./test');
 }
 async function project_buildServerFiles() {
-    await basicProjectChecks(divine.error);
+    await basicProjectChecks();
     fsWriteFileAsync('types.ts', await fsReadFileAsync('types.d.ts'));
     transpileFiles(['types.ts'], '.');
     fs.unlinkSync('types.ts');
@@ -144,7 +147,7 @@ async function project_buildServerFiles() {
         successLog('(server) Build sucessful!');
     }
     catch (e) {
-        console.log(e);
+        errorLog(`${e}`);
     }
     async function copyFileToDist(filename) {
         let content = await fsReadFileAsync(filename);

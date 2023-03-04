@@ -235,16 +235,16 @@ export function transferItems(origin, destination, predicate) {
     destination.push(...x.removedItems);
     return { transferedCount: x.removedCount };
 }
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 export async function asyncForEach(array, asyncFn, resolveSequentially = false) {
     if (resolveSequentially) {
         for await (const item of array) {
@@ -536,7 +536,6 @@ _; /********** FOR TIMERS ******************** FOR TIMERS ******************** F
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
-_; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 /**
  * Set an interval that is automatically killed when the stay-alive-checker fails but can also be manually killed with killTimer
  * @param id The id of the timer, so that btr.killTimer can find it
@@ -668,16 +667,16 @@ export function surroundedString(string, margin, perSide) {
     const x = margin.repeat(perSide);
     return x + string + x;
 }
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 /**Copy content to the clipboard, works for both client and server side */
 export function copyToClipboard(x) {
     if (isNode) {
@@ -984,16 +983,16 @@ export function triggerModalWithValidation_curry() { doNothing; }
 /**@deprecated use "divine.try" instead */
 export function tryF() { doNothing; } //@btr-ignore
 // ! DELETEEVERYTHINGBELOW, as it is only meant for server-side use
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
 export const divine = {
     bot: nullAs(),
     error: (err) => {
@@ -1076,44 +1075,16 @@ export const divine = {
         }
     }
 };
-_; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-/**Batch-load files for checking purposes */
-export async function getCachedFiles(errors, filepaths) {
-    const cachedFiles = [];
-    await asyncForEach(filepaths, addToCachedFiles);
-    return cachedFiles;
-    async function addToCachedFiles(filepath) {
-        if (!fileExists(filepath)) {
-            addToErrors(`File not found at '${filepath}'`);
-            return;
-        }
-        cachedFiles.some(x => x.path === filepath) ?
-            addToErrors(`File readed more than once by fsReadFileAsync: >>> (${filepath}) << <`) :
-            cachedFiles.push({ path: filepath, content: await fsReadFileAsync(filepath) });
-    }
-    function addToErrors(error) {
-        errors.push(error);
-    }
-    async function fileExists(path) {
-        try {
-            await fs.promises.access(path);
-            return true;
-        }
-        catch {
-            addToErrors('Missing file, couldn\'t read: ' + path);
-            return false;
-        }
-    }
-}
+_; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
 export function bigConsoleError(message) {
     function logAsterisks(lines) { for (let i = 0; i < lines; i++) {
@@ -1178,6 +1149,34 @@ export async function fsReadFileAsync(filePath) {
 export async function fsWriteFileAsync(filePath, content) {
     colorLog('white', `writing to '${filePath}'..`);
     return await fs.promises.writeFile(filePath, content);
+}
+/**Batch-load files for checking purposes */
+export async function getCachedFiles(errors, filepaths) {
+    const cachedFiles = [];
+    await asyncForEach(filepaths, addToCachedFiles);
+    return cachedFiles;
+    async function addToCachedFiles(filepath) {
+        if (!fileExists(filepath)) {
+            addToErrors(`File not found at '${filepath}'`);
+            return;
+        }
+        cachedFiles.some(x => x.path === filepath) ?
+            addToErrors(`File readed more than once by fsReadFileAsync: >>> (${filepath}) << <`) :
+            cachedFiles.push({ path: filepath, content: await fsReadFileAsync(filepath) });
+    }
+    function addToErrors(error) {
+        errors.push(error);
+    }
+    async function fileExists(path) {
+        try {
+            await fs.promises.access(path);
+            return true;
+        }
+        catch {
+            addToErrors('Missing file, couldn\'t read: ' + path);
+            return false;
+        }
+    }
 }
 /**For a project's debugging purposes */
 export function getDebugOptionsAndLog(devOrProd, options) {
@@ -1284,6 +1283,8 @@ export function inquirePromptCommands(functions, promptAgainAfterEachFn) {
 }
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export function killProcess(message) { bigConsoleError(message); process.exit(); }
+//TODO: describe me
+export function logBtrErrors(errors) { killProcess('\n\n' + errors.map((err, i) => (i + 1) + '. ' + err).join('\n\n') + '\n\n'); }
 //TODO: describe me
 export function mapCommandsForInquirePrompt(commands) {
     const object = {};

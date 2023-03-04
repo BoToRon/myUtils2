@@ -14,8 +14,8 @@ _
 import { btr_commands as recordOfCommands, validNpmVersion } from '../types.js'
 _
 import {
-	checkCodeThatCouldBeUpdated, colorLog, copyToClipboard, delay, divine, errorLog, fsReadFileAsync, fsWriteFileAsync,
-	getCachedFiles, getFilesAndFoldersNames, inquirePromptCommands, killProcess, logEmptyLine,
+	checkCodeThatCouldBeUpdated, colorLog, copyToClipboard, delay, errorLog, fsReadFileAsync, fsWriteFileAsync,
+	getCachedFiles, getFilesAndFoldersNames, inquirePromptCommands, killProcess, logBtrErrors, logEmptyLine,
 	mapCommandsForInquirePrompt, questionAsPromise, selfFilter, successLog, transpileFiles
 } from '../btr.js'
 
@@ -80,7 +80,8 @@ async function btrCheck() {
 	const warningsCount = { count: 0 }
 	checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths), warningsCount)
 
-	const checksPassed = errors.length || warningsCount.count > 1
+	const checksPassed = !errors.length && !warningsCount.count
+	if (errors.length) { logBtrErrors(errors) }
 	if (!checksPassed) { errorLog('btr-errors/warnings detected, fix them before attempting to transpile again') }
 	return checksPassed
 }
@@ -154,7 +155,7 @@ async function project_btrCheckAndTranspileToTestFolder() {
 }
 
 async function project_buildServerFiles() {
-	await basicProjectChecks(divine.error)
+	await basicProjectChecks()
 
 	fsWriteFileAsync('types.ts', await fsReadFileAsync('types.d.ts'))
 	transpileFiles(['types.ts'], '.')
