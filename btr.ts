@@ -145,8 +145,8 @@ export function getRandomItem_withCustomChances<T>(items: T[], chancesDefinining
 export function getUniqueValues<T>(arr: T[]) { return [...new Set(arr)] }
 /**@returns whether an item is the last one in an array or not (warning: maybe don't use with primitives) */
 export function isLastItem<T>(arr: T[], item: T) { return item === arr.at(-1) }
-/**Return the last item of the given array */ //TODO: consider replacing this for Array.prototype.at(-1)
-export function lastItem<T>(arr: T[]) { return arr[arr.length - 1] as T }
+/**Return the last item of the given array */
+export function lastItem<T>(arr: T[]) { return arr.at(-1) as T }
 /**Apply multiple mapping functions to a single array at once and return an object with all the result */
 export function multiMap<
 	T,
@@ -547,18 +547,15 @@ export async function initializeInterval<
 	return { timesRanSucessfully, ...await getResult() } as resolveInfo & { timesRanSucessfully: number, wasCancelled: true }
 
 	async function getResult(): Promise<resolveInfo> {
-		return await new Promise(resolve => {
-			if (doContinue) {
-				initializeTimer(id, Date.now() + intervalInMs, onEach, onKill).then(result => {
-					if (result.wasCancelled) { return resolve(result) }
-					initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1).then(result => resolve(result))
-				})
-			}
-			else {
-				initializeTimer(id, Date.now() + intervalInMs, onEach, onKill).then(result => resolve(result))
-				killTimer(id, `stayAliveChecker (${stayAliveChecker.name}) = false`)
-			}
-		})
+		if (doContinue) {
+			const timerResult = await initializeTimer(id, Date.now() + intervalInMs, onEach, onKill)
+			if (timerResult.wasCancelled) { return timerResult }
+			return await initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1)
+		}
+		else {
+			killTimer(id, `stayAliveChecker (${stayAliveChecker.name}) = false`)
+			return await initializeTimer(id, Date.now() + intervalInMs, onEach, onKill)
+		}
 	}
 }
 /**
@@ -658,7 +655,7 @@ export function asSingularOrPlural(noun: string, amount: number) { return noun +
 export function colorLog(color: validChalkColor, message: string) { console.log(chalk[color].bold(message)) } //DELETETHISFORCLIENT @btr-ignore
 /**(Message) 💀 */
 export function errorLog(message: string) { return colorLog('red', message + ' 💀') }
-/**TODO: describe me */
+//TODO: describe me
 export function getTraceableStack(error: string | Error, type: 'debugLog' | 'divineError' | 'killTimer' | 'zodCheck_socket') {
 	const { stack } = (typeof error === 'string' ? new Error(error) : error)
 	return `${stack}`.
@@ -886,7 +883,7 @@ export function getAppLog<T extends string, useStoreT extends () => btr_trackedV
 	window: { appLog: () => { store: { [x: string]: () => void } }, vueComponents: vueComponentsTracker<T> },
 	useStore: useStoreT
 ) {
-	delay(1000).then(() => {
+	delay(1000).then(() => { //@btr-ignore
 		window.appLog = () => mapObject({
 			store: useStore(),
 			...arrayToObject(
@@ -1033,7 +1030,7 @@ export const divine = {
 		DEV_OR_PROD !== 'PROD' ? killProcess(message) : divine.ping(message)
 	},
 	init: (() => {
-		delay(1000).then(async () => {
+		delay(1000).then(async () => { //@btr-ignore
 			if (process.env['prevent_divine_init']) { return }
 			const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = getEnviromentVariables()
 			if (DEV_OR_PROD !== 'PROD') { return }
@@ -1245,15 +1242,8 @@ export function getSeparatingCommentBlock(message: string) {
 }
 /**fetch the latest package.json of myUtils */
 export async function getLatestPackageJsonFromGithub() {
-	type response_github_file = { content: string }
-
-	const response: response_github_file = await new Promise((resolve) => {
-		fetch('https://api.github.com/repos/botoron/utils/contents/package.json', { method: 'GET' }
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		).then((res: any) => res.json().then((packageJson: any) => resolve(packageJson)))
-	})
-
-	return Buffer.from(response.content, 'base64').toString('utf8')
+	const fetched = await fetch('https://api.github.com/repos/botoron/utils/contents/package.json', { method: 'GET' })
+	return Buffer.from((await fetched.json() as { content: string }).content, 'base64').toString('utf8')
 }
 /**It's monging time >:D */
 export async function getMongoClient() {
@@ -1275,7 +1265,7 @@ export function getStartedHttpServer() {
 	const httpServer = http.createServer(app)
 	app.use(express.static(path.resolve() + '/public'))
 	app.get('/', (_request, response) => response.sendFile(path.resolve() + '/public/index.html'))
-	httpServer.listen(PORT, () => delay(1500).then(() => colorLog('white', 'Server up and running~')))
+	httpServer.listen(PORT, () => delay(1500).then(() => colorLog('white', 'Server up and running~'))) //@btr-ignore
 	return httpServer
 }
 /**Import modules or jsons */

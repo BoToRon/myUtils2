@@ -29,7 +29,6 @@ const serverFolder_dist = '../dist'
 const PACKAGE_DOT_JSON = 'package.json'
 
 const errors: string[] = []
-const warningsCount = { count: 0 }
 const packageJsonContent = await fsReadFileAsync(PACKAGE_DOT_JSON)
 const isPackage = JSON.parse(packageJsonContent).name === '@botoron/utils'
 const tsFilePaths = getFilesAndFoldersNames('.', null).filter(path => path.includes('.ts'))
@@ -65,23 +64,28 @@ const commands_forProject: recordOfCommands<command_forProject> = {
 if (isPackage) { inquirePromptCommands(mapCommandsForInquirePrompt(commands_forPackage), true) }
 else { inquirePromptCommands(mapCommandsForInquirePrompt(commands_forProject), true) }
 
-//GENERAL USE
+//function declarations below
 
-function transpileAndRunTestRunTs() {
-	transpileFiles(['./test/run.ts'], './test/transpiled'); execFile('./test/transpiled/test/run.ts')
-}
+function transpileAndRunTestRunTs() { transpileFiles(['./test/run.ts'], './test/transpiled'); execFile('./test/transpiled/test/run.ts') }
+function package_transpileBaseFiles() { transpileFiles(tsFilePaths.filter(path => !/\w\//.test(path)), '.') }
+function project_buildAll() { project_buildClientFilesWithVite(); project_buildServerFiles() }
+function quitCommandLineProgram() { killProcess('devForProject\'s commands terminated') }
+function project_buildClientFilesWithVite() { execSync('cd client & npm run build') }
+function project_initNodemon() { execSync('nodemon test/server/init.js') }
+function project_installBtrUtils() { execSync('npm i @botoron/utils') }
+function project_initVite() { execSync('cd client & npm run dev') }
+async function btrCheckFilesAndReportResult() { await btrCheck() }
+function project_forwardVitesPort() { execSync('lt --port 5173') }
+
 async function btrCheck() {
+	const warningsCount = { count: 0 }
 	checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths), warningsCount)
-}
-function quitCommandLineProgram() {
-	killProcess('devForProject\'s commands terminated')
-}
-async function btrCheckFilesAndReportResult() {
-	await btrCheck()
-	errors.length ? colorLog('red', errors.length + ' errors') : successLog('No btr-errors detected')
+
+	const checksPassed = errors.length || warningsCount.count > 1
+	if (!checksPassed) { errorLog('btr-errors/warnings detected, fix them before attempting to transpile again') }
+	return checksPassed
 }
 
-//FOR PACKAGE ONLY
 async function package_publish() {
 	await package_transpileAll()
 	await prompCommitMessageAndPush(utilsRepoName)
@@ -138,7 +142,7 @@ async function package_publish() {
 		}
 
 		function logDetailsForPrompt() {
-			delay(500).then(() => {
+			delay(500).then(() => { //@btr-ignore
 				colorLog('yellow', '50-character limits ends at that line: * * * * * |')
 				colorLog('green', repoName)
 				logEmptyLine()
@@ -147,13 +151,8 @@ async function package_publish() {
 	}
 }
 
-function package_transpileBaseFiles() {
-	transpileFiles(tsFilePaths.filter(path => !/\w\//.test(path)), '.')
-}
-
 async function package_transpileAll() {
-	await btrCheck()
-	if (errors.length || warningsCount.count > 1) { errorLog('btr-errors detected, fix them before attempting to transpile again'); return }
+	if (!await btrCheck()) { return }
 	package_transpileBaseFiles()
 
 	const filename = 'btr.ts'
@@ -190,18 +189,8 @@ async function package_transpileAll() {
 	}
 }
 
-//FOR PROJECT ONLY
-
-function project_buildAll() { project_buildClientFilesWithVite(); project_buildServerFiles() }
-function project_buildClientFilesWithVite() { execSync('cd client & npm run build') }
-function project_initNodemon() { execSync('nodemon test/server/init.js') }
-function project_installBtrUtils() { execSync('npm i @botoron/utils') }
-function project_initVite() { execSync('cd client & npm run dev') }
-function project_forwardVitesPort() { execSync('lt --port 5173') }
-
 async function project_btrCheckAndTranspileToTestFolder() {
-	await btrCheck()
-	if (errors.length || warningsCount.count > 1) { errorLog('btr-errors detected, fix them before attempting to transpile again'); return }
+	if (!await btrCheck()) { return }
 
 	transpileFiles(['server/init.ts'], './test')
 	await fsWriteFileAsync('test/package.json', packageJsonContent)

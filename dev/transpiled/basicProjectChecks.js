@@ -336,7 +336,7 @@ async function checkPackageJsons() {
         devDependencies: zRecord(['@types/express', '@typescript-eslint/eslint-plugin', '@typescript-eslint/parser',
             'dotenv', 'eslint', 'eslint-plugin-sonarjs', 'eslint-plugin-vue', 'inquirer', 'nodemon'], z.string()),
         scripts: z.object({
-            dev: z.literal('tsc --target esnext dev/commands.ts --outDir ./dev/transpiled & node dev/transpiled/dev/commands.js'),
+            dev: z.literal('tsc --target esnext dev/commands.ts --outDir ./dev/transpiled & node dev/transpiled/dev/commands.js'), //@btr-ignore
         }).strict(),
     });
     zodCheck_toErrors('./client/package.json', desiredPackageJsonClientSchema, packageJsonOfProjectClient);
@@ -347,7 +347,7 @@ function checkServerEventsTs() {
         asConsecutiveLines([
             'io.on(\'connection\', x => {',
             '\tconst socket = x as serverSocket',
-            '\tref.DB_misc.updateOne({}, { $inc: { pageVisits: 1 } }).then(() => ref.pageVisits++)',
+            '\tref.DB_misc.updateOne({}, { $inc: { pageVisits: 1 } }).then(() => ref.pageVisits++) //@btr-ignore',
             '\tsocket.onAny(args => ref.debugLog(\'logSocketOnAny\', { args }))',
             '\tref.debugLog(\'logWhenSocketConnects\', { id: x.id })',
         ]),
@@ -504,15 +504,8 @@ async function checkUtilsVersion() {
     }
     /**Check if the project is using the latest version of "@botoron/utils" */
     async function getLatestVersion() {
-        const response = (await new Promise((resolve) => {
-            try {
-                fetch('http://registry.npmjs.com/-/v1/search?text=@botoron/utils&size=1').
-                    then(res => res.json().then((x) => resolve(x)));
-            }
-            catch {
-                return { objects: [{ package: { version: '0' } }] };
-            }
-        }));
+        const fetched = await (await fetch('http://registry.npmjs.com/-/v1/search?text=@botoron/utils&size=1')).json();
+        const response = fetched || { objects: [{ package: { version: '0' } }] };
         return response.objects[0].package.version;
     }
     function versionValue(version) {

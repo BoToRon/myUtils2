@@ -138,8 +138,8 @@ export function getRandomItem_withCustomChances(items, chancesDefininingFunction
 export function getUniqueValues(arr) { return [...new Set(arr)]; }
 /**@returns whether an item is the last one in an array or not (warning: maybe don't use with primitives) */
 export function isLastItem(arr, item) { return item === arr.at(-1); }
-/**Return the last item of the given array */ //TODO: consider replacing this for Array.prototype.at(-1)
-export function lastItem(arr) { return arr[arr.length - 1]; }
+/**Return the last item of the given array */
+export function lastItem(arr) { return arr.at(-1); }
 /**Apply multiple mapping functions to a single array at once and return an object with all the result */
 export function multiMap(arr, f1, f2, f3 = doNothing, f4 = doNothing, f5 = doNothing) {
     return arr.reduce((acc, item) => {
@@ -551,20 +551,17 @@ export async function initializeInterval(id, intervalInMs, stayAliveChecker, onE
     const doContinue = await stayAliveChecker();
     return { timesRanSucessfully, ...await getResult() };
     async function getResult() {
-        return await new Promise(resolve => {
-            if (doContinue) {
-                initializeTimer(id, Date.now() + intervalInMs, onEach, onKill).then(result => {
-                    if (result.wasCancelled) {
-                        return resolve(result);
-                    }
-                    initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1).then(result => resolve(result));
-                });
+        if (doContinue) {
+            const timerResult = await initializeTimer(id, Date.now() + intervalInMs, onEach, onKill);
+            if (timerResult.wasCancelled) {
+                return timerResult;
             }
-            else {
-                initializeTimer(id, Date.now() + intervalInMs, onEach, onKill).then(result => resolve(result));
-                killTimer(id, `stayAliveChecker (${stayAliveChecker.name}) = false`);
-            }
-        });
+            return await initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1);
+        }
+        else {
+            killTimer(id, `stayAliveChecker (${stayAliveChecker.name}) = false`);
+            return await initializeTimer(id, Date.now() + intervalInMs, onEach, onKill);
+        }
     }
 }
 /**
@@ -650,7 +647,7 @@ export function asSingularOrPlural(noun, amount) { return noun + `${amount === 1
 export function colorLog(color, message) { console.log(chalk[color].bold(message)); } //DELETETHISFORCLIENT @btr-ignore
 /**(Message) 💀 */
 export function errorLog(message) { return colorLog('red', message + ' 💀'); }
-/**TODO: describe me */
+//TODO: describe me
 export function getTraceableStack(error, type) {
     const { stack } = (typeof error === 'string' ? new Error(error) : error);
     return `${stack}`.
@@ -1233,12 +1230,8 @@ export function getSeparatingCommentBlock(message) {
 }
 /**fetch the latest package.json of myUtils */
 export async function getLatestPackageJsonFromGithub() {
-    const response = await new Promise((resolve) => {
-        fetch('https://api.github.com/repos/botoron/utils/contents/package.json', { method: 'GET' }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ).then((res) => res.json().then((packageJson) => resolve(packageJson)));
-    });
-    return Buffer.from(response.content, 'base64').toString('utf8');
+    const fetched = await fetch('https://api.github.com/repos/botoron/utils/contents/package.json', { method: 'GET' });
+    return Buffer.from((await fetched.json()).content, 'base64').toString('utf8');
 }
 /**It's monging time >:D */
 export async function getMongoClient() {
@@ -1262,7 +1255,7 @@ export function getStartedHttpServer() {
     const httpServer = http.createServer(app);
     app.use(express.static(path.resolve() + '/public'));
     app.get('/', (_request, response) => response.sendFile(path.resolve() + '/public/index.html'));
-    httpServer.listen(PORT, () => delay(1500).then(() => colorLog('white', 'Server up and running~')));
+    httpServer.listen(PORT, () => delay(1500).then(() => colorLog('white', 'Server up and running~'))); //@btr-ignore
     return httpServer;
 }
 /**Import modules or jsons */
@@ -1310,7 +1303,7 @@ export function transpileFiles(sourceFiles, outputDirectory) {
         killProcess('transpileFiles\'s sourceFiles argument should NOT be an empty array!');
     }
     colorLog('white', 'Transpiling the following file(s): ' + sourceFiles);
-    const command = `tsc --target esnext ${sourceFiles.join(' ')} --outDir ${outputDirectory}`;
+    const command = `tsc --target esnext ${sourceFiles.join(' ')} --outDir ${outputDirectory}`; //@btr-ignore
     try {
         execSync(command);
     }
