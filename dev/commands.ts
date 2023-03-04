@@ -3,8 +3,6 @@ _ //			tsc --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ig
 _ // 			node dev/transpiled/dev/commands.js
 import fs from 'fs'
 _
-import { z } from 'zod'
-_
 import inquirer from 'inquirer'
 _
 import { execSync, execFile } from 'child_process'	//DELETETHISFORCLIENT
@@ -16,8 +14,9 @@ _
 import { btr_commands as recordOfCommands, validNpmVersion } from '../types.js'
 _
 import {
-	checkCodeThatCouldBeUpdated, colorLog, copyToClipboard, delay, divine, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles,
-	getFilesAndFoldersNames, inquirePromptCommands, killProcess, logEmptyLine, mapCommandsForInquirePrompt, questionAsPromise, selfFilter, successLog, transpileFiles, zodCheck_curry
+	checkCodeThatCouldBeUpdated, colorLog, copyToClipboard, delay, divine, errorLog, fsReadFileAsync, fsWriteFileAsync,
+	getCachedFiles, getFilesAndFoldersNames, inquirePromptCommands, killProcess, logEmptyLine,
+	mapCommandsForInquirePrompt, questionAsPromise, selfFilter, successLog, transpileFiles
 } from '../btr.js'
 
 type sharedCommand = 'check' | 'test' | 'EXIT'
@@ -106,49 +105,6 @@ async function package_publish() {
 			})
 		).versioning as validNpmVersion
 	}
-
-	async function prompCommitMessageAndPush(repoName: string): Promise<boolean> {
-		const commitType = await getCommitTypeFromPrompt()
-
-		//order for these 3 below matters
-		logDetailsForPrompt()
-		const commitMessage = await questionAsPromise('Enter a commit message:')
-		copyToClipboard(commitType + ': ' + commitMessage)
-
-		if (!zodCheck_curry(killProcess)(z.string().min(15).max(50), commitMessage)) { return prompCommitMessageAndPush(repoName) }
-		return await gitAddCommitPush()
-
-		async function getCommitTypeFromPrompt() {
-			return (await inquirer.
-				prompt({
-					name: 'versioning',
-					type: 'list',
-					message: 'Select an NPM versioning:',
-					choices: ['fix', 'feat', 'build', 'chore', 'ci', 'docs', 'refactor', 'style', 'test']
-				})
-			).versioning as string
-		}
-
-		function gitAddCommitPush(): Promise<boolean> {
-			return new Promise(resolve => {
-				execAndLog('git add .')
-				colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.')
-				execSync('git commit')
-				execAndLog('git push')
-				resolve(true)
-
-				function execAndLog(command: string) { execSync(command); successLog(command) }
-			})
-		}
-
-		function logDetailsForPrompt() {
-			delay(500).then(() => { //@btr-ignore
-				colorLog('yellow', '50-character limits ends at that line: * * * * * |')
-				colorLog('green', repoName)
-				logEmptyLine()
-			})
-		}
-	}
 }
 
 async function package_transpileAll() {
@@ -199,14 +155,21 @@ async function project_btrCheckAndTranspileToTestFolder() {
 
 async function project_buildServerFiles() {
 	await basicProjectChecks(divine.error)
-	await transpileTypesFile()
+
+	fsWriteFileAsync('types.ts', await fsReadFileAsync('types.d.ts'))
+	transpileFiles(['types.ts'], '.')
+	fs.unlinkSync('types.ts')
+
 	await copyFileToDist('.env')
 	await copyFileToDist('.gitignore')
 	await copyFileToDist(PACKAGE_DOT_JSON)
 
 	transpileFiles(['server/init.ts', 'server/io.ts'], serverFolder_dist)
-	await toggle_devOrProd_inRef()
-	successLog('(server) Build sucessful!')
+	toggle_devOrProd_inRef()
+
+	execSync('cd ../dist')
+	await prompCommitMessageAndPush('(project)-dist')
+	try { execSync('npm install'); successLog('(server) Build sucessful!') } catch (e) { console.log(e) }
 
 	async function copyFileToDist(filename: string) {
 		let content = await fsReadFileAsync(filename)
@@ -214,7 +177,6 @@ async function project_buildServerFiles() {
 		await fsWriteFileAsync('../dist/' + filename, content)
 
 		function deleteAllPackageJsonScriptsExceptStart_andReplaceSlashSrcWithSlashDist() {
-			//TODO: automatically git push and install npm dependencies when transpiling?
 			content = content.
 				replace('-src', '-dist').
 				replace(/"scripts": {[^}]{1,}/, `"scripts": { //regexHere
@@ -228,14 +190,42 @@ async function project_buildServerFiles() {
 		const filepath = serverFolder_dist + '/server/' + fileWithRef + '.js'
 		await fsWriteFileAsync(filepath, (await fsReadFileAsync(filepath)).replace('devOrProd = \'dev\'', 'devOrProd = \'prod\''))
 	}
+}
 
-	async function transpileTypesFile() {
-		const typesFile = await fsReadFileAsync('types.d.ts')
-		fsWriteFileAsync('types.ts', typesFile)
-		transpileFiles(['types.ts'], '.')
-		successLog('types.d.ts transpiled to root folder!')
-		fs.unlinkSync('types.ts')
-		await delay(1000)
-		return true
+async function prompCommitMessageAndPush(repoName: string) {
+	const commitType = await getCommitTypeFromPrompt()
+
+	//order for these 3 below matters
+	logDetailsForPrompt()
+	const commitMessage = await questionAsPromise('Enter a commit message:')
+	copyToClipboard(commitType + ': ' + commitMessage)
+	gitAddCommitPush()
+
+	async function getCommitTypeFromPrompt() {
+		return (await inquirer.
+			prompt({
+				name: 'versioning',
+				type: 'list',
+				message: 'Select an NPM versioning:',
+				choices: ['fix', 'feat', 'build', 'chore', 'ci', 'docs', 'refactor', 'style', 'test']
+			})
+		).versioning as string
+	}
+
+	function gitAddCommitPush() {
+		execAndLog('git add .')
+		colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.')
+		execSync('git commit')
+		execAndLog('git push')
+
+		function execAndLog(command: string) { execSync(command); successLog(command) }
+	}
+
+	function logDetailsForPrompt() {
+		delay(500).then(() => { //@btr-ignore
+			colorLog('yellow', '50-character limits ends at that line: * * * * * |')
+			colorLog('green', repoName)
+			logEmptyLine()
+		})
 	}
 }

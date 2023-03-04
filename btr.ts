@@ -1316,7 +1316,7 @@ export function transpileFiles(sourceFiles: string[], outputDirectory: string) {
 	colorLog('white', 'Transpiling the following file(s): ' + sourceFiles)
 	const command = `tsc --target esnext ${sourceFiles.join(' ')} --outDir ${outputDirectory}` //@btr-ignore
 	try { execSync(command) } catch { doNothing() }
-	colorLog('white', 'Done transpiling!')
+	colorLog('white', 'Done transpiling: ' + sourceFiles.join(', '))
 }
 /**Check the user input in socket.on functions and send error toasts if the validation fails */
 export function zodCheck_socket<T>(socket: Socket, schema: zSchema<T>, data: T) {
