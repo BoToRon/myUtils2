@@ -9,8 +9,8 @@ import {
 } from './constants.js'
 _
 import {
-	getCachedFiles, checkCodeThatCouldBeUpdated, compareArrays, getEnviromentVariables, getFilesAndFoldersNames, importFileFromProject,
-	logBtrErrors, nullAs, pick, successLog, surroundedString, zodCheck_curry, zRegexGenerator, zRecord, killProcess
+	getCachedFiles, checkCodeThatCouldBeUpdated, checkNoBtrErrorsOrWarnings, compareArrays, getEnviromentVariables,
+	getFilesAndFoldersNames, importFileFromProject, nullAs, pick, surroundedString, zodCheck_curry, zRegexGenerator, zRecord, killProcess
 } from './btr.js'
 
 let DEV_OR_PROD = <'DEV' | 'PROD'>nullAs()
@@ -23,7 +23,6 @@ const clientVueFiles: cachedFile[] = []
 const clientTsFiles: cachedFile[] = []
 const serverTsFiles: cachedFile[] = []
 
-/** Check the version of @botoron/utils, the enviroment variables and various config files */
 export async function basicProjectChecks() {
 	DEV_OR_PROD = getEnviromentVariables().DEV_OR_PROD
 	await fillCachedFiles()
@@ -32,8 +31,6 @@ export async function basicProjectChecks() {
 	await checkPackageJsons()
 	await checkVueDevFiles()
 	await checkVsCodeSettings()
-
-	checkCodeThatCouldBeUpdated([serverTsFiles, clientTsFiles, clientVueFiles].flat(), warningsCount)
 
 	//1. Obligatory project structure
 	checkFilesAndFolderStructure()
@@ -66,8 +63,11 @@ export async function basicProjectChecks() {
 	checkServerAndClientFilesLogTheirInitialization()
 	checkTrackabilityAndStyleScopeOfVueFiles()
 
-	errors.length ? logBtrErrors(errors) : successLog('all basicProjectChecks passed')
-	return !errors.length
+	//5. Warnings
+	checkCodeThatCouldBeUpdated([serverTsFiles, clientTsFiles, clientVueFiles].flat(), warningsCount)
+
+	//6. The Answer
+	return checkNoBtrErrorsOrWarnings(errors, warningsCount)
 }
 
 function zodCheck_toErrors<T>(path: string, schema: zSchema<T>, data: T) { zodCheck_curry((e: string) => addToErrors(path, e))(schema, data) }

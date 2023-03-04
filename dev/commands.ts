@@ -14,8 +14,8 @@ _
 import { btr_commands as recordOfCommands, validNpmVersion } from '../types.js'
 _
 import {
-	checkCodeThatCouldBeUpdated, colorLog, copyToClipboard, delay, errorLog, fsReadFileAsync, fsWriteFileAsync,
-	getCachedFiles, getFilesAndFoldersNames, inquirePromptCommands, killProcess, logBtrErrors, logEmptyLine,
+	checkCodeThatCouldBeUpdated, checkNoBtrErrorsOrWarnings, colorLog, copyToClipboard, delay, errorLog, fsReadFileAsync,
+	fsWriteFileAsync, getCachedFiles, getFilesAndFoldersNames, inquirePromptCommands, killProcess, logEmptyLine,
 	mapCommandsForInquirePrompt, questionAsPromise, selfFilter, successLog, transpileFiles
 } from '../btr.js'
 
@@ -76,14 +76,10 @@ function project_initVite() { execSync('cd client & npm run dev') }
 async function btrCheckFilesAndReportResult() { await btrCheck() }
 function project_forwardVitesPort() { execSync('lt --port 5173') }
 
-async function btrCheck() {
+async function btrCheck() { //TODO: replace this with
 	const warningsCount = { count: 0 }
 	checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths), warningsCount)
-
-	const checksPassed = !errors.length && !warningsCount.count
-	if (errors.length) { logBtrErrors(errors) }
-	if (!checksPassed) { errorLog('btr-errors/warnings detected, fix them before attempting to transpile again') }
-	return checksPassed
+	return checkNoBtrErrorsOrWarnings(errors, warningsCount)
 }
 
 async function package_publish() {
@@ -155,7 +151,7 @@ async function project_btrCheckAndTranspileToTestFolder() {
 }
 
 async function project_buildServerFiles() {
-	await basicProjectChecks()
+	if (!await basicProjectChecks()) { return }
 
 	fsWriteFileAsync('types.ts', await fsReadFileAsync('types.d.ts'))
 	transpileFiles(['types.ts'], '.')

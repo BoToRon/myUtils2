@@ -30,9 +30,8 @@ _
 import mongodb, { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
 _
 import {
-	arrayPredicate, btr_adminFetch, btr_commands, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn,
-	btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, bvToast, cachedFile, maybePromise,
-	messageHandler, myEnv, nullable, pipe_mutable_type, pipe_persistent_type, timer, validChalkColor, vueComponentsTracker, zSchema
+	arrayPredicate, btr_adminFetch, btr_commands, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, bvToast, cachedFile, maybePromise, messageHandler, myEnv, nullable,
+	pipe_mutable_type, pipe_persistent_type, timer, validChalkColor, vueComponentsTracker, warningsCount, zSchema
 } from './types.js'
 _
 import { getUniqueId_generator, isNode, timers, zValidVariants } from './constants.js'
@@ -1116,7 +1115,7 @@ export function bigConsoleError(message: string) {
 	logAsterisks(3)
 }
 /**Basically custom ESlint warnings */
-export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[], warningsCount: { count: number }) {
+export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[], warningsCount: warningsCount) {
 	cachedFiles.forEach(file => {
 		const { path, content } = file
 
@@ -1162,6 +1161,21 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[], warningsC
 			})
 		}
 	})
+}
+//TODO: describe me
+export function checkNoBtrErrorsOrWarnings(errors: string[], warningsCount: warningsCount) {
+	const checksPassed = !errors.length && !warningsCount.count
+	errors.length ? logErrors() : successLog('All btr-checks passed')
+	if (!checksPassed) { errorLog('btr-errors/warnings detected, fix them before attempting to transpile') }
+	return checksPassed
+
+	function logErrors() {
+		const { length } = errors
+		const maxErrorsLogged = 5
+
+		if (length > maxErrorsLogged) { errors.length = maxErrorsLogged; errors.push(`Plus ${length - maxErrorsLogged} errors not shown..`) }
+		killProcess('\n\n' + errors.map((err, i) => (i + 1) + '. ' + err).join('\n\n') + '\n\n')
+	}
 }
 /**Wrapper for fs.promise.readFile that announces the start of the file-reading */
 export async function fsReadFileAsync(filePath: string) {
@@ -1296,14 +1310,6 @@ export function inquirePromptCommands<
 }
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export function killProcess(message: string) { bigConsoleError(message); process.exit() }
-//TODO: describe me
-export function logBtrErrors(errors: string[]) {
-	const { length } = errors
-	const maxErrorsLogged = 5
-
-	if (length > maxErrorsLogged) { errors.length = maxErrorsLogged; errors.push(`Plus ${length - maxErrorsLogged} errors not shown..`) }
-	killProcess('\n\n' + errors.map((err, i) => (i + 1) + '. ' + err).join('\n\n') + '\n\n')
-}
 
 //TODO: describe me
 export function mapCommandsForInquirePrompt<T extends string>(commands: btr_commands<T>) {
