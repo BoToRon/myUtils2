@@ -33,11 +33,13 @@ export async function basicProjectChecks() {
 	await checkVueDevFiles()
 	await checkVsCodeSettings()
 
-	//IMPORTANCE: 10 (obligatory project structure)
+	checkCodeThatCouldBeUpdated([serverTsFiles, clientTsFiles, clientVueFiles].flat(), warningsCount)
+
+	//1. Obligatory project structure
 	checkFilesAndFolderStructure()
 	checkObligatoryTemplateFilesAreIdentical()
 
-	//IMPORTANCE: 5 (obligatory specific-files matches)
+	//2. Obligatory specific-files matches
 	checkSpecificMatches_AppVue()
 	checkSpecificMatches_clientIndexTs()
 	checkSpecificMatches_clientSocketTs()
@@ -51,7 +53,7 @@ export async function basicProjectChecks() {
 	checkSpecificMatches_serverRefTs()
 	checkBasicValidAdminCommands()
 
-	//IMPORTANCE: 3 (help prevent bugs)
+	//3. Help prevent bugs
 	checkClientFilesDontReferenceLocalStorageDirectly()
 	checkEnviromentVariables()
 	checkImportsAreFromTheRightBtrFile()
@@ -59,9 +61,8 @@ export async function basicProjectChecks() {
 	checkSocketEvents()
 	checkGitIgnore()
 
-	//IMPORTANCE: 1 (preferences)
+	//4. Preferences
 	checkAllExportedFunctionsAreDescribed()
-	checkCodeThatCouldBeUpdated([serverTsFiles, clientTsFiles, clientVueFiles].flat(), warningsCount)
 	checkServerAndClientFilesLogTheirInitialization()
 	checkTrackabilityAndStyleScopeOfVueFiles()
 

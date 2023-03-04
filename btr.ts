@@ -1297,7 +1297,14 @@ export function inquirePromptCommands<
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export function killProcess(message: string) { bigConsoleError(message); process.exit() }
 //TODO: describe me
-export function logBtrErrors(errors: string[]) { killProcess('\n\n' + errors.map((err, i) => (i + 1) + '. ' + err).join('\n\n') + '\n\n') }
+export function logBtrErrors(errors: string[]) {
+	const { length } = errors
+	const maxErrorsLogged = 5
+
+	if (length > maxErrorsLogged) { errors.length = maxErrorsLogged; errors.push(`Plus ${length - maxErrorsLogged} errors not shown..`) }
+	killProcess('\n\n' + errors.map((err, i) => (i + 1) + '. ' + err).join('\n\n') + '\n\n')
+}
+
 //TODO: describe me
 export function mapCommandsForInquirePrompt<T extends string>(commands: btr_commands<T>) {
 	const object = {} as Record<string, () => maybePromise<unknown>>
