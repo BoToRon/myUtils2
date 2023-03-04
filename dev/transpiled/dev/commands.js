@@ -3,8 +3,6 @@ _; //			tsc --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-i
 _; // 			node dev/transpiled/dev/commands.js
 import fs from 'fs';
 _;
-import { z } from 'zod';
-_;
 import inquirer from 'inquirer';
 _;
 import { execSync, execFile } from 'child_process'; //DELETETHISFORCLIENT
@@ -14,12 +12,11 @@ _;
 import { utilsRepoName, npmVersionOptions } from '../constants.js';
 _;
 _;
-import { checkCodeThatCouldBeUpdated, colorLog, copyToClipboard, delay, divine, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getFilesAndFoldersNames, inquirePromptCommands, killProcess, logEmptyLine, mapCommandsForInquirePrompt, questionAsPromise, selfFilter, successLog, transpileFiles, zodCheck_curry } from '../btr.js';
+import { checkCodeThatCouldBeUpdated, colorLog, copyToClipboard, delay, divine, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getFilesAndFoldersNames, inquirePromptCommands, killProcess, logEmptyLine, mapCommandsForInquirePrompt, questionAsPromise, selfFilter, successLog, transpileFiles } from '../btr.js';
 const fileWithRef = 'ref';
 const serverFolder_dist = '../dist';
 const PACKAGE_DOT_JSON = 'package.json';
 const errors = [];
-const warningsCount = { count: 0 };
 const packageJsonContent = await fsReadFileAsync(PACKAGE_DOT_JSON);
 const isPackage = JSON.parse(packageJsonContent).name === '@botoron/utils';
 const tsFilePaths = getFilesAndFoldersNames('.', null).filter(path => path.includes('.ts'));
@@ -53,22 +50,26 @@ if (isPackage) {
 else {
     inquirePromptCommands(mapCommandsForInquirePrompt(commands_forProject), true);
 }
-//GENERAL USE
-function transpileAndRunTestRunTs() {
-    transpileFiles(['./test/run.ts'], './test/transpiled');
-    execFile('./test/transpiled/test/run.ts');
-}
+//function declarations below
+function transpileAndRunTestRunTs() { transpileFiles(['./test/run.ts'], './test/transpiled'); execFile('./test/transpiled/test/run.ts'); }
+function package_transpileBaseFiles() { transpileFiles(tsFilePaths.filter(path => !/\w\//.test(path)), '.'); }
+function project_buildAll() { project_buildClientFilesWithVite(); project_buildServerFiles(); }
+function quitCommandLineProgram() { killProcess('devForProject\'s commands terminated'); }
+function project_buildClientFilesWithVite() { execSync('cd client & npm run build'); }
+function project_initNodemon() { execSync('nodemon test/server/init.js'); }
+function project_installBtrUtils() { execSync('npm i @botoron/utils'); }
+function project_initVite() { execSync('cd client & npm run dev'); }
+async function btrCheckFilesAndReportResult() { await btrCheck(); }
+function project_forwardVitesPort() { execSync('lt --port 5173'); }
 async function btrCheck() {
+    const warningsCount = { count: 0 };
     checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths), warningsCount);
+    const checksPassed = errors.length || warningsCount.count > 1;
+    if (!checksPassed) {
+        errorLog('btr-errors/warnings detected, fix them before attempting to transpile again');
+    }
+    return checksPassed;
 }
-function quitCommandLineProgram() {
-    killProcess('devForProject\'s commands terminated');
-}
-async function btrCheckFilesAndReportResult() {
-    await btrCheck();
-    errors.length ? colorLog('red', errors.length + ' errors') : successLog('No btr-errors detected');
-}
-//FOR PACKAGE ONLY
 async function package_publish() {
     await package_transpileAll();
     await prompCommitMessageAndPush(utilsRepoName);
@@ -85,51 +86,9 @@ async function package_publish() {
             choices: npmVersionOptions
         })).versioning;
     }
-    async function prompCommitMessageAndPush(repoName) {
-        const commitType = await getCommitTypeFromPrompt();
-        //order for these 3 below matters
-        logDetailsForPrompt();
-        const commitMessage = await questionAsPromise('Enter a commit message:');
-        copyToClipboard(commitType + ': ' + commitMessage);
-        if (!zodCheck_curry(killProcess)(z.string().min(15).max(50), commitMessage)) {
-            return prompCommitMessageAndPush(repoName);
-        }
-        return await gitAddCommitPush();
-        async function getCommitTypeFromPrompt() {
-            return (await inquirer.
-                prompt({
-                name: 'versioning',
-                type: 'list',
-                message: 'Select an NPM versioning:',
-                choices: ['fix', 'feat', 'build', 'chore', 'ci', 'docs', 'refactor', 'style', 'test']
-            })).versioning;
-        }
-        function gitAddCommitPush() {
-            return new Promise(resolve => {
-                execAndLog('git add .');
-                colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.');
-                execSync('git commit');
-                execAndLog('git push');
-                resolve(true);
-                function execAndLog(command) { execSync(command); successLog(command); }
-            });
-        }
-        function logDetailsForPrompt() {
-            delay(500).then(() => {
-                colorLog('yellow', '50-character limits ends at that line: * * * * * |');
-                colorLog('green', repoName);
-                logEmptyLine();
-            });
-        }
-    }
-}
-function package_transpileBaseFiles() {
-    transpileFiles(tsFilePaths.filter(path => !/\w\//.test(path)), '.');
 }
 async function package_transpileAll() {
-    await btrCheck();
-    if (errors.length || warningsCount.count > 1) {
-        errorLog('btr-errors detected, fix them before attempting to transpile again');
+    if (!await btrCheck()) {
         return;
     }
     package_transpileBaseFiles();
@@ -160,17 +119,8 @@ async function package_transpileAll() {
             split('\n');
     }
 }
-//FOR PROJECT ONLY
-function project_buildAll() { project_buildClientFilesWithVite(); project_buildServerFiles(); }
-function project_buildClientFilesWithVite() { execSync('cd client & npm run build'); }
-function project_initNodemon() { execSync('nodemon test/server/init.js'); }
-function project_installBtrUtils() { execSync('npm i @botoron/utils'); }
-function project_initVite() { execSync('cd client & npm run dev'); }
-function project_forwardVitesPort() { execSync('lt --port 5173'); }
 async function project_btrCheckAndTranspileToTestFolder() {
-    await btrCheck();
-    if (errors.length || warningsCount.count > 1) {
-        errorLog('btr-errors detected, fix them before attempting to transpile again');
+    if (!await btrCheck()) {
         return;
     }
     transpileFiles(['server/init.ts'], './test');
@@ -179,13 +129,23 @@ async function project_btrCheckAndTranspileToTestFolder() {
 }
 async function project_buildServerFiles() {
     await basicProjectChecks(divine.error);
-    await transpileTypesFile();
+    fsWriteFileAsync('types.ts', await fsReadFileAsync('types.d.ts'));
+    transpileFiles(['types.ts'], '.');
+    fs.unlinkSync('types.ts');
     await copyFileToDist('.env');
     await copyFileToDist('.gitignore');
     await copyFileToDist(PACKAGE_DOT_JSON);
     transpileFiles(['server/init.ts', 'server/io.ts'], serverFolder_dist);
-    await toggle_devOrProd_inRef();
-    successLog('(server) Build sucessful!');
+    toggle_devOrProd_inRef();
+    execSync('cd ../dist');
+    await prompCommitMessageAndPush('(project)-dist');
+    try {
+        execSync('npm install');
+        successLog('(server) Build sucessful!');
+    }
+    catch (e) {
+        console.log(e);
+    }
     async function copyFileToDist(filename) {
         let content = await fsReadFileAsync(filename);
         if (filename === PACKAGE_DOT_JSON) {
@@ -193,26 +153,44 @@ async function project_buildServerFiles() {
         }
         await fsWriteFileAsync('../dist/' + filename, content);
         function deleteAllPackageJsonScriptsExceptStart_andReplaceSlashSrcWithSlashDist() {
-            //TODO: automatically git push and install npm dependencies when transpiling?
             content = content.
                 replace('-src', '-dist').
-                replace(/"scripts": {[^}]{1,}/, `"scripts": { //regexHere
-		"start": "node server/init.js",
-		"git": "git add . & git commit & git push",
-	`);
+                replace(/"scripts": {[^}]{1,}/, '"scripts": { "start": "node server/init.js"'); //regexHere
         }
     }
     async function toggle_devOrProd_inRef() {
         const filepath = serverFolder_dist + '/server/' + fileWithRef + '.js';
         await fsWriteFileAsync(filepath, (await fsReadFileAsync(filepath)).replace('devOrProd = \'dev\'', 'devOrProd = \'prod\''));
     }
-    async function transpileTypesFile() {
-        const typesFile = await fsReadFileAsync('types.d.ts');
-        fsWriteFileAsync('types.ts', typesFile);
-        transpileFiles(['types.ts'], '.');
-        successLog('types.d.ts transpiled to root folder!');
-        fs.unlinkSync('types.ts');
-        await delay(1000);
-        return true;
+}
+async function prompCommitMessageAndPush(repoName) {
+    const commitType = await getCommitTypeFromPrompt();
+    //order for these 3 below matters
+    logDetailsForPrompt();
+    const commitMessage = await questionAsPromise('Enter a commit message:');
+    copyToClipboard(commitType + ': ' + commitMessage);
+    gitAddCommitPush();
+    async function getCommitTypeFromPrompt() {
+        return (await inquirer.
+            prompt({
+            name: 'versioning',
+            type: 'list',
+            message: 'Select an NPM versioning:',
+            choices: ['fix', 'feat', 'build', 'chore', 'ci', 'docs', 'refactor', 'style', 'test']
+        })).versioning;
+    }
+    function gitAddCommitPush() {
+        execAndLog('git add .');
+        colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.');
+        execSync('git commit');
+        execAndLog('git push');
+        function execAndLog(command) { execSync(command); successLog(command); }
+    }
+    function logDetailsForPrompt() {
+        delay(500).then(() => {
+            colorLog('yellow', '50-character limits ends at that line: * * * * * |');
+            colorLog('green', repoName);
+            logEmptyLine();
+        });
     }
 }

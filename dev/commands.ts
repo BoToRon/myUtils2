@@ -169,7 +169,7 @@ async function project_buildServerFiles() {
 
 	execSync('cd ../dist')
 	await prompCommitMessageAndPush('(project)-dist')
-	try { execSync('npm install'); successLog('(server) Build sucessful!') } catch (e) { console.log(e) }
+	try { execSync('npm install'); successLog('(server) Build sucessful!') } catch (e) { errorLog(`${e}`) }
 
 	async function copyFileToDist(filename: string) {
 		let content = await fsReadFileAsync(filename)
@@ -179,10 +179,7 @@ async function project_buildServerFiles() {
 		function deleteAllPackageJsonScriptsExceptStart_andReplaceSlashSrcWithSlashDist() {
 			content = content.
 				replace('-src', '-dist').
-				replace(/"scripts": {[^}]{1,}/, `"scripts": { //regexHere
-		"start": "node server/init.js",
-		"git": "git add . & git commit & git push",
-	`)
+				replace(/"scripts": {[^}]{1,}/, '"scripts": { "start": "node server/init.js"') //regexHere
 		}
 	}
 

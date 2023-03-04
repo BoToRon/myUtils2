@@ -131,8 +131,8 @@ export function getRandomItem_withCustomChances<T>(items: T[], chancesDefinining
 export function getUniqueValues<T>(arr: T[]) { return [...new Set(arr)] }
 /**@returns whether an item is the last one in an array or not (warning: maybe don't use with primitives) */
 export function isLastItem<T>(arr: T[], item: T) { return item === arr.at(-1) }
-/**Return the last item of the given array */ //TODO: consider replacing this for Array.prototype.at(-1)
-export function lastItem<T>(arr: T[]) { return arr[arr.length - 1] as T }
+/**Return the last item of the given array */
+export function lastItem<T>(arr: T[]) { return arr.at(-1) as T }
 /**Apply multiple mapping functions to a single array at once and return an object with all the result */
 export function multiMap<
 	T,
@@ -533,18 +533,15 @@ export async function initializeInterval<
 	return { timesRanSucessfully, ...await getResult() } as resolveInfo & { timesRanSucessfully: number, wasCancelled: true }
 
 	async function getResult(): Promise<resolveInfo> {
-		return await new Promise(resolve => {
-			if (doContinue) {
-				initializeTimer(id, Date.now() + intervalInMs, onEach, onKill).then(result => {
-					if (result.wasCancelled) { return resolve(result) }
-					initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1).then(result => resolve(result))
-				})
-			}
-			else {
-				initializeTimer(id, Date.now() + intervalInMs, onEach, onKill).then(result => resolve(result))
-				killTimer(id, `stayAliveChecker (${stayAliveChecker.name}) = false`)
-			}
-		})
+		if (doContinue) {
+			const timerResult = await initializeTimer(id, Date.now() + intervalInMs, onEach, onKill)
+			if (timerResult.wasCancelled) { return timerResult }
+			return await initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1)
+		}
+		else {
+			killTimer(id, `stayAliveChecker (${stayAliveChecker.name}) = false`)
+			return await initializeTimer(id, Date.now() + intervalInMs, onEach, onKill)
+		}
 	}
 }
 /**
@@ -643,7 +640,7 @@ export function asSingularOrPlural(noun: string, amount: number) { return noun +
 /**console.log... WITH COLORS :D */ //@btr-ignore
 /**(Message) 💀 */
 export function errorLog(message: string) { return colorLog('red', message + ' 💀') }
-/**TODO: describe me */
+//TODO: describe me
 export function getTraceableStack(error: string | Error, type: 'debugLog' | 'divineError' | 'killTimer' | 'zodCheck_socket') {
 	const { stack } = (typeof error === 'string' ? new Error(error) : error)
 	return `${stack}`.
@@ -871,7 +868,7 @@ export function getAppLog<T extends string, useStoreT extends () => btr_trackedV
 	window: { appLog: () => { store: { [x: string]: () => void } }, vueComponents: vueComponentsTracker<T> },
 	useStore: useStoreT
 ) {
-	delay(1000).then(() => {
+	delay(1000).then(() => { //@btr-ignore
 		window.appLog = () => mapObject({
 			store: useStore(),
 			...arrayToObject(

@@ -1310,7 +1310,7 @@ export function transpileFiles(sourceFiles, outputDirectory) {
     catch {
         doNothing();
     }
-    colorLog('white', 'Done transpiling!');
+    colorLog('white', 'Done transpiling: ' + sourceFiles.join(', '));
 }
 /**Check the user input in socket.on functions and send error toasts if the validation fails */
 export function zodCheck_socket(socket, schema, data) {

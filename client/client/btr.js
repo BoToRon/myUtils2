@@ -125,8 +125,8 @@ export function getRandomItem_withCustomChances(items, chancesDefininingFunction
 export function getUniqueValues(arr) { return [...new Set(arr)]; }
 /**@returns whether an item is the last one in an array or not (warning: maybe don't use with primitives) */
 export function isLastItem(arr, item) { return item === arr.at(-1); }
-/**Return the last item of the given array */ //TODO: consider replacing this for Array.prototype.at(-1)
-export function lastItem(arr) { return arr[arr.length - 1]; }
+/**Return the last item of the given array */
+export function lastItem(arr) { return arr.at(-1); }
 /**Apply multiple mapping functions to a single array at once and return an object with all the result */
 export function multiMap(arr, f1, f2, f3 = doNothing, f4 = doNothing, f5 = doNothing) {
     return arr.reduce((acc, item) => {
@@ -538,20 +538,17 @@ export async function initializeInterval(id, intervalInMs, stayAliveChecker, onE
     const doContinue = await stayAliveChecker();
     return { timesRanSucessfully, ...await getResult() };
     async function getResult() {
-        return await new Promise(resolve => {
-            if (doContinue) {
-                initializeTimer(id, Date.now() + intervalInMs, onEach, onKill).then(result => {
-                    if (result.wasCancelled) {
-                        return resolve(result);
-                    }
-                    initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1).then(result => resolve(result));
-                });
+        if (doContinue) {
+            const timerResult = await initializeTimer(id, Date.now() + intervalInMs, onEach, onKill);
+            if (timerResult.wasCancelled) {
+                return timerResult;
             }
-            else {
-                initializeTimer(id, Date.now() + intervalInMs, onEach, onKill).then(result => resolve(result));
-                killTimer(id, `stayAliveChecker (${stayAliveChecker.name}) = false`);
-            }
-        });
+            return await initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1);
+        }
+        else {
+            killTimer(id, `stayAliveChecker (${stayAliveChecker.name}) = false`);
+            return await initializeTimer(id, Date.now() + intervalInMs, onEach, onKill);
+        }
     }
 }
 /**
@@ -636,7 +633,7 @@ export function asSingularOrPlural(noun, amount) { return noun + `${amount === 1
 /**console.log... WITH COLORS :D */ //@btr-ignore
 /**(Message) 💀 */
 export function errorLog(message) { return colorLog('red', message + ' 💀'); }
-/**TODO: describe me */
+//TODO: describe me
 export function getTraceableStack(error, type) {
     const { stack } = (typeof error === 'string' ? new Error(error) : error);
     return `${stack}`.
