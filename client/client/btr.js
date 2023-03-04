@@ -973,19 +973,17 @@ export function triggerModalWithValidation_curry() { doNothing; }
 /**@deprecated use "divine.try" instead */
 export function tryF() { doNothing; } //@btr-ignore
 export function colorLog(color, message) { console.log(`%c${message}`, `color: ${color};`); } //@btr-ignore
+const clipboard = { write: doNothing };
+const fsWriteFileAsync = doNothing;
 const divine = {
-    error: (err) => {
-        alert(err + ', Please, report, this, ') },, ping, (message) => { divine.error(message); });
-        try { }
-        finally { }
-        async (fn, args) => {
-            try {
-                return await fn(...args);
-            }
-            catch (err) {
-                divine.error(err);
-            }
-        },
-        ;
-    }
+    error: (err) => { alert(err + '\n Please report this'); },
+    ping: (message) => { divine.error(message); },
+    try: async (fn, args) => {
+        try {
+            return await fn(...args);
+        }
+        catch (err) {
+            divine.error(err);
+        }
+    },
 };

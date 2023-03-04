@@ -132,8 +132,10 @@ async function package_transpileAll() {
     const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x)); //regexHere
     lines.splice(cutPoint, lines.length);
     lines.push('export function colorLog(color: string, message: string) { console.log(`%c${message}`, `color: ${color};`) } //@btr-ignore');
+    lines.push('const clipboard = { write: doNothing }');
+    lines.push('const fsWriteFileAsync = doNothing');
     lines.push(`const divine = {
-	error: (err: string | Error) => { alert(err + '\n Please report this') },
+	error: (err: string | Error) => { alert(err + '\\n Please report this') },
 	ping: (message: string) => { divine.error(message) },
 	try: async <T extends (...args: Parameters<T>) => maybePromise<ReturnType<T>>>(fn: T, args: Parameters<T>) => {
 		try { return await fn(...args) }
