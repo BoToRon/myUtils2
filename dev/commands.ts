@@ -1,5 +1,3 @@
-
-
 let _
 _ //			tsc --target esnext dev/commands.ts --outDir ./dev/transpiled 
 _ // 			node dev/transpiled/dev/commands.js
@@ -69,9 +67,15 @@ else { inquirePromptCommands(mapCommandsForInquirePrompt(commands_forProject), t
 
 //GENERAL USE
 
-function transpileAndRunTestRunTs() { transpileFiles(['./test/run.ts'], './test/transpiled'); execFile('./test/transpiled/test/run.ts') }
-async function btrCheck() { checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths), warningsCount) }
-function quitCommandLineProgram() { killProcess('devForProject\'s commands terminated') }
+function transpileAndRunTestRunTs() {
+	transpileFiles(['./test/run.ts'], './test/transpiled'); execFile('./test/transpiled/test/run.ts')
+}
+async function btrCheck() {
+	checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths), warningsCount)
+}
+function quitCommandLineProgram() {
+	killProcess('devForProject\'s commands terminated')
+}
 async function btrCheckFilesAndReportResult() {
 	await btrCheck()
 	errors.length ? colorLog('red', errors.length + ' errors') : successLog('No btr-errors detected')
@@ -188,8 +192,8 @@ async function package_transpileAll() {
 
 //FOR PROJECT ONLY
 
-function project_buildClientFilesWithVite() { execSync('cd client & npm run build') }
 function project_buildAll() { project_buildClientFilesWithVite(); project_buildServerFiles() }
+function project_buildClientFilesWithVite() { execSync('cd client & npm run build') }
 function project_initNodemon() { execSync('nodemon test/server/init.js') }
 function project_installBtrUtils() { execSync('npm i @botoron/utils') }
 function project_initVite() { execSync('cd client & npm run dev') }
