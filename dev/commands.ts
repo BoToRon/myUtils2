@@ -11,7 +11,7 @@ import { basicProjectChecks } from '../basicProjectChecks.js'
 _
 import { utilsRepoName, npmVersionOptions } from '../constants.js'
 _
-import { btr_commands as recordOfCommands, validNpmVersion } from '../types.js'
+import { btr_commands as recordOfCommands } from '../types.js'
 _
 import {
 	checkCodeThatCouldBeUpdated, checkNoBtrErrorsOrWarnings, colorLog, copyToClipboard, delay, errorLog, fsReadFileAsync,
@@ -22,6 +22,7 @@ import {
 type sharedCommand = 'check' | 'test' | 'EXIT'
 type command_forPackage = sharedCommand | 'publishOnly' | 'transpileAll' | 'transpileBase' | 'transpile_commit_and_PUBLISH'
 type command_forProject = sharedCommand | 'btr' | 'build-client' | 'build-server' | 'build-all' | 'localtunnel' | 'nodemon' | 'transpile' | 'vue'
+type validNpmVersion = typeof npmVersionOptions[number]
 
 const fileWithRef = 'ref'
 const serverFolder_dist = '../dist'

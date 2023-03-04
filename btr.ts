@@ -30,11 +30,10 @@ _
 import mongodb, { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
 _
 import {
-	arrayPredicate, btr_adminFetch, btr_commands, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, bvToast, cachedFile, maybePromise, messageHandler, myEnv, nullable,
-	pipe_mutable_type, pipe_persistent_type, timer, validChalkColor, vueComponentsTracker, warningsCount, zSchema
+	btr_adminFetch, btr_commands, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, cachedFile, maybePromise, nullable, timer, zSchema
 } from './types.js'
 _
-import { getUniqueId_generator, isNode, timers, zValidVariants } from './constants.js'
+import { getUniqueId_generator, isNode, timers, zMyEnv, zValidVariants } from './constants.js'
 _
 import { type Primitive, z, type ZodRawShape, type ZodTypeAny } from 'zod'
 _
@@ -45,10 +44,55 @@ _ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ***********
 _ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 
 export {
 	btr_adminFetch, btr_bvModal, btr_commands, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language,
 	btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, nullable, zValidVariants
+}
+
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+
+type validChalkColor = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'white' | 'grey' | 'magentaBright'
+type vueComponentsTracker<T extends string> = Record<T, btr_trackedVueComponent[]>
+type messageHandler = (message: string) => void
+type arrayPredicate<T> = (arg1: T) => boolean
+type pipe_persistent_type<T> = (arg: T) => T
+type warningsCount = { count: number }
+type myEnv = z.infer<typeof zMyEnv>
+
+type bvToast = {
+	toast: (
+		message: string,
+		toastOptions: {
+			variant: btr_validVariant
+			autoHideDelay: number
+			toaster: string
+			solid: boolean
+			title: string
+		}
+	) => void
+}
+type pipe_mutable_type = {
+	<T, A>(source: T, a: (value: T) => A): A
+	<T, A, B>(source: T, a: (value: T) => A, b: (value: A) => B): B
+	<T, A, B, C>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C): C
+	<T, A, B, C, D>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D): D
+	<T, A, B, C, D, E>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D, e: (value: D) => E): E
+	//can always make it longer 😉
 }
 
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/

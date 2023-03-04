@@ -1,7 +1,7 @@
 let _
 import { z } from 'zod'
 _
-import { cachedFile, packageJson, zSchema } from './types.js'
+import { cachedFile, zSchema } from './types.js'
 _
 import {
 	CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_FNS_TS, GLOBAL_VARS_TS,
@@ -12,6 +12,8 @@ import {
 	getCachedFiles, checkCodeThatCouldBeUpdated, checkNoBtrErrorsOrWarnings, compareArrays, getEnviromentVariables,
 	getFilesAndFoldersNames, importFileFromProject, nullAs, pick, surroundedString, zodCheck_curry, zRegexGenerator, zRecord, killProcess
 } from './btr.js'
+
+type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
 
 let DEV_OR_PROD = <'DEV' | 'PROD'>nullAs()
 

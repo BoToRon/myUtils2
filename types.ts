@@ -1,8 +1,7 @@
 let _
 import { type SafeParseReturnType, z } from 'zod'
 _
-import { npmVersionOptions, zMyEnv, zValidVariants } from './constants.js'
-_
+import { zValidVariants } from './constants.js'
 
 /**Generic to get the type of an object/interface while preserving key-value typing */
 export type objectEntriesT<T, amount extends 'plural' | 'single'> = { [K in keyof T]: [K, amount extends 'plural' ? T[K][] : T[K]] }[keyof T]
@@ -11,7 +10,9 @@ export type zSchema<T> = { _def: object, safeParse: (x: T) => SafeParseReturnTyp
 /**Syntaxic-sugar */
 export type nullable<T> = T | null //@btr-ignore
 
-//^^ EXPORTABLE GENERICS ABOVE ^^ vv EXPORTABLE "btr_" TYPES BELOW vv
+//^^ EXPORTABLE GENERICS ABOVE ^^ vv EXPORTABLE TYPES BELOW vv
+
+export type btr_commands<C extends string> = Record<C, { description: string, fn: () => maybePromise<unknown> }> //@btr-ignore
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void
 export type btr_nonVoidFn = <F extends (...args: Parameters<F>) => ReturnType<F>> () => unknown
 export type btr_trackedVueComponent = { id: string, name: string, beforeDestroy?: () => void }
@@ -31,28 +32,8 @@ export type btr_fieldsForColumnOfTable = string | {
 
 /**Exclusive for this package */
 
-export type toastOptions = { toaster: string, autoHideDelay: number, solid: boolean, variant: btr_validVariant, title: string }
-export type validChalkColor = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'white' | 'grey' | 'magentaBright'	//DELETETHISFORCLIENT
-export type btr_commands<C extends string> = Record<C, { description: string, fn: () => maybePromise<unknown> }> //@btr-ignore
-export type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
-export type vueComponentsTracker<T extends string> = Record<T, btr_trackedVueComponent[]>
-export type bvToast = { toast: (message: string, toastOptions: toastOptions) => void }
-export type validNpmVersion = typeof npmVersionOptions[number]
 export type cachedFile = { path: string, content: string }
-export type messageHandler = (message: string) => void
-export type arrayPredicate<T> = (arg1: T) => boolean
-export type pipe_persistent_type<T> = (arg: T) => T
-export type warningsCount = { count: number }
 export type maybePromise<T> = T | Promise<T>
-export type myEnv = z.infer<typeof zMyEnv>
-export type pipe_mutable_type = {
-	<T, A>(source: T, a: (value: T) => A): A
-	<T, A, B>(source: T, a: (value: T) => A, b: (value: A) => B): B
-	<T, A, B, C>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C): C
-	<T, A, B, C, D>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D): D
-	<T, A, B, C, D, E>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D, e: (value: D) => E): E
-	//can always make it longer 😉
-}
 export type timer = {
 	id: string,
 	runAt: number,
@@ -77,4 +58,3 @@ export type timer = {
 		cancelStack: string
 	}
 }
-
