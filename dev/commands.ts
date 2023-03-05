@@ -1,5 +1,6 @@
 let _
 _ //tsc --module nodenext --moduleResolution node --resolveJsonModule --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
+_ //tsc --moduleResolution node --resolveJsonModule --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
 _ //			tsc --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
 _ // 			node dev/transpiled/dev/commands.js			2
 _
@@ -7,18 +8,18 @@ import inquirer from 'inquirer'
 _
 import { unlinkSync } from 'fs'
 _
-import { execSync, execFile } from 'child_process'	//DELETETHISFORCLIENT
+import { recordOfCommands } from '../types.js'
+_
+import { execSync, execFile } from 'child_process'
 _
 import { basicProjectChecks } from '../basicProjectChecks.js'
 _
-import { utilsRepoName, npmVersionOptions } from '../constants.js'
-_
-import { btr_commands as recordOfCommands } from '../types.js'
+import { utilsRepoName, npmVersionOptions, TSC_FLAGS } from '../constants.js'
 _
 import {
-	checkCodeThatCouldBeUpdated, checkNoBtrErrorsOrWarnings, colorLog, copyToClipboard, delay, errorLog, fsReadFileAsync,
-	fsWriteFileAsync, getCachedFiles, getFilesAndFoldersNames, inquirePromptCommands, killProcess, logEmptyLine,
-	mapCommandsForInquirePrompt, questionAsPromise, selfFilter, successLog, transpileFiles
+	checkCodeThatCouldBeUpdated, checkNoBtrErrorsOrWarnings, colorLog, copyToClipboard, delay, errorLog,
+	fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getFilesAndFoldersNames, inquirePromptCommands,
+	killProcess, logEmptyLine, mapCommandsForInquirePrompt, questionAsPromise, selfFilter, successLog
 } from '../btr.js'
 
 type sharedCommand = 'check' | 'test' | 'EXIT'
@@ -233,4 +234,14 @@ async function prompCommitMessageAndPush(repoName: string) {
 			logEmptyLine()
 		})
 	}
+}
+
+function transpileFiles(sourceFiles: string[], outputDirectory: string) {
+	if (!sourceFiles.length) { killProcess('transpileFiles\'s sourceFiles argument should NOT be an empty array!') }
+
+	colorLog('white', 'Transpiling the following file(s): ' + sourceFiles)
+	const command = `tsc ${TSC_FLAGS} ${sourceFiles.join(' ')} --outDir ${outputDirectory}` //@btr-ignore
+	console.log({ command }) //@btr-ignore TODO: delete this
+	try { execSync(command) } catch (e) { errorLog(`${e}`) }
+	colorLog('white', 'Done transpiling: ' + sourceFiles.join(', '))
 }

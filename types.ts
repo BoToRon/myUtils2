@@ -12,7 +12,7 @@ export type nullable<T> = T | null //@btr-ignore
 
 //^^ EXPORTABLE GENERICS ABOVE ^^ vv EXPORTABLE TYPES BELOW vv
 
-export type btr_commands<C extends string> = Record<C, { description: string, fn: () => maybePromise<unknown> }> //@btr-ignore
+export type recordOfCommands<C extends string> = Record<C, { description: string, fn: () => maybePromise<unknown> }> //@btr-ignore
 export type btr_newToastFn = (title: string, message: string, variant: btr_validVariant) => void
 export type btr_nonVoidFn = <F extends (...args: Parameters<F>) => ReturnType<F>> () => unknown
 export type btr_trackedVueComponent = { id: string, name: string, beforeDestroy?: () => void }

@@ -21,19 +21,16 @@ import { Socket } from 'socket.io'	//DELETETHISFORCLIENT
 _
 import getReadLine from 'readline'	//DELETETHISFORCLIENT
 _
-import { createRequire } from 'module'	//DELETETHISFORCLIENT
-_
-import { execSync } from 'child_process'	//DELETETHISFORCLIENT
-_
 import mongodb, { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
 _
 import { promises, readdirSync, statSync } from 'fs'	//DELETETHISFORCLIENT 
 _
 import {
-	btr_adminFetch, btr_commands, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, cachedFile, maybePromise, nullable, timer, zSchema
+	btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo,
+	btr_trackedVueComponent, btr_validVariant, btr_bvModal, cachedFile, maybePromise, nullable, recordOfCommands, timer, zSchema
 } from './types.js'
 _
-import { getUniqueId_generator, isNode, timers, TSC_FLAGS, zMyEnv, zValidVariants } from './constants.js'
+import { getUniqueId_generator, isNode, timers, zMyEnv, zValidVariants } from './constants.js'
 _
 import { type Primitive, z, type ZodRawShape, type ZodTypeAny } from 'zod'
 _
@@ -51,8 +48,8 @@ _ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ***********
 _ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 
 export {
-	btr_adminFetch, btr_bvModal, btr_commands, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language,
-	btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, nullable, zValidVariants
+	btr_adminFetch, btr_bvModal, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn,
+	btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, nullable, recordOfCommands, zValidVariants
 }
 
 _ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
@@ -1275,8 +1272,6 @@ export function getDebugOptionsAndLog<K extends string>(devOrProd: 'dev' | 'prod
 }
 /** Get the contents of the project's .env */
 export function getEnviromentVariables() {
-	const require = createRequire(import.meta.url)
-	require('dotenv').config({ path: './.env' })
 	return process.env as myEnv
 }
 /**Get all the file and folders within a folder, stopping at predefined folders (assets, git, node_modules, test) */
@@ -1361,7 +1356,7 @@ export function inquirePromptCommands<
 export function killProcess(message: string) { bigConsoleError(message); process.exit() }
 
 //TODO: describe me
-export function mapCommandsForInquirePrompt<T extends string>(commands: btr_commands<T>) {
+export function mapCommandsForInquirePrompt<T extends string>(commands: recordOfCommands<T>) {
 	const object = {} as Record<string, () => maybePromise<unknown>>
 	objectEntries(commands).forEach(({ key, value }) => object[key + ': ' + value.description] = value.fn)
 	return object
@@ -1372,16 +1367,6 @@ export async function questionAsPromise(question: string) {
 	const input = await new Promise(res => { readline.question(chalk.magenta(question) + '\n', res) }) as string
 	readline.close()
 	return input
-}
-//TODO: describe me
-export function transpileFiles(sourceFiles: string[], outputDirectory: string) {
-	if (!sourceFiles.length) { killProcess('transpileFiles\'s sourceFiles argument should NOT be an empty array!') }
-
-	colorLog('white', 'Transpiling the following file(s): ' + sourceFiles)
-	const command = `tsc ${TSC_FLAGS} ${sourceFiles.join(' ')} --outDir ${outputDirectory}` //@btr-ignore
-	console.log({ command }) //@btr-ignore TODO: delete this
-	try { execSync(command) } catch (e) { errorLog(`${e}`) }
-	colorLog('white', 'Done transpiling: ' + sourceFiles.join(', '))
 }
 /**Check the user input in socket.on functions and send error toasts if the validation fails */
 export function zodCheck_socket<T>(socket: Socket, schema: zSchema<T>, data: T) {
