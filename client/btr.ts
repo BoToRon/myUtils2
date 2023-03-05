@@ -15,10 +15,10 @@ _
 _
 import {
 	btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo,
-	btr_trackedVueComponent, btr_validVariant, btr_bvModal,  maybePromise, nullable, recordOfCommands, timer, zSchema
-} from '../types.js'
+	btr_trackedVueComponent, btr_validVariant, btr_bvModal, maybePromise, nullable, recordOfCommands, timer, zSchema
+} from './types.js'
 _
-import { getUniqueId_generator, isNode, timers, zMyEnv, zValidVariants } from '../constants.js'
+import { getUniqueId_generator, isNode, timers, zMyEnv, zValidVariants } from './constants.js'
 _
 import { type Primitive, z, type ZodRawShape, type ZodTypeAny } from 'zod'
 _
@@ -277,13 +277,17 @@ _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS *****************
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 
-export async function asyncForEach<T>(array: T[], asyncFn: (item: T) => Promise<unknown>, resolveSequentially = false) {
+//Array.prototype.forEach, but async!
+export async function asyncForEach<T>(array: T[], resolveSequentially: boolean, asyncFn: (item: T) => Promise<unknown>) {
 	if (resolveSequentially) { for await (const item of array) { await asyncFn(item) } }  //@btr-ignore
-	if (!resolveSequentially) { await Promise.all(array.map(item => asyncFn(item))) }
+	if (!resolveSequentially) { await allPromises(array, asyncFn) }
+}
+//Await for an asynchronous function to apply to all the items of an array
+export async function allPromises<T, returnType>(array: T[], asyncFn: (item: T) => Promise<returnType>) {
+	return await Promise.all(array.map(item => asyncFn(item))) as returnType[] //@btr-ignore
 }
 /**Set interval with try-catch and call it immediately*/
 export function doAndRepeat(fn: () => void, interval: number) { divine.try(fn, []); setInterval(() => divine.try(fn, []), interval) }
-
 /**
  * Filter and map an array in a single loop
  * @param arr The array to be filterMap'd
@@ -1047,3 +1051,5 @@ const divine = {
 		catch (err) { divine.error(err as string) }
 	},
 }
+
+const bot = <eris.Client>nullAs()

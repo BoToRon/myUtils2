@@ -1,9 +1,9 @@
 let _;
 import eris from 'eris'; //DELETETHISFORCLIENT
 _;
-import util from 'util'; //DELETETHISFORCLIEfNT
-_;
 import http from 'http'; //DELETETHISFORCLIENT
+_;
+import util from 'util'; //DELETETHISFORCLIENT
 _;
 import path from 'path'; //DELETETHISFORCLIENT
 _;
@@ -256,15 +256,20 @@ _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ****************
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-export async function asyncForEach(array, asyncFn, resolveSequentially = false) {
+//Array.prototype.forEach, but async!
+export async function asyncForEach(array, resolveSequentially, asyncFn) {
     if (resolveSequentially) {
         for await (const item of array) {
             await asyncFn(item);
         }
     } //@btr-ignore
     if (!resolveSequentially) {
-        await Promise.all(array.map(item => asyncFn(item)));
+        await allPromises(array, asyncFn);
     }
+}
+//Await for an asynchronous function to apply to all the items of an array
+export async function allPromises(array, asyncFn) {
+    return await Promise.all(array.map(item => asyncFn(item))); //@btr-ignore
 }
 /**Set interval with try-catch and call it immediately*/
 export function doAndRepeat(fn, interval) { divine.try(fn, []); setInterval(() => divine.try(fn, []), interval); }
@@ -653,8 +658,20 @@ _; /********** FOR STRINGS ******************** FOR STRINGS ********************
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 /**Add an "S" to the end of a noun if talking about them in plural based on the amount passed */
 export function asSingularOrPlural(noun, amount) { return noun + `${amount === 1 ? '' : 's'}`; }
-/**console.log... WITH COLORS :D */ //@btr-ignore
-export function colorLog(color, message) { console.log(chalk[color].bold(message)); } //DELETETHISFORCLIENT @btr-ignore
+/**Log a big red message surrounded by a lot of asterisks for visibility */
+export function bigConsoleError(message) {
+    logAsterisksLines(3);
+    logRed(message);
+    logAsterisksLines(3);
+    function logAsterisksLines(lines) { for (let i = 0; i < lines; i++) {
+        logRed('*'.repeat(150));
+    } }
+    function logRed(message) { return colorLog('red', message); }
+}
+/**console.log... WITH COLOURS :D */ //@btr-ignore
+export function colorLog(color, message) {
+    isNode ? console.log(chalk[color].bold(message)) : console.log(`%c${message}`, `color: ${color};`); //@btr-ignore
+}
 /**(Message) 💀 */
 export function errorLog(message) { return colorLog('red', message + ' 💀'); }
 //TODO: describe me
@@ -993,7 +1010,6 @@ export function trackVueComponent_curry() { doNothing; }
 export function triggerModalWithValidation_curry() { doNothing; }
 /**@deprecated use "divine.try" instead */
 export function tryF() { doNothing; } //@btr-ignore
-// ! DELETEEVERYTHINGBELOW, as it is only meant for server-side use
 _; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
 _; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
 _; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
@@ -1004,88 +1020,105 @@ _; /********** DIVINE ******************** DIVINE ******************** DIVINE **
 _; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
 _; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
 _; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-export const divine = {
-    bot: nullAs(),
-    error: (err) => {
-        const message = getTraceableStack(err, 'divineError');
-        const { DEV_OR_PROD } = getEnviromentVariables();
-        DEV_OR_PROD !== 'PROD' ? killProcess(message) : divine.ping(message);
-    },
-    init: (() => {
-        delay(1000).then(async () => {
-            if (process.env['prevent_divine_init']) {
-                return;
-            }
-            const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = getEnviromentVariables();
-            if (DEV_OR_PROD !== 'PROD') {
-                return;
-            }
-            const divinePrepend = '***DivineBot:***';
-            const bot = eris(ERIS_TOKEN);
-            bot.on('messageReactionRemove', (a, b, c) => role('remove', a, b, c));
-            bot.on('messageReactionAdd', (a, b, c) => role('add', a, b, c));
-            bot.on('disconnect', () => { colorLog('red', `${divinePrepend}: Disconnected D: ... retrying!`); });
-            bot.on('connect', () => divine.ping(`(${APP_NAME}) - I'm alive bitch >:D`));
-            const idOfRoleAssigningMessage = '822523162724925473';
-            await attemptConnection();
-            divine.bot = bot;
-            function role(action, message, emoji, reactor) {
-                try {
-                    if (message.id !== idOfRoleAssigningMessage) {
-                        return;
+const divine = (function () {
+    const bot = nullAs();
+    return isNode ? {
+        bot,
+        error: (err) => {
+            const message = getTraceableStack(err, 'divineError');
+            const { DEV_OR_PROD } = getEnviromentVariables();
+            DEV_OR_PROD !== 'PROD' ? killProcess(message) : divine.ping(message);
+        },
+        init: (() => {
+            delay(1000).then(async () => {
+                if (process.env['prevent_divine_init']) {
+                    return;
+                }
+                const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = getEnviromentVariables();
+                if (DEV_OR_PROD !== 'PROD') {
+                    return;
+                }
+                const divinePrepend = '***DivineBot:***';
+                const bot = eris(ERIS_TOKEN);
+                bot.on('messageReactionRemove', (a, b, c) => role('remove', a, b, c));
+                bot.on('messageReactionAdd', (a, b, c) => role('add', a, b, c));
+                bot.on('disconnect', () => { colorLog('red', `${divinePrepend}: Disconnected D: ... retrying!`); });
+                bot.on('connect', () => divine.ping(`(${APP_NAME}) - I'm alive bitch >:D`));
+                const idOfRoleAssigningMessage = '822523162724925473';
+                await attemptConnection();
+                divine.bot = bot;
+                function role(action, message, emoji, reactor) {
+                    try {
+                        if (message.id !== idOfRoleAssigningMessage) {
+                            return;
+                        }
+                        const role = [
+                            { app: 'UntCG', emoji: 'cards', id: 'SAMPLEROLEID' },
+                            { app: 'CwCA', emoji: 'chess', id: 'SAMPLEROLEID' },
+                            { app: 'Cool', emoji: 'cool', id: 'SAMPLEROLEID' },
+                            { app: 'Divine', emoji: 'divine', id: 'SAMPLEROLEID' },
+                            { app: 'Bluejay', emoji: 'bluejay', id: 'SAMPLEROLEID' },
+                            { app: 'Cute', emoji: 'cute', id: 'SAMPLEROLEID' },
+                        ].find(x => x.emoji === emoji.name);
+                        if (role) {
+                            ({ add: reactor.addRole, remove: reactor.removeRole })[action](role.id);
+                        }
                     }
-                    const role = [
-                        { app: 'UntCG', emoji: 'cards', id: 'SAMPLEROLEID' },
-                        { app: 'CwCA', emoji: 'chess', id: 'SAMPLEROLEID' },
-                        { app: 'Cool', emoji: 'cool', id: 'SAMPLEROLEID' },
-                        { app: 'Divine', emoji: 'divine', id: 'SAMPLEROLEID' },
-                        { app: 'Bluejay', emoji: 'bluejay', id: 'SAMPLEROLEID' },
-                        { app: 'Cute', emoji: 'cute', id: 'SAMPLEROLEID' },
-                    ].find(x => x.emoji === emoji.name);
-                    if (role) {
-                        ({ add: reactor.addRole, remove: reactor.removeRole })[action](role.id);
+                    catch (e) {
+                        errorLog('divineBot.role.tryCatch.error: \n' + e);
                     }
                 }
-                catch (e) {
-                    errorLog('divineBot.role.tryCatch.error: \n' + e);
-                }
-            }
-            async function attemptConnection() {
-                try {
-                    bot.connect();
-                    colorLog('cyan', 'waiting for DivineBot');
-                    while (!bot.uptime) {
+                async function attemptConnection() {
+                    try {
+                        bot.connect();
+                        colorLog('cyan', 'waiting for DivineBot');
+                        while (!bot.uptime) {
+                            await delay(1000);
+                        }
+                        successLog('The divine egg has hatched');
+                    }
+                    catch {
+                        colorLog('yellow', `${divinePrepend} Failed to connect.. retrying >:D`);
                         await delay(1000);
+                        attemptConnection();
                     }
-                    successLog('The divine egg has hatched');
                 }
-                catch {
-                    colorLog('yellow', `${divinePrepend} Failed to connect.. retrying >:D`);
-                    await delay(1000);
-                    attemptConnection();
-                }
+            });
+        })(),
+        ping: async (message) => {
+            while (!divine.bot?.ready) {
+                await delay(1000);
             }
-        });
-    })(),
-    ping: async (message) => {
-        while (!divine.bot?.ready) {
-            await delay(1000);
+            const { APP_NAME } = getEnviromentVariables();
+            const theMessage = `<@470322452040515584> - (${APP_NAME}) \n ${message}`;
+            const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } };
+            divine.bot.createMessage('1055939528776495206', divineOptions);
+        },
+        /**tryCatch wrapper for functions with divineError as the default error handler */
+        try: async (fn, args) => {
+            try {
+                return await fn(...args);
+            }
+            catch (err) {
+                divine.error(err);
+            }
         }
-        const { APP_NAME } = getEnviromentVariables();
-        const theMessage = `<@470322452040515584> - (${APP_NAME}) \n ${message}`;
-        const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } };
-        divine.bot.createMessage('1055939528776495206', divineOptions);
-    },
-    /**tryCatch wrapper for functions with divineError as the default error handler */
-    try: async (fn, args) => {
-        try {
-            return await fn(...args);
+    } : {
+        bot,
+        init: (() => { doNothing(); })(),
+        error: (err) => { alert(err + '\n Please report this'); },
+        ping: (message) => { divine.error(message); },
+        try: async (fn, args) => {
+            try {
+                return await fn(...args);
+            }
+            catch (err) {
+                divine.error(err);
+            }
         }
-        catch (err) {
-            divine.error(err);
-        }
-    }
-};
+    };
+})();
+// ! DELETEEVERYTHINGBELOW, as it is only meant for server-side use
 _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
 _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
 _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
@@ -1096,16 +1129,6 @@ _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ****************
 _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
 _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
 _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
-/**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
-export function bigConsoleError(message) {
-    function logAsterisks(lines) { for (let i = 0; i < lines; i++) {
-        log('*'.repeat(150));
-    } }
-    function log(message) { return colorLog('red', message); }
-    logAsterisks(3);
-    log(message);
-    logAsterisks(3);
-}
 /**Basically custom ESlint warnings */
 export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
     cachedFiles.forEach(file => {
@@ -1116,6 +1139,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
         checkReplaceableCode(['fs from \'fs\''], '{ (specific fs methods) } from \'fs\''); //@btr-ignore
         checkReplaceableCode(['console.log'], 'colorLog OR consoleLogFull OR debugLog'); //@btr-ignore
         checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine'); //@btr-ignore
+        checkReplaceableCode(['replaceAll'], '.replace (with global flag enabled)'); //@btr-ignore
         checkReplaceableCode(['readonly ', 'ReadonlyArray<'], 'Readonly<'); //@btr-ignore
         checkReplaceableCode(['{ description: string,'], ': commands'); //@btr-ignore
         checkReplaceableCode(['//@ts-ignore'], '//@ts-expect-error'); //@btr-ignore
@@ -1126,6 +1150,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
         checkReplaceableCode(['autologin'], 'useStore().login'); //@btr-ignore
         checkReplaceableCode(['Object.values'], 'objectValues'); //@btr-ignore
         checkReplaceableCode(['JSON.stringify'], 'stringify'); //@btr-ignore
+        checkReplaceableCode(['Promise.all'], 'allPromises'); //@btr-ignore
         checkReplaceableCode(['Object.keys'], 'objectKeys'); //@btr-ignore
         checkReplaceableCode(['exec('], 'execSync('); //@btr-ignore /)
         checkReplaceableCode([' tryF'], 'divine.try'); //@btr-ignore
@@ -1159,13 +1184,21 @@ export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
         }
     });
 }
+/**Check if a file in the provided filepath exists */
+export async function checkFileExists(path) { try {
+    await promises.access(path);
+    return true;
+}
+catch {
+    return false;
+} }
 //TODO: describe me
 export function checkNoBtrErrorsOrWarnings(errors, warningsCount) {
     const checksPassed = !errors.length && !warningsCount.count;
-    errors.length ? logErrors() : successLog('All btr-checks passed');
-    if (!checksPassed) {
-        errorLog('btr-errors/warnings detected, fix them before attempting to transpile');
+    if (errors.length) {
+        logErrors();
     }
+    checksPassed ? successLog('All btr-checks passed') : errorLog('btr-errors/warnings detected, fix them before attempting to transpile');
     return checksPassed;
     function logErrors() {
         const { length } = errors;
@@ -1190,10 +1223,10 @@ export async function fsWriteFileAsync(filePath, content) {
 /**Batch-load files for checking purposes */
 export async function getCachedFiles(errors, filepaths) {
     const cachedFiles = [];
-    await asyncForEach(filepaths, addToCachedFiles);
+    await asyncForEach(filepaths, false, addToCachedFiles);
     return cachedFiles;
     async function addToCachedFiles(filepath) {
-        if (!fileExists(filepath)) {
+        if (!checkFileExists(filepath)) {
             addToErrors(`File not found at '${filepath}'`);
             return;
         }
@@ -1203,16 +1236,6 @@ export async function getCachedFiles(errors, filepaths) {
     }
     function addToErrors(error) {
         errors.push(error);
-    }
-    async function fileExists(path) {
-        try {
-            await promises.access(path);
-            return true;
-        }
-        catch {
-            addToErrors('Missing file, couldn\'t read: ' + path);
-            return false;
-        }
     }
 }
 /**For a project's debugging purposes */
@@ -1335,7 +1358,7 @@ export async function questionAsPromise(question) {
 export function zodCheck_socket(socket, schema, data) {
     return zodCheck_curry(errorHandler)(schema, data);
     function caller() {
-        return ((getTraceableStack('', 'zodCheck_socket').split('\n') || [])[3]?.match(/at \w{1,}/) || //regexHere
+        return ((getTraceableStack('', 'zodCheck_socket').split('\n'))[3]?.match(/at \w{1,}/) || //regexHere
             ['at <unable to identify function caller>'])[0];
     }
     function errorHandler(error) {

@@ -72,6 +72,7 @@ export async function basicProjectChecks() {
 }
 
 function zodCheck_toErrors<T>(path: string, schema: zSchema<T>, data: T) { zodCheck_curry((e: string) => addToErrors(path, e))(schema, data) }
+function getCachedFileContent(filepath: string) { return (getFromCachedFiles([filepath])[0] as cachedFile).content } //@btr-ignore
 function checkSpecificMatches_serverLoginTs() { checkMatchInSpecificFile('./server/login.ts', 'socket.emit(\'initData\',') }
 function externalTemplatePath(filename: string) { return '../../_templateFiles/' + filename }
 function addToErrors(path: string, error: string) { errors.push(`(at ${path}): ${error}`) }
@@ -131,9 +132,9 @@ function checkEnviromentVariables() {
 
 function checkFilesAreIdentical(path: string, pathToTemplate: string) {
 	const file = getFromCachedFiles([path]).find(x => !x.path.includes('@botoron')) as cachedFile
-	const template = getFromCachedFiles([pathToTemplate])[0] as cachedFile
+	const templateContent = getCachedFileContent(pathToTemplate)
 
-	if (withoutSlash_r_n(file.content) === withoutSlash_r_n(template.content)) { return }
+	if (withoutSlash_r_n(file.content) === withoutSlash_r_n(templateContent)) { return }
 
 	addToErrors(path, 'File should be identical to the one at ' + pathToTemplate)
 	function withoutSlash_r_n(content: string) { return content.replace(/\r|\n/g, '') } //regexHere
@@ -165,7 +166,7 @@ function checkFilesAndFolderStructure() {
 
 /**Check all files/folders that should be ignored by default are so */
 function checkGitIgnore() {
-	const currentIgnores = (getFromCachedFiles([GITIGNORE])[0] as cachedFile).content.split('\r\n')
+	const currentIgnores = getCachedFileContent(GITIGNORE).split('\r\n')
 	const desiredIgnores = ['.env', 'client/node_modules', 'node_modules', 'test/*']
 	const missingItems = compareArrays(desiredIgnores, currentIgnores).missingItems
 
@@ -205,7 +206,7 @@ function checkLocalImportsHaveJsExtention() {
 }
 
 function checkMatchInSpecificFile(filepath: string, wantedMatch: string) {
-	const { content } = (getFromCachedFiles([filepath])[0] as cachedFile)
+	const content = getCachedFileContent(filepath)
 	if (!content.includes(wantedMatch)) { addToErrors(filepath, `"${surroundedString(wantedMatch, ' ', 10)}" is missing)`) }
 }
 
@@ -265,13 +266,13 @@ async function checkPackageJsons() {
 /**Check all socket events are handled aka socket.on(<EVENTNAME>) */
 function checkSocketEvents() {
 	const filepath = TYPES_IO_TS
-	const linesInTypesIo = (getFromCachedFiles([filepath])[0] as cachedFile).content.split('\n')
+	const linesInTypesIo = getCachedFileContent(filepath).split('\n')
 	checkSocketOnOfInterface('ServerToClientEvents', CLIENT_SRC_SOCKET)
 	checkSocketOnOfInterface('ClientToServerEvents', SERVER_EVENTS_TS)
 
 	function checkSocketOnOfInterface(nameOfInterface: string, pathToHandlingFile: string) {
 
-		const handlingFile = (getFromCachedFiles([pathToHandlingFile])[0] as cachedFile).content
+		const handlingFile = getCachedFileContent(pathToHandlingFile)
 		let isKeyOfWantedInterface = false
 
 		linesInTypesIo.forEach(line => {
@@ -565,15 +566,15 @@ async function checkVsCodeSettings() {
 	zodCheck_toErrors('.vscode/settings.json', desiredVsSettings, vsSettingsOfProject)
 }
 
-/**Turn off that damn skipLibCheck that comes on by default */
-async function checkVueDevFiles() {
+/**Turn off that damn skipLibCheck that comes on by default, and other vue config files stuff */
+function checkVueDevFiles() {
 	if (DEV_OR_PROD !== 'DEV') { return true }
 
-	await Promise.all(['env.d.ts', 'tsconfig.config.json', 'tsconfig.json', 'vite.config.ts', 'vue.config.js'].map(filename => {
+	return ['env.d.ts', 'tsconfig.config.json', 'tsconfig.json', 'vite.config.ts', 'vue.config.js'].map(filename => {
 		const fullpath = './client/' + filename
 		const pathToTemplate = 'node_modules/@botoron/utils/templateFiles/' + filename
 		return checkFilesAreIdentical(fullpath, pathToTemplate)
-	}))
+	})
 }
 
 async function fillCachedFiles() {

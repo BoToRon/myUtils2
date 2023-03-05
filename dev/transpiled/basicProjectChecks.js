@@ -525,16 +525,16 @@ async function checkVsCodeSettings() {
     });
     zodCheck_toErrors('.vscode/settings.json', desiredVsSettings, vsSettingsOfProject);
 }
-/**Turn off that damn skipLibCheck that comes on by default */
-async function checkVueDevFiles() {
+/**Turn off that damn skipLibCheck that comes on by default, and other vue config files stuff */
+function checkVueDevFiles() {
     if (DEV_OR_PROD !== 'DEV') {
         return true;
     }
-    await Promise.all(['env.d.ts', 'tsconfig.config.json', 'tsconfig.json', 'vite.config.ts', 'vue.config.js'].map(filename => {
+    return ['env.d.ts', 'tsconfig.config.json', 'tsconfig.json', 'vite.config.ts', 'vue.config.js'].map(filename => {
         const fullpath = './client/' + filename;
         const pathToTemplate = 'node_modules/@botoron/utils/templateFiles/' + filename;
         return checkFilesAreIdentical(fullpath, pathToTemplate);
-    }));
+    });
 }
 async function fillCachedFiles() {
     const vueTemplates = ['admin', 'simpleConfirmationModal'].map(x => externalTemplatePath(`__${x}.vue`));

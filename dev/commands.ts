@@ -15,9 +15,9 @@ _
 import { utilsRepoName, npmVersionOptions, TSC_FLAGS } from '../constants.js'
 _
 import {
-	checkCodeThatCouldBeUpdated, checkNoBtrErrorsOrWarnings, colorLog, copyToClipboard, delay, errorLog,
-	fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getFilesAndFoldersNames, inquirePromptCommands,
-	killProcess, logEmptyLine, mapCommandsForInquirePrompt, questionAsPromise, selfFilter, successLog
+	allPromises, asyncForEach, checkCodeThatCouldBeUpdated, checkFileExists, checkNoBtrErrorsOrWarnings, colorLog, copyToClipboard,
+	delay, doNothing, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getFilesAndFoldersNames, inquirePromptCommands,
+	killProcess, logEmptyLine, mapCommandsForInquirePrompt, questionAsPromise, safeRegexMatch, selfFilter, successLog
 } from '../btr.js'
 
 type sharedCommand = 'check' | 'test' | 'EXIT'
@@ -32,7 +32,7 @@ const PACKAGE_DOT_JSON = 'package.json'
 const errors: string[] = []
 const packageJsonContent = await fsReadFileAsync(PACKAGE_DOT_JSON)
 const isPackage = JSON.parse(packageJsonContent).name === '@botoron/utils'
-const tsFilePaths = getFilesAndFoldersNames('.', null).filter(path => path.includes('.ts'))
+const tsFilePaths = getFilesAndFoldersNames('.', null).filter(path => path.includes('.ts') && !path.includes('client/'))
 
 process.env['prevent_divine_init'] = 'true'
 
@@ -62,13 +62,12 @@ const commands_forProject: recordOfCommands<command_forProject> = {
 	vue: { description: 'Move to the client folder and init vite', fn: project_initVite },
 }
 
-if (isPackage) { inquirePromptCommands(mapCommandsForInquirePrompt(commands_forPackage), true) }
-else { inquirePromptCommands(mapCommandsForInquirePrompt(commands_forProject), true) }
+runCommands(isPackage ? commands_forPackage : commands_forProject)
 
 //function declarations below
 
-function transpileAndRunTestRunTs() { transpileFiles(['./test/run.ts'], './test/transpiled'); execFile('./test/transpiled/test/run.ts') }
-function package_transpileBaseFiles() { transpileFiles(tsFilePaths.filter(path => !/\w\//.test(path)), '.') }
+function runCommands(commands: recordOfCommands<string>) { inquirePromptCommands(mapCommandsForInquirePrompt(commands), true) }
+async function package_transpileBaseFiles() { await transpileFiles(tsFilePaths.filter(path => !/\w\//.test(path)), '.') }
 function project_buildAll() { project_buildClientFilesWithVite(); project_buildServerFiles() }
 function quitCommandLineProgram() { killProcess('devForProject\'s commands terminated') }
 function project_buildClientFilesWithVite() { execSync('cd client & npm run build') }
@@ -78,7 +77,7 @@ function project_initVite() { execSync('cd client & npm run dev') }
 async function btrCheckFilesAndReportResult() { await btrCheck() }
 function project_forwardVitesPort() { execSync('lt --port 5173') }
 
-async function btrCheck() { //TODO: replace this with
+async function btrCheck() {
 	const warningsCount = { count: 0 }
 	checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths), warningsCount)
 	return checkNoBtrErrorsOrWarnings(errors, warningsCount)
@@ -108,36 +107,25 @@ async function package_transpileAll() {
 	package_transpileBaseFiles()
 
 	const filename = 'btr.ts'
-	const lines = await getLinesInBtrTs()
+	const lines = (await fsReadFileAsync(filename)).replace('eris.Client', 'unknown').split('\n')
 
 	selfFilter(lines, line => !/DELETETHISFORCLIENT/.test(line)) //regexHere
+	lines.splice(lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x)), lines.length) //regexHere
 
-	const cutPoint = lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x)) //regexHere
-	lines.splice(cutPoint, lines.length)
-
-	lines.push('export function colorLog(color: string, message: string) { console.log(`%c${message}`, `color: ${color};`) } //@btr-ignore')
 	lines.push('const clipboard = { write: doNothing }')
 	lines.push('const fsWriteFileAsync = doNothing')
-	lines.push(`const divine = {
-	error: (err: string | Error) => { alert(err + '\\n Please report this') },
-	ping: (message: string) => { divine.error(message) },
-	try: async <T extends (...args: Parameters<T>) => maybePromise<ReturnType<T>>>(fn: T, args: Parameters<T>) => {
-		try { return await fn(...args) }
-		catch (err) { divine.error(err as string) }
-	},
-}`)
+	lines.push('const chalk = {}')
 
 	await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'))
+	await transpileFiles([`client/${filename}`], './client')
+	await fixRelativeImports()
 
-	transpileFiles(['client/btr.ts'], './client')
 	successLog('browser versions emitted')
 
-	async function getLinesInBtrTs() {
-		return (await fsReadFileAsync(filename)).
-			replaceAll(/from '\.\/(?=constants|types)/g, 'from \'../').
-			replaceAll(/(cachedFile|myEnv|validChalkColor),/g, '').
-			replaceAll(/bigConsoleError/g, 'colorLog').
-			split('\n')
+	async function fixRelativeImports() {
+		async function doIt(x: string) { await replaceStringInFile(x, /from '\.\/(?=constants|types)/g, '..') }
+		const clientFiles = [`./client/${filename}`, `./client/${filename.replace('.ts', '.js')}`]
+		await allPromises(clientFiles, doIt)
 	}
 }
 
@@ -155,7 +143,7 @@ async function package_transpile_git_andPublish() {
 async function project_btrCheckAndTranspileToTestFolder() {
 	if (!await btrCheck()) { return }
 
-	transpileFiles(['server/init.ts'], './test')
+	await transpileFiles(['server/init.ts'], './test')
 	await fsWriteFileAsync('test/package.json', packageJsonContent)
 	successLog('files transpiled to ./test')
 }
@@ -164,15 +152,15 @@ async function project_buildServerFiles() {
 	if (!await basicProjectChecks()) { return }
 
 	fsWriteFileAsync('types.ts', await fsReadFileAsync('types.d.ts'))
-	transpileFiles(['types.ts'], '.')
+	await transpileFiles(['types.ts'], '.')
 	unlinkSync('types.ts')
 
 	await copyFileToDist('.env')
 	await copyFileToDist('.gitignore')
 	await copyFileToDist(PACKAGE_DOT_JSON)
 
-	transpileFiles(['server/init.ts', 'server/io.ts'], serverFolder_dist)
-	toggle_devOrProd_inRef()
+	await transpileFiles(['server/init.ts', 'server/io.ts'], serverFolder_dist)
+	await replaceStringInFile(`${serverFolder_dist}/server/${fileWithRef}.js`, 'devOrProd = \'dev\'', 'devOrProd = \'prod\'')
 
 	execSync('cd ../dist')
 	await prompCommitMessageAndPush('(project)-dist')
@@ -188,11 +176,6 @@ async function project_buildServerFiles() {
 				replace('-src', '-dist').
 				replace(/"scripts": {[^}]{1,}/, '"scripts": { "start": "node server/init.js"') //regexHere
 		}
-	}
-
-	async function toggle_devOrProd_inRef() {
-		const filepath = serverFolder_dist + '/server/' + fileWithRef + '.js'
-		await fsWriteFileAsync(filepath, (await fsReadFileAsync(filepath)).replace('devOrProd = \'dev\'', 'devOrProd = \'prod\''))
 	}
 }
 
@@ -234,13 +217,33 @@ async function prompCommitMessageAndPush(repoName: string) {
 	}
 }
 
-function transpileFiles(sourceFiles: string[], outputDirectory: string) {
-	if (!sourceFiles.length) { killProcess('transpileFiles\'s sourceFiles argument should NOT be an empty array!') }
+async function replaceStringInFile(filepath: string, oldString: string | RegExp, newString: string) {
+	await fsWriteFileAsync(filepath, (await fsReadFileAsync(filepath)).replace(oldString, newString))
+}
 
-	colorLog('white', 'Transpiling the following file(s): ' + sourceFiles)
-	const command = `tsc ${TSC_FLAGS} ${sourceFiles.join(' ')} --outDir ${outputDirectory}` //@btr-ignore
-	//console.log({ command }) //@btr-ignore //TODO: delete this
-	//execSync(command)
-	try { execSync(command) } catch (e) { errorLog(`${e}`) }
-	colorLog('white', 'Done transpiling: ' + sourceFiles.join(', '))
+async function transpileAndRunTestRunTs() {
+	await transpileFiles(['./test/run.ts'], './test/transpiled')
+	execFile('./test/transpiled/test/run.ts')
+}
+
+async function transpileFiles(sourceFilesArr: string[], outputDirectory: string) {
+	if (!sourceFilesArr.length) { killProcess('transpileFiles\'s sourceFiles argument should NOT be an empty array!') }
+
+	const allJsFilenames = sourceFilesArr.map(filename => `${outputDirectory}/${safeRegexMatch(filename, /\w{1,}(?=\.ts)/g, 0)}.js`)
+	await asyncForEach(allJsFilenames, false, deleteOldJsVersion)
+
+	const sourceFiles = sourceFilesArr.join(' ')
+	const command = `tsc ${TSC_FLAGS} ${sourceFiles} --outDir ${outputDirectory}`
+	colorLog('cyan', command)
+	try { execSync(command) } catch { doNothing() }
+
+	const allFilesWereTranspiled = (await allPromises(allJsFilenames, checkFileExists)).every(x => x)
+	allFilesWereTranspiled ? successLog('Transpilation successful') : killProcess('Transpilation failed: ' + sourceFiles)
+	return allFilesWereTranspiled
+
+	async function deleteOldJsVersion(filepath: string) {
+		const fileExists = await checkFileExists(filepath)
+		colorLog('magenta', (fileExists ? 'Deleting' : 'File doesn\'t exist') + ': ' + filepath)
+		if (fileExists) { unlinkSync(filepath) }
+	}
 }
