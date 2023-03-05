@@ -5,7 +5,7 @@ import { cachedFile, zSchema } from './types.js'
 _
 import {
 	CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_FNS_TS, GLOBAL_VARS_TS,
-	SERVER_EVENTS_TS, SERVER_REF_TS, TSCONFIG_JSON, TYPES_IO_TS, TYPES_Z_TS, zMyEnv
+	SERVER_EVENTS_TS, SERVER_REF_TS, TSC_FLAGS, TSCONFIG_JSON, TYPES_IO_TS, TYPES_Z_TS, zMyEnv
 } from './constants.js'
 _
 import {
@@ -14,11 +14,9 @@ import {
 } from './btr.js'
 
 type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
-
 let DEV_OR_PROD = <'DEV' | 'PROD'>nullAs()
 
 const errors: string[] = []
-const warningsCount = { count: 0 }
 const cachedFiles: cachedFile[] = []
 
 const clientVueFiles: cachedFile[] = []
@@ -43,7 +41,7 @@ export async function basicProjectChecks() {
 	checkSpecificMatches_clientIndexTs()
 	checkSpecificMatches_clientSocketTs()
 	checkSpecificMatches_clientStoreTs()
-	checkSpecificMatches_GlobalFnsTs()
+	checkSpecificMatches_globalFnsTs()
 	checkSpecificMatches_typesIoTs()
 	checkSpecificMatches_typesTypesTs()
 	checkSpecificMatches_serverEventsTs()
@@ -66,6 +64,7 @@ export async function basicProjectChecks() {
 	checkTrackabilityAndStyleScopeOfVueFiles()
 
 	//5. Warnings
+	const warningsCount = { count: 0 }
 	checkCodeThatCouldBeUpdated([serverTsFiles, clientTsFiles, clientVueFiles].flat(), warningsCount)
 
 	//6. The Answer
@@ -255,7 +254,7 @@ async function checkPackageJsons() {
 		devDependencies: zRecord(['@types/express', '@typescript-eslint/eslint-plugin', '@typescript-eslint/parser',
 			'dotenv', 'eslint', 'eslint-plugin-sonarjs', 'eslint-plugin-vue', 'inquirer', 'nodemon'], z.string()),
 		scripts: z.object({
-			dev: z.literal('tsc --target esnext dev/commands.ts --outDir ./dev/transpiled & node dev/transpiled/dev/commands.js'), //@btr-ignore
+			dev: z.literal(`tsc ${TSC_FLAGS} dev/commands.ts --outDir ./dev/transpiled & node dev/transpiled/dev/commands.js`), //@btr-ignore
 		}).strict(),
 	})
 
@@ -424,7 +423,7 @@ function checkSpecificMatches_serverEventsTs() {
 	].forEach(line => checkMatchInSpecificFile(SERVER_EVENTS_TS, line))
 }
 
-function checkSpecificMatches_GlobalFnsTs() {
+function checkSpecificMatches_globalFnsTs() {
 	checkMatchInSpecificFile(GLOBAL_FNS_TS, asConsecutiveLines([
 		'/**Shorthand for mongoClient.db(DATABASE).collection(COLLECTION) */',
 		'export function mongoCollection(name: validMongoCollection) { return mongoClient.db('

@@ -29,7 +29,7 @@ _;
 import mongodb from 'mongodb'; //DELETETHISFORCLIENT
 _;
 _;
-import { getUniqueId_generator, isNode, timers, zValidVariants } from './constants.js';
+import { getUniqueId_generator, isNode, timers, TSC_FLAGS, zValidVariants } from './constants.js';
 _;
 import { z } from 'zod';
 _;
@@ -39,7 +39,22 @@ _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 export { zValidVariants };
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -1119,6 +1134,9 @@ export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
         checkReplaceableCode(['z.record'], 'zRecord'); //@btr-ignore
         checkReplaceableCode(['null as'], 'nullAs'); //@btr-ignore
         checkReplaceableCode([').then('], 'await'); //@btr-ignore
+        if (warningsCount.count > 5) {
+            colorLog('yellow', `+${warningsCount.count - 5} warnings not shown..`);
+        }
         function checkReplaceableCode(replaceableCodeStrings, suggestedReplacement) {
             replaceableCodeStrings.forEach(replaceableString => {
                 const withEscapedCharacters = replaceableString.replace(/(?=\W{1,1})/g, '\\'); //regexHere
@@ -1129,6 +1147,9 @@ export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
                     return;
                 }
                 warningsCount.count++;
+                if (warningsCount.count > 5) {
+                    return;
+                }
                 colorLog('yellow', surroundedString(warningsCount.count + ' . WARNING: OUTDATED/REPLACEABLE CODE', '-', 50));
                 console.log({
                     matches: matches.map(x => surroundedString(x, ' ', 5)),
@@ -1139,6 +1160,24 @@ export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
             });
         }
     });
+}
+//TODO: describe me
+export function checkNoBtrErrorsOrWarnings(errors, warningsCount) {
+    const checksPassed = !errors.length && !warningsCount.count;
+    errors.length ? logErrors() : successLog('All btr-checks passed');
+    if (!checksPassed) {
+        errorLog('btr-errors/warnings detected, fix them before attempting to transpile');
+    }
+    return checksPassed;
+    function logErrors() {
+        const { length } = errors;
+        const maxErrorsLogged = 5;
+        if (length > maxErrorsLogged) {
+            errors.length = maxErrorsLogged;
+            errors.push(`Plus ${length - maxErrorsLogged} errors not shown..`);
+        }
+        killProcess('\n\n' + errors.map((err, i) => (i + 1) + '. ' + err).join('\n\n') + '\n\n');
+    }
 }
 /**Wrapper for fs.promise.readFile that announces the start of the file-reading */
 export async function fsReadFileAsync(filePath) {
@@ -1284,8 +1323,6 @@ export function inquirePromptCommands(functions, promptAgainAfterEachFn) {
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export function killProcess(message) { bigConsoleError(message); process.exit(); }
 //TODO: describe me
-export function logBtrErrors(errors) { killProcess('\n\n' + errors.map((err, i) => (i + 1) + '. ' + err).join('\n\n') + '\n\n'); }
-//TODO: describe me
 export function mapCommandsForInquirePrompt(commands) {
     const object = {};
     objectEntries(commands).forEach(({ key, value }) => object[key + ': ' + value.description] = value.fn);
@@ -1304,7 +1341,7 @@ export function transpileFiles(sourceFiles, outputDirectory) {
         killProcess('transpileFiles\'s sourceFiles argument should NOT be an empty array!');
     }
     colorLog('white', 'Transpiling the following file(s): ' + sourceFiles);
-    const command = `tsc --target esnext ${sourceFiles.join(' ')} --outDir ${outputDirectory}`; //@btr-ignore
+    const command = `tsc ${TSC_FLAGS} ${sourceFiles.join(' ')} --outDir ${outputDirectory}`; //@btr-ignore
     try {
         execSync(command);
     }

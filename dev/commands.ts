@@ -1,5 +1,5 @@
 let _
-_ //			tsc --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
+_ //			tsc --moduleResolution node --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
 _ // 			node dev/transpiled/dev/commands.js
 import fs from 'fs'
 _

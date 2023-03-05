@@ -1,5 +1,5 @@
 let _;
-_; //			tsc --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
+_; //			tsc --moduleResolution node --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
 _; // 			node dev/transpiled/dev/commands.js
 import fs from 'fs';
 _;
@@ -12,7 +12,7 @@ _;
 import { utilsRepoName, npmVersionOptions } from '../constants.js';
 _;
 _;
-import { checkCodeThatCouldBeUpdated, colorLog, copyToClipboard, delay, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getFilesAndFoldersNames, inquirePromptCommands, killProcess, logBtrErrors, logEmptyLine, mapCommandsForInquirePrompt, questionAsPromise, selfFilter, successLog, transpileFiles } from '../btr.js';
+import { checkCodeThatCouldBeUpdated, checkNoBtrErrorsOrWarnings, colorLog, copyToClipboard, delay, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getFilesAndFoldersNames, inquirePromptCommands, killProcess, logEmptyLine, mapCommandsForInquirePrompt, questionAsPromise, selfFilter, successLog, transpileFiles } from '../btr.js';
 const fileWithRef = 'ref';
 const serverFolder_dist = '../dist';
 const PACKAGE_DOT_JSON = 'package.json';
@@ -64,14 +64,7 @@ function project_forwardVitesPort() { execSync('lt --port 5173'); }
 async function btrCheck() {
     const warningsCount = { count: 0 };
     checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths), warningsCount);
-    const checksPassed = !errors.length && !warningsCount.count;
-    if (errors.length) {
-        logBtrErrors(errors);
-    }
-    if (!checksPassed) {
-        errorLog('btr-errors/warnings detected, fix them before attempting to transpile again');
-    }
-    return checksPassed;
+    return checkNoBtrErrorsOrWarnings(errors, warningsCount);
 }
 async function package_publish() {
     await package_transpileAll();
@@ -131,7 +124,9 @@ async function project_btrCheckAndTranspileToTestFolder() {
     successLog('files transpiled to ./test');
 }
 async function project_buildServerFiles() {
-    await basicProjectChecks();
+    if (!await basicProjectChecks()) {
+        return;
+    }
     fsWriteFileAsync('types.ts', await fsReadFileAsync('types.d.ts'));
     transpileFiles(['types.ts'], '.');
     fs.unlinkSync('types.ts');

@@ -33,7 +33,7 @@ import {
 	btr_adminFetch, btr_commands, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, cachedFile, maybePromise, nullable, timer, zSchema
 } from './types.js'
 _
-import { getUniqueId_generator, isNode, timers, zMyEnv, zValidVariants } from './constants.js'
+import { getUniqueId_generator, isNode, timers, TSC_FLAGS, zMyEnv, zValidVariants } from './constants.js'
 _
 import { type Primitive, z, type ZodRawShape, type ZodTypeAny } from 'zod'
 _
@@ -1161,6 +1161,7 @@ export function bigConsoleError(message: string) {
 /**Basically custom ESlint warnings */
 export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[], warningsCount: warningsCount) {
 	cachedFiles.forEach(file => {
+		const maxAountOfWarnings = 5
 		const { path, content } = file
 
 		checkReplaceableCode(['triggerModalWithValidation, bvModal.show', 'bvModal.hide'], '.triggerModal(modalId, show | hide)')	//@btr-ignore
@@ -1184,6 +1185,8 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[], warningsC
 		checkReplaceableCode(['null as'], 'nullAs')	//@btr-ignore
 		checkReplaceableCode([').then('], 'await') //@btr-ignore
 
+		if (warningsCount.count > maxAountOfWarnings) { colorLog('yellow', `+${warningsCount.count - maxAountOfWarnings} warnings not shown..`) }
+
 		function checkReplaceableCode(replaceableCodeStrings: string[], suggestedReplacement: string) {
 			replaceableCodeStrings.forEach(replaceableString => {
 				const withEscapedCharacters = replaceableString.replace(/(?=\W{1,1})/g, '\\') //regexHere
@@ -1194,6 +1197,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[], warningsC
 				if (!matches.length) { return }
 
 				warningsCount.count++
+				if (warningsCount.count > maxAountOfWarnings) { return }
 				colorLog('yellow', surroundedString(warningsCount.count + ' . WARNING: OUTDATED/REPLACEABLE CODE', '-', 50))
 
 				console.log({ //@btr-ignore
@@ -1373,7 +1377,7 @@ export function transpileFiles(sourceFiles: string[], outputDirectory: string) {
 	if (!sourceFiles.length) { killProcess('transpileFiles\'s sourceFiles argument should NOT be an empty array!') }
 
 	colorLog('white', 'Transpiling the following file(s): ' + sourceFiles)
-	const command = `tsc --target esnext ${sourceFiles.join(' ')} --outDir ${outputDirectory}` //@btr-ignore
+	const command = `tsc ${TSC_FLAGS} ${sourceFiles.join(' ')} --outDir ${outputDirectory}` //@btr-ignore
 	try { execSync(command) } catch { doNothing() }
 	colorLog('white', 'Done transpiling: ' + sourceFiles.join(', '))
 }
