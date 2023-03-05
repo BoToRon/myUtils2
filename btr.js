@@ -1,6 +1,4 @@
 let _;
-import fs from 'fs'; //DELETETHISFORCLIENT 
-_;
 import eris from 'eris'; //DELETETHISFORCLIENT
 _;
 import util from 'util'; //DELETETHISFORCLIEfNT
@@ -22,11 +20,9 @@ _;
 _;
 import getReadLine from 'readline'; //DELETETHISFORCLIENT
 _;
-import { createRequire } from 'module'; //DELETETHISFORCLIENT
-_;
-import { execSync } from 'child_process'; //DELETETHISFORCLIENT
-_;
 import mongodb from 'mongodb'; //DELETETHISFORCLIENT
+_;
+import { promises, readdirSync, statSync } from 'fs'; //DELETETHISFORCLIENT 
 _;
 _;
 import { getUniqueId_generator, isNode, timers, zValidVariants } from './constants.js';
@@ -39,7 +35,22 @@ _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 export { zValidVariants };
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -235,16 +246,16 @@ export function transferItems(origin, destination, predicate) {
     destination.push(...x.removedItems);
     return { transferedCount: x.removedCount };
 }
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 export async function asyncForEach(array, asyncFn, resolveSequentially = false) {
     if (resolveSequentially) {
         for await (const item of array) {
@@ -536,7 +547,6 @@ _; /********** FOR TIMERS ******************** FOR TIMERS ******************** F
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
-_; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 /**
  * Set an interval that is automatically killed when the stay-alive-checker fails but can also be manually killed with killTimer
  * @param id The id of the timer, so that btr.killTimer can find it
@@ -668,16 +678,16 @@ export function surroundedString(string, margin, perSide) {
     const x = margin.repeat(perSide);
     return x + string + x;
 }
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 /**Copy content to the clipboard, works for both client and server side */
 export function copyToClipboard(x) {
     if (isNode) {
@@ -984,16 +994,16 @@ export function triggerModalWithValidation_curry() { doNothing; }
 /**@deprecated use "divine.try" instead */
 export function tryF() { doNothing; } //@btr-ignore
 // ! DELETEEVERYTHINGBELOW, as it is only meant for server-side use
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
 export const divine = {
     bot: nullAs(),
     error: (err) => {
@@ -1076,16 +1086,107 @@ export const divine = {
         }
     }
 };
-_; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
-_; /********** FOR SERVER-ONLY ******************** FOR SERVER-ONLY ******************** FOR SERVER-ONLY **********/
+_; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+_; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
+/**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
+export function bigConsoleError(message) {
+    function logAsterisks(lines) { for (let i = 0; i < lines; i++) {
+        log('*'.repeat(150));
+    } }
+    function log(message) { return colorLog('red', message); }
+    logAsterisks(3);
+    log(message);
+    logAsterisks(3);
+}
+/**Basically custom ESlint warnings */
+export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
+    cachedFiles.forEach(file => {
+        const maxWarningsLogged = 5;
+        const { path, content } = file;
+        checkReplaceableCode(['triggerModalWithValidation, bvModal.show', 'bvModal.hide'], '.triggerModal(modalId, show | hide)'); //@btr-ignore
+        checkReplaceableCode(['console.log(stringify'], 'colorLog OR consoleLogFull OR debugLog'); //@btr-ignore
+        checkReplaceableCode(['fs from \'fs\''], '{ (specific fs methods) } from \'fs\''); //@btr-ignore
+        checkReplaceableCode(['console.log'], 'colorLog OR consoleLogFull OR debugLog'); //@btr-ignore
+        checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine'); //@btr-ignore
+        checkReplaceableCode(['readonly ', 'ReadonlyArray<'], 'Readonly<'); //@btr-ignore
+        checkReplaceableCode(['{ description: string,'], ': commands'); //@btr-ignore
+        checkReplaceableCode(['//@ts-ignore'], '//@ts-expect-error'); //@btr-ignore
+        checkReplaceableCode(['for await'], 'await asyncForEach'); //@btr-ignore
+        checkReplaceableCode(['Object.entries'], 'objectEntries'); //@btr-ignore
+        checkReplaceableCode(['tsc --target'], 'transpileFiles'); //@btr-ignore
+        checkReplaceableCode(['| null', 'null |'], 'nullable'); //@btr-ignore
+        checkReplaceableCode(['autologin'], 'useStore().login'); //@btr-ignore
+        checkReplaceableCode(['Object.values'], 'objectValues'); //@btr-ignore
+        checkReplaceableCode(['JSON.stringify'], 'stringify'); //@btr-ignore
+        checkReplaceableCode(['Object.keys'], 'objectKeys'); //@btr-ignore
+        checkReplaceableCode(['exec('], 'execSync('); //@btr-ignore /)
+        checkReplaceableCode([' tryF'], 'divine.try'); //@btr-ignore
+        checkReplaceableCode(['z.record'], 'zRecord'); //@btr-ignore
+        checkReplaceableCode(['null as'], 'nullAs'); //@btr-ignore
+        checkReplaceableCode([').then('], 'await'); //@btr-ignore
+        if (warningsCount.count > maxWarningsLogged) {
+            colorLog('yellow', `+${warningsCount.count - maxWarningsLogged} warnings not shown..`);
+        }
+        function checkReplaceableCode(replaceableCodeStrings, suggestedReplacement) {
+            replaceableCodeStrings.forEach(replaceableString => {
+                const withEscapedCharacters = replaceableString.replace(/(?=\W{1,1})/g, '\\'); //regexHere
+                const theRegex = new RegExp(withEscapedCharacters + '.{0,}', 'gi');
+                const matches = Array(...content.match(theRegex) || []);
+                selfFilter(matches, match => !/@btr-ignore/.test(match)); //regexHere
+                if (!matches.length) {
+                    return;
+                }
+                warningsCount.count++;
+                if (warningsCount.count > maxWarningsLogged) {
+                    return;
+                }
+                colorLog('yellow', surroundedString(warningsCount.count + ' . WARNING: OUTDATED/REPLACEABLE CODE', '-', 50));
+                console.log({
+                    matches: matches.map(x => surroundedString(x, ' ', 5)),
+                    replaceableCode: surroundedString(replaceableString, ' ', 10),
+                    suggestedReplacement: surroundedString(suggestedReplacement, ' ', 5),
+                    path
+                });
+            });
+        }
+    });
+}
+//TODO: describe me
+export function checkNoBtrErrorsOrWarnings(errors, warningsCount) {
+    const checksPassed = !errors.length && !warningsCount.count;
+    errors.length ? logErrors() : successLog('All btr-checks passed');
+    if (!checksPassed) {
+        errorLog('btr-errors/warnings detected, fix them before attempting to transpile');
+    }
+    return checksPassed;
+    function logErrors() {
+        const { length } = errors;
+        const maxErrorsLogged = 5;
+        if (length > maxErrorsLogged) {
+            errors.length = maxErrorsLogged;
+            errors.push(`Plus ${length - maxErrorsLogged} errors not shown..`);
+        }
+        killProcess('\n\n' + errors.map((err, i) => (i + 1) + '. ' + err).join('\n\n') + '\n\n');
+    }
+}
+/**Wrapper for fs.promise.readFile that announces the start of the file-reading */
+export async function fsReadFileAsync(filePath) {
+    colorLog('white', `reading '${filePath}'..`);
+    return await promises.readFile(filePath, 'utf8');
+}
+/**Wrapper for fsWriteFileAsync that announces the start of the file-writing */
+export async function fsWriteFileAsync(filePath, content) {
+    colorLog('white', `writing to '${filePath}'..`);
+    return await promises.writeFile(filePath, content);
+}
 /**Batch-load files for checking purposes */
 export async function getCachedFiles(errors, filepaths) {
     const cachedFiles = [];
@@ -1105,7 +1206,7 @@ export async function getCachedFiles(errors, filepaths) {
     }
     async function fileExists(path) {
         try {
-            await fs.promises.access(path);
+            await promises.access(path);
             return true;
         }
         catch {
@@ -1113,71 +1214,6 @@ export async function getCachedFiles(errors, filepaths) {
             return false;
         }
     }
-}
-/**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
-export function bigConsoleError(message) {
-    function logAsterisks(lines) { for (let i = 0; i < lines; i++) {
-        log('*'.repeat(150));
-    } }
-    function log(message) { return colorLog('red', message); }
-    logAsterisks(3);
-    log(message);
-    logAsterisks(3);
-}
-/**Basically custom ESlint warnings */
-export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
-    cachedFiles.forEach(file => {
-        const { path, content } = file;
-        checkReplaceableCode(['triggerModalWithValidation, bvModal.show', 'bvModal.hide'], '.triggerModal(modalId, show | hide)'); //@btr-ignore
-        checkReplaceableCode(['console.log(stringify'], 'colorLog OR consoleLogFull OR debugLog'); //@btr-ignore
-        checkReplaceableCode(['console.log'], 'colorLog OR consoleLogFull OR debugLog'); //@btr-ignore
-        checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine'); //@btr-ignore
-        checkReplaceableCode(['readonly ', 'ReadonlyArray<'], 'Readonly<'); //@btr-ignore
-        checkReplaceableCode(['{ description: string,'], ': commands'); //@btr-ignore
-        checkReplaceableCode(['//@ts-ignore'], '//@ts-expect-error'); //@btr-ignore
-        checkReplaceableCode(['for await'], 'await asyncForEach'); //@btr-ignore
-        checkReplaceableCode(['Object.entries'], 'objectEntries'); //@btr-ignore
-        checkReplaceableCode(['tsc --target'], 'transpileFiles'); //@btr-ignore
-        checkReplaceableCode(['| null', 'null |'], 'nullable'); //@btr-ignore
-        checkReplaceableCode(['autologin'], 'useStore().login'); //@btr-ignore
-        checkReplaceableCode(['Object.values'], 'objectValues'); //@btr-ignore
-        checkReplaceableCode(['JSON.stringify'], 'stringify'); //@btr-ignore
-        checkReplaceableCode(['Object.keys'], 'objectKeys'); //@btr-ignore
-        checkReplaceableCode(['exec('], 'execSync('); //@btr-ignore /)
-        checkReplaceableCode([' tryF'], 'divine.try'); //@btr-ignore
-        checkReplaceableCode(['z.record'], 'zRecord'); //@btr-ignore
-        checkReplaceableCode(['null as'], 'nullAs'); //@btr-ignore
-        checkReplaceableCode([').then('], 'await'); //@btr-ignore
-        function checkReplaceableCode(replaceableCodeStrings, suggestedReplacement) {
-            replaceableCodeStrings.forEach(replaceableString => {
-                const withEscapedCharacters = replaceableString.replace(/(?=\W{1,1})/g, '\\'); //regexHere
-                const theRegex = new RegExp(withEscapedCharacters + '.{0,}', 'gi');
-                const matches = Array(...content.match(theRegex) || []);
-                selfFilter(matches, match => !/@btr-ignore/.test(match)); //regexHere
-                if (!matches.length) {
-                    return;
-                }
-                warningsCount.count++;
-                colorLog('yellow', surroundedString(warningsCount.count + ' . WARNING: OUTDATED/REPLACEABLE CODE', '-', 50));
-                console.log({
-                    matches: matches.map(x => surroundedString(x, ' ', 5)),
-                    replaceableCode: surroundedString(replaceableString, ' ', 10),
-                    suggestedReplacement: surroundedString(suggestedReplacement, ' ', 5),
-                    path
-                });
-            });
-        }
-    });
-}
-/**Wrapper for fs.promise.readFile that announces the start of the file-reading */
-export async function fsReadFileAsync(filePath) {
-    colorLog('white', `reading '${filePath}'..`);
-    return await fs.promises.readFile(filePath, 'utf8');
-}
-/**Wrapper for fsWriteFileAsync that announces the start of the file-writing */
-export async function fsWriteFileAsync(filePath, content) {
-    colorLog('white', `writing to '${filePath}'..`);
-    return await fs.promises.writeFile(filePath, content);
 }
 /**For a project's debugging purposes */
 export function getDebugOptionsAndLog(devOrProd, options) {
@@ -1197,16 +1233,14 @@ export function getDebugOptionsAndLog(devOrProd, options) {
 }
 /** Get the contents of the project's .env */
 export function getEnviromentVariables() {
-    const require = createRequire(import.meta.url);
-    require('dotenv').config({ path: './.env' });
     return process.env;
 }
 /**Get all the file and folders within a folder, stopping at predefined folders (assets, git, node_modules, test) */
 export function getFilesAndFoldersNames(directory, extension) {
     const results = [];
-    fs.readdirSync(directory).forEach((file) => {
+    readdirSync(directory).forEach((file) => {
         file = directory + '/' + file;
-        const stat = fs.statSync(file);
+        const stat = statSync(file);
         const stopHere = /node_modules|git|test|assets/.test(file); //regexHere
         if (stat && stat.isDirectory() && !stopHere) {
             results.push(...getFilesAndFoldersNames(file, null));
@@ -1296,21 +1330,6 @@ export async function questionAsPromise(question) {
     const input = await new Promise(res => { readline.question(chalk.magenta(question) + '\n', res); });
     readline.close();
     return input;
-}
-//TODO: describe me
-export function transpileFiles(sourceFiles, outputDirectory) {
-    if (!sourceFiles.length) {
-        killProcess('transpileFiles\'s sourceFiles argument should NOT be an empty array!');
-    }
-    colorLog('white', 'Transpiling the following file(s): ' + sourceFiles);
-    const command = `tsc --target esnext ${sourceFiles.join(' ')} --outDir ${outputDirectory}`; //@btr-ignore
-    try {
-        execSync(command);
-    }
-    catch {
-        doNothing();
-    }
-    colorLog('white', 'Done transpiling: ' + sourceFiles.join(', '));
 }
 /**Check the user input in socket.on functions and send error toasts if the validation fails */
 export function zodCheck_socket(socket, schema, data) {

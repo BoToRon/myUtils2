@@ -1,8 +1,6 @@
 let _;
 _;
-_;
 import util from 'util'; //DELETETHISFORCLIEfNT
-_;
 _;
 _;
 _;
@@ -26,7 +24,22 @@ _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 export { zValidVariants };
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -222,16 +235,16 @@ export function transferItems(origin, destination, predicate) {
     destination.push(...x.removedItems);
     return { transferedCount: x.removedCount };
 }
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 export async function asyncForEach(array, asyncFn, resolveSequentially = false) {
     if (resolveSequentially) {
         for await (const item of array) {
@@ -523,7 +536,6 @@ _; /********** FOR TIMERS ******************** FOR TIMERS ******************** F
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
-_; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 /**
  * Set an interval that is automatically killed when the stay-alive-checker fails but can also be manually killed with killTimer
  * @param id The id of the timer, so that btr.killTimer can find it
@@ -654,16 +666,16 @@ export function surroundedString(string, margin, perSide) {
     const x = margin.repeat(perSide);
     return x + string + x;
 }
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_; /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 /**Copy content to the clipboard, works for both client and server side */
 export function copyToClipboard(x) {
     if (isNode) {

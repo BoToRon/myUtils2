@@ -1,6 +1,5 @@
 let _
 _
-_
 import util from 'util' //DELETETHISFORCLIEfNT
 _
 _
@@ -14,14 +13,12 @@ _
 _
 _
 _
-_
 import {
-	arrayPredicate, btr_adminFetch, btr_commands, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn,
-	btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, bvToast,  maybePromise,
-	messageHandler,  nullable, pipe_mutable_type, pipe_persistent_type, timer,  vueComponentsTracker, zSchema
+	btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo,
+	btr_trackedVueComponent, btr_validVariant, btr_bvModal,  maybePromise, nullable, recordOfCommands, timer, zSchema
 } from '../types.js'
 _
-import { getUniqueId_generator, isNode, timers, zValidVariants } from '../constants.js'
+import { getUniqueId_generator, isNode, timers, zMyEnv, zValidVariants } from '../constants.js'
 _
 import { type Primitive, z, type ZodRawShape, type ZodTypeAny } from 'zod'
 _
@@ -32,10 +29,55 @@ _ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ***********
 _ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
+_ /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 
 export {
-	btr_adminFetch, btr_bvModal, btr_commands, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language,
-	btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, nullable, zValidVariants
+	btr_adminFetch, btr_bvModal, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn,
+	btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, nullable, recordOfCommands, zValidVariants
+}
+
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+_ /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
+
+type validChalkColor = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'white' | 'grey' | 'magentaBright'
+type vueComponentsTracker<T extends string> = Record<T, btr_trackedVueComponent[]>
+type messageHandler = (message: string) => void
+type arrayPredicate<T> = (arg1: T) => boolean
+type pipe_persistent_type<T> = (arg: T) => T
+type warningsCount = { count: number }
+type myEnv = z.infer<typeof zMyEnv>
+
+type bvToast = {
+	toast: (
+		message: string,
+		toastOptions: {
+			variant: btr_validVariant
+			autoHideDelay: number
+			toaster: string
+			solid: boolean
+			title: string
+		}
+	) => void
+}
+type pipe_mutable_type = {
+	<T, A>(source: T, a: (value: T) => A): A
+	<T, A, B>(source: T, a: (value: T) => A, b: (value: A) => B): B
+	<T, A, B, C>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C): C
+	<T, A, B, C, D>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D): D
+	<T, A, B, C, D, E>(source: T, a: (value: T) => A, b: (value: A) => B, c: (value: B) => C, d: (value: C) => D, e: (value: D) => E): E
+	//can always make it longer 😉
 }
 
 _ /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
@@ -224,16 +266,17 @@ export function transferItems<T>(origin: T[], destination: T[], predicate: array
 	destination.push(...x.removedItems)
 	return { transferedCount: x.removedCount }
 }
-_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+_ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
+
 export async function asyncForEach<T>(array: T[], asyncFn: (item: T) => Promise<unknown>, resolveSequentially = false) {
 	if (resolveSequentially) { for await (const item of array) { await asyncFn(item) } }  //@btr-ignore
 	if (!resolveSequentially) { await Promise.all(array.map(item => asyncFn(item))) }
@@ -506,7 +549,6 @@ _ /********** FOR TIMERS ******************** FOR TIMERS ******************** FO
 _ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
-_ /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 
 /**
  * Set an interval that is automatically killed when the stay-alive-checker fails but can also be manually killed with killTimer
@@ -661,16 +703,16 @@ export function surroundedString(string: string, margin: string, perSide: number
 	const x = margin.repeat(perSide)
 	return x + string + x
 }
-_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
-_ /********** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
+_ /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 
 /**Copy content to the clipboard, works for both client and server side */
 export function copyToClipboard(x: unknown) {

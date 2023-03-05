@@ -1,6 +1,4 @@
 let _
-_ //tsc --module NodeNext --moduleResolution nodenext --resolveJsonModule --target esnext dev/commands.ts --outDir ./dev/transpiled							//@btr-ignore .
-_ //tsc --moduleResolution node --resolveJsonModule --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
 _ //			tsc --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
 _ // 			node dev/transpiled/dev/commands.js			2
 _
@@ -241,8 +239,8 @@ function transpileFiles(sourceFiles: string[], outputDirectory: string) {
 
 	colorLog('white', 'Transpiling the following file(s): ' + sourceFiles)
 	const command = `tsc ${TSC_FLAGS} ${sourceFiles.join(' ')} --outDir ${outputDirectory}` //@btr-ignore
-	console.log({ command }) //@btr-ignore TODO: delete this
-	execSync(command)
-	//try { execSync(command) } catch (e) { errorLog(`${e}`) }
+	//console.log({ command }) //@btr-ignore //TODO: delete this
+	//execSync(command)
+	try { execSync(command) } catch (e) { errorLog(`${e}`) }
 	colorLog('white', 'Done transpiling: ' + sourceFiles.join(', '))
 }
