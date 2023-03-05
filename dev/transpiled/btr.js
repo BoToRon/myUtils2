@@ -1,39 +1,72 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+var _a;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.pick = exports.objectValues = exports.objectKeys = exports.objectEntries = exports.mapObject = exports.hasOwnProperty = exports.getUniqueId = exports.deepClone = exports.consoleLogFull = exports.addMissingPropsToObjects = exports.toOrdinal = exports.toClockDuration = exports.roll = exports.mathMaxMin = exports.isWithinRange = exports.isOdd = exports.isEven = exports.formatDate = exports.getDisplayableTimeLeft = exports.delay = exports.retryF = exports.pipe_mutableType = exports.filterMap = exports.doAndRepeat = exports.asyncForEach = exports.transferItems = exports.spliceLast = exports.spliceIf = exports.sortBy = exports.sortAlphabetically = exports.shuffle = exports.sortNumbers = exports.selfFilter = exports.safeMap = exports.removeItem = exports.multiMap = exports.lastItem = exports.isLastItem = exports.getUniqueValues = exports.getRandomItem_withCustomChances = exports.getRandomItem = exports.getLastItem = exports.compareArrays = exports.chunk = exports.asFormattedList = exports.arrayToObject = exports.addUnrepeatedItems = exports.addOrReplaceItem = exports.addOrRemoveItem = exports.zValidVariants = void 0;
+exports.getDebugOptionsAndLog = exports.getCachedFiles = exports.fsWriteFileAsync = exports.fsReadFileAsync = exports.checkNoBtrErrorsOrWarnings = exports.checkCodeThatCouldBeUpdated = exports.bigConsoleError = exports.divine = exports.tryF = exports.triggerModalWithValidation_curry = exports.trackVueComponent_curry = exports.pipe_persistentType = exports.getFormattedTimestamp = exports.doAndRepeat_server = exports.copyToClipboard_server = exports.copyToClipboard_client = exports.triggerModal = exports.trackVueComponent = exports.newToast_client_curry = exports.getLocalStorageAndSetter = exports.getAppLog = exports.downloadFile = exports.clientSocketLogOnAny = exports.zRegexGenerator = exports.zRecord = exports.zPipe = exports.zodCheckAndHandle = exports.zodCheck_simple = exports.zodCheck_curry = exports.zGetSchemaFromData = exports.zGetSafeParseResultAndHandleErrorMessage = exports.nullAs = exports.logEmptyLine = exports.doNothing = exports.dataIsEqual = exports.copyToClipboard = exports.surroundedString = exports.toSingleLine = exports.successLog = exports.logInitialization = exports.isGuest = exports.getTraceableStack = exports.errorLog = exports.colorLog = exports.asSingularOrPlural = exports.killTimer = exports.initializeTimer = exports.initializeInterval = exports.stringify = exports.replaceObject = void 0;
+exports.zodCheck_socket = exports.transpileFiles = exports.questionAsPromise = exports.mapCommandsForInquirePrompt = exports.killProcess = exports.inquirePromptCommands = exports.importFileFromProject = exports.getStartedHttpServer = exports.getMongoClient = exports.getLatestPackageJsonFromGithub = exports.getSeparatingCommentBlock = exports.getFilesAndFoldersNames = exports.getEnviromentVariables = void 0;
 let _;
-import eris from 'eris'; //DELETETHISFORCLIENT
+const eris_1 = __importDefault(require("eris")); //DELETETHISFORCLIENT
 _;
-import util from 'util'; //DELETETHISFORCLIEfNT
+const util_1 = __importDefault(require("util")); //DELETETHISFORCLIEfNT
 _;
-import http from 'http'; //DELETETHISFORCLIENT
+const http_1 = __importDefault(require("http")); //DELETETHISFORCLIENT
 _;
-import path from 'path'; //DELETETHISFORCLIENT
+const path_1 = __importDefault(require("path")); //DELETETHISFORCLIENT
 _;
-import chalk from 'chalk'; //DELETETHISFORCLIENT
+const chalk_1 = __importDefault(require("chalk")); //DELETETHISFORCLIENT
 _;
-import express from 'express'; //DELETETHISFORCLIENT
+const express_1 = __importDefault(require("express")); //DELETETHISFORCLIENT
 _;
-import fetch from 'node-fetch'; //DELETETHISFORCLIENT
+const node_fetch_1 = __importDefault(require("node-fetch")); //DELETETHISFORCLIENT
 _;
-import inquirer from 'inquirer'; //DELETETHISFORCLIENT
+const inquirer_1 = __importDefault(require("inquirer")); //DELETETHISFORCLIENT
 _;
-import clipboard from 'clipboardy'; //DELETETHISFORCLIENT
-_;
-_;
-import getReadLine from 'readline'; //DELETETHISFORCLIENT
-_;
-import { createRequire } from 'module'; //DELETETHISFORCLIENT
-_;
-import { execSync } from 'child_process'; //DELETETHISFORCLIENT
-_;
-import mongodb from 'mongodb'; //DELETETHISFORCLIENT
-_;
-import { promises, readdirSync, statSync } from 'fs'; //DELETETHISFORCLIENT 
+const clipboardy_1 = __importDefault(require("clipboardy")); //DELETETHISFORCLIENT
 _;
 _;
-import { getUniqueId_generator, isNode, timers, TSC_FLAGS, zValidVariants } from './constants.js';
+const readline_1 = __importDefault(require("readline")); //DELETETHISFORCLIENT
 _;
-import { z } from 'zod';
+const module_1 = require("module"); //DELETETHISFORCLIENT
 _;
-import { fromZodError } from 'zod-validation-error';
+const child_process_1 = require("child_process"); //DELETETHISFORCLIENT
+_;
+const mongodb_1 = __importDefault(require("mongodb")); //DELETETHISFORCLIENT
+_;
+const fs_1 = require("fs"); //DELETETHISFORCLIENT 
+_;
+_;
+const constants_js_1 = require("./constants.js");
+Object.defineProperty(exports, "zValidVariants", { enumerable: true, get: function () { return constants_js_1.zValidVariants; } });
+_;
+const zod_1 = require("zod");
+_;
+const zod_validation_error_1 = require("zod-validation-error");
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
@@ -44,7 +77,6 @@ _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
 _; /********** EXPORTABLE TYPES ******************** EXPORTABLE TYPES ******************** EXPORTABLE TYPES **********/
-export { zValidVariants };
 _; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
 _; /********** TYPES ******************** TYPES ******************** TYPES ******************** TYPES ******************** TYPES **********/
@@ -66,7 +98,7 @@ _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** F
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 _; /********** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS ******************** FOR ARRAYS **********/
 /**Adds an item to an array, or removes it if it already was added. Returns the array and the action applied */
-export function addOrRemoveItem(arr, item) {
+function addOrRemoveItem(arr, item) {
     let x;
     const isInArray = arr.includes(item);
     if (!isInArray) {
@@ -79,30 +111,34 @@ export function addOrRemoveItem(arr, item) {
     }
     return { action: x, arr };
 }
+exports.addOrRemoveItem = addOrRemoveItem;
 /**Adds an item to an array, or replaces the first one if found. WARNING: make sure the predicate can only find ONE item */
-export function addOrReplaceItem(arr, newItem, predicate) {
+function addOrReplaceItem(arr, newItem, predicate) {
     const replaceableItem = arr.find(x => predicate(x));
     replaceableItem ? arr[arr.indexOf(replaceableItem)] = newItem : arr.push(newItem);
 }
+exports.addOrReplaceItem = addOrReplaceItem;
 /**Add to arrayA items from array B that it doesn't already have */
-export function addUnrepeatedItems(arr, newItems) {
+function addUnrepeatedItems(arr, newItems) {
     newItems.forEach(x => { if (!arr.includes(x)) {
         arr.push(x);
     } });
     return arr;
 }
+exports.addUnrepeatedItems = addUnrepeatedItems;
 /**
  * @param arr The array (tuple) of strings that each will become a key
  * @param mappingFn The function to determine the value of each entry
  * @returns An object where each key is an item of "arr" and the value is determined by "mappingFn"
  */
-export function arrayToObject(arr, mappingFn) {
+function arrayToObject(arr, mappingFn) {
     const object = {};
     arr.forEach(x => object[x] = mappingFn(x));
     return object;
 }
+exports.arrayToObject = arrayToObject;
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
-export function asFormattedList(arr, useAndForTheLastItem) {
+function asFormattedList(arr, useAndForTheLastItem) {
     let string = '';
     arr.forEach((item, index) => {
         const isLastItem = index === arr.length - 1;
@@ -119,8 +155,9 @@ export function asFormattedList(arr, useAndForTheLastItem) {
     });
     return string;
 }
+exports.asFormattedList = asFormattedList;
 /**Return an array of sub-arrays with the items of the passed array, where each sub-array's max lenght is the passed size*/
-export function chunk(arr, chunkSize) {
+function chunk(arr, chunkSize) {
     const results = [[]];
     arr.forEach(item => {
         const lastSubArray = lastItem(results);
@@ -128,8 +165,9 @@ export function chunk(arr, chunkSize) {
     });
     return results.reverse();
 }
+exports.chunk = chunk;
 /**Compare array A to array B and return the details */
-export function compareArrays(baseArray, testArray) {
+function compareArrays(baseArray, testArray) {
     const nonDesiredItems = testArray.filter(x => !baseArray.includes(x));
     const missingItems = baseArray.filter(x => !testArray.includes(x));
     const lengthDifference = baseArray.length - testArray.length;
@@ -137,26 +175,33 @@ export function compareArrays(baseArray, testArray) {
     const arraysAreEqual = arraysHaveTheSameItems && !lengthDifference;
     return { arraysAreEqual, arraysHaveTheSameItems, lengthDifference, missingItems, nonDesiredItems };
 }
+exports.compareArrays = compareArrays;
 /**syntax sugar for arr[arr.length - 1] */
-export function getLastItem(arr) { return arr[arr.length - 1]; }
+function getLastItem(arr) { return arr[arr.length - 1]; }
+exports.getLastItem = getLastItem;
 /**@returns a random item along its index */
-export function getRandomItem(arr) { const r = roll(arr.length); return { item: arr[r], index: r }; }
+function getRandomItem(arr) { const r = roll(arr.length); return { item: arr[r], index: r }; }
+exports.getRandomItem = getRandomItem;
 /**getRandomItem, but each items has custom chances to be selected */
-export function getRandomItem_withCustomChances(items, chancesDefininingFunction) {
+function getRandomItem_withCustomChances(items, chancesDefininingFunction) {
     const chancesAdjustItems = [];
     items.forEach(item => { for (let i = 0; i < chancesDefininingFunction(item); i++) {
         chancesAdjustItems.push(item);
     } });
     return getRandomItem(chancesAdjustItems).item;
 }
+exports.getRandomItem_withCustomChances = getRandomItem_withCustomChances;
 /**@returns a version of the provided array without repeating items */
-export function getUniqueValues(arr) { return [...new Set(arr)]; }
+function getUniqueValues(arr) { return [...new Set(arr)]; }
+exports.getUniqueValues = getUniqueValues;
 /**@returns whether an item is the last one in an array or not (warning: maybe don't use with primitives) */
-export function isLastItem(arr, item) { return item === arr.at(-1); }
+function isLastItem(arr, item) { return item === arr.at(-1); }
+exports.isLastItem = isLastItem;
 /**Return the last item of the given array */
-export function lastItem(arr) { return arr.at(-1); }
+function lastItem(arr) { return arr.at(-1); }
+exports.lastItem = lastItem;
 /**Apply multiple mapping functions to a single array at once and return an object with all the result */
-export function multiMap(arr, f1, f2, f3 = doNothing, f4 = doNothing, f5 = doNothing) {
+function multiMap(arr, f1, f2, f3 = doNothing, f4 = doNothing, f5 = doNothing) {
     return arr.reduce((acc, item) => {
         acc.map1.push(f1(item));
         acc.map2.push(f2(item));
@@ -172,17 +217,20 @@ export function multiMap(arr, f1, f2, f3 = doNothing, f4 = doNothing, f5 = doNot
         map5: [],
     });
 }
+exports.multiMap = multiMap;
 /*Remove a single item from an array, or all copies of that item if its a primitive value and return the removedCount */
-export function removeItem(arr, item) { return selfFilter(arr, (x) => x !== item).removedCount; }
+function removeItem(arr, item) { return selfFilter(arr, (x) => x !== item).removedCount; }
+exports.removeItem = removeItem;
 /**
  * Map an array, and filter-out the items that weren't fit
  * see filterMap for a faster (single rather than double loop) but more complex version)
  */
-export function safeMap(arr, mapFn) {
+function safeMap(arr, mapFn) {
     return arr.map(x => mapFn(x)).filter(x => x);
 }
+exports.safeMap = safeMap;
 /**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
-export function selfFilter(arr, predicate) {
+function selfFilter(arr, predicate) {
     let removedCount = 0;
     const removedItems = [];
     for (let i = 0; i < arr.length; i++) {
@@ -196,32 +244,36 @@ export function selfFilter(arr, predicate) {
     }
     return { removedItems, removedCount };
 }
+exports.selfFilter = selfFilter;
 /**Sort an array of numbers either upwards (A-scending) or downwards (D-escending)*/
-export function sortNumbers(numbers, direction) {
+function sortNumbers(numbers, direction) {
     numbers.sort((a, b) => a > b ? 1 : -1);
     if (direction === 'D') {
         numbers.reverse();
     }
     return numbers;
 }
+exports.sortNumbers = sortNumbers;
 /**Randomizes the order of the items in the array */
-export function shuffle(arr) {
+function shuffle(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
         const rand = roll(i + 1);
         [arr[i], arr[rand]] = [arr[rand], arr[i]];
     }
     return arr;
 }
+exports.shuffle = shuffle;
 /**Sort an array alphabetically, optionally backwards */
-export function sortAlphabetically(arr, reverseArr) {
+function sortAlphabetically(arr, reverseArr) {
     arr.sort((a, b) => a > b ? 1 : -1);
     if (reverseArr) {
         arr.reverse();
     }
     return arr;
 }
+exports.sortAlphabetically = sortAlphabetically;
 /**Sort an array of objects based on the value a property. A: Ascending, D: Descesding. Chainable */
-export function sortBy(arr, keyWithDir, ...extraKeysWithDir) {
+function sortBy(arr, keyWithDir, ...extraKeysWithDir) {
     if (!arr.length) {
         return arr;
     }
@@ -239,17 +291,21 @@ export function sortBy(arr, keyWithDir, ...extraKeysWithDir) {
     });
     return arr;
 }
+exports.sortBy = sortBy;
 /** */
 /**syntactic sugar for selfFilter(arr, predicate).removedItems */
-export function spliceIf(arr, predicate) { return selfFilter(arr, predicate).removedItems; }
+function spliceIf(arr, predicate) { return selfFilter(arr, predicate).removedItems; }
+exports.spliceIf = spliceIf;
 /**Remove X amount of items from the end of an array */
-export function spliceLast(arr, count) { return arr.splice(-count); }
+function spliceLast(arr, count) { return arr.splice(-count); }
+exports.spliceLast = spliceLast;
 /**Transfer items that meet a given condition from one array to another */
-export function transferItems(origin, destination, predicate) {
+function transferItems(origin, destination, predicate) {
     const x = selfFilter(origin, predicate);
     destination.push(...x.removedItems);
     return { transferedCount: x.removedCount };
 }
+exports.transferItems = transferItems;
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
@@ -260,7 +316,7 @@ _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ****************
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-export async function asyncForEach(array, asyncFn, resolveSequentially = false) {
+async function asyncForEach(array, asyncFn, resolveSequentially = false) {
     if (resolveSequentially) {
         for await (const item of array) {
             await asyncFn(item);
@@ -270,8 +326,10 @@ export async function asyncForEach(array, asyncFn, resolveSequentially = false) 
         await Promise.all(array.map(item => asyncFn(item)));
     }
 }
+exports.asyncForEach = asyncForEach;
 /**Set interval with try-catch and call it immediately*/
-export function doAndRepeat(fn, interval) { divine.try(fn, []); setInterval(() => divine.try(fn, []), interval); }
+function doAndRepeat(fn, interval) { exports.divine.try(fn, []); setInterval(() => exports.divine.try(fn, []), interval); }
+exports.doAndRepeat = doAndRepeat;
 /**
  * Filter and map an array in a single loop
  * @param arr The array to be filterMap'd
@@ -279,19 +337,21 @@ export function doAndRepeat(fn, interval) { divine.try(fn, []); setInterval(() =
  * @param mapFn The function to apply to each item of the array, and possibly to each carryover from "filter"
  * @returns The provided array, filtered and mapped
  */
-export function filterMap(arr, filter, mapFn) {
+function filterMap(arr, filter, mapFn) {
     return arr.reduce((acc, item) => {
         const { answer, carryOver } = filter(item);
         return answer ? acc.concat(mapFn(item, carryOver)) : acc;
     }, []);
 }
+exports.filterMap = filterMap;
 /**
 * Pipes a value through a number of functions in the order that they appear.
 * Takes between 1 and 12 arguments. `pipe(x, a, b)` is equivalent to `b(a(x))`.
 * If only one argument is provided (`pipe(x)`), this will produce a type error but JS will run fine (and return `x`).
 */
 // eslint-disable-next-line func-style
-export const pipe_mutableType = (source, ...project) => project.reduce((accumulator, element) => element(accumulator), source);
+const pipe_mutableType = (source, ...project) => project.reduce((accumulator, element) => element(accumulator), source);
+exports.pipe_mutableType = pipe_mutableType;
 /**
  * Retry a function up to X amount of times or until it is executed successfully, mainly for fetching/requesting stuff
  * @param fn The function to be retried hoping it returns successfully
@@ -301,7 +361,7 @@ export const pipe_mutableType = (source, ...project) => project.reduce((accumula
  * @param delayBetweenRetries Delay between each retry in milliseconds
  * @returns
  */
-export async function retryF(fn, args, retriesLeft, defaultReturn, delayBetweenRetries) {
+async function retryF(fn, args, retriesLeft, defaultReturn, delayBetweenRetries) {
     try {
         return { data: fn(...args), was: 'success' };
     }
@@ -314,6 +374,7 @@ export async function retryF(fn, args, retriesLeft, defaultReturn, delayBetweenR
         return await retryF(fn, args, retriesLeft - 1, defaultReturn, delayBetweenRetries);
     }
 }
+exports.retryF = retryF;
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
@@ -325,7 +386,7 @@ _; /********** FOR NUMBERS ******************** FOR NUMBERS ********************
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 _; /********** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS ******************** FOR NUMBERS **********/
 /**Promise-based delay that BREAKS THE LIMIT OF setTimeOut*/
-export function delay(x) {
+function delay(x) {
     return new Promise(resolve => {
         const maxTimeOut = 1000 * 60 * 60 * 24;
         const loopsNeeded = Math.floor(x / maxTimeOut);
@@ -334,8 +395,9 @@ export function delay(x) {
         function interval(i, ms) { setTimeout(() => i ? interval(i - 1, maxTimeOut) : resolve(true), ms); }
     });
 }
+exports.delay = delay;
 /**Return the time left to make a move in a compacted form and with a variant corresponding to how much of it left */
-export function getDisplayableTimeLeft(deadline) {
+function getDisplayableTimeLeft(deadline) {
     const time = (deadline - Date.now()) / 1000;
     let message = '';
     const twoMinutes = 60 * 2;
@@ -372,6 +434,7 @@ export function getDisplayableTimeLeft(deadline) {
         return variant;
     }
 }
+exports.getDisplayableTimeLeft = getDisplayableTimeLeft;
 /**
  *Formate a timestamp with Intl.DateTimeFormt. Options: short/medium/long (add +hour to include Hour) or hOnly (hour only)
  @param timestamp //The timestamp to be converted to a readable date/hour
@@ -381,7 +444,7 @@ export function getDisplayableTimeLeft(deadline) {
  //can also do hourOnly or "+hour" to add the hour at the end
  { short: '01/01/23', medium: 'Jan 01, 2023', long: 'January 01, 2023' }
  */
-export function formatDate(timestamp, language, type) {
+function formatDate(timestamp, language, type) {
     return new Intl.DateTimeFormat({ English: 'en', Español: 'es' }[language], getOptions()).format(timestamp);
     function getOptions() {
         switch (type) {
@@ -397,21 +460,25 @@ export function formatDate(timestamp, language, type) {
         }
     }
 }
+exports.formatDate = formatDate;
 /**Self-explanatory */
-export function isEven(number) { return !isOdd(number); }
+function isEven(number) { return !isOdd(number); }
+exports.isEven = isEven;
 /**Self-explanatory */
-export function isOdd(number) { return Boolean(Number(number) % 2); }
+function isOdd(number) { return Boolean(Number(number) % 2); }
+exports.isOdd = isOdd;
 /**@returns whether a number is either the minimum provided, the maximum provided or any number in-between */
-export function isWithinRange(number, max, min) {
+function isWithinRange(number, max, min) {
     if (min > max) {
-        divine.ping('"min" should be lower than "max"!');
+        exports.divine.ping('"min" should be lower than "max"!');
     }
     return number <= max && number >= min;
 }
+exports.isWithinRange = isWithinRange;
 /**Math.max and Math.min merged into one */
-export function mathMaxMin(max, min, number) {
+function mathMaxMin(max, min, number) {
     if (min > max) {
-        divine.ping('"min" should be lower than "max"!');
+        exports.divine.ping('"min" should be lower than "max"!');
     }
     if (number > max) {
         return max;
@@ -421,10 +488,12 @@ export function mathMaxMin(max, min, number) {
     }
     return number;
 }
+exports.mathMaxMin = mathMaxMin;
 /**@returns a number up to (but not included) provided max, eg: roll(1) will ALWAYS return zero */
-export function roll(maxRoll) { return Math.floor(Math.random() * Number(maxRoll)); }
+function roll(maxRoll) { return Math.floor(Math.random() * Number(maxRoll)); }
+exports.roll = roll;
 /**Convert duration as a timestamp to clock format (xx:xx:xx.xxx) with selectable amount of decimals */
-export function toClockDuration(timestamp, decimalAfterSeconds) {
+function toClockDuration(timestamp, decimalAfterSeconds) {
     const second = 1000;
     const minute = second * 60;
     const hour = minute * 60;
@@ -442,8 +511,9 @@ export function toClockDuration(timestamp, decimalAfterSeconds) {
         return decimalAfterSeconds ? `.${getClockField(1).slice(0, decimalAfterSeconds)}` : '';
     }
 }
+exports.toClockDuration = toClockDuration;
 /**1 becomes '1st' , 2 becomes '2nd', 3 becomes '3rd' and so on */
-export function toOrdinal(number) {
+function toOrdinal(number) {
     const asString = String(number);
     const lastDigit = asString[asString.length - 1];
     if ([11, 12, 13].includes(Number(number))) {
@@ -456,6 +526,7 @@ export function toOrdinal(number) {
         default: return `${number}th`;
     }
 }
+exports.toOrdinal = toOrdinal;
 _; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 _; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 _; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
@@ -467,16 +538,18 @@ _; /********** FOR OBJECTS ******************** FOR OBJECTS ********************
 _; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 _; /********** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS ******************** FOR OBJECTS **********/
 /**Add all default properties missing in an object*/
-export function addMissingPropsToObjects(original, defaults) {
+function addMissingPropsToObjects(original, defaults) {
     objectKeys(defaults).forEach(key => { if (!Object.prototype.hasOwnProperty.call(original, key)) {
         original[key] = defaults[key];
     } });
     return original;
 }
+exports.addMissingPropsToObjects = addMissingPropsToObjects;
 /**Console log an object to its full depth */
-export function consoleLogFull(data) { console.log(util.inspect(data, { showHidden: false, depth: null, colors: true })); } //@btr-ignore
+function consoleLogFull(data) { console.log(util_1.default.inspect(data, { showHidden: false, depth: null, colors: true })); } //@btr-ignore
+exports.consoleLogFull = consoleLogFull;
 /**Return a copy that can be altered without having to worry about modifying the original */
-export function deepClone(originalObject) {
+function deepClone(originalObject) {
     const copy = JSON.parse(stringify(originalObject));
     ifObject_copyRebindedMethods();
     return copy;
@@ -493,26 +566,33 @@ export function deepClone(originalObject) {
         });
     }
 }
+exports.deepClone = deepClone;
 /**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
-export function getUniqueId(suffix) { return suffix + '_' + getUniqueId_generator.next().value; }
+function getUniqueId(suffix) { return suffix + '_' + constants_js_1.getUniqueId_generator.next().value; }
+exports.getUniqueId = getUniqueId;
 /**Because ESlint doesn't like Object(x).hasOwnProperty :p */
-export function hasOwnProperty(x, key) { return Object.prototype.hasOwnProperty.call(x, key); }
+function hasOwnProperty(x, key) { return Object.prototype.hasOwnProperty.call(x, key); }
+exports.hasOwnProperty = hasOwnProperty;
 /**Map an object! (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
-export function mapObject(object, mappingFn) {
+function mapObject(object, mappingFn) {
     const newObject = {};
     objectEntries(object).forEach(x => { newObject[x.key] = mappingFn(x.value); });
     return newObject;
 }
+exports.mapObject = mapObject;
 /**Object.Prototype.entries but with proper type-inference */
-export function objectEntries(object) {
+function objectEntries(object) {
     return Object.entries(object).map(entry => ({ key: entry[0], value: entry[1] })); //@btr-ignore
 }
+exports.objectEntries = objectEntries;
 /**Object.keys but with proper type-inference */ //@btr-ignore
-export function objectKeys(object) { return Object.keys(object); } //@btr-ignore
+function objectKeys(object) { return Object.keys(object); } //@btr-ignore
+exports.objectKeys = objectKeys;
 /**Object.Prototype.values but with proper type-inference */
-export function objectValues(object) { return Object.values(object); } //@btr-ignore
+function objectValues(object) { return Object.values(object); } //@btr-ignore
+exports.objectValues = objectValues;
 /**Create an object with only the specified properties of another base object (references are kept) */
-export function pick(theObject, properties) {
+function pick(theObject, properties) {
     const thePartial = {};
     objectEntries(theObject).forEach(entry => {
         const { key, value } = entry;
@@ -523,13 +603,15 @@ export function pick(theObject, properties) {
     });
     return thePartial;
 }
+exports.pick = pick;
 /**Replace the values of an object with those of another that shares the schema*/
-export function replaceObject(originalObject, newObject) {
+function replaceObject(originalObject, newObject) {
     objectKeys(originalObject).forEach(key => delete originalObject[key]);
     objectKeys(newObject).forEach(key => originalObject[key] = newObject[key]);
 }
+exports.replaceObject = replaceObject;
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods, see deepClone) */
-export function stringify(object) {
+function stringify(object) {
     const seen = new WeakSet();
     return JSON.stringify(object, (_key, value) => {
         if (typeof value === 'object' && value !== null) {
@@ -541,6 +623,7 @@ export function stringify(object) {
         return value;
     }, '  ');
 }
+exports.stringify = stringify;
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
 _; /********** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS ******************** FOR TIMERS **********/
@@ -561,7 +644,7 @@ _; /********** FOR TIMERS ******************** FOR TIMERS ******************** F
  * @param timesRanSucessfully The amount of times the interval ran before its dismise
  * @returns initializeTimer's resolveInfo with the return of onKill as the value (since onEach never resolves, just keeps going)
  */
-export async function initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully) {
+async function initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully) {
     const doContinue = await stayAliveChecker();
     return { timesRanSucessfully, ...await getResult() };
     async function getResult() {
@@ -578,6 +661,7 @@ export async function initializeInterval(id, intervalInMs, stayAliveChecker, onE
         }
     }
 }
+exports.initializeInterval = initializeInterval;
 /**
  * Set a cancellable timer that runs at the specified time
  * @param id The id of the timer, so that btr.killTimer can find it
@@ -586,7 +670,7 @@ export async function initializeInterval(id, intervalInMs, stayAliveChecker, onE
  * @param onCancel The function that should run if the timer was cancelled via killTimer
  * @returns the return of "onComplete" if it was completed, or all info revelant to cancellation along with the value of "onCancel"
  */
-export async function initializeTimer(id, runAt, onComplete, onCancel) {
+async function initializeTimer(id, runAt, onComplete, onCancel) {
     const timer = {
         id, runAt, onComplete, onCancel,
         value_onComplete: nullAs(),
@@ -597,7 +681,7 @@ export async function initializeTimer(id, runAt, onComplete, onCancel) {
         cancelStack: '',
         cancelledAt: 0,
     };
-    timers.push(timer);
+    constants_js_1.timers.push(timer);
     return await interval();
     async function getResolvedTimer() {
         const { id, startedAt, runAt, onComplete, onCancel, cancelledAt, cancelStack, wasCancelled } = timer;
@@ -626,25 +710,27 @@ export async function initializeTimer(id, runAt, onComplete, onCancel) {
         const isTheLastInterval = maxInterval >= timeLeft;
         await delay(isTheLastInterval ? timeLeft : maxInterval);
         if (isTheLastInterval) {
-            removeItem(timers, timer);
+            removeItem(constants_js_1.timers, timer);
         }
         return timer.wasCancelled ? timer : isTheLastInterval ? getResolvedTimer() : interval();
     }
 }
+exports.initializeTimer = initializeTimer;
 /**Kill a timer created with initializeTimer/Interval, the reason provided will become a divine stack */
-export async function killTimer(timerId, reason) {
-    const theTimer = timers.find(x => x.id === timerId);
+async function killTimer(timerId, reason) {
+    const theTimer = constants_js_1.timers.find(x => x.id === timerId);
     if (!theTimer) {
-        divine.error('Unable to cancel, no timer was found with this id: ' + timerId);
+        exports.divine.error('Unable to cancel, no timer was found with this id: ' + timerId);
         return;
     }
-    removeItem(timers, theTimer);
+    removeItem(constants_js_1.timers, theTimer);
     theTimer.value_onCancel = await theTimer.onCancel();
     theTimer.cancelStack = getTraceableStack(reason, 'killTimer');
     theTimer.cancelledAt = Date.now();
     theTimer.wasCancelled = true;
     return theTimer;
 }
+exports.killTimer = killTimer;
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
@@ -656,32 +742,41 @@ _; /********** FOR STRINGS ******************** FOR STRINGS ********************
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 _; /********** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS ******************** FOR STRINGS **********/
 /**Add an "S" to the end of a noun if talking about them in plural based on the amount passed */
-export function asSingularOrPlural(noun, amount) { return noun + `${amount === 1 ? '' : 's'}`; }
+function asSingularOrPlural(noun, amount) { return noun + `${amount === 1 ? '' : 's'}`; }
+exports.asSingularOrPlural = asSingularOrPlural;
 /**console.log... WITH COLORS :D */ //@btr-ignore
-export function colorLog(color, message) { console.log(chalk[color].bold(message)); } //DELETETHISFORCLIENT @btr-ignore
+function colorLog(color, message) { console.log(chalk_1.default[color].bold(message)); } //DELETETHISFORCLIENT @btr-ignore
+exports.colorLog = colorLog;
 /**(Message) 💀 */
-export function errorLog(message) { return colorLog('red', message + ' 💀'); }
+function errorLog(message) { return colorLog('red', message + ' 💀'); }
+exports.errorLog = errorLog;
 //TODO: describe me
-export function getTraceableStack(error, type) {
+function getTraceableStack(error, type) {
     const { stack } = (typeof error === 'string' ? new Error(error) : error);
     return `${stack}`.
         replace(/\(node:3864\).{0,}\n.{0,}exit code./, ''). //regexHere
         replace(/\n {4}at/g, `\n ${' * '.repeat(5)} at`). //regexHere
         replace(/^Error/, type); //regexHere
 }
+exports.getTraceableStack = getTraceableStack;
 /**@returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
-export function isGuest(username) { return /Guest[0-9]{13}/i.test(`${username}`); } //regexHere
+function isGuest(username) { return /Guest[0-9]{13}/i.test(`${username}`); } //regexHere
+exports.isGuest = isGuest;
 /**To know when files are fired and in what order  */
-export function logInitialization(filename) { colorLog(isNode ? 'cyan' : 'magenta', '*'.repeat(20) + ' ' + filename); }
+function logInitialization(filename) { colorLog(constants_js_1.isNode ? 'cyan' : 'magenta', '*'.repeat(20) + ' ' + filename); }
+exports.logInitialization = logInitialization;
 /**(Message) ✔️ */
-export function successLog(message) { return colorLog('green', message + ' ✔️'); }
+function successLog(message) { return colorLog('green', message + ' ✔️'); }
+exports.successLog = successLog;
 /**@returns an string with its linebreaks converted into simple one-char spaces */
-export function toSingleLine(sentence) { return `${sentence}`.replace(/ {0,}\n {0,}/g, ' '); } //regexHere
+function toSingleLine(sentence) { return `${sentence}`.replace(/ {0,}\n {0,}/g, ' '); } //regexHere
+exports.toSingleLine = toSingleLine;
 /**Return an string with X amount of (character) as margin per side */
-export function surroundedString(string, margin, perSide) {
+function surroundedString(string, margin, perSide) {
     const x = margin.repeat(perSide);
     return x + string + x;
 }
+exports.surroundedString = surroundedString;
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
@@ -693,9 +788,9 @@ _; /********** MISC ******************** MISC ******************** MISC ********
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 _; /********** MISC ******************** MISC ******************** MISC ******************** MISC ******************** MISC **********/
 /**Copy content to the clipboard, works for both client and server side */
-export function copyToClipboard(x) {
-    if (isNode) {
-        clipboard.write(stringify(x));
+function copyToClipboard(x) {
+    if (constants_js_1.isNode) {
+        clipboardy_1.default.write(stringify(x));
         return;
     }
     const text = stringify(x);
@@ -706,6 +801,7 @@ export function copyToClipboard(x) {
     document.execCommand('copy');
     document.body.removeChild(a);
 }
+exports.copyToClipboard = copyToClipboard;
 /**
  * Compare data B against an schema created from data A
  * @param A The first piece of data
@@ -713,15 +809,19 @@ export function copyToClipboard(x) {
  * @param errorHandler The handler for the message error
  * @returns
  */
-export function dataIsEqual(A, B, errorHandler = nullAs()) {
+function dataIsEqual(A, B, errorHandler = nullAs()) {
     return zGetSafeParseResultAndHandleErrorMessage(zGetSchemaFromData(A), B, errorHandler);
 }
+exports.dataIsEqual = dataIsEqual;
 /**For obligatory callbacks */
-export function doNothing(...args) { args; }
+function doNothing(...args) { args; }
+exports.doNothing = doNothing;
 /**Margin to make reading logs easier */
-export function logEmptyLine() { console.log(''); } //@btr-ignore
+function logEmptyLine() { console.log(''); } //@btr-ignore
+exports.logEmptyLine = logEmptyLine;
 /** @returns null, as the provided type */
-export function nullAs() { return null; } //@btr-ignore
+function nullAs() { return null; } //@btr-ignore
+exports.nullAs = nullAs;
 _; /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
 _; /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
 _; /********** ZOD ******************** ZOD ******************** ZOD ******************** ZOD ******************** ZOD **********/
@@ -739,33 +839,35 @@ _; /********** ZOD ******************** ZOD ******************** ZOD ***********
  * @param errorHandler The handler for the message error
  * @returns
  */
-export function zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler = nullAs()) {
+function zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler = nullAs()) {
     const result = (schema.strict ? schema.strict() : schema).safeParse(data);
     if (result.success === false && errorHandler) {
-        errorHandler(fromZodError(result.error).message);
+        errorHandler((0, zod_validation_error_1.fromZodError)(result.error).message);
     }
     return result;
 }
+exports.zGetSafeParseResultAndHandleErrorMessage = zGetSafeParseResultAndHandleErrorMessage;
 /**Dynamically generate a Zod Schema from an array/object */
-export function zGetSchemaFromData(data) {
+function zGetSchemaFromData(data) {
     if (!data) {
-        return z.nullable(nullAs());
+        return zod_1.z.nullable(nullAs());
     }
     if (typeof data !== 'object') {
-        return z.literal(data);
+        return zod_1.z.literal(data);
     }
     if (Array.isArray(data)) {
-        return z.tuple(data.map(toLiteral));
+        return zod_1.z.tuple(data.map(toLiteral));
     }
-    return z.object(mapObject(data, toLiteral));
+    return zod_1.z.object(mapObject(data, toLiteral));
     function toLiteral(x) {
         return typeof x === 'object' ?
             zGetSchemaFromData(x) :
-            z.literal(x);
+            zod_1.z.literal(x);
     }
 }
+exports.zGetSchemaFromData = zGetSchemaFromData;
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler in case it isn't a fit. */
-export function zodCheck_curry(errorHandler) {
+function zodCheck_curry(errorHandler) {
     return function zodCheck(schema, data) {
         function body(errorHandler, schema, data) {
             return zGetSafeParseResultAndHandleErrorMessage(schema, data, errorHandler).success;
@@ -773,10 +875,12 @@ export function zodCheck_curry(errorHandler) {
         return body(errorHandler, schema, data);
     };
 }
+exports.zodCheck_curry = zodCheck_curry;
 /**Simple zodCheck without any kind of error handler */
-export function zodCheck_simple(schema, data) {
+function zodCheck_simple(schema, data) {
     return zGetSafeParseResultAndHandleErrorMessage(schema, data, doNothing).success;
 }
+exports.zodCheck_simple = zodCheck_simple;
 /**
  * Check data against a provided schema, and execute either the success or error handler
  * @param zSchema The zSchema to test data against
@@ -785,12 +889,13 @@ export function zodCheck_simple(schema, data) {
  * @param args The arguments to be applied to successHandler
  * @param errorHandler The function that will execute if data does NOT fits zSchema
  */
-export function zodCheckAndHandle(zSchema, data, successHandler, args, errorHandler) {
+function zodCheckAndHandle(zSchema, data, successHandler, args, errorHandler) {
     const zResult = zGetSafeParseResultAndHandleErrorMessage(zSchema, data, errorHandler);
     if (zResult.success === true && successHandler) {
         successHandler(...args);
     }
 }
+exports.zodCheckAndHandle = zodCheckAndHandle;
 /**
  * Pipe with schema validation and basic error tracking/handling
  * @param zSchema The schema that must persist through the whole pipe
@@ -798,7 +903,7 @@ export function zodCheckAndHandle(zSchema, data, successHandler, args, errorHand
  * @param fns The functions that will conform the pipe in order
  * @returns
  */
-export function zPipe(zSchema, initialValue, ...fns) {
+function zPipe(zSchema, initialValue, ...fns) {
     const initialPipeState = { value: initialValue, error: nullAs(), failedAt: nullAs() };
     return fns.reduce((pipeState, fn, index) => {
         if (pipeState.error) {
@@ -813,10 +918,12 @@ export function zPipe(zSchema, initialValue, ...fns) {
         }
     }, initialPipeState);
 }
+exports.zPipe = zPipe;
 /**Zod's "record", but all keys are Required instead of Optional as it is the default */
-export function zRecord(keys, schema) {
-    return z.object(arrayToObject(keys, () => schema));
+function zRecord(keys, schema) {
+    return zod_1.z.object(arrayToObject(keys, () => schema));
 }
+exports.zRecord = zRecord;
 /**
  * Return the regex given with possibly an error indicating it wasn't matched.
  * MUST BE USED AS A SPREAD ARGUMENT, eg: zString.regex( ...zRegexGenerator(/hi/, false) )
@@ -824,7 +931,7 @@ export function zRecord(keys, schema) {
  * @param exactPhrase If true, it will return an error if there's anything before or after the match
  * @returns Arguments for zod's regex string method (theRegex, theErrorMesssage)
  */
-export function zRegexGenerator(regex, exactPhrase) {
+function zRegexGenerator(regex, exactPhrase) {
     if (exactPhrase) {
         let asString = String(regex);
         asString = asString.slice(1, asString.length - 1);
@@ -832,6 +939,7 @@ export function zRegexGenerator(regex, exactPhrase) {
     }
     return [regex, 'Regex not matched: ' + regex];
 }
+exports.zRegexGenerator = zRegexGenerator;
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
@@ -843,22 +951,23 @@ _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ************
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 _; /********** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY ******************** FOR CLIENT-ONLY **********/
 /**Log every socket.io event with the data received for debugging purposes */
-export function clientSocketLogOnAny(useStore) {
+function clientSocketLogOnAny(useStore) {
     useStore().socket.onAny((eventName, ...args) => {
         const eventInfo = { event: eventName, timestamp: Date.now(), data: args };
         colorLog('red', stringify(eventInfo));
         useStore().socketEvents.unshift(eventInfo);
     });
 }
+exports.clientSocketLogOnAny = clientSocketLogOnAny;
 /**Stringify and download the provided data */
-export async function downloadFile(filename, fileFormat, data) {
-    if (isNode) {
+async function downloadFile(filename, fileFormat, data) {
+    if (constants_js_1.isNode) {
         await downloadFile_node();
     }
     else {
         downloadFile_client();
     }
-    isNode ? downloadFile_node() : downloadFile_client();
+    constants_js_1.isNode ? downloadFile_node() : downloadFile_client();
     function downloadFile_client() {
         const a = document.createElement('a');
         a.href = window.URL.createObjectURL(new Blob([data], { type: 'text/plain' }));
@@ -874,11 +983,12 @@ export async function downloadFile(filename, fileFormat, data) {
         successLog('Done!');
     }
 }
+exports.downloadFile = downloadFile;
 /**
  * Register into the window's a finder and logger of all vue components, including the main instance and pinia store
  * @example getAppLog(window as never, useStore) //at the bottom of store.ts
  */
-export function getAppLog(window, useStore) {
+function getAppLog(window, useStore) {
     delay(1000).then(() => {
         window.appLog = () => mapObject({
             store: useStore(),
@@ -898,8 +1008,9 @@ export function getAppLog(window, useStore) {
         }));
     });
 }
+exports.getAppLog = getAppLog;
 /**localStorage, but better */
-export function getLocalStorageAndSetter(defaults) {
+function getLocalStorageAndSetter(defaults) {
     const storedInfo = getStoredInfo();
     objectEntries(defaults).forEach(({ key, value }) => { if (!(key in storedInfo)) {
         localStorageSet(key, value);
@@ -914,10 +1025,11 @@ export function getLocalStorageAndSetter(defaults) {
         localStorage['info'] = stringify(storedInfo);
     }
 }
+exports.getLocalStorageAndSetter = getLocalStorageAndSetter;
 /**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
-export function newToast_client_curry($bvToast) {
+function newToast_client_curry($bvToast) {
     return function body(title, message, variant) {
-        if (!zodCheck_curry(alert)(zValidVariants, variant)) {
+        if (!zodCheck_curry(alert)(constants_js_1.zValidVariants, variant)) {
             return;
         }
         $bvToast.toast(message, {
@@ -929,8 +1041,9 @@ export function newToast_client_curry($bvToast) {
         });
     };
 }
+exports.newToast_client_curry = newToast_client_curry;
 /**Add/remove a vue component to the window for easy access/debugging */
-export function trackVueComponent(name, component, window) {
+function trackVueComponent(name, component, window) {
     component.name = name;
     component.id = getUniqueId(name);
     component.beforeDestroy = onDestroy;
@@ -952,8 +1065,9 @@ export function trackVueComponent(name, component, window) {
         logAllComponents();
     }
 }
+exports.trackVueComponent = trackVueComponent;
 //TODO: describe me
-export async function triggerModal(useStore, id, action) {
+async function triggerModal(useStore, id, action) {
     if (action === 'show') {
         useStore().bvModal.show(id); //@btr-ignore
         for (let i = 0; i < 10; i++) {
@@ -971,6 +1085,7 @@ export async function triggerModal(useStore, id, action) {
     function elementExists() { return Boolean(document.getElementById(id)); }
     function promptError() { alert(`Modal with the '${id}' id was not found. Could not ${action}. Please report this`); }
 }
+exports.triggerModal = triggerModal;
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
@@ -982,21 +1097,29 @@ _; /********** DEPRECATED ******************** DEPRECATED ******************** D
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 _; /********** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED ******************** DEPRECATED **********/
 /**@deprecated use "copyToClipboardr" instead */
-export function copyToClipboard_client() { doNothing; }
+function copyToClipboard_client() { doNothing; }
+exports.copyToClipboard_client = copyToClipboard_client;
 /**@deprecated use "copyToClipboardr" instead */
-export function copyToClipboard_server() { doNothing; }
+function copyToClipboard_server() { doNothing; }
+exports.copyToClipboard_server = copyToClipboard_server;
 /**@deprecated use "doAndRepeat" instead */
-export function doAndRepeat_server() { doNothing; }
+function doAndRepeat_server() { doNothing; }
+exports.doAndRepeat_server = doAndRepeat_server;
 /**@deprecated use "formatDate" instead */
-export function getFormattedTimestamp() { doNothing; }
+function getFormattedTimestamp() { doNothing; }
+exports.getFormattedTimestamp = getFormattedTimestamp;
 /** @deprecated use either zPipe (persistenType with zod errors) or pipe_mutableType! */
-export function pipe_persistentType() { doNothing; }
+function pipe_persistentType() { doNothing; }
+exports.pipe_persistentType = pipe_persistentType;
 /**@deprecated use "trackVueComponent" instead */
-export function trackVueComponent_curry() { doNothing; }
+function trackVueComponent_curry() { doNothing; }
+exports.trackVueComponent_curry = trackVueComponent_curry;
 /**@deprecated use "triggerModal" instead */
-export function triggerModalWithValidation_curry() { doNothing; }
+function triggerModalWithValidation_curry() { doNothing; }
+exports.triggerModalWithValidation_curry = triggerModalWithValidation_curry;
 /**@deprecated use "divine.try" instead */
-export function tryF() { doNothing; } //@btr-ignore
+function tryF() { doNothing; } //@btr-ignore
+exports.tryF = tryF;
 // ! DELETEEVERYTHINGBELOW, as it is only meant for server-side use
 _; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
 _; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
@@ -1008,12 +1131,12 @@ _; /********** DIVINE ******************** DIVINE ******************** DIVINE **
 _; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
 _; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
 _; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-export const divine = {
+exports.divine = {
     bot: nullAs(),
     error: (err) => {
         const message = getTraceableStack(err, 'divineError');
         const { DEV_OR_PROD } = getEnviromentVariables();
-        DEV_OR_PROD !== 'PROD' ? killProcess(message) : divine.ping(message);
+        DEV_OR_PROD !== 'PROD' ? killProcess(message) : exports.divine.ping(message);
     },
     init: (() => {
         delay(1000).then(async () => {
@@ -1025,14 +1148,14 @@ export const divine = {
                 return;
             }
             const divinePrepend = '***DivineBot:***';
-            const bot = eris(ERIS_TOKEN);
+            const bot = (0, eris_1.default)(ERIS_TOKEN);
             bot.on('messageReactionRemove', (a, b, c) => role('remove', a, b, c));
             bot.on('messageReactionAdd', (a, b, c) => role('add', a, b, c));
             bot.on('disconnect', () => { colorLog('red', `${divinePrepend}: Disconnected D: ... retrying!`); });
-            bot.on('connect', () => divine.ping(`(${APP_NAME}) - I'm alive bitch >:D`));
+            bot.on('connect', () => exports.divine.ping(`(${APP_NAME}) - I'm alive bitch >:D`));
             const idOfRoleAssigningMessage = '822523162724925473';
             await attemptConnection();
-            divine.bot = bot;
+            exports.divine.bot = bot;
             function role(action, message, emoji, reactor) {
                 try {
                     if (message.id !== idOfRoleAssigningMessage) {
@@ -1072,13 +1195,13 @@ export const divine = {
         });
     })(),
     ping: async (message) => {
-        while (!divine.bot?.ready) {
+        while (!exports.divine.bot?.ready) {
             await delay(1000);
         }
         const { APP_NAME } = getEnviromentVariables();
         const theMessage = `<@470322452040515584> - (${APP_NAME}) \n ${message}`;
         const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } };
-        divine.bot.createMessage('1055939528776495206', divineOptions);
+        exports.divine.bot.createMessage('1055939528776495206', divineOptions);
     },
     /**tryCatch wrapper for functions with divineError as the default error handler */
     try: async (fn, args) => {
@@ -1086,7 +1209,7 @@ export const divine = {
             return await fn(...args);
         }
         catch (err) {
-            divine.error(err);
+            exports.divine.error(err);
         }
     }
 };
@@ -1101,7 +1224,7 @@ _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ****************
 _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
 _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
 /**FOR NODE-DEBUGGING ONLY. Log a big red message surrounded by a lot of asterisks for visibility */
-export function bigConsoleError(message) {
+function bigConsoleError(message) {
     function logAsterisks(lines) { for (let i = 0; i < lines; i++) {
         log('*'.repeat(150));
     } }
@@ -1110,8 +1233,9 @@ export function bigConsoleError(message) {
     log(message);
     logAsterisks(3);
 }
+exports.bigConsoleError = bigConsoleError;
 /**Basically custom ESlint warnings */
-export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
+function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
     cachedFiles.forEach(file => {
         const maxWarningsLogged = 5;
         const { path, content } = file;
@@ -1163,8 +1287,9 @@ export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
         }
     });
 }
+exports.checkCodeThatCouldBeUpdated = checkCodeThatCouldBeUpdated;
 //TODO: describe me
-export function checkNoBtrErrorsOrWarnings(errors, warningsCount) {
+function checkNoBtrErrorsOrWarnings(errors, warningsCount) {
     const checksPassed = !errors.length && !warningsCount.count;
     errors.length ? logErrors() : successLog('All btr-checks passed');
     if (!checksPassed) {
@@ -1181,18 +1306,21 @@ export function checkNoBtrErrorsOrWarnings(errors, warningsCount) {
         killProcess('\n\n' + errors.map((err, i) => (i + 1) + '. ' + err).join('\n\n') + '\n\n');
     }
 }
+exports.checkNoBtrErrorsOrWarnings = checkNoBtrErrorsOrWarnings;
 /**Wrapper for fs.promise.readFile that announces the start of the file-reading */
-export async function fsReadFileAsync(filePath) {
+async function fsReadFileAsync(filePath) {
     colorLog('white', `reading '${filePath}'..`);
-    return await promises.readFile(filePath, 'utf8');
+    return await fs_1.promises.readFile(filePath, 'utf8');
 }
+exports.fsReadFileAsync = fsReadFileAsync;
 /**Wrapper for fsWriteFileAsync that announces the start of the file-writing */
-export async function fsWriteFileAsync(filePath, content) {
+async function fsWriteFileAsync(filePath, content) {
     colorLog('white', `writing to '${filePath}'..`);
-    return await promises.writeFile(filePath, content);
+    return await fs_1.promises.writeFile(filePath, content);
 }
+exports.fsWriteFileAsync = fsWriteFileAsync;
 /**Batch-load files for checking purposes */
-export async function getCachedFiles(errors, filepaths) {
+async function getCachedFiles(errors, filepaths) {
     const cachedFiles = [];
     await asyncForEach(filepaths, addToCachedFiles);
     return cachedFiles;
@@ -1210,7 +1338,7 @@ export async function getCachedFiles(errors, filepaths) {
     }
     async function fileExists(path) {
         try {
-            await promises.access(path);
+            await fs_1.promises.access(path);
             return true;
         }
         catch {
@@ -1219,8 +1347,9 @@ export async function getCachedFiles(errors, filepaths) {
         }
     }
 }
+exports.getCachedFiles = getCachedFiles;
 /**For a project's debugging purposes */
-export function getDebugOptionsAndLog(devOrProd, options) {
+function getDebugOptionsAndLog(devOrProd, options) {
     function forDevForProd(forDev, forProd) { return { dev: forDev, prod: forProd }[devOrProd]; }
     return {
         debugOptions: mapObject(options, (x) => forDevForProd(x[0], x[1])),
@@ -1235,18 +1364,22 @@ export function getDebugOptionsAndLog(devOrProd, options) {
         }
     };
 }
+exports.getDebugOptionsAndLog = getDebugOptionsAndLog;
 /** Get the contents of the project's .env */
-export function getEnviromentVariables() {
-    const require = createRequire(import.meta.url);
+function getEnviromentVariables() {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //@ts-ignore
+    const require = (0, module_1.createRequire)(import.meta.url);
     require('dotenv').config({ path: './.env' });
     return process.env;
 }
+exports.getEnviromentVariables = getEnviromentVariables;
 /**Get all the file and folders within a folder, stopping at predefined folders (assets, git, node_modules, test) */
-export function getFilesAndFoldersNames(directory, extension) {
+function getFilesAndFoldersNames(directory, extension) {
     const results = [];
-    readdirSync(directory).forEach((file) => {
+    (0, fs_1.readdirSync)(directory).forEach((file) => {
         file = directory + '/' + file;
-        const stat = statSync(file);
+        const stat = (0, fs_1.statSync)(file);
         const stopHere = /node_modules|git|test|assets/.test(file); //regexHere
         if (stat && stat.isDirectory() && !stopHere) {
             results.push(...getFilesAndFoldersNames(file, null));
@@ -1257,8 +1390,9 @@ export function getFilesAndFoldersNames(directory, extension) {
     });
     return extension ? results.filter(path => path.includes(extension)) : results;
 }
+exports.getFilesAndFoldersNames = getFilesAndFoldersNames;
 /**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
-export function getSeparatingCommentBlock(message) {
+function getSeparatingCommentBlock(message) {
     let line = '';
     const asterisks = '*'.repeat(10);
     while (line.length < 100) {
@@ -1268,15 +1402,17 @@ export function getSeparatingCommentBlock(message) {
     console.log(theBlock); //@btr-ignore
     return theBlock;
 }
+exports.getSeparatingCommentBlock = getSeparatingCommentBlock;
 /**fetch the latest package.json of myUtils */
-export async function getLatestPackageJsonFromGithub() {
-    const fetched = await fetch('https://api.github.com/repos/botoron/utils/contents/package.json', { method: 'GET' });
+async function getLatestPackageJsonFromGithub() {
+    const fetched = await (0, node_fetch_1.default)('https://api.github.com/repos/botoron/utils/contents/package.json', { method: 'GET' });
     return Buffer.from((await fetched.json()).content, 'base64').toString('utf8');
 }
+exports.getLatestPackageJsonFromGithub = getLatestPackageJsonFromGithub;
 /**It's monging time >:D */
-export async function getMongoClient() {
+async function getMongoClient() {
     const { MONGO_URI } = getEnviromentVariables();
-    const mongo = new mongodb.MongoClient(MONGO_URI);
+    const mongo = new mongodb_1.default.MongoClient(MONGO_URI);
     let mongoClient = nullAs();
     mongo.connect((err, client) => { if (err) {
         throw err;
@@ -1288,31 +1424,34 @@ export async function getMongoClient() {
     successLog('It\'s Monging time >:D');
     return mongoClient;
 }
+exports.getMongoClient = getMongoClient;
 /**Start and return an http Express server */
-export function getStartedHttpServer() {
+function getStartedHttpServer() {
     const { PORT } = getEnviromentVariables();
-    const app = express();
-    const httpServer = http.createServer(app);
-    app.use(express.static(path.resolve() + '/public'));
-    app.get('/', (_request, response) => response.sendFile(path.resolve() + '/public/index.html'));
+    const app = (0, express_1.default)();
+    const httpServer = http_1.default.createServer(app);
+    app.use(express_1.default.static(path_1.default.resolve() + '/public'));
+    app.get('/', (_request, response) => response.sendFile(path_1.default.resolve() + '/public/index.html'));
     httpServer.listen(PORT, () => delay(1500).then(() => colorLog('white', 'Server up and running~'))); //@btr-ignore
     return httpServer;
 }
+exports.getStartedHttpServer = getStartedHttpServer;
 /**Import modules or jsons */
-export async function importFileFromProject(filename, extension) {
+async function importFileFromProject(filename, extension) {
     try {
         const path = `../../../${filename}.${extension}`;
         const options = extension === 'json' ? { assert: { type: 'json' } } : {};
-        const mainPackageJson = (await import(path, options)).default;
+        const mainPackageJson = (await (_a = path, Promise.resolve().then(() => __importStar(require(_a))))).default;
         return mainPackageJson;
     }
     catch (e) {
         return e;
     }
 }
+exports.importFileFromProject = importFileFromProject;
 /**Prompt and handle admin/dev commands */
-export function inquirePromptCommands(functions, promptAgainAfterEachFn) {
-    inquirer.
+function inquirePromptCommands(functions, promptAgainAfterEachFn) {
+    inquirer_1.default.
         prompt({ name: 'fn', type: 'list', message: 'Run a function:', choices: objectKeys(functions) }).
         then(async (choice) => {
         await functions[choice.fn]();
@@ -1322,39 +1461,44 @@ export function inquirePromptCommands(functions, promptAgainAfterEachFn) {
         inquirePromptCommands(functions, promptAgainAfterEachFn);
     });
 }
+exports.inquirePromptCommands = inquirePromptCommands;
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
-export function killProcess(message) { bigConsoleError(message); process.exit(); }
+function killProcess(message) { bigConsoleError(message); process.exit(); }
+exports.killProcess = killProcess;
 //TODO: describe me
-export function mapCommandsForInquirePrompt(commands) {
+function mapCommandsForInquirePrompt(commands) {
     const object = {};
     objectEntries(commands).forEach(({ key, value }) => object[key + ': ' + value.description] = value.fn);
     return object;
 }
+exports.mapCommandsForInquirePrompt = mapCommandsForInquirePrompt;
 /**Prompts a question in the terminal, awaits for the input and returns it */
-export async function questionAsPromise(question) {
-    const readline = getReadLine.createInterface({ input: process.stdin, output: process.stdout });
-    const input = await new Promise(res => { readline.question(chalk.magenta(question) + '\n', res); });
+async function questionAsPromise(question) {
+    const readline = readline_1.default.createInterface({ input: process.stdin, output: process.stdout });
+    const input = await new Promise(res => { readline.question(chalk_1.default.magenta(question) + '\n', res); });
     readline.close();
     return input;
 }
+exports.questionAsPromise = questionAsPromise;
 //TODO: describe me
-export function transpileFiles(sourceFiles, outputDirectory) {
+function transpileFiles(sourceFiles, outputDirectory) {
     if (!sourceFiles.length) {
         killProcess('transpileFiles\'s sourceFiles argument should NOT be an empty array!');
     }
     colorLog('white', 'Transpiling the following file(s): ' + sourceFiles);
-    const command = `tsc ${TSC_FLAGS} ${sourceFiles.join(' ')} --outDir ${outputDirectory}`; //@btr-ignore
+    const command = `tsc ${constants_js_1.TSC_FLAGS} ${sourceFiles.join(' ')} --outDir ${outputDirectory}`; //@btr-ignore
     console.log({ command }); //@btr-ignore TODO: delete this
     try {
-        execSync(command);
+        (0, child_process_1.execSync)(command);
     }
     catch (e) {
         errorLog(`${e}`);
     }
     colorLog('white', 'Done transpiling: ' + sourceFiles.join(', '));
 }
+exports.transpileFiles = transpileFiles;
 /**Check the user input in socket.on functions and send error toasts if the validation fails */
-export function zodCheck_socket(socket, schema, data) {
+function zodCheck_socket(socket, schema, data) {
     return zodCheck_curry(errorHandler)(schema, data);
     function caller() {
         return ((getTraceableStack('', 'zodCheck_socket').split('\n') || [])[3]?.match(/at \w{1,}/) || //regexHere
@@ -1364,3 +1508,4 @@ export function zodCheck_socket(socket, schema, data) {
         socket.emit('toast', '💀', `${error} - - - (${caller()}, ${{ ...schema._def }})`, 'danger');
     }
 }
+exports.zodCheck_socket = zodCheck_socket;

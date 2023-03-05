@@ -16,7 +16,7 @@ export const PACKAGE_DOT_JSON = 'package.json'
 export const GLOBAL_VARS_TS = './global/vars.ts'
 export const SERVER_EVENTS_TS = './server/events.ts'
 export const CLIENT_SRC_SOCKET = CLIENT_SRC + '/socket.ts'
-export const TSC_FLAGS = '--moduleResolution node --target esnext'
+export const TSC_FLAGS = '--module nodenext --moduleResolution node --target esnext'
 
 export const utilsRepoName = 'Utils 🛠️'
 export const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null

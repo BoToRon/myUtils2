@@ -1,7 +1,7 @@
 let _
-_ //			tsc --moduleResolution node --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
+_ //tsc --module nodenext --moduleResolution node --resolveJsonModule --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
 _ //			tsc --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
-_ // 			node dev/transpiled/dev/commands.js
+_ // 			node dev/transpiled/dev/commands.js			2
 _
 import inquirer from 'inquirer'
 _
