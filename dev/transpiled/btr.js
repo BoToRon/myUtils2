@@ -1,6 +1,4 @@
 let _;
-import fs from 'fs'; //DELETETHISFORCLIENT 
-_;
 import eris from 'eris'; //DELETETHISFORCLIENT
 _;
 import util from 'util'; //DELETETHISFORCLIEfNT
@@ -27,6 +25,8 @@ _;
 import { execSync } from 'child_process'; //DELETETHISFORCLIENT
 _;
 import mongodb from 'mongodb'; //DELETETHISFORCLIENT
+_;
+import { promises, readdirSync, statSync } from 'fs'; //DELETETHISFORCLIENT 
 _;
 _;
 import { getUniqueId_generator, isNode, timers, TSC_FLAGS, zValidVariants } from './constants.js';
@@ -1113,9 +1113,11 @@ export function bigConsoleError(message) {
 /**Basically custom ESlint warnings */
 export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
     cachedFiles.forEach(file => {
+        const maxWarningsLogged = 5;
         const { path, content } = file;
         checkReplaceableCode(['triggerModalWithValidation, bvModal.show', 'bvModal.hide'], '.triggerModal(modalId, show | hide)'); //@btr-ignore
         checkReplaceableCode(['console.log(stringify'], 'colorLog OR consoleLogFull OR debugLog'); //@btr-ignore
+        checkReplaceableCode(['fs from \'fs\''], '{ (specific fs methods) } from \'fs\''); //@btr-ignore
         checkReplaceableCode(['console.log'], 'colorLog OR consoleLogFull OR debugLog'); //@btr-ignore
         checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine'); //@btr-ignore
         checkReplaceableCode(['readonly ', 'ReadonlyArray<'], 'Readonly<'); //@btr-ignore
@@ -1134,8 +1136,8 @@ export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
         checkReplaceableCode(['z.record'], 'zRecord'); //@btr-ignore
         checkReplaceableCode(['null as'], 'nullAs'); //@btr-ignore
         checkReplaceableCode([').then('], 'await'); //@btr-ignore
-        if (warningsCount.count > 5) {
-            colorLog('yellow', `+${warningsCount.count - 5} warnings not shown..`);
+        if (warningsCount.count > maxWarningsLogged) {
+            colorLog('yellow', `+${warningsCount.count - maxWarningsLogged} warnings not shown..`);
         }
         function checkReplaceableCode(replaceableCodeStrings, suggestedReplacement) {
             replaceableCodeStrings.forEach(replaceableString => {
@@ -1147,7 +1149,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
                     return;
                 }
                 warningsCount.count++;
-                if (warningsCount.count > 5) {
+                if (warningsCount.count > maxWarningsLogged) {
                     return;
                 }
                 colorLog('yellow', surroundedString(warningsCount.count + ' . WARNING: OUTDATED/REPLACEABLE CODE', '-', 50));
@@ -1182,12 +1184,12 @@ export function checkNoBtrErrorsOrWarnings(errors, warningsCount) {
 /**Wrapper for fs.promise.readFile that announces the start of the file-reading */
 export async function fsReadFileAsync(filePath) {
     colorLog('white', `reading '${filePath}'..`);
-    return await fs.promises.readFile(filePath, 'utf8');
+    return await promises.readFile(filePath, 'utf8');
 }
 /**Wrapper for fsWriteFileAsync that announces the start of the file-writing */
 export async function fsWriteFileAsync(filePath, content) {
     colorLog('white', `writing to '${filePath}'..`);
-    return await fs.promises.writeFile(filePath, content);
+    return await promises.writeFile(filePath, content);
 }
 /**Batch-load files for checking purposes */
 export async function getCachedFiles(errors, filepaths) {
@@ -1208,7 +1210,7 @@ export async function getCachedFiles(errors, filepaths) {
     }
     async function fileExists(path) {
         try {
-            await fs.promises.access(path);
+            await promises.access(path);
             return true;
         }
         catch {
@@ -1242,9 +1244,9 @@ export function getEnviromentVariables() {
 /**Get all the file and folders within a folder, stopping at predefined folders (assets, git, node_modules, test) */
 export function getFilesAndFoldersNames(directory, extension) {
     const results = [];
-    fs.readdirSync(directory).forEach((file) => {
+    readdirSync(directory).forEach((file) => {
         file = directory + '/' + file;
-        const stat = fs.statSync(file);
+        const stat = statSync(file);
         const stopHere = /node_modules|git|test|assets/.test(file); //regexHere
         if (stat && stat.isDirectory() && !stopHere) {
             results.push(...getFilesAndFoldersNames(file, null));
@@ -1342,11 +1344,12 @@ export function transpileFiles(sourceFiles, outputDirectory) {
     }
     colorLog('white', 'Transpiling the following file(s): ' + sourceFiles);
     const command = `tsc ${TSC_FLAGS} ${sourceFiles.join(' ')} --outDir ${outputDirectory}`; //@btr-ignore
+    console.log({ command }); //@btr-ignore TODO: delete this
     try {
         execSync(command);
     }
-    catch {
-        doNothing();
+    catch (e) {
+        errorLog(`${e}`);
     }
     colorLog('white', 'Done transpiling: ' + sourceFiles.join(', '));
 }

@@ -1,6 +1,4 @@
 let _
-import fs from 'fs'	//DELETETHISFORCLIENT 
-_
 import eris from 'eris'	//DELETETHISFORCLIENT
 _
 import util from 'util' //DELETETHISFORCLIEfNT
@@ -28,6 +26,8 @@ _
 import { execSync } from 'child_process'	//DELETETHISFORCLIENT
 _
 import mongodb, { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
+_
+import { promises, readdirSync, statSync } from 'fs'	//DELETETHISFORCLIENT 
 _
 import {
 	btr_adminFetch, btr_commands, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, cachedFile, maybePromise, nullable, timer, zSchema
@@ -1161,11 +1161,12 @@ export function bigConsoleError(message: string) {
 /**Basically custom ESlint warnings */
 export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[], warningsCount: warningsCount) {
 	cachedFiles.forEach(file => {
-		const maxAountOfWarnings = 5
+		const maxWarningsLogged = 5
 		const { path, content } = file
 
 		checkReplaceableCode(['triggerModalWithValidation, bvModal.show', 'bvModal.hide'], '.triggerModal(modalId, show | hide)')	//@btr-ignore
 		checkReplaceableCode(['console.log(stringify'], 'colorLog OR consoleLogFull OR debugLog')	//@btr-ignore
+		checkReplaceableCode(['fs from \'fs\''], '{ (specific fs methods) } from \'fs\'') //@btr-ignore
 		checkReplaceableCode(['console.log'], 'colorLog OR consoleLogFull OR debugLog')	//@btr-ignore
 		checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine')	//@btr-ignore
 		checkReplaceableCode(['readonly ', 'ReadonlyArray<'], 'Readonly<')	//@btr-ignore
@@ -1185,7 +1186,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[], warningsC
 		checkReplaceableCode(['null as'], 'nullAs')	//@btr-ignore
 		checkReplaceableCode([').then('], 'await') //@btr-ignore
 
-		if (warningsCount.count > maxAountOfWarnings) { colorLog('yellow', `+${warningsCount.count - maxAountOfWarnings} warnings not shown..`) }
+		if (warningsCount.count > maxWarningsLogged) { colorLog('yellow', `+${warningsCount.count - maxWarningsLogged} warnings not shown..`) }
 
 		function checkReplaceableCode(replaceableCodeStrings: string[], suggestedReplacement: string) {
 			replaceableCodeStrings.forEach(replaceableString => {
@@ -1197,7 +1198,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[], warningsC
 				if (!matches.length) { return }
 
 				warningsCount.count++
-				if (warningsCount.count > maxAountOfWarnings) { return }
+				if (warningsCount.count > maxWarningsLogged) { return }
 				colorLog('yellow', surroundedString(warningsCount.count + ' . WARNING: OUTDATED/REPLACEABLE CODE', '-', 50))
 
 				console.log({ //@btr-ignore
@@ -1228,12 +1229,12 @@ export function checkNoBtrErrorsOrWarnings(errors: string[], warningsCount: warn
 /**Wrapper for fs.promise.readFile that announces the start of the file-reading */
 export async function fsReadFileAsync(filePath: string) {
 	colorLog('white', `reading '${filePath}'..`)
-	return await fs.promises.readFile(filePath, 'utf8')
+	return await promises.readFile(filePath, 'utf8')
 }
 /**Wrapper for fsWriteFileAsync that announces the start of the file-writing */
 export async function fsWriteFileAsync(filePath: string, content: string) {
 	colorLog('white', `writing to '${filePath}'..`)
-	return await fs.promises.writeFile(filePath, content)
+	return await promises.writeFile(filePath, content)
 }
 /**Batch-load files for checking purposes */
 export async function getCachedFiles(errors: string[], filepaths: string[]) {
@@ -1254,7 +1255,7 @@ export async function getCachedFiles(errors: string[], filepaths: string[]) {
 	}
 
 	async function fileExists(path: string) {
-		try { await fs.promises.access(path); return true }
+		try { await promises.access(path); return true }
 		catch { addToErrors('Missing file, couldn\'t read: ' + path); return false }
 	}
 }
@@ -1282,9 +1283,9 @@ export function getEnviromentVariables() {
 export function getFilesAndFoldersNames(directory: string, extension: nullable<'.ts' | '.vue'>) {
 	const results: string[] = []
 
-	fs.readdirSync(directory).forEach((file) => {
+	readdirSync(directory).forEach((file) => {
 		file = directory + '/' + file
-		const stat = fs.statSync(file)
+		const stat = statSync(file)
 
 		const stopHere = /node_modules|git|test|assets/.test(file) //regexHere
 		if (stat && stat.isDirectory() && !stopHere) { results.push(...getFilesAndFoldersNames(file, null)) }
@@ -1378,7 +1379,8 @@ export function transpileFiles(sourceFiles: string[], outputDirectory: string) {
 
 	colorLog('white', 'Transpiling the following file(s): ' + sourceFiles)
 	const command = `tsc ${TSC_FLAGS} ${sourceFiles.join(' ')} --outDir ${outputDirectory}` //@btr-ignore
-	try { execSync(command) } catch { doNothing() }
+	console.log({ command }) //@btr-ignore TODO: delete this
+	try { execSync(command) } catch (e) { errorLog(`${e}`) }
 	colorLog('white', 'Done transpiling: ' + sourceFiles.join(', '))
 }
 /**Check the user input in socket.on functions and send error toasts if the validation fails */

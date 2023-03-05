@@ -1,9 +1,11 @@
 let _;
 _; //			tsc --moduleResolution node --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
+_; //			tsc --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
 _; // 			node dev/transpiled/dev/commands.js
-import fs from 'fs';
 _;
 import inquirer from 'inquirer';
+_;
+import { unlinkSync } from 'fs';
 _;
 import { execSync, execFile } from 'child_process'; //DELETETHISFORCLIENT
 _;
@@ -28,10 +30,10 @@ const sharedCommands = {
 };
 const commands_forPackage = {
     ...sharedCommands,
-    publishOnly: { description: 'npm version + npm publish', fn: package_publish },
+    publishOnly: { description: 'npm version + npm publish', fn: package_publishOnly },
     transpileAll: { description: 'Transpile base files if they pass all checks and emit the client versions', fn: package_transpileAll },
     transpileBase: { description: 'Transpile the file bases, NOT for production', fn: package_transpileBaseFiles },
-    transpile_commit_and_PUBLISH: { description: '1) Transpile all. 2) Git commit + push. 3) npm version + PUBLISH', fn: package_publish },
+    transpile_commit_and_PUBLISH: { description: '1) Transpile all. 2) Git commit + push. 3) npm version + PUBLISH', fn: package_transpile_git_andPublish },
 };
 const commands_forProject = {
     ...sharedCommands,
@@ -66,22 +68,20 @@ async function btrCheck() {
     checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths), warningsCount);
     return checkNoBtrErrorsOrWarnings(errors, warningsCount);
 }
-async function package_publish() {
-    await package_transpileAll();
-    await prompCommitMessageAndPush(utilsRepoName);
+async function getVersioningFromPrompt() {
+    return (await inquirer.
+        prompt({
+        name: 'versioning',
+        type: 'list',
+        message: 'Select an NPM versioning:',
+        choices: npmVersionOptions
+    })).versioning;
+}
+async function package_publishOnly() {
     execSync(`npm version ${await getVersioningFromPrompt()}`);
     successLog('package version\'d');
     execSync('npm publish');
     successLog('package publish\'d');
-    async function getVersioningFromPrompt() {
-        return (await inquirer.
-            prompt({
-            name: 'versioning',
-            type: 'list',
-            message: 'Select an NPM versioning:',
-            choices: npmVersionOptions
-        })).versioning;
-    }
 }
 async function package_transpileAll() {
     if (!await btrCheck()) {
@@ -115,6 +115,14 @@ async function package_transpileAll() {
             split('\n');
     }
 }
+async function package_transpile_git_andPublish() {
+    await package_transpileAll();
+    await prompCommitMessageAndPush(utilsRepoName);
+    execSync(`npm version ${await getVersioningFromPrompt()}`);
+    successLog('package version\'d');
+    execSync('npm publish');
+    successLog('package publish\'d');
+}
 async function project_btrCheckAndTranspileToTestFolder() {
     if (!await btrCheck()) {
         return;
@@ -129,7 +137,7 @@ async function project_buildServerFiles() {
     }
     fsWriteFileAsync('types.ts', await fsReadFileAsync('types.d.ts'));
     transpileFiles(['types.ts'], '.');
-    fs.unlinkSync('types.ts');
+    unlinkSync('types.ts');
     await copyFileToDist('.env');
     await copyFileToDist('.gitignore');
     await copyFileToDist(PACKAGE_DOT_JSON);
