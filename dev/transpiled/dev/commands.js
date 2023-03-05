@@ -1,5 +1,5 @@
 let _;
-_; //tsc --module nodenext --moduleResolution node --resolveJsonModule --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
+_; //tsc --module NodeNext --moduleResolution nodenext --resolveJsonModule --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
 _; //tsc --moduleResolution node --resolveJsonModule --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
 _; //			tsc --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
 _; // 			node dev/transpiled/dev/commands.js			2
