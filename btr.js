@@ -690,6 +690,14 @@ export function logInitialization(filename) { colorLog(isNode ? 'cyan' : 'magent
 export function successLog(message) { return colorLog('green', message + ' ✔️'); }
 /**@returns an string with its linebreaks converted into simple one-char spaces */
 export function toSingleLine(sentence) { return `${sentence}`.replace(/ {0,}\n {0,}/g, ' '); } //regexHere
+//TODO: describe me
+export function safeRegexMatch(theString, theRegex, wantedIndex) {
+    const matches = theString.match(theRegex);
+    if (!matches) {
+        divine.error(`safeRegexMatch error - theString: ${theString}, theRegex: ${theRegex} `);
+    }
+    return (matches || [])[wantedIndex] || ''; //@btr-ignore
+}
 /**Return an string with X amount of (character) as margin per side */
 export function surroundedString(string, margin, perSide) {
     const x = margin.repeat(perSide);
@@ -1020,7 +1028,7 @@ _; /********** DIVINE ******************** DIVINE ******************** DIVINE **
 _; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
 _; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
 _; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
-const divine = (function () {
+export const divine = (function () {
     const bot = nullAs();
     return isNode ? {
         bot,
@@ -1152,7 +1160,8 @@ export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
         checkReplaceableCode(['JSON.stringify'], 'stringify'); //@btr-ignore
         checkReplaceableCode(['Promise.all'], 'allPromises'); //@btr-ignore
         checkReplaceableCode(['Object.keys'], 'objectKeys'); //@btr-ignore
-        checkReplaceableCode(['exec('], 'execSync('); //@btr-ignore /)
+        checkReplaceableCode(['])['], 'safeRegexMatch'); //@btr-ignore
+        checkReplaceableCode(['exec('], 'execSync('); //@btr-ignore 
         checkReplaceableCode([' tryF'], 'divine.try'); //@btr-ignore
         checkReplaceableCode(['z.record'], 'zRecord'); //@btr-ignore
         checkReplaceableCode(['null as'], 'nullAs'); //@btr-ignore

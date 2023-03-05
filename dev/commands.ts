@@ -229,7 +229,7 @@ async function transpileAndRunTestRunTs() {
 async function transpileFiles(sourceFilesArr: string[], outputDirectory: string) {
 	if (!sourceFilesArr.length) { killProcess('transpileFiles\'s sourceFiles argument should NOT be an empty array!') }
 
-	const allJsFilenames = sourceFilesArr.map(filename => `${outputDirectory}/${safeRegexMatch(filename, /\w{1,}(?=\.ts)/g, 0)}.js`)
+	const allJsFilenames = sourceFilesArr.map(filename => `${outputDirectory}/${safeRegexMatch(filename, /\w{1,}(?=\.ts)/g, 0)}.js`) //regexHere
 	await asyncForEach(allJsFilenames, false, deleteOldJsVersion)
 
 	const sourceFiles = sourceFilesArr.join(' ')

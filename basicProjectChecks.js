@@ -4,7 +4,7 @@ _;
 _;
 import { CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_FNS_TS, GLOBAL_VARS_TS, SERVER_EVENTS_TS, SERVER_REF_TS, TSC_FLAGS, TSCONFIG_JSON, TYPES_IO_TS, TYPES_Z_TS, zMyEnv } from './constants.js';
 _;
-import { getCachedFiles, checkCodeThatCouldBeUpdated, checkNoBtrErrorsOrWarnings, compareArrays, getEnviromentVariables, getFilesAndFoldersNames, importFileFromProject, nullAs, pick, surroundedString, zodCheck_curry, zRegexGenerator, zRecord, killProcess } from './btr.js';
+import { getCachedFiles, checkCodeThatCouldBeUpdated, checkNoBtrErrorsOrWarnings, compareArrays, getEnviromentVariables, getFilesAndFoldersNames, importFileFromProject, killProcess, nullAs, pick, safeRegexMatch, surroundedString, zodCheck_curry, zRegexGenerator, zRecord } from './btr.js';
 let DEV_OR_PROD = nullAs();
 const errors = [];
 const cachedFiles = [];
@@ -52,6 +52,7 @@ export async function basicProjectChecks() {
     return checkNoBtrErrorsOrWarnings(errors, warningsCount);
 }
 function zodCheck_toErrors(path, schema, data) { zodCheck_curry((e) => addToErrors(path, e))(schema, data); }
+function getCachedFileContent(filepath) { return getFromCachedFiles([filepath])[0].content; } //@btr-ignore
 function checkSpecificMatches_serverLoginTs() { checkMatchInSpecificFile('./server/login.ts', 'socket.emit(\'initData\','); }
 function externalTemplatePath(filename) { return '../../_templateFiles/' + filename; }
 function addToErrors(path, error) { errors.push(`(at ${path}): ${error}`); }
@@ -108,8 +109,8 @@ function checkEnviromentVariables() {
 }
 function checkFilesAreIdentical(path, pathToTemplate) {
     const file = getFromCachedFiles([path]).find(x => !x.path.includes('@botoron'));
-    const template = getFromCachedFiles([pathToTemplate])[0];
-    if (withoutSlash_r_n(file.content) === withoutSlash_r_n(template.content)) {
+    const templateContent = getCachedFileContent(pathToTemplate);
+    if (withoutSlash_r_n(file.content) === withoutSlash_r_n(templateContent)) {
         return;
     }
     addToErrors(path, 'File should be identical to the one at ' + pathToTemplate);
@@ -137,7 +138,7 @@ function checkFilesAndFolderStructure() {
 }
 /**Check all files/folders that should be ignored by default are so */
 function checkGitIgnore() {
-    const currentIgnores = getFromCachedFiles([GITIGNORE])[0].content.split('\r\n');
+    const currentIgnores = getCachedFileContent(GITIGNORE).split('\r\n');
     const desiredIgnores = ['.env', 'client/node_modules', 'node_modules', 'test/*'];
     const missingItems = compareArrays(desiredIgnores, currentIgnores).missingItems;
     if (missingItems.length) {
@@ -179,7 +180,7 @@ function checkLocalImportsHaveJsExtention() {
     });
 }
 function checkMatchInSpecificFile(filepath, wantedMatch) {
-    const { content } = getFromCachedFiles([filepath])[0];
+    const content = getCachedFileContent(filepath);
     if (!content.includes(wantedMatch)) {
         addToErrors(filepath, `"${surroundedString(wantedMatch, ' ', 10)}" is missing)`);
     }
@@ -234,11 +235,11 @@ async function checkPackageJsons() {
 /**Check all socket events are handled aka socket.on(<EVENTNAME>) */
 function checkSocketEvents() {
     const filepath = TYPES_IO_TS;
-    const linesInTypesIo = getFromCachedFiles([filepath])[0].content.split('\n');
+    const linesInTypesIo = getCachedFileContent(filepath).split('\n');
     checkSocketOnOfInterface('ServerToClientEvents', CLIENT_SRC_SOCKET);
     checkSocketOnOfInterface('ClientToServerEvents', SERVER_EVENTS_TS);
     function checkSocketOnOfInterface(nameOfInterface, pathToHandlingFile) {
-        const handlingFile = getFromCachedFiles([pathToHandlingFile])[0].content;
+        const handlingFile = getCachedFileContent(pathToHandlingFile);
         let isKeyOfWantedInterface = false;
         linesInTypesIo.forEach(line => {
             if (line.includes(`export interface ${nameOfInterface}`)) {
@@ -247,14 +248,14 @@ function checkSocketEvents() {
             }
             if (/^\}/.test(line)) {
                 isKeyOfWantedInterface = false;
-            } //"{"" <-- here so it doesn't mess with the color of brackets //regexHere
+            } //{  //regexHere
             if (!isKeyOfWantedInterface) {
                 return;
             }
             if (!/^\t\w/.test(line)) {
                 return;
             } //regexHere
-            const event = (line.match(/(?<=\t)\w{1,}/) || [''])[0]; //regexHere
+            const event = safeRegexMatch(line, /(?<=\t)\w{1,}/, 0); //regexHere
             if (handlingFile.includes(`socket.on('${event}'`)) {
                 return;
             }

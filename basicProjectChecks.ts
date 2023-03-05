@@ -9,8 +9,8 @@ import {
 } from './constants.js'
 _
 import {
-	getCachedFiles, checkCodeThatCouldBeUpdated, checkNoBtrErrorsOrWarnings, compareArrays, getEnviromentVariables,
-	getFilesAndFoldersNames, importFileFromProject, nullAs, pick, surroundedString, zodCheck_curry, zRegexGenerator, zRecord, killProcess
+	getCachedFiles, checkCodeThatCouldBeUpdated, checkNoBtrErrorsOrWarnings, compareArrays, getEnviromentVariables, getFilesAndFoldersNames,
+	importFileFromProject, killProcess, nullAs, pick, safeRegexMatch, surroundedString, zodCheck_curry, zRegexGenerator, zRecord
 } from './btr.js'
 
 type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
@@ -277,11 +277,11 @@ function checkSocketEvents() {
 
 		linesInTypesIo.forEach(line => {
 			if (line.includes(`export interface ${nameOfInterface}`)) { isKeyOfWantedInterface = true; return }
-			if (/^\}/.test(line)) { isKeyOfWantedInterface = false } //"{"" <-- here so it doesn't mess with the color of brackets //regexHere
+			if (/^\}/.test(line)) { isKeyOfWantedInterface = false } //{  //regexHere
 			if (!isKeyOfWantedInterface) { return }
 
 			if (!/^\t\w/.test(line)) { return } //regexHere
-			const event = (line.match(/(?<=\t)\w{1,}/) || [''])[0] //regexHere
+			const event = safeRegexMatch(line, /(?<=\t)\w{1,}/, 0) //regexHere
 
 			if (handlingFile.includes(`socket.on('${event}'`)) { return }
 			errors.push(`${nameOfInterface}'s " ${event} " is declared but not handled in ${pathToHandlingFile}`)

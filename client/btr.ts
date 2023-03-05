@@ -1,6 +1,5 @@
 let _
 _
-import util from 'util' //DELETETHISFORCLIEfNT
 _
 _
 _
@@ -15,10 +14,10 @@ _
 _
 import {
 	btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo,
-	btr_trackedVueComponent, btr_validVariant, btr_bvModal, maybePromise, nullable, recordOfCommands, timer, zSchema
-} from './types.js'
+	btr_trackedVueComponent, btr_validVariant, btr_bvModal, cachedFile, maybePromise, nullable, recordOfCommands, timer, zSchema
+} ..types.js'
 _
-import { getUniqueId_generator, isNode, timers, zMyEnv, zValidVariants } from './constants.js'
+import { getUniqueId_generator, isNode, timers, zMyEnv, zValidVariants } ..constants.js'
 _
 import { type Primitive, z, type ZodRawShape, type ZodTypeAny } from 'zod'
 _
@@ -116,7 +115,7 @@ export function addUnrepeatedItems<T>(arr: T[], newItems: T[]) {
  */
 export function arrayToObject<
 	T extends Readonly<string[]>,
-	F extends (...x: (T[number])[]) => ReturnType<F>
+	F extends (...x: (T[number])[]) => ReturnType<F> //@btr-ignore
 >(
 	arr: T,
 	mappingFn: F
@@ -683,7 +682,19 @@ _ /********** FOR STRINGS ******************** FOR STRINGS ******************** 
 
 /**Add an "S" to the end of a noun if talking about them in plural based on the amount passed */
 export function asSingularOrPlural(noun: string, amount: number) { return noun + `${amount === 1 ? '' : 's'}` }
-/**console.log... WITH COLORS :D */ //@btr-ignore
+/**Log a big red message surrounded by a lot of asterisks for visibility */
+export function bigConsoleError(message: string) {
+	logAsterisksLines(3)
+	logRed(message)
+	logAsterisksLines(3)
+
+	function logAsterisksLines(lines: number) { for (let i = 0; i < lines; i++) { logRed('*'.repeat(150)) } }
+	function logRed(message: string) { return colorLog('red', message) }
+}
+/**console.log... WITH COLOURS :D */ //@btr-ignore
+export function colorLog(color: validChalkColor, message: string) {
+	isNode ? console.log(chalk[color].bold(message)) : console.log(`%c${message}`, `color: ${color};`) //@btr-ignore
+}
 /**(Message) 💀 */
 export function errorLog(message: string) { return colorLog('red', message + ' 💀') }
 //TODO: describe me
@@ -702,6 +713,12 @@ export function logInitialization(filename: string) { colorLog(isNode ? 'cyan' :
 export function successLog(message: string) { return colorLog('green', message + ' ✔️') }
 /**@returns an string with its linebreaks converted into simple one-char spaces */
 export function toSingleLine(sentence: string) { return `${sentence}`.replace(/ {0,}\n {0,}/g, ' ') } //regexHere
+//TODO: describe me
+export function safeRegexMatch(theString: string, theRegex: RegExp, wantedIndex: number) {
+	const matches = theString.match(theRegex)
+	if (!matches) { divine.error(`safeRegexMatch error - theString: ${theString}, theRegex: ${theRegex} `) }
+	return (matches || [])[wantedIndex] || '' //@btr-ignore
+}
 /**Return an string with X amount of (character) as margin per side */
 export function surroundedString(string: string, margin: string, perSide: number) {
 	const x = margin.repeat(perSide)
@@ -1040,16 +1057,108 @@ export function triggerModalWithValidation_curry() { doNothing }
 /**@deprecated use "divine.try" instead */
 export function tryF() { doNothing } //@btr-ignore
 
-export function colorLog(color: string, message: string) { console.log(`%c${message}`, `color: ${color};`) } //@btr-ignore
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+_ /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
+export const divine = (function (): {
+	bot: unknown
+	error: (err: string | Error) => void
+	init: void
+	ping: (message: string) => maybePromise<void>
+	try: <T extends (...args: Parameters<T>) => maybePromise<ReturnType<T>>>(fn: T, args: Parameters<T>) => Promise<ReturnType<T> | undefined>
+} {
+	const bot = <eris.Client>nullAs()
+
+	return isNode ? {
+		bot,
+		error: (err: string | Error) => {
+			const message = getTraceableStack(err, 'divineError')
+			const { DEV_OR_PROD } = getEnviromentVariables()
+			DEV_OR_PROD !== 'PROD' ? killProcess(message) : divine.ping(message)
+		},
+		init: (() => {
+			delay(1000).then(async () => { //@btr-ignore
+				if (process.env['prevent_divine_init']) { return }
+				const { APP_NAME, DEV_OR_PROD, ERIS_TOKEN } = getEnviromentVariables()
+				if (DEV_OR_PROD !== 'PROD') { return }
+
+				const divinePrepend = '***DivineBot:***'
+				const bot = eris(ERIS_TOKEN)
+
+				bot.on('messageReactionRemove', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('remove', a, b, c))
+				bot.on('messageReactionAdd', (a: eris.PossiblyUncachedMessage, b: eris.PartialEmoji, c: eris.Member) => role('add', a, b, c))
+				bot.on('disconnect', () => { colorLog('red', `${divinePrepend}: Disconnected D: ... retrying!`) })
+				bot.on('connect', () => divine.ping(`(${APP_NAME}) - I'm alive bitch >:D`))
+
+				const idOfRoleAssigningMessage = '822523162724925473'
+				await attemptConnection()
+				divine.bot = bot
+
+				function role(action: 'add' | 'remove', message: eris.PossiblyUncachedMessage, emoji: eris.PartialEmoji, reactor: eris.Member) {
+					try {
+						if (message.id !== idOfRoleAssigningMessage) { return }
+
+						const role = [
+							{ app: 'UntCG', emoji: 'cards', id: 'SAMPLEROLEID' },
+							{ app: 'CwCA', emoji: 'chess', id: 'SAMPLEROLEID' },
+							{ app: 'Cool', emoji: 'cool', id: 'SAMPLEROLEID' },
+							{ app: 'Divine', emoji: 'divine', id: 'SAMPLEROLEID' },
+							{ app: 'Bluejay', emoji: 'bluejay', id: 'SAMPLEROLEID' },
+							{ app: 'Cute', emoji: 'cute', id: 'SAMPLEROLEID' },
+						].find(x => x.emoji === emoji.name)
+
+						if (role) { ({ add: reactor.addRole, remove: reactor.removeRole })[action](role.id) }
+					}
+					catch (e) { errorLog('divineBot.role.tryCatch.error: \n' + e) }
+				}
+
+				async function attemptConnection() {
+					try {
+						bot.connect()
+						colorLog('cyan', 'waiting for DivineBot')
+						while (!bot.uptime) { await delay(1000) }
+						successLog('The divine egg has hatched')
+					}
+					catch {
+						colorLog('yellow', `${divinePrepend} Failed to connect.. retrying >:D`)
+						await delay(1000)
+						attemptConnection()
+					}
+				}
+			})
+		})(),
+		ping: async (message: string) => {
+			while (!divine.bot?.ready) { await delay(1000) }
+			const { APP_NAME } = getEnviromentVariables()
+
+			const theMessage = `<@470322452040515584> - (${APP_NAME}) \n ${message}`
+			const divineOptions = { content: theMessage, allowedMentions: { everyone: true, roles: true } }
+			divine.bot.createMessage('1055939528776495206', divineOptions)
+		},
+		/**tryCatch wrapper for functions with divineError as the default error handler */
+		try: async <T extends (...args: Parameters<T>) => maybePromise<ReturnType<T>>>(fn: T, args: Parameters<T>) => {
+			try { return await fn(...args) }
+			catch (err) { divine.error(err as string) }
+		}
+	} : {
+		bot,
+		init: (() => { doNothing() })(),
+		error: (err: string | Error) => { alert(err + '\n Please report this') },
+		ping: (message: string) => { divine.error(message) },
+		try: async <T extends (...args: Parameters<T>) => maybePromise<ReturnType<T>>>(fn: T, args: Parameters<T>) => {
+			try { return await fn(...args) }
+			catch (err) { divine.error(err as string) }
+		}
+	}
+})()
+
 const clipboard = { write: doNothing }
 const fsWriteFileAsync = doNothing
-const divine = {
-	error: (err: string | Error) => { alert(err + '\n Please report this') },
-	ping: (message: string) => { divine.error(message) },
-	try: async <T extends (...args: Parameters<T>) => maybePromise<ReturnType<T>>>(fn: T, args: Parameters<T>) => {
-		try { return await fn(...args) }
-		catch (err) { divine.error(err as string) }
-	},
-}
-
-const bot = <eris.Client>nullAs()
+const chalk = {}

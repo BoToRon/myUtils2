@@ -696,7 +696,7 @@ export function safeRegexMatch(theString, theRegex, wantedIndex) {
     if (!matches) {
         divine.error(`safeRegexMatch error - theString: ${theString}, theRegex: ${theRegex} `);
     }
-    return (matches || [])[wantedIndex] || '';
+    return (matches || [])[wantedIndex] || ''; //@btr-ignore
 }
 /**Return an string with X amount of (character) as margin per side */
 export function surroundedString(string, margin, perSide) {
