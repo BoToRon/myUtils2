@@ -1265,6 +1265,8 @@ export function getDebugOptionsAndLog(devOrProd, options) {
 }
 /** Get the contents of the project's .env */
 export function getEnviromentVariables() {
+    const require = createRequire(import.meta.url);
+    require('dotenv').config({ path: './.env' });
     return process.env;
 }
 /**Get all the file and folders within a folder, stopping at predefined folders (assets, git, node_modules, test) */

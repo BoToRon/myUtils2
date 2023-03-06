@@ -71,7 +71,10 @@ function getCommands_forPackage() {
 		...sharedCommands,
 		publishOnly: { description: 'npm version + npm publish', fn: package_publishOnly },
 		transpileAll: { description: 'Transpile base files if they pass all checks and emit the client versions', fn: package_transpileAll },
-		transpile_commit_and_PUBLISH: { description: '1) Transpile all. 2) Git commit + push. 3) npm version + PUBLISH', fn: package_transpile_git_andPublish },
+		transpile_commit_and_PUBLISH: {
+			description: '1) Transpile all. 2) Git commit + push. 3) npm version + PUBLISH',
+			fn: package_transpile_git_andPublish
+		},
 	}
 }
 

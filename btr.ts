@@ -19,6 +19,8 @@ import { Socket } from 'socket.io'	//DELETETHISFORCLIENT
 _
 import getReadLine from 'readline'	//DELETETHISFORCLIENT
 _
+import { createRequire } from 'module'	//DELETETHISFORCLIENT
+_
 import mongodb, { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
 _
 import { promises, readdirSync, statSync } from 'fs'	//DELETETHISFORCLIENT 
@@ -1302,6 +1304,8 @@ export function getDebugOptionsAndLog<K extends string>(devOrProd: 'dev' | 'prod
 }
 /** Get the contents of the project's .env */
 export function getEnviromentVariables() {
+	const require = createRequire(import.meta.url)
+	require('dotenv').config({ path: './.env' })
 	return process.env as myEnv
 }
 /**Get all the file and folders within a folder, stopping at predefined folders (assets, git, node_modules, test) */
