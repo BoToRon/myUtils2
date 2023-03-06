@@ -5,6 +5,8 @@ import inquirer from 'inquirer'
 _
 import { unlinkSync } from 'fs'
 _
+import { MongoClient } from 'mongodb'
+_
 import { execSync, execFile } from 'child_process'
 _
 import { maybePromise, recordOfCommands } from '../types.js'
@@ -39,6 +41,7 @@ if (isPackage) { runCommands(commands_forPackage) }
 //function declarations below
 
 export function projectCommandsHandler(
+	mongoClient: MongoClient,
 	mongoCollections: Readonly<string[]>,
 	commandsSpecificOfProject: recordOfCommands<string>
 ) {
@@ -52,13 +55,15 @@ export function projectCommandsHandler(
 		...getSeparator('BTR COMMANDS ABOVE'),
 	})
 
-	function getSeparator(name: string) { return { ['-'.repeat(40 - name.length) + name]: { description: '-'.repeat(40), fn: doNothing } } }
-
 	function getLogAll_forAllMongoCollections() {
 		return arrayToObject(mongoCollections, (key) => ({
 			description: `Log the entire '${key}' mongo collection`,
-			fn: async () => consoleLogFull(await getEntireMongoCollection(key))
+			fn: async () => consoleLogFull(await getEntireMongoCollection(mongoClient, key))
 		}))
+	}
+
+	function getSeparator(name: string) {
+		return { ['-'.repeat(40 - name.length) + name]: { description: '-'.repeat(40), fn: doNothing } }
 	}
 }
 

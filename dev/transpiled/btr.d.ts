@@ -1,4 +1,5 @@
 import { Socket } from 'socket.io';
+import { MongoClient } from 'mongodb';
 import { btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, cachedFile, maybePromise, nullable, recordOfCommands, timer, zSchema } from './types.js';
 import { zValidVariants } from './constants.js';
 import { z } from 'zod';
@@ -375,16 +376,19 @@ export declare function getDebugOptionsAndLog<K extends string>(devOrProd: 'dev'
     debugOptions: Record<K, [boolean, boolean]> extends infer T extends object ? { [key in keyof T]: boolean; } : never;
     debugLog: <T_1 extends object>(debugKey: K, error: T_1) => void;
 };
+/**Get an array with all the items in a Mongo Collection */
+export declare function getEntireMongoCollection<T>(mongoClient: MongoClient, collectionName: Readonly<string>): Promise<T[]>;
 /** Get the contents of the project's .env */
 export declare function getEnviromentVariables(): z.infer<any>;
 /**Get all the file and folders within a folder, stopping at predefined folders (assets, git, node_modules, test) */
 export declare function getFilesAndFoldersNames(directory: string, extension: nullable<'.ts' | '.vue'>): string[];
-/**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
-export declare function getSeparatingCommentBlock(message: string): string;
 /**fetch the latest package.json of myUtils */
 export declare function getLatestPackageJsonFromGithub(): Promise<string>;
 /**It's monging time >:D */
 export declare function getMongoClient(): Promise<MongoClient>;
+export declare function getMongoCollection_curry(mongoClient: MongoClient, database: Readonly<string>): (collection: string) => any;
+/**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
+export declare function getSeparatingCommentBlock(message: string): string;
 /**Start and return an http Express server */
 export declare function getStartedHttpServer(): any;
 /**Import modules or jsons */

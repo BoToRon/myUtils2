@@ -431,8 +431,7 @@ function checkSpecificMatches_serverEventsTs() {
 
 function checkSpecificMatches_globalFnsTs() {
 	checkMatchesInSpecificFile(GLOBAL_FNS_TS, [asConsecutiveLines([
-		'/**Shorthand for mongoClient.db(DATABASE).collection(COLLECTION) */',
-		'export function mongoCollection(name: validMongoCollection) { return mongoClient.db(' //) <--to not mess with colours
+		//TODO: find something to put in here or remove it from necessary files
 	])])
 }
 

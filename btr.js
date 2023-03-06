@@ -18,9 +18,9 @@ _;
 _;
 import getReadLine from 'readline'; //DELETETHISFORCLIENT
 _;
-import { createRequire } from 'module'; //DELETETHISFORCLIENT
+import { MongoClient } from 'mongodb'; //DELETETHISFORCLIENT
 _;
-import mongodb from 'mongodb'; //DELETETHISFORCLIENT
+import { createRequire } from 'module'; //DELETETHISFORCLIENT
 _;
 import { promises, readdirSync, statSync } from 'fs'; //DELETETHISFORCLIENT 
 _;
@@ -1152,6 +1152,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
         checkReplaceableCode(['fs from \'fs\''], '{ (specific fs methods) } from \'fs\''); //@btr-ignore
         checkReplaceableCode(['console.log'], 'colorLog OR consoleLogFull OR debugLog'); //@btr-ignore
         checkReplaceableCode(['replaceAll('], '.replace (with global flag enabled)'); //@btr-ignore )
+        checkReplaceableCode(['function mongoCollection'], 'getMongoCollection_curry'); //@btr-ignore
         checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine'); //@btr-ignore
         checkReplaceableCode(['readonly ', 'ReadonlyArray<'], 'Readonly<'); //@btr-ignore
         checkReplaceableCode(['{ description: string,'], ': commands'); //@btr-ignore
@@ -1265,6 +1266,10 @@ export function getDebugOptionsAndLog(devOrProd, options) {
         }
     };
 }
+/**Get an array with all the items in a Mongo Collection */
+export async function getEntireMongoCollection(mongoClient, collectionName) {
+    return await mongoClient.db(getEnviromentVariables().DATABASE_NAME).collection(collectionName).find({}).toArray();
+}
 /** Get the contents of the project's .env */
 export function getEnviromentVariables() {
     const require = createRequire(import.meta.url);
@@ -1287,6 +1292,30 @@ export function getFilesAndFoldersNames(directory, extension) {
     });
     return extension ? results.filter(path => path.includes(extension)) : results;
 }
+/**fetch the latest package.json of myUtils */
+export async function getLatestPackageJsonFromGithub() {
+    const fetched = await fetch('https://api.github.com/repos/botoron/utils/contents/package.json', { method: 'GET' });
+    return Buffer.from((await fetched.json()).content, 'base64').toString('utf8');
+}
+/**It's monging time >:D */
+export async function getMongoClient() {
+    const { DATABASE_NAME, MONGO_URI_START } = getEnviromentVariables();
+    const mongo = new MongoClient(MONGO_URI_START + DATABASE_NAME + '?retryWrites=true&w=majority');
+    let mongoClient = nullAs();
+    //TODO: migrate from the deprecated connect method
+    mongo.connect((err, client) => { if (err) {
+        throw err;
+    } mongoClient = client; });
+    colorLog('cyan', 'waiting for Mongo');
+    while (!mongoClient) {
+        await delay(1000);
+    }
+    successLog('It\'s Monging time >:D');
+    return mongoClient;
+}
+export function getMongoCollection_curry(mongoClient, database) {
+    return function getMongoCollection(collection) { return mongoClient.db(database).collection(collection); };
+}
 /**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
 export function getSeparatingCommentBlock(message) {
     let line = '';
@@ -1297,26 +1326,6 @@ export function getSeparatingCommentBlock(message) {
     const theBlock = `_ /${line}/\n`.repeat(5);
     console.log(theBlock); //@btr-ignore
     return theBlock;
-}
-/**fetch the latest package.json of myUtils */
-export async function getLatestPackageJsonFromGithub() {
-    const fetched = await fetch('https://api.github.com/repos/botoron/utils/contents/package.json', { method: 'GET' });
-    return Buffer.from((await fetched.json()).content, 'base64').toString('utf8');
-}
-/**It's monging time >:D */
-export async function getMongoClient() {
-    const { MONGO_URI } = getEnviromentVariables();
-    const mongo = new mongodb.MongoClient(MONGO_URI);
-    let mongoClient = nullAs();
-    mongo.connect((err, client) => { if (err) {
-        throw err;
-    } mongoClient = client; });
-    colorLog('cyan', 'waiting for Mongo');
-    while (!mongoClient) {
-        await delay(1000);
-    }
-    successLog('It\'s Monging time >:D');
-    return mongoClient;
 }
 /**Start and return an http Express server */
 export function getStartedHttpServer() {

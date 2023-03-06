@@ -24,10 +24,12 @@ export const zValidVariants = z.enum(['primary', 'secondary', 'success', 'warnin
 export const npmVersionOptions = ['major', 'minor', 'patch'];
 export const timers = [];
 export const zMyEnv = z.object({
+    MONGO_URI: z.undefined(),
     DEV_OR_PROD: z.enum(['DEV', 'PROD']),
+    MONGO_URI_START: z.string(),
     ADMIN_PASSWORD: z.string(),
+    DATABASE_NAME: z.string(),
     PORT: z.literal('3000'),
     ERIS_TOKEN: z.string(),
-    MONGO_URI: z.string(),
     APP_NAME: z.string(),
 });

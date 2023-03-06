@@ -22,18 +22,23 @@ export async function basicProjectChecks() {
     checkFilesAndFolderStructure();
     checkObligatoryTemplateFilesAreIdentical();
     //2. Obligatory specific-files matches
-    checkSpecificMatches_AppVue();
-    checkSpecificMatches_clientIndexTs();
-    checkSpecificMatches_clientSocketTs();
-    checkSpecificMatches_clientStoreTs();
-    checkSpecificMatches_globalFnsTs();
+    //2.1 types folder
     checkSpecificMatches_typesIoTs();
     checkSpecificMatches_typesTypesTs();
+    checkSpecificMatches_typesZTs();
+    //2.2 global folder
+    checkSpecificMatches_globalFnsTs();
+    checkSpecificMatches_globalVarsTs();
+    //2.3 server folder
     checkSpecificMatches_serverEventsTs();
     checkSpecificMatches_serverInitTs();
     checkSpecificMatches_serverLoginTs();
     checkSpecificMatches_serverRefTs();
-    checkBasicValidAdminCommands();
+    //2.4 client folder
+    checkSpecificMatches_clientAppVue();
+    checkSpecificMatches_clientIndexTs();
+    checkSpecificMatches_clientSocketTs();
+    checkSpecificMatches_clientStoreTs();
     //3. Help prevent bugs
     checkClientFilesDontReferenceLocalStorageDirectly();
     checkEnviromentVariables();
@@ -53,15 +58,11 @@ export async function basicProjectChecks() {
 }
 function zodCheck_toErrors(path, schema, data) { zodCheck_curry((e) => addToErrors(path, e))(schema, data); }
 function getCachedFileContent(filepath) { return getFromCachedFiles([filepath])[0].content; } //@btr-ignore
-function checkSpecificMatches_serverLoginTs() { checkMatchInSpecificFile('./server/login.ts', 'socket.emit(\'initData\','); }
+function checkSpecificMatches_serverLoginTs() { checkMatchesInSpecificFile('./server/login.ts', ['socket.emit(\'initData\',']); }
 function externalTemplatePath(filename) { return '../../_templateFiles/' + filename; }
 function addToErrors(path, error) { errors.push(`(at ${path}): ${error}`); }
 function inBtrUtils(path) { return './node_modules/@botoron/utils/' + path; }
 function asConsecutiveLines(lines) { return lines.join('\r\n'); }
-function checkBasicValidAdminCommands() {
-    checkMatchInSpecificFile(GLOBAL_VARS_TS, 'export const adminCommands = [\'getSockets\', \'help\', \'ref\',');
-    checkMatchInSpecificFile(TYPES_Z_TS, 'export const zValidAdminCommands = z.enum(adminCommands)');
-}
 /**Check all the top-level functions in main .ts server files have a description */
 function checkAllExportedFunctionsAreDescribed() {
     if (DEV_OR_PROD !== 'DEV') {
@@ -179,11 +180,14 @@ function checkLocalImportsHaveJsExtention() {
         });
     });
 }
-function checkMatchInSpecificFile(filepath, wantedMatch) {
+function checkMatchesInSpecificFile(filepath, wantedMatches) {
     const content = getCachedFileContent(filepath);
-    if (!content.includes(wantedMatch)) {
+    wantedMatches.forEach(wantedMatch => {
+        if (content.includes(wantedMatch)) {
+            return;
+        }
         addToErrors(filepath, `"${surroundedString(wantedMatch, ' ', 10)}" is missing)`);
-    }
+    });
 }
 function checkObligatoryTemplateFilesAreIdentical() {
     checkFilesAreIdentical(ESLINT_CJS, inBtrUtils(ESLINT_CJS));
@@ -273,8 +277,8 @@ function checkServerAndClientFilesLogTheirInitialization() {
         }
     });
 }
-function checkSpecificMatches_AppVue() {
-    [
+function checkSpecificMatches_clientAppVue() {
+    checkMatchesInSpecificFile(CLIENT_SRC + '/App.vue', [
         asConsecutiveLines([
             '<template>',
             '\t<b-container id="app" class="justify-content-center" v-cloak>',
@@ -287,10 +291,10 @@ function checkSpecificMatches_AppVue() {
             '\t\t\t<br>',
             '\t\t</b-alert>'
         ])
-    ].forEach(x => checkMatchInSpecificFile(CLIENT_SRC + '/App.vue', x));
+    ]);
 }
 function checkSpecificMatches_clientIndexTs() {
-    [
+    checkMatchesInSpecificFile(CLIENT_SRC + '/index.ts', [
         asConsecutiveLines([
             'let _',
             'import Vue from \'vue\'',
@@ -330,19 +334,19 @@ function checkSpecificMatches_clientIndexTs() {
             'getAppLog(window as never, useStore as never)',
             'useStore().login()',
         ])
-    ].forEach(x => checkMatchInSpecificFile(CLIENT_SRC + '/index.ts', x));
+    ]);
 }
 function checkSpecificMatches_clientSocketTs() {
-    [
+    checkMatchesInSpecificFile(CLIENT_SRC_SOCKET, [
         asConsecutiveLines([
             'export const socket: clientSocket = import.meta.env.PROD ? io() : io(\'http://localhost:3000/\')',
             'socket.on(\'globalAlert\', globalAlert => useStore().globalAlert = globalAlert)',
             'socket.on(\'initData\','
         ])
-    ].forEach(x => checkMatchInSpecificFile(CLIENT_SRC_SOCKET, x));
+    ]);
 }
 function checkSpecificMatches_clientStoreTs() {
-    [
+    checkMatchesInSpecificFile('./client/src/store.ts', [
         asConsecutiveLines([
             'declare global {',
             '\tinterface Window {',
@@ -380,10 +384,10 @@ function checkSpecificMatches_clientStoreTs() {
             '\t\t\tuseStore()[key] = value; localStorageSet(key, value)',
             '\t\t},'
         ])
-    ].forEach(x => checkMatchInSpecificFile('./client/src/store.ts', x));
+    ]);
 }
 function checkSpecificMatches_serverEventsTs() {
-    [
+    checkMatchesInSpecificFile(SERVER_EVENTS_TS, [
         asConsecutiveLines([
             'io.on(\'connection\', x => {',
             '\tconst socket = x as serverSocket',
@@ -392,20 +396,27 @@ function checkSpecificMatches_serverEventsTs() {
             '\tref.debugLog(\'logWhenSocketConnects\', { id: x.id })',
         ]),
         'export const ioInitialized = true'
-    ].forEach(line => checkMatchInSpecificFile(SERVER_EVENTS_TS, line));
+    ]);
 }
 function checkSpecificMatches_globalFnsTs() {
-    checkMatchInSpecificFile(GLOBAL_FNS_TS, asConsecutiveLines([
-        '/**Shorthand for mongoClient.db(DATABASE).collection(COLLECTION) */',
-        'export function mongoCollection(name: validMongoCollection) { return mongoClient.db('
-    ])); //) <--to not mess with colours)
+    checkMatchesInSpecificFile(GLOBAL_FNS_TS, [asConsecutiveLines([
+        //TODO: find something to put in here or remove it from necessary files
+        ])]);
+}
+function checkSpecificMatches_globalVarsTs() {
+    checkMatchesInSpecificFile(GLOBAL_VARS_TS, [
+        'export const adminCommands = [\'getSockets\', \'help\', \'ref\',',
+        'as const //adminCommands',
+        'export const mongoCollections = [\'misc\',',
+        'as const //mongoCollections',
+    ]);
 }
 function checkSpecificMatches_serverInitTs() {
-    checkMatchInSpecificFile('./server/init.ts', 'successLog(stringify({ refInitialized: true, ioInitialized }))');
+    checkMatchesInSpecificFile('./server/init.ts', ['successLog(stringify({ refInitialized: true, ioInitialized }))']);
 }
 /**Check the properties and initialization of server/ref.ts */
 function checkSpecificMatches_serverRefTs() {
-    [
+    checkMatchesInSpecificFile(SERVER_REF_TS, [
         'const devOrProd = \'dev\' as \'dev\' | \'prod\'',
         asConsecutiveLines([
             'const { debugOptions: debug, debugLog } = getDebugOptionsAndLog(devOrProd, {',
@@ -419,10 +430,10 @@ function checkSpecificMatches_serverRefTs() {
         'alert: { message: \'\', show: false } as globalAlert,',
         'DB_misc: mongoCollection(\'misc\'),',
         'pageVisits: (await mongoCollection(\'misc\').findOne({}) as unknown as mongoMisc).pageVisits,',
-    ].forEach(line => checkMatchInSpecificFile(SERVER_REF_TS, line));
+    ]);
 }
 function checkSpecificMatches_typesIoTs() {
-    [
+    checkMatchesInSpecificFile(TYPES_IO_TS, [
         asConsecutiveLines([
             'import { Server, Socket as socket_server } from \'socket.io\'',
             'import { Socket as socket_client } from \'socket.io-client\'',
@@ -446,10 +457,11 @@ function checkSpecificMatches_typesIoTs() {
             'export const io = new Server<ClientToServerEvents, ServerToClientEvents>(getStartedHttpServer(), { cors: { origin: \'*\' } })',
             'export type serverSocket = socket_server<ClientToServerEvents, ServerToClientEvents, object, {',
         ])
-    ].forEach(event => checkMatchInSpecificFile(TYPES_IO_TS, event));
+    ]);
 }
 function checkSpecificMatches_typesTypesTs() {
-    [
+    checkMatchesInSpecificFile('./types/types.d.ts', [
+        'import { mongoCollections } from \'../global/vars.js\'',
         asConsecutiveLines([
             '/**imported from utils */',
             'declare global {',
@@ -476,9 +488,15 @@ function checkSpecificMatches_typesTypesTs() {
         ]),
         'type mongoMisc = { adminKey: string, pageVisits: number',
         'type validModalId = \'modal-',
-        'type validMongoCollection = \'misc\'',
+        'type validMongoCollection = typeof mongoCollections[number]',
         'type validView = \'admin\' |',
-    ].forEach(x => checkMatchInSpecificFile('./types/types.d.ts', x));
+    ]);
+}
+function checkSpecificMatches_typesZTs() {
+    checkMatchesInSpecificFile(TYPES_Z_TS, [
+        'export const zValidAdminCommands = z.enum(adminCommands)',
+        'adminCommands } from \'../global/vars.js\''
+    ]);
 }
 /**Check all the vue components are trackable by the window */
 function checkTrackabilityAndStyleScopeOfVueFiles() {
@@ -486,14 +504,14 @@ function checkTrackabilityAndStyleScopeOfVueFiles() {
         return true;
     }
     clientVueFiles.forEach(file => {
-        [
+        checkMatchesInSpecificFile(file.path, [
             asConsecutiveLines([
                 'export default defineComponent({',
                 '\tmounted() {',
                 `\t\ttrackVueComponent('${filepathToComponentName()}', this as never, window as never)`
             ]),
             '<style scoped>'
-        ].forEach(wantedMatch => checkMatchInSpecificFile(file.path, wantedMatch));
+        ]);
         function filepathToComponentName() { return file.path.replace(/\.\/client\/src\/_?/, '').replace('.vue', ''); }
     });
 }

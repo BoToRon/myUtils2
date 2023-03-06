@@ -19,9 +19,9 @@ import { Socket } from 'socket.io'	//DELETETHISFORCLIENT
 _
 import getReadLine from 'readline'	//DELETETHISFORCLIENT
 _
-import { createRequire } from 'module'	//DELETETHISFORCLIENT
+import { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
 _
-import mongodb, { MongoClient } from 'mongodb'	//DELETETHISFORCLIENT
+import { createRequire } from 'module'	//DELETETHISFORCLIENT
 _
 import { promises, readdirSync, statSync } from 'fs'	//DELETETHISFORCLIENT 
 _
@@ -1200,6 +1200,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[], warningsC
 		checkReplaceableCode(['fs from \'fs\''], '{ (specific fs methods) } from \'fs\'') //@btr-ignore
 		checkReplaceableCode(['console.log'], 'colorLog OR consoleLogFull OR debugLog')	//@btr-ignore
 		checkReplaceableCode(['replaceAll('], '.replace (with global flag enabled)') //@btr-ignore )
+		checkReplaceableCode(['function mongoCollection'], 'getMongoCollection_curry') //@btr-ignore
 		checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine')	//@btr-ignore
 		checkReplaceableCode(['readonly ', 'ReadonlyArray<'], 'Readonly<')	//@btr-ignore
 		checkReplaceableCode(['{ description: string,'], ': commands')	//@btr-ignore
@@ -1303,8 +1304,8 @@ export function getDebugOptionsAndLog<K extends string>(devOrProd: 'dev' | 'prod
 	}
 }
 /**Get an array with all the items in a Mongo Collection */
-export async function getEntireMongoCollection<T>(collectionName: Readonly<string>) {
-	return await (await getMongoClient()).db(getEnviromentVariables().DATABASE_NAME).collection(collectionName).find({}).toArray() as T[]
+export async function getEntireMongoCollection<T>(mongoClient: MongoClient, collectionName: Readonly<string>) {
+	return await mongoClient.db(getEnviromentVariables().DATABASE_NAME).collection(collectionName).find({}).toArray() as T[]
 }
 /** Get the contents of the project's .env */
 export function getEnviromentVariables() {
@@ -1336,13 +1337,18 @@ export async function getLatestPackageJsonFromGithub() {
 export async function getMongoClient() {
 	const { DATABASE_NAME, MONGO_URI_START } = getEnviromentVariables()
 
-	const mongo = new mongodb.MongoClient(MONGO_URI_START + DATABASE_NAME + '?retryWrites=true&w=majority')
+	const mongo = new MongoClient(MONGO_URI_START + DATABASE_NAME + '?retryWrites=true&w=majority')
 	let mongoClient = <MongoClient>nullAs()
+	//TODO: migrate from the deprecated connect method
 	mongo.connect((err, client) => { if (err) { throw err } mongoClient = client as MongoClient })
 	colorLog('cyan', 'waiting for Mongo')
 	while (!mongoClient) { await delay(1000) }
 	successLog('It\'s Monging time >:D')
 	return mongoClient
+}
+
+export function getMongoCollection_curry(mongoClient: MongoClient, database: Readonly<string>) {
+	return function getMongoCollection(collection: string) { return mongoClient.db(database).collection(collection) }
 }
 /**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
 export function getSeparatingCommentBlock(message: string) {
