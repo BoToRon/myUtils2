@@ -20,7 +20,7 @@ const PACKAGE_DOT_JSON = 'package.json';
 const errors = [];
 const packageJsonContent = await fsReadFileAsync(PACKAGE_DOT_JSON);
 const isPackage = JSON.parse(packageJsonContent).name === '@botoron/utils';
-const tsFilePaths = getFilesAndFoldersNames('.', null).filter(path => path.includes('.ts') && !path.includes('client/'));
+const tsFilePaths = getFilesAndFoldersNames('.', null).filter(path => path.includes('.ts') && !/(client\/|\.d\.ts)/.test(path));
 process.env['prevent_divine_init'] = 'true';
 const sharedCommands = getSharedCommands();
 const commands_forPackage = getCommands_forPackage();
@@ -40,13 +40,12 @@ export async function projectCommandsHandler(commandsSpecificOfProject) {
     }
 }
 async function runCommands(commands) { await inquirePromptCommands(mapCommandsForInquirePrompt(commands), true); }
-async function package_transpileBaseFiles() { await transpileFiles(tsFilePaths.filter(path => !/\w\//.test(path)), '.'); }
+function project_installBtrUtilsAndKillProcess() { execSync('npm i @botoron/utils'); killProcess('Reinit command line to apply updates'); }
 function project_buildAll() { project_buildClientFilesWithVite(); project_buildServerFiles(); }
 function quitCommandLineProgram() { killProcess('devForProject\'s commands terminated'); }
 function project_buildClientFilesWithVite() { execSync('cd client & npm run build'); }
 function execAndLog(command) { execSync(command); successLog(command); }
 function project_initNodemon() { execSync('nodemon test/server/init.js'); }
-function project_installBtrUtils() { execSync('npm i @botoron/utils'); }
 function project_initVite() { execSync('cd client & npm run dev'); }
 async function btrCheckFilesAndReportResult() { await btrCheck(); }
 function project_forwardVitesPort() { execSync('lt --port 5173'); }
@@ -63,14 +62,13 @@ function getCommands_forPackage() {
         ...sharedCommands,
         publishOnly: { description: 'npm version + npm publish', fn: package_publishOnly },
         transpileAll: { description: 'Transpile base files if they pass all checks and emit the client versions', fn: package_transpileAll },
-        transpileBase: { description: 'Transpile the file bases, NOT for production', fn: package_transpileBaseFiles },
         transpile_commit_and_PUBLISH: { description: '1) Transpile all. 2) Git commit + push. 3) npm version + PUBLISH', fn: package_transpile_git_andPublish },
     };
 }
 function getCommands_forProject() {
     return {
         ...sharedCommands,
-        btr: { description: 'Install/update @botoron/utils', fn: project_installBtrUtils },
+        btr: { description: 'Install/update @botoron/utils', fn: project_installBtrUtilsAndKillProcess },
         'build-client': { description: 'Build the client files onto the ../dist/public', fn: project_buildClientFilesWithVite },
         'build-server': { description: 'Build the server files onto ../dist', fn: project_buildServerFiles },
         'build-all': { description: 'Transpile and copy/paste all files needed for ../dist', fn: project_buildAll },
@@ -104,7 +102,7 @@ async function package_transpileAll() {
     if (!await btrCheck()) {
         return;
     }
-    package_transpileBaseFiles();
+    await transpileFiles(tsFilePaths.filter(path => !/\w\//.test(path)), '.');
     const filename = 'btr.ts';
     const lines = (await fsReadFileAsync(filename)).replace('eris.Client', 'unknown').split('\n');
     selfFilter(lines, line => !/DELETETHISFORCLIENT/.test(line)); //regexHere
@@ -204,7 +202,7 @@ async function transpileFiles(sourceFilesArr, outputDirectory) {
     const allJsFilenames = sourceFilesArr.map(filename => `${outputDirectory}/${safeRegexMatch(filename, /\w{1,}(?=\.ts)/g, 0)}.js`); //regexHere
     await asyncForEach(allJsFilenames, false, deleteOldJsVersion);
     const sourceFiles = sourceFilesArr.join(' ');
-    const command = `tsc ${TSC_FLAGS} ${sourceFiles} --outDir ${outputDirectory}`;
+    const command = `tsc ${TSC_FLAGS} ${sourceFiles} --outDir ${outputDirectory} `;
     colorLog('cyan', command);
     try {
         execSync(command);
