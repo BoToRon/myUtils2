@@ -18,7 +18,6 @@ export const SERVER_EVENTS_TS = './server/events.ts'
 export const CLIENT_SRC_SOCKET = CLIENT_SRC + '/socket.ts'
 export const TSC_FLAGS = '--target esnext' //--module NodeNext --moduleResolution nodenext --resolveJsonModule
 
-export const utilsRepoName = 'Utils 🛠️'
 export const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null
 export const getUniqueId_generator = (function* () { let i = 0; while (true) { i++; yield isNode ? `${Date.now() + i}` : i } })()
 

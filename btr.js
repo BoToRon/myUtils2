@@ -18,6 +18,8 @@ _;
 _;
 import getReadLine from 'readline'; //DELETETHISFORCLIENT
 _;
+import { createRequire } from 'module'; //DELETETHISFORCLIENT
+_;
 import mongodb from 'mongodb'; //DELETETHISFORCLIENT
 _;
 import { promises, readdirSync, statSync } from 'fs'; //DELETETHISFORCLIENT 

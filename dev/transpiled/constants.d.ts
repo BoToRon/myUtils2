@@ -12,7 +12,6 @@ export declare const GLOBAL_VARS_TS = "./global/vars.ts";
 export declare const SERVER_EVENTS_TS = "./server/events.ts";
 export declare const CLIENT_SRC_SOCKET: string;
 export declare const TSC_FLAGS = "--target esnext";
-export declare const utilsRepoName = "Utils \uD83D\uDEE0\uFE0F";
 export declare const isNode: boolean;
 export declare const getUniqueId_generator: Generator<string | number, never, unknown>;
 export declare const zValidVariants: any;

@@ -12,7 +12,7 @@ import { maybePromise, recordOfCommands } from '../types.js'
 _
 import { basicProjectChecks } from '../basicProjectChecks.js'
 _
-import { utilsRepoName, npmVersionOptions, TSC_FLAGS } from '../constants.js'
+import { npmVersionOptions, TSC_FLAGS } from '../constants.js'
 _
 import {
 	allPromises, asyncForEach, checkCodeThatCouldBeUpdated, checkFileExists, checkNoBtrErrorsOrWarnings, colorLog, copyToClipboard,
@@ -71,10 +71,6 @@ function getCommands_forPackage() {
 		...sharedCommands,
 		publishOnly: { description: 'npm version + npm publish', fn: package_publishOnly },
 		transpileAll: { description: 'Transpile base files if they pass all checks and emit the client versions', fn: package_transpileAll },
-		transpile_commit_and_PUBLISH: {
-			description: '1) Transpile all. 2) Git commit + push. 3) npm version + PUBLISH',
-			fn: package_transpile_git_andPublish
-		},
 	}
 }
 
@@ -145,12 +141,6 @@ async function package_transpileAll() {
 	}
 }
 
-async function package_transpile_git_andPublish() {
-	await package_transpileAll()
-	await prompCommitMessageAndPush(utilsRepoName)
-	await package_publishOnly()
-}
-
 async function project_btrCheckAndTranspileToTestFolder() {
 	if (!await btrCheck()) { return }
 
@@ -188,31 +178,31 @@ async function project_buildServerFiles() {
 				replace(/"scripts": {[^}]{1,}/, '"scripts": { "start": "node server/init.js"') //regexHere
 		}
 	}
-}
 
-async function prompCommitMessageAndPush(repoName: string) {
-	const commitType = await getCommitType()
+	async function prompCommitMessageAndPush(repoName: string) {
+		const commitType = await getCommitType()
 
-	//order for these 3 below matters
-	logDetailsForPrompt()
-	const commitMessage = await questionAsPromise('Enter a commit message:')
-	copyToClipboard(commitType + ': ' + commitMessage)
+		//order for these 3 below matters
+		logDetailsForPrompt()
+		const commitMessage = await questionAsPromise('Enter a commit message:')
+		copyToClipboard(commitType + ': ' + commitMessage)
 
-	execAndLog('git add .')
-	colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.')
-	execSync('git commit')
-	execAndLog('git push')
+		execAndLog('git add .')
+		colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.')
+		execSync('git commit')
+		execAndLog('git push')
 
-	async function getCommitType() {
-		await chooseFromPrompt('Define the type of commit:', ['fix', 'feat', 'build', 'chore', 'ci', 'docs', 'refactor', 'style', 'test'])
-	}
+		async function getCommitType() {
+			await chooseFromPrompt('Define the type of commit:', ['fix', 'feat', 'build', 'chore', 'ci', 'docs', 'refactor', 'style', 'test'])
+		}
 
-	function logDetailsForPrompt() {
-		delay(500).then(() => { //@btr-ignore
-			colorLog('yellow', '50-character limits ends at that line: * * * * * |')
-			colorLog('green', repoName)
-			logEmptyLine()
-		})
+		function logDetailsForPrompt() {
+			delay(500).then(() => { //@btr-ignore
+				colorLog('yellow', '50-character limits ends at that line: * * * * * |')
+				colorLog('green', repoName)
+				logEmptyLine()
+			})
+		}
 	}
 }
 
