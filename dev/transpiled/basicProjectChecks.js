@@ -4,7 +4,7 @@ _;
 _;
 import { CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_FNS_TS, GLOBAL_VARS_TS, SERVER_EVENTS_TS, SERVER_REF_TS, TSC_FLAGS, TSCONFIG_JSON, TYPES_IO_TS, TYPES_Z_TS, zMyEnv } from './constants.js';
 _;
-import { getCachedFiles, checkCodeThatCouldBeUpdated, checkNoBtrErrorsOrWarnings, compareArrays, getEnviromentVariables, getFilesAndFoldersNames, importFileFromProject, nullAs, pick, surroundedString, zodCheck_curry, zRegexGenerator, zRecord, killProcess } from './btr.js';
+import { getCachedFiles, checkCodeThatCouldBeUpdated, checkNoBtrErrorsOrWarnings, compareArrays, getEnviromentVariables, getFilesAndFoldersNames, importFileFromProject, killProcess, nullAs, pick, safeRegexMatch, surroundedString, zodCheck_curry, zRegexGenerator, zRecord } from './btr.js';
 let DEV_OR_PROD = nullAs();
 const errors = [];
 const cachedFiles = [];
@@ -248,14 +248,14 @@ function checkSocketEvents() {
             }
             if (/^\}/.test(line)) {
                 isKeyOfWantedInterface = false;
-            } //"{"" <-- here so it doesn't mess with the color of brackets //regexHere
+            } //{  //regexHere
             if (!isKeyOfWantedInterface) {
                 return;
             }
             if (!/^\t\w/.test(line)) {
                 return;
             } //regexHere
-            const event = (line.match(/(?<=\t)\w{1,}/) || [''])[0]; //regexHere
+            const event = safeRegexMatch(line, /(?<=\t)\w{1,}/, 0); //regexHere
             if (handlingFile.includes(`socket.on('${event}'`)) {
                 return;
             }

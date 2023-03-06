@@ -11,7 +11,6 @@ _
 _
 _
 _
-_
 import {
 	btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo,
 	btr_trackedVueComponent, btr_validVariant, btr_bvModal, cachedFile, maybePromise, nullable, recordOfCommands, timer, zSchema
@@ -282,8 +281,8 @@ export async function asyncForEach<T>(array: T[], resolveSequentially: boolean, 
 	if (!resolveSequentially) { await allPromises(array, asyncFn) }
 }
 //Await for an asynchronous function to apply to all the items of an array
-export async function allPromises<T, returnType>(array: T[], asyncFn: (item: T) => Promise<returnType>) {
-	return await Promise.all(array.map(item => asyncFn(item))) as returnType[] //@btr-ignore
+export async function allPromises<T, returnType>(array: T[], asyncFn: (item: T, index?: number) => Promise<returnType>) {
+	return await Promise.all(array.map((item, index) => asyncFn(item, index))) as returnType[] //@btr-ignore
 }
 /**Set interval with try-catch and call it immediately*/
 export function doAndRepeat(fn: () => void, interval: number) { divine.try(fn, []); setInterval(() => divine.try(fn, []), interval) }

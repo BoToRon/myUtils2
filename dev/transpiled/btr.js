@@ -13,8 +13,6 @@ import express from 'express'; //DELETETHISFORCLIENT
 _;
 import fetch from 'node-fetch'; //DELETETHISFORCLIENT
 _;
-import inquirer from 'inquirer'; //DELETETHISFORCLIENT
-_;
 import clipboard from 'clipboardy'; //DELETETHISFORCLIENT
 _;
 _;
@@ -269,7 +267,7 @@ export async function asyncForEach(array, resolveSequentially, asyncFn) {
 }
 //Await for an asynchronous function to apply to all the items of an array
 export async function allPromises(array, asyncFn) {
-    return await Promise.all(array.map(item => asyncFn(item))); //@btr-ignore
+    return await Promise.all(array.map((item, index) => asyncFn(item, index))); //@btr-ignore
 }
 /**Set interval with try-catch and call it immediately*/
 export function doAndRepeat(fn, interval) { divine.try(fn, []); setInterval(() => divine.try(fn, []), interval); }
@@ -1139,15 +1137,20 @@ _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ****************
 _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
 /**Basically custom ESlint warnings */
 export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
-    cachedFiles.forEach(file => {
-        const maxWarningsLogged = 5;
+    const maxWarningsLogged = 5;
+    cachedFiles.forEach(checkFile);
+    if (warningsCount.count > maxWarningsLogged) {
+        colorLog('yellow', `+${warningsCount.count - maxWarningsLogged} warnings not shown..`);
+    }
+    function checkFile(file) {
         const { path, content } = file;
         checkReplaceableCode(['triggerModalWithValidation, bvModal.show', 'bvModal.hide'], '.triggerModal(modalId, show | hide)'); //@btr-ignore
+        checkReplaceableCode(['type: list'], 'replace the whole prompt with \'chooseFromPrompt\''); //@btr-ignore
         checkReplaceableCode(['console.log(stringify'], 'colorLog OR consoleLogFull OR debugLog'); //@btr-ignore
         checkReplaceableCode(['fs from \'fs\''], '{ (specific fs methods) } from \'fs\''); //@btr-ignore
         checkReplaceableCode(['console.log'], 'colorLog OR consoleLogFull OR debugLog'); //@btr-ignore
+        checkReplaceableCode(['replaceAll('], '.replace (with global flag enabled)'); //@btr-ignore )
         checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine'); //@btr-ignore
-        checkReplaceableCode(['replaceAll'], '.replace (with global flag enabled)'); //@btr-ignore
         checkReplaceableCode(['readonly ', 'ReadonlyArray<'], 'Readonly<'); //@btr-ignore
         checkReplaceableCode(['{ description: string,'], ': commands'); //@btr-ignore
         checkReplaceableCode(['//@ts-ignore'], '//@ts-expect-error'); //@btr-ignore
@@ -1166,9 +1169,6 @@ export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
         checkReplaceableCode(['z.record'], 'zRecord'); //@btr-ignore
         checkReplaceableCode(['null as'], 'nullAs'); //@btr-ignore
         checkReplaceableCode([').then('], 'await'); //@btr-ignore
-        if (warningsCount.count > maxWarningsLogged) {
-            colorLog('yellow', `+${warningsCount.count - maxWarningsLogged} warnings not shown..`);
-        }
         function checkReplaceableCode(replaceableCodeStrings, suggestedReplacement) {
             replaceableCodeStrings.forEach(replaceableString => {
                 const withEscapedCharacters = replaceableString.replace(/(?=\W{1,1})/g, '\\'); //regexHere
@@ -1191,7 +1191,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
                 });
             });
         }
-    });
+    }
 }
 /**Check if a file in the provided filepath exists */
 export async function checkFileExists(path) { try {
@@ -1335,18 +1335,6 @@ export async function importFileFromProject(filename, extension) {
     catch (e) {
         return e;
     }
-}
-/**Prompt and handle admin/dev commands */
-export function inquirePromptCommands(functions, promptAgainAfterEachFn) {
-    inquirer.
-        prompt({ name: 'fn', type: 'list', message: 'Run a function:', choices: objectKeys(functions) }).
-        then(async (choice) => {
-        await functions[choice.fn]();
-        if (!promptAgainAfterEachFn) {
-            return;
-        }
-        inquirePromptCommands(functions, promptAgainAfterEachFn);
-    });
 }
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export function killProcess(message) { bigConsoleError(message); process.exit(); }

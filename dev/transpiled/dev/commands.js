@@ -6,14 +6,14 @@ import inquirer from 'inquirer';
 _;
 import { unlinkSync } from 'fs';
 _;
-_;
 import { execSync, execFile } from 'child_process';
+_;
 _;
 import { basicProjectChecks } from '../basicProjectChecks.js';
 _;
 import { utilsRepoName, npmVersionOptions, TSC_FLAGS } from '../constants.js';
 _;
-import { allPromises, asyncForEach, checkCodeThatCouldBeUpdated, checkFileExists, checkNoBtrErrorsOrWarnings, colorLog, copyToClipboard, delay, doNothing, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getFilesAndFoldersNames, inquirePromptCommands, killProcess, logEmptyLine, mapCommandsForInquirePrompt, questionAsPromise, safeRegexMatch, selfFilter, successLog } from '../btr.js';
+import { allPromises, asyncForEach, checkCodeThatCouldBeUpdated, checkFileExists, checkNoBtrErrorsOrWarnings, colorLog, copyToClipboard, delay, doNothing, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getFilesAndFoldersNames, killProcess, logEmptyLine, mapCommandsForInquirePrompt, objectKeys, questionAsPromise, safeRegexMatch, selfFilter, successLog } from '../btr.js';
 const fileWithRef = 'ref';
 const serverFolder_dist = '../dist';
 const PACKAGE_DOT_JSON = 'package.json';
@@ -22,36 +22,29 @@ const packageJsonContent = await fsReadFileAsync(PACKAGE_DOT_JSON);
 const isPackage = JSON.parse(packageJsonContent).name === '@botoron/utils';
 const tsFilePaths = getFilesAndFoldersNames('.', null).filter(path => path.includes('.ts') && !path.includes('client/'));
 process.env['prevent_divine_init'] = 'true';
-const sharedCommands = {
-    check: { description: 'btr-check the files in this very project', fn: btrCheckFilesAndReportResult },
-    test: { description: 'Transpile and run test/run.ts', fn: transpileAndRunTestRunTs },
-    EXIT: { description: 'Quit the command line', fn: quitCommandLineProgram }
-};
-const commands_forPackage = {
-    ...sharedCommands,
-    publishOnly: { description: 'npm version + npm publish', fn: package_publishOnly },
-    transpileAll: { description: 'Transpile base files if they pass all checks and emit the client versions', fn: package_transpileAll },
-    transpileBase: { description: 'Transpile the file bases, NOT for production', fn: package_transpileBaseFiles },
-    transpile_commit_and_PUBLISH: { description: '1) Transpile all. 2) Git commit + push. 3) npm version + PUBLISH', fn: package_transpile_git_andPublish },
-};
-const commands_forProject = {
-    ...sharedCommands,
-    btr: { description: 'Install/update @botoron/utils', fn: project_installBtrUtils },
-    'build-client': { description: 'Build the client files onto the ../dist/public', fn: project_buildClientFilesWithVite },
-    'build-server': { description: 'Build the server files onto ../dist', fn: project_buildServerFiles },
-    'build-all': { description: 'Transpile and copy/paste all files needed for ../dist', fn: project_buildAll },
-    localtunnel: { description: 'Expose vite\'s port through a tunnel', fn: project_forwardVitesPort },
-    nodemon: { description: 'Init Nodemon', fn: project_initNodemon },
-    transpile: { description: 'Transpile the files in ./server onto ./test', fn: project_btrCheckAndTranspileToTestFolder },
-    vue: { description: 'Move to the client folder and init vite', fn: project_initVite },
-};
-runCommands(isPackage ? commands_forPackage : commands_forProject);
+const sharedCommands = getSharedCommands();
+const commands_forPackage = getCommands_forPackage();
+const commands_forProject = getCommands_forProject();
+if (isPackage) {
+    runCommands(commands_forPackage);
+}
 //function declarations below
-function runCommands(commands) { inquirePromptCommands(mapCommandsForInquirePrompt(commands), true); }
+export async function projectCommandsHandler(commandsSpecificOfProject) {
+    const commandsForDevScriptOfProject = ['Predetermined @btr commands for all projects', 'Commands specific to the current project'];
+    const commandsGroup = await chooseFromPrompt('Select a group of commands to choose from:', commandsForDevScriptOfProject);
+    if (commandsGroup === 'Predetermined @btr commands for all projects') {
+        runCommands(commands_forProject);
+    }
+    if (commandsGroup === 'Commands specific to the current project') {
+        runCommands(commandsSpecificOfProject);
+    }
+}
+async function runCommands(commands) { await inquirePromptCommands(mapCommandsForInquirePrompt(commands), true); }
 async function package_transpileBaseFiles() { await transpileFiles(tsFilePaths.filter(path => !/\w\//.test(path)), '.'); }
 function project_buildAll() { project_buildClientFilesWithVite(); project_buildServerFiles(); }
 function quitCommandLineProgram() { killProcess('devForProject\'s commands terminated'); }
 function project_buildClientFilesWithVite() { execSync('cd client & npm run build'); }
+function execAndLog(command) { execSync(command); successLog(command); }
 function project_initNodemon() { execSync('nodemon test/server/init.js'); }
 function project_installBtrUtils() { execSync('npm i @botoron/utils'); }
 function project_initVite() { execSync('cd client & npm run dev'); }
@@ -62,20 +55,50 @@ async function btrCheck() {
     checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths), warningsCount);
     return checkNoBtrErrorsOrWarnings(errors, warningsCount);
 }
-async function getVersioningFromPrompt() {
-    return (await inquirer.
-        prompt({
-        name: 'versioning',
-        type: 'list',
-        message: 'Select an NPM versioning:',
-        choices: npmVersionOptions
-    })).versioning;
+async function chooseFromPrompt(message, choices) {
+    return (await inquirer.prompt({ name: 'choice', type: 'list', message, choices })).choice; //@btr-ignore
+}
+function getCommands_forPackage() {
+    return {
+        ...sharedCommands,
+        publishOnly: { description: 'npm version + npm publish', fn: package_publishOnly },
+        transpileAll: { description: 'Transpile base files if they pass all checks and emit the client versions', fn: package_transpileAll },
+        transpileBase: { description: 'Transpile the file bases, NOT for production', fn: package_transpileBaseFiles },
+        transpile_commit_and_PUBLISH: { description: '1) Transpile all. 2) Git commit + push. 3) npm version + PUBLISH', fn: package_transpile_git_andPublish },
+    };
+}
+function getCommands_forProject() {
+    return {
+        ...sharedCommands,
+        btr: { description: 'Install/update @botoron/utils', fn: project_installBtrUtils },
+        'build-client': { description: 'Build the client files onto the ../dist/public', fn: project_buildClientFilesWithVite },
+        'build-server': { description: 'Build the server files onto ../dist', fn: project_buildServerFiles },
+        'build-all': { description: 'Transpile and copy/paste all files needed for ../dist', fn: project_buildAll },
+        localtunnel: { description: 'Expose vite\'s port through a tunnel', fn: project_forwardVitesPort },
+        nodemon: { description: 'Init Nodemon', fn: project_initNodemon },
+        transpile: { description: 'Transpile the files in ./server onto ./test', fn: project_btrCheckAndTranspileToTestFolder },
+        vue: { description: 'Move to the client folder and init vite', fn: project_initVite },
+    };
+}
+function getSharedCommands() {
+    return {
+        check: { description: 'btr-check the files in this very project', fn: btrCheckFilesAndReportResult },
+        test: { description: 'Transpile and run test/run.ts', fn: transpileAndRunTestRunTs },
+        EXIT: { description: 'Quit the command line', fn: quitCommandLineProgram }
+    };
+}
+async function inquirePromptCommands(fns, promptAgainAfterEachFn //TODO: this parameter is only ever passed as true, hard-code it instead?
+) {
+    const choice = await chooseFromPrompt('Run a function:', objectKeys(fns));
+    await fns[choice]();
+    if (!promptAgainAfterEachFn) {
+        return;
+    }
+    await inquirePromptCommands(fns, promptAgainAfterEachFn);
 }
 async function package_publishOnly() {
-    execSync(`npm version ${await getVersioningFromPrompt()}`);
-    successLog('package version\'d');
-    execSync('npm publish');
-    successLog('package publish\'d');
+    execAndLog(`npm version ${await chooseFromPrompt('Select an NPM versioning:', npmVersionOptions)}`);
+    execAndLog('npm publish');
 }
 async function package_transpileAll() {
     if (!await btrCheck()) {
@@ -102,10 +125,7 @@ async function package_transpileAll() {
 async function package_transpile_git_andPublish() {
     await package_transpileAll();
     await prompCommitMessageAndPush(utilsRepoName);
-    execSync(`npm version ${await getVersioningFromPrompt()}`);
-    successLog('package version\'d');
-    execSync('npm publish');
-    successLog('package publish\'d');
+    await package_publishOnly();
 }
 async function project_btrCheckAndTranspileToTestFolder() {
     if (!await btrCheck()) {
@@ -150,27 +170,17 @@ async function project_buildServerFiles() {
     }
 }
 async function prompCommitMessageAndPush(repoName) {
-    const commitType = await getCommitTypeFromPrompt();
+    const commitType = await getCommitType();
     //order for these 3 below matters
     logDetailsForPrompt();
     const commitMessage = await questionAsPromise('Enter a commit message:');
     copyToClipboard(commitType + ': ' + commitMessage);
-    gitAddCommitPush();
-    async function getCommitTypeFromPrompt() {
-        return (await inquirer.
-            prompt({
-            name: 'versioning',
-            type: 'list',
-            message: 'Select an NPM versioning:',
-            choices: ['fix', 'feat', 'build', 'chore', 'ci', 'docs', 'refactor', 'style', 'test']
-        })).versioning;
-    }
-    function gitAddCommitPush() {
-        execAndLog('git add .');
-        colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.');
-        execSync('git commit');
-        execAndLog('git push');
-        function execAndLog(command) { execSync(command); successLog(command); }
+    execAndLog('git add .');
+    colorLog('cyan', 'Commit message copied to clipboard, paste it in the editor, save and close.');
+    execSync('git commit');
+    execAndLog('git push');
+    async function getCommitType() {
+        await chooseFromPrompt('Define the type of commit:', ['fix', 'feat', 'build', 'chore', 'ci', 'docs', 'refactor', 'style', 'test']);
     }
     function logDetailsForPrompt() {
         delay(500).then(() => {
@@ -191,7 +201,7 @@ async function transpileFiles(sourceFilesArr, outputDirectory) {
     if (!sourceFilesArr.length) {
         killProcess('transpileFiles\'s sourceFiles argument should NOT be an empty array!');
     }
-    const allJsFilenames = sourceFilesArr.map(filename => `${outputDirectory}/${safeRegexMatch(filename, /\w{1,}(?=\.ts)/g, 0)}.js`);
+    const allJsFilenames = sourceFilesArr.map(filename => `${outputDirectory}/${safeRegexMatch(filename, /\w{1,}(?=\.ts)/g, 0)}.js`); //regexHere
     await asyncForEach(allJsFilenames, false, deleteOldJsVersion);
     const sourceFiles = sourceFilesArr.join(' ');
     const command = `tsc ${TSC_FLAGS} ${sourceFiles} --outDir ${outputDirectory}`;

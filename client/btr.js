@@ -11,7 +11,6 @@ _;
 _;
 _;
 _;
-_;
 import { btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, nullable, recordOfCommands } ..types.js';
 _;
 import { getUniqueId_generator, isNode, timers, zValidVariants } ..constants.js';
@@ -258,7 +257,7 @@ export async function asyncForEach(array, resolveSequentially, asyncFn) {
 }
 //Await for an asynchronous function to apply to all the items of an array
 export async function allPromises(array, asyncFn) {
-    return await Promise.all(array.map(item => asyncFn(item))); //@btr-ignore
+    return await Promise.all(array.map((item, index) => asyncFn(item, index))); //@btr-ignore
 }
 /**Set interval with try-catch and call it immediately*/
 export function doAndRepeat(fn, interval) { divine.try(fn, []); setInterval(() => divine.try(fn, []), interval); }

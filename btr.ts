@@ -13,8 +13,6 @@ import express from 'express'	//DELETETHISFORCLIENT
 _
 import fetch from 'node-fetch'	//DELETETHISFORCLIENT
 _
-import inquirer from 'inquirer'	//DELETETHISFORCLIENT
-_
 import clipboard from 'clipboardy'	//DELETETHISFORCLIENT
 _
 import { Socket } from 'socket.io'	//DELETETHISFORCLIENT
@@ -295,8 +293,8 @@ export async function asyncForEach<T>(array: T[], resolveSequentially: boolean, 
 	if (!resolveSequentially) { await allPromises(array, asyncFn) }
 }
 //Await for an asynchronous function to apply to all the items of an array
-export async function allPromises<T, returnType>(array: T[], asyncFn: (item: T) => Promise<returnType>) {
-	return await Promise.all(array.map(item => asyncFn(item))) as returnType[] //@btr-ignore
+export async function allPromises<T, returnType>(array: T[], asyncFn: (item: T, index?: number) => Promise<returnType>) {
+	return await Promise.all(array.map((item, index) => asyncFn(item, index))) as returnType[] //@btr-ignore
 }
 /**Set interval with try-catch and call it immediately*/
 export function doAndRepeat(fn: () => void, interval: number) { divine.try(fn, []); setInterval(() => divine.try(fn, []), interval) }
@@ -1187,16 +1185,20 @@ _ /********** FOR NODE-ONLY ******************** FOR NODE-ONLY *****************
 
 /**Basically custom ESlint warnings */
 export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[], warningsCount: warningsCount) {
-	cachedFiles.forEach(file => {
-		const maxWarningsLogged = 5
+	const maxWarningsLogged = 5
+	cachedFiles.forEach(checkFile)
+	if (warningsCount.count > maxWarningsLogged) { colorLog('yellow', `+${warningsCount.count - maxWarningsLogged} warnings not shown..`) }
+
+	function checkFile(file: cachedFile) {
 		const { path, content } = file
 
 		checkReplaceableCode(['triggerModalWithValidation, bvModal.show', 'bvModal.hide'], '.triggerModal(modalId, show | hide)')	//@btr-ignore
+		checkReplaceableCode(['type: list'], 'replace the whole prompt with \'chooseFromPrompt\'') //@btr-ignore
 		checkReplaceableCode(['console.log(stringify'], 'colorLog OR consoleLogFull OR debugLog')	//@btr-ignore
 		checkReplaceableCode(['fs from \'fs\''], '{ (specific fs methods) } from \'fs\'') //@btr-ignore
 		checkReplaceableCode(['console.log'], 'colorLog OR consoleLogFull OR debugLog')	//@btr-ignore
+		checkReplaceableCode(['replaceAll('], '.replace (with global flag enabled)') //@btr-ignore )
 		checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine')	//@btr-ignore
-		checkReplaceableCode(['replaceAll'], '.replace (with global flag enabled)') //@btr-ignore
 		checkReplaceableCode(['readonly ', 'ReadonlyArray<'], 'Readonly<')	//@btr-ignore
 		checkReplaceableCode(['{ description: string,'], ': commands')	//@btr-ignore
 		checkReplaceableCode(['//@ts-ignore'], '//@ts-expect-error')	//@btr-ignore
@@ -1215,8 +1217,6 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[], warningsC
 		checkReplaceableCode(['z.record'], 'zRecord')	//@btr-ignore
 		checkReplaceableCode(['null as'], 'nullAs')	//@btr-ignore
 		checkReplaceableCode([').then('], 'await') //@btr-ignore
-
-		if (warningsCount.count > maxWarningsLogged) { colorLog('yellow', `+${warningsCount.count - maxWarningsLogged} warnings not shown..`) }
 
 		function checkReplaceableCode(replaceableCodeStrings: string[], suggestedReplacement: string) {
 			replaceableCodeStrings.forEach(replaceableString => {
@@ -1239,7 +1239,7 @@ export function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[], warningsC
 				})
 			})
 		}
-	})
+	}
 }
 /**Check if a file in the provided filepath exists */
 export async function checkFileExists(path: string) { try { await promises.access(path); return true } catch { return false } }
@@ -1365,22 +1365,6 @@ export async function importFileFromProject<T>(filename: string, extension: 'cjs
 		return mainPackageJson as T
 
 	} catch (e) { return e }
-}
-/**Prompt and handle admin/dev commands */
-export function inquirePromptCommands<
-	K extends string,
-	F extends () => maybePromise<unknown>
->(
-	functions: Record<K, F>,
-	promptAgainAfterEachFn: boolean
-) {
-	inquirer.
-		prompt({ name: 'fn', type: 'list', message: 'Run a function:', choices: objectKeys(functions) }).
-		then(async (choice: { fn: K }) => {
-			await functions[choice.fn]()
-			if (!promptAgainAfterEachFn) { return }
-			inquirePromptCommands(functions, promptAgainAfterEachFn)
-		})
 }
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export function killProcess(message: string) { bigConsoleError(message); process.exit() }
