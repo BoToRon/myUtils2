@@ -37,18 +37,24 @@ export async function basicProjectChecks() {
 	checkObligatoryTemplateFilesAreIdentical()
 
 	//2. Obligatory specific-files matches
-	checkSpecificMatches_AppVue()
-	checkSpecificMatches_clientIndexTs()
-	checkSpecificMatches_clientSocketTs()
-	checkSpecificMatches_clientStoreTs()
-	checkSpecificMatches_globalFnsTs()
+
+	//2.1 types folder
 	checkSpecificMatches_typesIoTs()
 	checkSpecificMatches_typesTypesTs()
+	checkSpecificMatches_typesZTs()
+	//2.2 global folder
+	checkSpecificMatches_globalFnsTs()
+	checkSpecificMatches_globalVarsTs()
+	//2.3 server folder
 	checkSpecificMatches_serverEventsTs()
 	checkSpecificMatches_serverInitTs()
 	checkSpecificMatches_serverLoginTs()
 	checkSpecificMatches_serverRefTs()
-	checkBasicValidAdminCommands()
+	//2.4 client folder
+	checkSpecificMatches_clientAppVue()
+	checkSpecificMatches_clientIndexTs()
+	checkSpecificMatches_clientSocketTs()
+	checkSpecificMatches_clientStoreTs()
 
 	//3. Help prevent bugs
 	checkClientFilesDontReferenceLocalStorageDirectly()
@@ -78,11 +84,6 @@ function externalTemplatePath(filename: string) { return '../../_templateFiles/'
 function addToErrors(path: string, error: string) { errors.push(`(at ${path}): ${error}`) }
 function inBtrUtils(path: string) { return './node_modules/@botoron/utils/' + path }
 function asConsecutiveLines(lines: string[]) { return lines.join('\r\n') }
-
-function checkBasicValidAdminCommands() {
-	checkMatchInSpecificFile(GLOBAL_VARS_TS, 'export const adminCommands = [\'getSockets\', \'help\', \'ref\',')
-	checkMatchInSpecificFile(TYPES_Z_TS, 'export const zValidAdminCommands = z.enum(adminCommands)')
-}
 
 /**Check all the top-level functions in main .ts server files have a description */
 function checkAllExportedFunctionsAreDescribed() {
@@ -298,7 +299,7 @@ function checkServerAndClientFilesLogTheirInitialization() {
 		})
 }
 
-function checkSpecificMatches_AppVue() {
+function checkSpecificMatches_clientAppVue() {
 	[
 		asConsecutiveLines([
 			'<template>',
@@ -431,6 +432,15 @@ function checkSpecificMatches_globalFnsTs() {
 	])) //) <--to not mess with colours)
 }
 
+function checkSpecificMatches_globalVarsTs() {
+	[
+		'export const adminCommands = [\'getSockets\', \'help\', \'ref\',',
+		'as const //adminCommands',
+		'export const mongoCollections = [\'misc\',',
+		'as const //mongoCollections',
+	].forEach(line => checkMatchInSpecificFile(GLOBAL_VARS_TS, line))
+}
+
 function checkSpecificMatches_serverInitTs() {
 	checkMatchInSpecificFile('./server/init.ts', 'successLog(stringify({ refInitialized: true, ioInitialized }))')
 }
@@ -484,6 +494,7 @@ function checkSpecificMatches_typesIoTs() {
 
 function checkSpecificMatches_typesTypesTs() {
 	[
+		'import { mongoCollections } from \'../global/vars.js\'',
 		asConsecutiveLines([
 			'/**imported from utils */',
 			'declare global {',
@@ -510,9 +521,16 @@ function checkSpecificMatches_typesTypesTs() {
 		]),
 		'type mongoMisc = { adminKey: string, pageVisits: number',
 		'type validModalId = \'modal-',
-		'type validMongoCollection = \'misc\'',
+		'type validMongoCollection = typeof mongoCollections[number]',
 		'type validView = \'admin\' |',
 	].forEach(x => checkMatchInSpecificFile('./types/types.d.ts', x))
+}
+
+function checkSpecificMatches_typesZTs() {
+	[
+		'export const zValidAdminCommands = z.enum(adminCommands)',
+		'adminCommands } from \'../global/vars.js\''
+	].forEach(line => checkMatchInSpecificFile(TYPES_Z_TS, line))
 }
 
 /**Check all the vue components are trackable by the window */
