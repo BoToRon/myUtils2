@@ -26,10 +26,12 @@ export const npmVersionOptions = ['major', 'minor', 'patch'] as const
 export const timers: timer[] = []
 
 export const zMyEnv = z.object({
+	MONGO_URI: z.undefined(), //Deprecated, using MONGO_URI_START + DATABASE_NAME now to build the URI
 	DEV_OR_PROD: z.enum(['DEV', 'PROD']),
+	MONGO_URI_START: z.string(),
 	ADMIN_PASSWORD: z.string(),
+	DATABASE_NAME: z.string(),
 	PORT: z.literal('3000'),
 	ERIS_TOKEN: z.string(),
-	MONGO_URI: z.string(),
 	APP_NAME: z.string(),
 })

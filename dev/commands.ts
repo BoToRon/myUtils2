@@ -1,7 +1,6 @@
 let _
 _ //			tsc --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
 _ // 			node dev/transpiled/dev/commands.js			2
-_
 import inquirer from 'inquirer'
 _
 import { unlinkSync } from 'fs'
@@ -15,9 +14,10 @@ _
 import { npmVersionOptions, TSC_FLAGS } from '../constants.js'
 _
 import {
-	allPromises, asyncForEach, checkCodeThatCouldBeUpdated, checkFileExists, checkNoBtrErrorsOrWarnings, colorLog, copyToClipboard,
-	delay, doNothing, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getFilesAndFoldersNames, killProcess,
-	logEmptyLine, mapCommandsForInquirePrompt, objectKeys, questionAsPromise, safeRegexMatch, selfFilter, successLog
+	allPromises, arrayToObject, asyncForEach, checkCodeThatCouldBeUpdated, checkFileExists, checkNoBtrErrorsOrWarnings, colorLog,
+	consoleLogFull, copyToClipboard, delay, doNothing, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles,
+	getEntireMongoCollection, getFilesAndFoldersNames, killProcess, logEmptyLine, mapCommandsForInquirePrompt,
+	objectKeys, questionAsPromise, safeRegexMatch, selfFilter, successLog
 } from '../btr.js'
 
 const fileWithRef = 'ref'
@@ -38,9 +38,13 @@ if (isPackage) { runCommands(commands_forPackage) }
 
 //function declarations below
 
-export function projectCommandsHandler(commandsSpecificOfProject: recordOfCommands<string>) {
+export function projectCommandsHandler(
+	mongoCollections: Readonly<string[]>,
+	commandsSpecificOfProject: recordOfCommands<string>
+) {
 	runCommands({
 		...getSeparator('CUSTOM COMMANDS BELOW'),
+		...getLogAll_forAllMongoCollections(),
 		...commandsSpecificOfProject,
 		...getSeparator('CUSTOM COMMANDS ABOVE'),
 		...getSeparator('BTR COMMANDS BELOW'),
@@ -49,6 +53,13 @@ export function projectCommandsHandler(commandsSpecificOfProject: recordOfComman
 	})
 
 	function getSeparator(name: string) { return { ['-'.repeat(40 - name.length) + name]: { description: '-'.repeat(40), fn: doNothing } } }
+
+	function getLogAll_forAllMongoCollections() {
+		return arrayToObject(mongoCollections, (key) => ({
+			description: `Log the entire '${key}' mongo collection`,
+			fn: async () => consoleLogFull(await getEntireMongoCollection(key))
+		}))
+	}
 }
 
 async function runCommands(commands: recordOfCommands<string>) { await inquirePromptCommands(mapCommandsForInquirePrompt(commands), true) }

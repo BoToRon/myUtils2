@@ -1302,6 +1302,10 @@ export function getDebugOptionsAndLog<K extends string>(devOrProd: 'dev' | 'prod
 		}
 	}
 }
+/**Get an array with all the items in a Mongo Collection */
+export async function getEntireMongoCollection<T>(collectionName: Readonly<string>) {
+	return await (await getMongoClient()).db(getEnviromentVariables().DATABASE_NAME).collection(collectionName).find({}).toArray() as T[]
+}
 /** Get the contents of the project's .env */
 export function getEnviromentVariables() {
 	const require = createRequire(import.meta.url)
@@ -1323,6 +1327,23 @@ export function getFilesAndFoldersNames(directory: string, extension: nullable<'
 
 	return extension ? results.filter(path => path.includes(extension)) : results
 }
+/**fetch the latest package.json of myUtils */
+export async function getLatestPackageJsonFromGithub() {
+	const fetched = await fetch('https://api.github.com/repos/botoron/utils/contents/package.json', { method: 'GET' })
+	return Buffer.from((await fetched.json() as { content: string }).content, 'base64').toString('utf8')
+}
+/**It's monging time >:D */
+export async function getMongoClient() {
+	const { DATABASE_NAME, MONGO_URI_START } = getEnviromentVariables()
+
+	const mongo = new mongodb.MongoClient(MONGO_URI_START + DATABASE_NAME + '?retryWrites=true&w=majority')
+	let mongoClient = <MongoClient>nullAs()
+	mongo.connect((err, client) => { if (err) { throw err } mongoClient = client as MongoClient })
+	colorLog('cyan', 'waiting for Mongo')
+	while (!mongoClient) { await delay(1000) }
+	successLog('It\'s Monging time >:D')
+	return mongoClient
+}
 /**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
 export function getSeparatingCommentBlock(message: string) {
 	let line = ''
@@ -1331,23 +1352,6 @@ export function getSeparatingCommentBlock(message: string) {
 	const theBlock = `_ /${line}/\n`.repeat(5)
 	console.log(theBlock) //@btr-ignore
 	return theBlock
-}
-/**fetch the latest package.json of myUtils */
-export async function getLatestPackageJsonFromGithub() {
-	const fetched = await fetch('https://api.github.com/repos/botoron/utils/contents/package.json', { method: 'GET' })
-	return Buffer.from((await fetched.json() as { content: string }).content, 'base64').toString('utf8')
-}
-/**It's monging time >:D */
-export async function getMongoClient() {
-	const { MONGO_URI } = getEnviromentVariables()
-
-	const mongo = new mongodb.MongoClient(MONGO_URI)
-	let mongoClient = <MongoClient>nullAs()
-	mongo.connect((err, client) => { if (err) { throw err } mongoClient = client as MongoClient })
-	colorLog('cyan', 'waiting for Mongo')
-	while (!mongoClient) { await delay(1000) }
-	successLog('It\'s Monging time >:D')
-	return mongoClient
 }
 /**Start and return an http Express server */
 export function getStartedHttpServer() {
