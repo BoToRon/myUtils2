@@ -29,15 +29,16 @@ if (isPackage) {
     runCommands(commands_forPackage);
 }
 //function declarations below
-export async function projectCommandsHandler(commandsSpecificOfProject) {
-    const commandsForDevScriptOfProject = ['Predetermined @btr commands for all projects', 'Commands specific to the current project'];
-    const commandsGroup = await chooseFromPrompt('Select a group of commands to choose from:', commandsForDevScriptOfProject);
-    if (commandsGroup === 'Predetermined @btr commands for all projects') {
-        runCommands(commands_forProject);
-    }
-    if (commandsGroup === 'Commands specific to the current project') {
-        runCommands(commandsSpecificOfProject);
-    }
+export function projectCommandsHandler(commandsSpecificOfProject) {
+    runCommands({
+        ...getSeparator('CUSTOM COMMANDS BELOW'),
+        ...commandsSpecificOfProject,
+        ...getSeparator('CUSTOM COMMANDS ABOVE'),
+        ...getSeparator('BTR COMMANDS BELOW'),
+        ...commands_forProject,
+        ...getSeparator('BTR COMMANDS ABOVE'),
+    });
+    function getSeparator(name) { return { ['-'.repeat(40 - name.length) + name]: { description: '-'.repeat(40), fn: doNothing } }; }
 }
 async function runCommands(commands) { await inquirePromptCommands(mapCommandsForInquirePrompt(commands), true); }
 function project_installBtrUtilsAndKillProcess() { execSync('npm i @botoron/utils'); killProcess('Reinit command line to apply updates'); }

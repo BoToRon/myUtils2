@@ -1,2 +1,2 @@
 import { recordOfCommands } from '../types.js';
-export declare function projectCommandsHandler(commandsSpecificOfProject: recordOfCommands<string>): Promise<void>;
+export declare function projectCommandsHandler(commandsSpecificOfProject: recordOfCommands<string>): void;
