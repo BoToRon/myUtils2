@@ -5,31 +5,27 @@ import inquirer from 'inquirer';
 _;
 import { unlinkSync } from 'fs';
 _;
-_;
 import { execSync, execFile } from 'child_process';
 _;
 _;
 import { basicProjectChecks } from '../basicProjectChecks.js';
 _;
-import { npmVersionOptions, TSC_FLAGS } from '../constants.js';
+import { npmVersionOptions, PACKAGE_DOT_JSON, TSC_FLAGS } from '../constants.js';
 _;
-import { allPromises, arrayToObject, asyncForEach, checkCodeThatCouldBeUpdated, checkFileExists, checkNoBtrErrorsOrWarnings, colorLog, consoleLogFull, copyToClipboard, delay, doNothing, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getEntireMongoCollection, getFilesAndFoldersNames, killProcess, logEmptyLine, mapCommandsForInquirePrompt, objectKeys, questionAsPromise, safeRegexMatch, selfFilter, successLog } from '../btr.js';
+import { allPromises, arrayToObject, asyncForEach, checkCodeThatCouldBeUpdated, checkFileExists, checkNoBtrErrorsOrWarnings, colorLog, consoleLogFull, copyToClipboard, delay, doNothing, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getContentOfPackageJson, getMongoCollectionArray, getFilesAndFoldersNames, isMyUtilsPackage, killProcess, logEmptyLine, mapCommandsForInquirePrompt, objectKeys, questionAsPromise, safeRegexMatch, selfFilter, successLog, } from '../btr.js';
 const fileWithRef = 'ref';
 const serverFolder_dist = '../dist';
-const PACKAGE_DOT_JSON = 'package.json';
 const errors = [];
-const packageJsonContent = await fsReadFileAsync(PACKAGE_DOT_JSON);
-const isPackage = JSON.parse(packageJsonContent).name === '@botoron/utils';
 const tsFilePaths = getFilesAndFoldersNames('.', null).filter(path => path.includes('.ts') && !/(client\/|\.d\.ts)/.test(path));
 process.env['prevent_divine_init'] = 'true';
 const sharedCommands = getSharedCommands();
 const commands_forPackage = getCommands_forPackage();
 const commands_forProject = getCommands_forProject();
-if (isPackage) {
+if (await isMyUtilsPackage()) {
     runCommands(commands_forPackage);
 }
 //function declarations below
-export function projectCommandsHandler(mongoClient, mongoCollections, commandsSpecificOfProject) {
+export function projectCommandsHandler(mongoCollections, commandsSpecificOfProject) {
     runCommands({
         ...getSeparator('CUSTOM COMMANDS BELOW'),
         ...getLogAll_forAllMongoCollections(),
@@ -42,7 +38,7 @@ export function projectCommandsHandler(mongoClient, mongoCollections, commandsSp
     function getLogAll_forAllMongoCollections() {
         return arrayToObject(mongoCollections, (key) => ({
             description: `Log the entire '${key}' mongo collection`,
-            fn: async () => consoleLogFull(await getEntireMongoCollection(mongoClient, key))
+            fn: async () => consoleLogFull(await getMongoCollectionArray(key, 'all'))
         }));
     }
     function getSeparator(name) {
@@ -70,8 +66,8 @@ async function chooseFromPrompt(message, choices) {
 function getCommands_forPackage() {
     return {
         ...sharedCommands,
-        publishOnly: { description: 'npm version + npm publish', fn: package_publishOnly },
         transpileAll: { description: 'Transpile base files if they pass all checks and emit the client versions', fn: package_transpileAll },
+        versionAndPublish: { description: 'npm version + npm publish', fn: package_versionAndPublish },
     };
 }
 function getCommands_forProject() {
@@ -103,7 +99,7 @@ async function inquirePromptCommands(fns, promptAgainAfterEachFn //TODO: this pa
     }
     await inquirePromptCommands(fns, promptAgainAfterEachFn);
 }
-async function package_publishOnly() {
+async function package_versionAndPublish() {
     execAndLog(`npm version ${await chooseFromPrompt('Select an NPM versioning:', npmVersionOptions)}`);
     execAndLog('npm publish');
 }
@@ -123,6 +119,7 @@ async function package_transpileAll() {
     await transpileFiles([`client/${filename}`], './client');
     await fixRelativeImports();
     successLog('browser versions emitted');
+    successLog('You may now Commit & Push and thn run the versionAndPublish command');
     async function fixRelativeImports() {
         async function doIt(x) { await replaceStringInFile(x, /from '\.\/(?=constants|types)/g, '..'); }
         const clientFiles = [`./client/${filename}`, `./client/${filename.replace('.ts', '.js')}`];
@@ -134,7 +131,7 @@ async function project_btrCheckAndTranspileToTestFolder() {
         return;
     }
     await transpileFiles(['server/init.ts'], './test');
-    await fsWriteFileAsync('test/package.json', packageJsonContent);
+    await fsWriteFileAsync('test/package.json', await getContentOfPackageJson());
     successLog('files transpiled to ./test');
 }
 async function project_buildServerFiles() {

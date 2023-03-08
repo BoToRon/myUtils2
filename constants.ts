@@ -2,7 +2,6 @@ let _
 import { z } from 'zod'
 _
 import { timer } from './types.js'
-_
 
 export const GITIGNORE = './.gitignore'
 export const CLIENT_SRC = './client/src'
@@ -35,3 +34,4 @@ export const zMyEnv = z.object({
 	ERIS_TOKEN: z.string(),
 	APP_NAME: z.string(),
 })
+

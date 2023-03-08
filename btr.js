@@ -25,7 +25,7 @@ _;
 import { promises, readdirSync, statSync } from 'fs'; //DELETETHISFORCLIENT 
 _;
 _;
-import { getUniqueId_generator, isNode, timers, zValidVariants } from './constants.js';
+import { getUniqueId_generator, isNode, PACKAGE_DOT_JSON, timers, zValidVariants } from './constants.js';
 _;
 import { z } from 'zod';
 _;
@@ -1010,6 +1010,8 @@ export function copyToClipboard_server() { doNothing; }
 export function doAndRepeat_server() { doNothing; }
 /**@deprecated use "formatDate" instead */
 export function getFormattedTimestamp() { doNothing; }
+/**@deperecated use "mongoClient" instead */
+export function getMongoClient() { doNothing; }
 /** @deprecated use either zPipe (persistenType with zod errors) or pipe_mutableType! */
 export function pipe_persistentType() { doNothing; }
 /**@deprecated use "trackVueComponent" instead */
@@ -1127,6 +1129,34 @@ export const divine = (function () {
     };
 })();
 // ! DELETEEVERYTHINGBELOW, as it is only meant for server-side use
+_; /********** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ***********/
+_; /********** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ***********/
+_; /********** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ***********/
+_; /********** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ***********/
+_; /********** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ***********/
+_; /********** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ***********/
+_; /********** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ***********/
+_; /********** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ***********/
+_; /********** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ***********/
+_; /********** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ***********/
+export const mongoClient = await (async function () {
+    if (await isMyUtilsPackage()) {
+        return nullAs();
+    }
+    const { DATABASE_NAME, MONGO_URI_START } = getEnviromentVariables();
+    const mongo = new MongoClient(MONGO_URI_START + DATABASE_NAME + '?retryWrites=true&w=majority');
+    let mongoClient = nullAs();
+    //TODO: migrate from the deprecated connect method
+    mongo.connect((err, client) => { if (err) {
+        throw err;
+    } mongoClient = client; });
+    colorLog('cyan', 'waiting for Mongo');
+    while (!mongoClient) {
+        await delay(1000);
+    }
+    successLog('It\'s Monging time >:D');
+    return mongoClient;
+})();
 _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
 _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
 _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
@@ -1152,7 +1182,6 @@ export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
         checkReplaceableCode(['fs from \'fs\''], '{ (specific fs methods) } from \'fs\''); //@btr-ignore
         checkReplaceableCode(['console.log'], 'colorLog OR consoleLogFull OR debugLog'); //@btr-ignore
         checkReplaceableCode(['replaceAll('], '.replace (with global flag enabled)'); //@btr-ignore )
-        checkReplaceableCode(['function mongoCollection'], 'getMongoCollection_curry'); //@btr-ignore
         checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine'); //@btr-ignore
         checkReplaceableCode(['readonly ', 'ReadonlyArray<'], 'Readonly<'); //@btr-ignore
         checkReplaceableCode(['{ description: string,'], ': commands'); //@btr-ignore
@@ -1250,6 +1279,8 @@ export async function getCachedFiles(errors, filepaths) {
         errors.push(error);
     }
 }
+//TODO: decribe me
+export async function getContentOfPackageJson() { return await fsReadFileAsync(PACKAGE_DOT_JSON); }
 /**For a project's debugging purposes */
 export function getDebugOptionsAndLog(devOrProd, options) {
     function forDevForProd(forDev, forProd) { return { dev: forDev, prod: forProd }[devOrProd]; }
@@ -1265,10 +1296,6 @@ export function getDebugOptionsAndLog(devOrProd, options) {
             logEmptyLine();
         }
     };
-}
-/**Get an array with all the items in a Mongo Collection */
-export async function getEntireMongoCollection(mongoClient, collectionName) {
-    return await mongoClient.db(getEnviromentVariables().DATABASE_NAME).collection(collectionName).find({}).toArray();
 }
 /** Get the contents of the project's .env */
 export function getEnviromentVariables() {
@@ -1297,24 +1324,12 @@ export async function getLatestPackageJsonFromGithub() {
     const fetched = await fetch('https://api.github.com/repos/botoron/utils/contents/package.json', { method: 'GET' });
     return Buffer.from((await fetched.json()).content, 'base64').toString('utf8');
 }
-/**It's monging time >:D */
-export async function getMongoClient() {
-    const { DATABASE_NAME, MONGO_URI_START } = getEnviromentVariables();
-    const mongo = new MongoClient(MONGO_URI_START + DATABASE_NAME + '?retryWrites=true&w=majority');
-    let mongoClient = nullAs();
-    //TODO: migrate from the deprecated connect method
-    mongo.connect((err, client) => { if (err) {
-        throw err;
-    } mongoClient = client; });
-    colorLog('cyan', 'waiting for Mongo');
-    while (!mongoClient) {
-        await delay(1000);
-    }
-    successLog('It\'s Monging time >:D');
-    return mongoClient;
-}
-export function getMongoCollection_curry(mongoClient, database) {
-    return function getMongoCollection(collection) { return mongoClient.db(database).collection(collection); };
+/**Get an array with either all the items in a Mongo Collection, or an amount of sample items */
+export async function getMongoCollectionArray(collectionName, amount) {
+    const collection = mongoCollection(collectionName);
+    return (await (amount === 'all' ?
+        collection.find({}) :
+        collection.aggregate([{ $sample: { size: amount } }])).toArray());
 }
 /**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
 export function getSeparatingCommentBlock(message) {
@@ -1349,6 +1364,8 @@ export async function importFileFromProject(filename, extension) {
         return e;
     }
 }
+//TODO: describe me
+export async function isMyUtilsPackage() { return JSON.parse(await getContentOfPackageJson()).name === '@botoron/utils'; }
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export function killProcess(message) { bigConsoleError(message); process.exit(); }
 //TODO: describe me
@@ -1356,6 +1373,10 @@ export function mapCommandsForInquirePrompt(commands) {
     const object = {};
     objectEntries(commands).forEach(({ key, value }) => object[key + ': ' + value.description] = value.fn);
     return object;
+}
+//TODO: describe me
+export function mongoCollection(collectionName) {
+    return mongoClient.db(getEnviromentVariables().DATABASE_NAME).collection(collectionName);
 }
 /**Prompts a question in the terminal, awaits for the input and returns it */
 export async function questionAsPromise(question) {

@@ -17,7 +17,7 @@ import {
 	btr_trackedVueComponent, btr_validVariant, btr_bvModal, cachedFile, maybePromise, nullable, recordOfCommands, timer, zSchema
 } ..types.js'
 _
-import { getUniqueId_generator, isNode, timers, zMyEnv, zValidVariants } ..constants.js'
+import { getUniqueId_generator, isNode, PACKAGE_DOT_JSON, timers, zMyEnv, zValidVariants } ..constants.js'
 _
 import { type Primitive, z, type ZodRawShape, type ZodTypeAny } from 'zod'
 _
@@ -1048,6 +1048,8 @@ export function copyToClipboard_server() { doNothing }
 export function doAndRepeat_server() { doNothing }
 /**@deprecated use "formatDate" instead */
 export function getFormattedTimestamp() { doNothing }
+/**@deperecated use "mongoClient" instead */
+export function getMongoClient() { doNothing }
 /** @deprecated use either zPipe (persistenType with zod errors) or pipe_mutableType! */
 export function pipe_persistentType() { doNothing }
 /**@deprecated use "trackVueComponent" instead */
