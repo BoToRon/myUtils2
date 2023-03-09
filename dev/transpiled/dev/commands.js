@@ -46,7 +46,14 @@ export function projectCommandsHandler(mongoCollections, commandsSpecificOfProje
     }
 }
 async function runCommands(commands) { await inquirePromptCommands(mapCommandsForInquirePrompt(commands), true); }
-function project_installBtrUtilsAndKillProcess() { execSync('npm i @botoron/utils'); killProcess('Reinit command line to apply updates'); }
+function project_installBtrUtils_setValidMongoCollections_andKillCommandLine() {
+    execSync('npm i @botoron/utils');
+    const tEquals = 'type validMongoCollection = ';
+    const btrTs = './node_modules/@botoron/utils/btr.ts';
+    replaceStringInFile(btrTs, '//importOf_mongoCollections_here', 'import { mongoCollections } from \'../../../global/vars.js\'');
+    replaceStringInFile(btrTs, tEquals + 'string', tEquals + 'typeof mongoCollections[number]');
+    killProcess('Reinit command line to apply updates');
+}
 function project_buildAll() { project_buildClientFilesWithVite(); project_buildServerFiles(); }
 function quitCommandLineProgram() { killProcess('devForProject\'s commands terminated'); }
 function project_buildClientFilesWithVite() { execSync('cd client & npm run build'); }
@@ -73,7 +80,7 @@ function getCommands_forPackage() {
 function getCommands_forProject() {
     return {
         ...sharedCommands,
-        btr: { description: 'Install/update @botoron/utils', fn: project_installBtrUtilsAndKillProcess },
+        btr: { description: 'Install/update @botoron/utils', fn: project_installBtrUtils_setValidMongoCollections_andKillCommandLine },
         'build-client': { description: 'Build the client files onto the ../dist/public', fn: project_buildClientFilesWithVite },
         'build-server': { description: 'Build the server files onto ../dist', fn: project_buildServerFiles },
         'build-all': { description: 'Transpile and copy/paste all files needed for ../dist', fn: project_buildAll },
@@ -118,8 +125,7 @@ async function package_transpileAll() {
     await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'));
     await transpileFiles([`client/${filename}`], './client');
     await fixRelativeImports();
-    successLog('browser versions emitted');
-    successLog('You may now Commit & Push and thn run the versionAndPublish command');
+    successLog('browser versions emitted - You may now Commit & Push and then run the "versionAndPublish" command');
     async function fixRelativeImports() {
         async function doIt(x) { await replaceStringInFile(x, /from '\.\/(?=constants|types)/g, '..'); }
         const clientFiles = [`./client/${filename}`, `./client/${filename.replace('.ts', '.js')}`];

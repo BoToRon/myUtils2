@@ -1,4 +1,5 @@
 let _
+//importOf_mongoCollections_here
 import eris from 'eris'	//DELETETHISFORCLIENT
 _
 import http from 'http'	//DELETETHISFORCLIENT
@@ -70,6 +71,7 @@ type arrayPredicate<T> = (arg1: T) => boolean
 type pipe_persistent_type<T> = (arg: T) => T
 type warningsCount = { count: number }
 type myEnv = z.infer<typeof zMyEnv>
+type validMongoCollection = string
 
 type bvToast = {
 	toast: (
@@ -1062,7 +1064,7 @@ export function doAndRepeat_server() { doNothing }
 /**@deprecated use "formatDate" instead */
 export function getFormattedTimestamp() { doNothing }
 /**@deperecated use "mongoClient" instead */
-export function getMongoClient() { doNothing }
+export function getMongoClient(a: unknown) { doNothing(a) }
 /** @deprecated use either zPipe (persistenType with zod errors) or pipe_mutableType! */
 export function pipe_persistentType() { doNothing }
 /**@deprecated use "trackVueComponent" instead */
@@ -1358,11 +1360,12 @@ export async function getLatestPackageJsonFromGithub() {
 	return Buffer.from((await fetched.json() as { content: string }).content, 'base64').toString('utf8')
 }
 /**Get an array with either all the items in a Mongo Collection, or an amount of sample items */
-export async function getMongoCollectionArray<T>(collectionName: Readonly<string>, amount: 'all' | number): Promise<T[]> {
+export async function getMongoCollectionArray<T>(collectionName: validMongoCollection, amount: 'all' | number): Promise<T[]> {
 	const collection = mongoCollection(collectionName)
-	return (await (amount === 'all' ?
-		collection.find({}) :
-		collection.aggregate([{ $sample: { size: amount } }])
+	return (await (
+		amount === 'all' ?
+			collection.find({}) :
+			collection.aggregate([{ $sample: { size: amount } }])
 	).toArray()) as T[]
 }
 /**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
@@ -1406,7 +1409,7 @@ export function mapCommandsForInquirePrompt<T extends string>(commands: recordOf
 	return object
 }
 //TODO: describe me
-export function mongoCollection(collectionName: Readonly<string>) {
+export function mongoCollection(collectionName: validMongoCollection) {
 	return mongoClient.db(getEnviromentVariables().DATABASE_NAME).collection(collectionName)
 }
 /**Prompts a question in the terminal, awaits for the input and returns it */

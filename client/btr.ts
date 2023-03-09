@@ -1,4 +1,5 @@
 let _
+//importOf_mongoCollections_here
 _
 _
 _
@@ -57,6 +58,7 @@ type arrayPredicate<T> = (arg1: T) => boolean
 type pipe_persistent_type<T> = (arg: T) => T
 type warningsCount = { count: number }
 type myEnv = z.infer<typeof zMyEnv>
+type validMongoCollection = string
 
 type bvToast = {
 	toast: (
@@ -1049,7 +1051,7 @@ export function doAndRepeat_server() { doNothing }
 /**@deprecated use "formatDate" instead */
 export function getFormattedTimestamp() { doNothing }
 /**@deperecated use "mongoClient" instead */
-export function getMongoClient() { doNothing }
+export function getMongoClient(a: unknown) { doNothing(a) }
 /** @deprecated use either zPipe (persistenType with zod errors) or pipe_mutableType! */
 export function pipe_persistentType() { doNothing }
 /**@deprecated use "trackVueComponent" instead */

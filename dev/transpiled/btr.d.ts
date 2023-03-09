@@ -11,6 +11,7 @@ type pipe_persistent_type<T> = (arg: T) => T;
 type warningsCount = {
     count: number;
 };
+type validMongoCollection = string;
 type bvToast = {
     toast: (message: string, toastOptions: {
         variant: btr_validVariant;
@@ -345,7 +346,7 @@ export declare function doAndRepeat_server(): void;
 /**@deprecated use "formatDate" instead */
 export declare function getFormattedTimestamp(): void;
 /**@deperecated use "mongoClient" instead */
-export declare function getMongoClient(): void;
+export declare function getMongoClient(a: unknown): void;
 /** @deprecated use either zPipe (persistenType with zod errors) or pipe_mutableType! */
 export declare function pipe_persistentType(): void;
 /**@deprecated use "trackVueComponent" instead */
@@ -386,7 +387,7 @@ export declare function getFilesAndFoldersNames(directory: string, extension: nu
 /**fetch the latest package.json of myUtils */
 export declare function getLatestPackageJsonFromGithub(): Promise<string>;
 /**Get an array with either all the items in a Mongo Collection, or an amount of sample items */
-export declare function getMongoCollectionArray<T>(collectionName: Readonly<string>, amount: 'all' | number): Promise<T[]>;
+export declare function getMongoCollectionArray<T>(collectionName: validMongoCollection, amount: 'all' | number): Promise<T[]>;
 /**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
 export declare function getSeparatingCommentBlock(message: string): string;
 /**Start and return an http Express server */
@@ -397,7 +398,7 @@ export declare function isMyUtilsPackage(): Promise<boolean>;
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export declare function killProcess(message: string): void;
 export declare function mapCommandsForInquirePrompt<T extends string>(commands: recordOfCommands<T>): Record<string, () => maybePromise<unknown>>;
-export declare function mongoCollection(collectionName: Readonly<string>): any;
+export declare function mongoCollection(collectionName: validMongoCollection): any;
 /**Prompts a question in the terminal, awaits for the input and returns it */
 export declare function questionAsPromise(question: string): Promise<string>;
 /**Check the user input in socket.on functions and send error toasts if the validation fails */

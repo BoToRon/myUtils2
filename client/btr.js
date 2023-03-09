@@ -1,4 +1,5 @@
 let _;
+//importOf_mongoCollections_here
 _;
 _;
 _;
@@ -1000,7 +1001,7 @@ export function doAndRepeat_server() { doNothing; }
 /**@deprecated use "formatDate" instead */
 export function getFormattedTimestamp() { doNothing; }
 /**@deperecated use "mongoClient" instead */
-export function getMongoClient() { doNothing; }
+export function getMongoClient(a) { doNothing(a); }
 /** @deprecated use either zPipe (persistenType with zod errors) or pipe_mutableType! */
 export function pipe_persistentType() { doNothing; }
 /**@deprecated use "trackVueComponent" instead */
