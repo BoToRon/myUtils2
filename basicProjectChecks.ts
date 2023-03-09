@@ -37,7 +37,7 @@ export async function basicProjectChecks() {
 	checkFilesAndFolderStructure()
 	checkObligatoryTemplateFilesAreIdentical()
 	await checkPackageJsons()
-	checkValidMongoCollections()
+	await checkValidMongoCollections()
 	await checkVsCodeSettings()
 	checkVueDevFiles()
 
@@ -262,8 +262,8 @@ async function checkPackageJsons() {
 		version: z.string(),
 		engines: z.object({ node: z.literal('>=18.0.0') }).strict(),
 		dependencies: zRecord(['@botoron/utils', 'socket.io', 'socket.io-client', 'zod-validation-error'], z.string()),
-		devDependencies: zRecord(['@types/express', '@typescript-eslint/eslint-plugin', '@typescript-eslint/parser',
-			'dotenv', 'eslint', 'eslint-plugin-sonarjs', 'eslint-plugin-vue', 'inquirer', 'nodemon'], z.string()),
+		devDependencies: zRecord(['@types/express', '@typescript-eslint/eslint-plugin', '@typescript-eslint/parser', 'dotenv', 'eslint',
+			'eslint-plugin-no-floating-promise', 'eslint-plugin-sonarjs', 'eslint-plugin-vue', 'inquirer', 'nodemon'], z.string()),
 		scripts: z.object({
 			dev: z.literal(`tsc ${TSC_FLAGS} dev/commands.ts --outDir ./dev/transpiled & node dev/transpiled/dev/commands.js`), //@btr-ignore
 		}).strict(),

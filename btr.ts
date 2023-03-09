@@ -642,6 +642,7 @@ export async function initializeInterval<
 			return await initializeInterval(id, intervalInMs, stayAliveChecker, onEach, onKill, timesRanSucessfully + 1)
 		}
 		else {
+			// eslint-disable-next-line no-floating-promise/no-floating-promise
 			killTimer(id, `stayAliveChecker (${stayAliveChecker.name}) = false`)
 			return await initializeTimer(id, Date.now() + intervalInMs, onEach, onKill)
 		}
@@ -1226,6 +1227,7 @@ export const divine = (function (): {
 					catch {
 						colorLog('yellow', `${divinePrepend} Failed to connect.. retrying >:D`)
 						await delay(1000)
+						// eslint-disable-next-line no-floating-promise/no-floating-promise
 						attemptConnection()
 					}
 				}

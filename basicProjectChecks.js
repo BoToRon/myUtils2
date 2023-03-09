@@ -22,7 +22,7 @@ export async function basicProjectChecks() {
     checkFilesAndFolderStructure();
     checkObligatoryTemplateFilesAreIdentical();
     await checkPackageJsons();
-    checkValidMongoCollections();
+    await checkValidMongoCollections();
     await checkVsCodeSettings();
     checkVueDevFiles();
     //2. Obligatory specific-files matches
@@ -232,8 +232,8 @@ async function checkPackageJsons() {
         version: z.string(),
         engines: z.object({ node: z.literal('>=18.0.0') }).strict(),
         dependencies: zRecord(['@botoron/utils', 'socket.io', 'socket.io-client', 'zod-validation-error'], z.string()),
-        devDependencies: zRecord(['@types/express', '@typescript-eslint/eslint-plugin', '@typescript-eslint/parser',
-            'dotenv', 'eslint', 'eslint-plugin-sonarjs', 'eslint-plugin-vue', 'inquirer', 'nodemon'], z.string()),
+        devDependencies: zRecord(['@types/express', '@typescript-eslint/eslint-plugin', '@typescript-eslint/parser', 'dotenv', 'eslint',
+            'eslint-plugin-no-floating-promise', 'eslint-plugin-sonarjs', 'eslint-plugin-vue', 'inquirer', 'nodemon'], z.string()),
         scripts: z.object({
             dev: z.literal(`tsc ${TSC_FLAGS} dev/commands.ts --outDir ./dev/transpiled & node dev/transpiled/dev/commands.js`), //@btr-ignore
         }).strict(),
@@ -539,6 +539,18 @@ async function checkUtilsVersion() {
         return (major * 99 * 99) + (minor * 99) + patch;
     }
 }
+async function checkValidMongoCollections() {
+    const namesInDatabase = (await mongoClient.db(getEnviromentVariables().DATABASE_NAME).listCollections().toArray()).map(x => x.name);
+    if (compareArrays([...mongoCollections], namesInDatabase).arraysAreEqual) {
+        return;
+    }
+    addToErrors('checkNamesOfValidCollections', `The mongoCollections in "global/vars.ts" 
+		(${sortAlphabetically([...mongoCollections])})
+		and the names in the actual database
+		(${sortAlphabetically(namesInDatabase)})
+		do NOT match ()
+		`);
+}
 async function checkVsCodeSettings() {
     const vsSettingsOfProject = await importFileFromProject('.vscode/settings', 'json');
     const desiredVsSettings = z.object({
@@ -596,16 +608,4 @@ function getFromCachedFiles(obligatoryMatches) {
     }
     addToErrors('checks.getFromCachedFiles', `No file cached with the requested obligatory matches(${obligatoryMatches}) was found, was it added by "fillCachedFiles" ?`);
     return [{ path: 'FAILSAFE', content: '' }];
-}
-async function checkValidMongoCollections() {
-    const namesInDatabase = (await mongoClient.db(getEnviromentVariables().DATABASE_NAME).listCollections().toArray()).map(x => x.name);
-    if (compareArrays([...mongoCollections], namesInDatabase).arraysAreEqual) {
-        return;
-    }
-    addToErrors('checkNamesOfValidCollections', `The mongoCollections in "global/vars.ts" 
-		(${sortAlphabetically([...mongoCollections])})
-		and the names in the actual database
-		(${sortAlphabetically(namesInDatabase)})
-		do NOT match ()
-		`);
 }

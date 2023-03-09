@@ -2,7 +2,7 @@
 
 module.exports = {
 	env: { browser: true, es2021: true, node: true },
-	plugins: ['vue', '@typescript-eslint', 'sonarjs'], //'jsdoc'
+	plugins: ['@typescript-eslint', 'no-floating-promise', 'sonarjs', 'vue'], //'jsdoc'
 
 	extends: ['eslint:recommended', 'plugin:vue/vue3-essential', 'plugin:@typescript-eslint/recommended', 'plugin:sonarjs/recommended'],
 	parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
@@ -11,6 +11,7 @@ module.exports = {
 	rules: {
 		//'jsdoc/require-jsdoc': 1,
 		'sonarjs/cognitive-complexity': 'off',
+		'no-floating-promise/no-floating-promise': 2,
 		'arrow-body-style': ['error', 'as-needed'],
 		'max-lines-per-function': ['error', 100],
 		'func-style': ['error', 'declaration'],

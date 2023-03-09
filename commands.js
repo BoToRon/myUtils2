@@ -17,14 +17,15 @@ const errors = [];
 const tsFilePaths = getFilesAndFoldersNames('.', null).filter(path => path.includes('.ts') && !/(client\/|\.d\.ts)/.test(path));
 process.env['prevent_divine_init'] = 'true';
 const sharedCommands = getSharedCommands();
+const isUtilsPackage = await isMyUtilsPackage();
 const commands_forPackage = getCommands_forPackage();
 const commands_forProject = getCommands_forProject();
-if (await isMyUtilsPackage()) {
-    runCommands(commands_forPackage);
+if (isUtilsPackage) {
+    await runCommands(commands_forPackage);
 }
 //function declarations below
-export function projectCommandsHandler(mongoCollections, commandsSpecificOfProject) {
-    runCommands({
+export async function projectCommandsHandler(mongoCollections, commandsSpecificOfProject) {
+    await runCommands({
         ...getSeparator('BASIC COMMANDS'),
         ...sharedCommands,
         ...getSeparator('CUSTOM SPECIFIC FOR THIS PROJECT'),
@@ -45,18 +46,7 @@ export function projectCommandsHandler(mongoCollections, commandsSpecificOfProje
     }
 }
 async function runCommands(commands) { await inquirePromptCommands(mapCommandsForInquirePrompt(commands), true); }
-async function project_installBtrUtils_setValidMongoCollections_andKillCommandLine() {
-    execSync('npm i @botoron/utils');
-    await asyncForEach(tsFilePaths, false, (filename) => replacePlaceholdingVarsForActualImports('./node_modules/@botoron/utils/' + filename));
-    killProcess('Reinit command line to apply updates');
-    async function replacePlaceholdingVarsForActualImports(filepath) {
-        //TODO: create more placeholders than just mongoCollections?
-        const mongoCollection_actualPath = 'import { mongoCollections } from \'../../../global/vars.js\'';
-        const mongoCollections_placeholder = 'const mongoCollections = [\'SAMPLE_MONGO_COLLECTION_NAME\'] as const //placeholder - DONOTEDIT';
-        await replaceStringInFile(filepath, mongoCollections_placeholder, mongoCollection_actualPath);
-    }
-}
-function project_buildAll() { project_buildClientFilesWithVite(); project_buildServerFiles(); }
+async function project_buildAll() { project_buildClientFilesWithVite(); await project_buildServerFiles(); }
 function quitCommandLineProgram() { killProcess('devForProject\'s commands terminated'); }
 function project_buildClientFilesWithVite() { execSync('cd client & npm run build'); }
 function execAndLog(command) { execSync(command); successLog(command); }
@@ -65,6 +55,9 @@ function project_initVite() { execSync('cd client & npm run dev'); }
 async function btrCheckFilesAndReportResult() { await btrCheck(); }
 function project_forwardVitesPort() { execSync('lt --port 5173'); }
 async function btrCheck() {
+    if (!isUtilsPackage) {
+        return await basicProjectChecks();
+    }
     const warningsCount = { count: 0 };
     checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths), warningsCount);
     return checkNoBtrErrorsOrWarnings(errors, warningsCount);
@@ -195,6 +188,17 @@ async function project_buildServerFiles() {
                 logEmptyLine();
             });
         }
+    }
+}
+async function project_installBtrUtils_setValidMongoCollections_andKillCommandLine() {
+    execSync('npm i @botoron/utils');
+    await asyncForEach(tsFilePaths, false, (filename) => replacePlaceholdingVarsForActualImports('./node_modules/@botoron/utils/' + filename));
+    killProcess('Reinit command line to apply updates');
+    async function replacePlaceholdingVarsForActualImports(filepath) {
+        //TODO: create more placeholders than just mongoCollections?
+        const mongoCollection_actualPath = 'import { mongoCollections } from \'../../../global/vars.js\'';
+        const mongoCollections_placeholder = 'const mongoCollections = [\'SAMPLE_MONGO_COLLECTION_NAME\'] as const //placeholder - DONOTEDIT';
+        await replaceStringInFile(filepath, mongoCollections_placeholder, mongoCollection_actualPath);
     }
 }
 async function replaceStringInFile(filepath, oldString, newString) {
