@@ -38,12 +38,12 @@ export function projectCommandsHandler(mongoCollections: Readonly<string[]>, com
 	runCommands({
 		...getSeparator('BASIC COMMANDS'),
 		...sharedCommands,
-		...getSeparator('DEFAULT COMMANDS FOR PROJECTS'),
-		...commands_forProject,
-		...getSeparator('MONGO LOG COMMANDS'),
-		...getLogAll_forAllMongoCollections(),
 		...getSeparator('CUSTOM SPECIFIC FOR THIS PROJECT'),
 		...commandsSpecificOfProject,
+		...getSeparator('MONGO LOG COMMANDS'),
+		...getLogAll_forAllMongoCollections(),
+		...getSeparator('DEFAULT COMMANDS FOR PROJECTS'),
+		...commands_forProject,
 	})
 
 	function getLogAll_forAllMongoCollections() {
@@ -154,7 +154,8 @@ async function package_transpileAll() {
 	await transpileFiles([`client/${filename}`], './client')
 	await fixRelativeImports()
 
-	successLog('browser versions emitted - You may now Commit & Push and then run the "versionAndPublish" command')
+	successLog('browser versions emitted')
+	colorLog('yellow', 'You may now Commit & Push and then run the "versionAndPublish" command')
 
 	async function fixRelativeImports() {
 		async function doIt(x: string) { await replaceStringInFile(x, /from '\.\/(?=constants|types)/g, '..') }

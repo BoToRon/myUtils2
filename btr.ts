@@ -1203,12 +1203,18 @@ export const mongoClient = await (async function () {
 
 //TODO: describe me
 export function mongo_collection(collectionName: validMongoCollection) {
+	mongoClient.db(getEnviromentVariables().DATABASE_NAME).listCollections().toArray()
 	return mongoClient.db(getEnviromentVariables().DATABASE_NAME).collection(collectionName)
 }
 
 /**Get an array with all the items in a Mongo Collection*/
 export async function mongo_getEntireCollection<T>(collectionName: validMongoCollection) {
 	return await mongo_collection(collectionName).find({}).toArray() as T[] //@btr-ignore
+}
+
+/**Get the names of all the collections in the Mongo database of the project */
+export async function mongo_getNamesOfCollections() {
+	return (await mongoClient.db(getEnviromentVariables().DATABASE_NAME).listCollections().toArray()).map(x => x.name)
 }
 
 /**Get an array with X amount of sample items in a Mongo collection */
