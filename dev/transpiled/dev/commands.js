@@ -27,13 +27,14 @@ if (await isMyUtilsPackage()) {
 //function declarations below
 export function projectCommandsHandler(mongoCollections, commandsSpecificOfProject) {
     runCommands({
-        ...getSeparator('CUSTOM COMMANDS BELOW'),
-        ...getLogAll_forAllMongoCollections(),
-        ...commandsSpecificOfProject,
-        ...getSeparator('CUSTOM COMMANDS ABOVE'),
-        ...getSeparator('BTR COMMANDS BELOW'),
+        ...getSeparator('BASIC COMMANDS'),
+        ...sharedCommands,
+        ...getSeparator('DEFAULT COMMANDS FOR PROJECTS'),
         ...commands_forProject,
-        ...getSeparator('BTR COMMANDS ABOVE'),
+        ...getSeparator('MONGO LOG COMMANDS'),
+        ...getLogAll_forAllMongoCollections(),
+        ...getSeparator('CUSTOM SPECIFIC FOR THIS PROJECT'),
+        ...commandsSpecificOfProject,
     });
     function getLogAll_forAllMongoCollections() {
         return arrayToObject(mongoCollections, (key) => ({
@@ -42,7 +43,7 @@ export function projectCommandsHandler(mongoCollections, commandsSpecificOfProje
         }));
     }
     function getSeparator(name) {
-        return { ['-'.repeat(40 - name.length) + name]: { description: '-'.repeat(40), fn: doNothing } };
+        return { ['-'.repeat(100 - name.length) + name]: { description: '-'.repeat(50), fn: doNothing } };
     }
 }
 async function runCommands(commands) { await inquirePromptCommands(mapCommandsForInquirePrompt(commands), true); }
@@ -65,7 +66,7 @@ async function btrCheck() {
     return checkNoBtrErrorsOrWarnings(errors, warningsCount);
 }
 async function chooseFromPrompt(message, choices) {
-    return (await inquirer.prompt({ name: 'choice', type: 'list', message, choices })).choice; //@btr-ignore
+    return (await inquirer.prompt({ name: 'choice', type: 'list', pageSize: 99, message, choices })).choice; //@btr-ignore
 }
 function getCommands_forPackage() {
     return {
@@ -76,7 +77,6 @@ function getCommands_forPackage() {
 }
 function getCommands_forProject() {
     return {
-        ...sharedCommands,
         btr: { description: 'Install/update @botoron/utils', fn: project_installBtrUtils_setValidMongoCollections_andKillCommandLine },
         'build-client': { description: 'Build the client files onto the ../dist/public', fn: project_buildClientFilesWithVite },
         'build-server': { description: 'Build the server files onto ../dist', fn: project_buildServerFiles },

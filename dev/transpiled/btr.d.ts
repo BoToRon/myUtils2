@@ -367,7 +367,7 @@ export declare function mongo_collection(collectionName: validMongoCollection): 
 export declare function mongo_getEntireCollection<T>(collectionName: validMongoCollection): Promise<T[]>;
 /**Get an array with X amount of sample items in a Mongo collection */
 export declare function mongo_getSample<T>(collectionName: validMongoCollection, maxAmountOfItems: number): Promise<T[]>;
-export declare function mongo_replaceEntireCollection(collection: validMongoCollection, newDataForCollection: unknown[]): Promise<void>;
+export declare function mongo_replaceEntireCollection(collectionName: validMongoCollection, newDataForCollection: unknown[]): Promise<void>;
 /**Basically custom ESlint warnings */
 export declare function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[], warningsCount: warningsCount): void;
 /**Check if a file in the provided filepath exists */

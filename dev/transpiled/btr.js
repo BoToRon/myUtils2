@@ -1170,11 +1170,11 @@ export async function mongo_getSample(collectionName, maxAmountOfItems) {
     return await mongo_collection(collectionName).aggregate([{ $sample: { size: maxAmountOfItems } }]).toArray(); //@btr-ignore
 }
 //TODO: describe me
-export async function mongo_replaceEntireCollection(collection, newDataForCollection) {
-    const backUp = mongo_collection(collection).find({}).toArray();
+export async function mongo_replaceEntireCollection(collectionName, newDataForCollection) {
+    const backUp = await mongo_getEntireCollection(collectionName);
     await downloadFile('./dev/backups/replaceEntireCollection_backUp', '.json', backUp);
-    await mongo_collection(collection).deleteMany({});
-    mongo_collection(collection).insertMany(newDataForCollection);
+    await mongo_collection(collectionName).deleteMany({});
+    mongo_collection(collectionName).insertMany(newDataForCollection);
 }
 _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
 _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
