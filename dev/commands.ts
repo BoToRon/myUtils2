@@ -7,11 +7,11 @@ import { unlinkSync } from 'fs'
 _
 import { execSync, execFile } from 'child_process'
 _
-import { maybePromise, recordOfCommands } from '../types.js'
-_
 import { basicProjectChecks } from '../basicProjectChecks.js'
 _
 import { npmVersionOptions, PACKAGE_DOT_JSON, TSC_FLAGS } from '../constants.js'
+_
+import { maybePromise, recordOfCommands, validMongoCollection } from '../types.js'
 _
 import {
 	allPromises, arrayToObject, asyncForEach, checkCodeThatCouldBeUpdated, checkFileExists, checkNoBtrErrorsOrWarnings, colorLog,
@@ -46,7 +46,7 @@ export function projectCommandsHandler(mongoCollections: Readonly<string[]>, com
 	})
 
 	function getLogAll_forAllMongoCollections() {
-		return arrayToObject(mongoCollections, (key) => ({
+		return arrayToObject(mongoCollections, (key: validMongoCollection) => ({
 			description: `Log the entire '${key}' mongo collection`,
 			fn: async () => consoleLogFull(await getMongoCollectionArray(key, 'all'))
 		}))
@@ -58,12 +58,12 @@ export function projectCommandsHandler(mongoCollections: Readonly<string[]>, com
 }
 
 async function runCommands(commands: recordOfCommands<string>) { await inquirePromptCommands(mapCommandsForInquirePrompt(commands), true) }
-function project_installBtrUtils_setValidMongoCollections_andKillCommandLine() {
+async function project_installBtrUtils_setValidMongoCollections_andKillCommandLine() {
 	execSync('npm i @botoron/utils')
 	const tEquals = 'type validMongoCollection = '
-	const btrTs = './node_modules/@botoron/utils/btr.ts'
-	replaceStringInFile(btrTs, '//importOf_mongoCollections_here', 'import { mongoCollections } from \'../../../global/vars.js\'')
-	replaceStringInFile(btrTs, tEquals + 'string', tEquals + 'typeof mongoCollections[number]')
+	const typesTs = './node_modules/@botoron/utils/types.ts'
+	await replaceStringInFile(typesTs, tEquals + 'string', tEquals + 'typeof mongoCollections[number]')
+	await replaceStringInFile(typesTs, '//importOf_mongoCollections_here', 'import { mongoCollections } from \'../../../global/vars.js\'')
 	killProcess('Reinit command line to apply updates')
 }
 function project_buildAll() { project_buildClientFilesWithVite(); project_buildServerFiles() }

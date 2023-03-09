@@ -1,5 +1,4 @@
 let _;
-//importOf_mongoCollections_here
 import eris from 'eris'; //DELETETHISFORCLIENT
 _;
 import http from 'http'; //DELETETHISFORCLIENT

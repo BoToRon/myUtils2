@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io';
-import { btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, cachedFile, maybePromise, nullable, recordOfCommands, timer, zSchema } from './types.js';
+import { btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, cachedFile, maybePromise, nullable, recordOfCommands, timer, validMongoCollection, zSchema } from './types.js';
 import { zValidVariants } from './constants.js';
 import { z } from 'zod';
 export { btr_adminFetch, btr_bvModal, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, nullable, recordOfCommands, zValidVariants };
@@ -11,7 +11,6 @@ type pipe_persistent_type<T> = (arg: T) => T;
 type warningsCount = {
     count: number;
 };
-type validMongoCollection = string;
 type bvToast = {
     toast: (message: string, toastOptions: {
         variant: btr_validVariant;

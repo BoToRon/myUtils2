@@ -1,7 +1,9 @@
 let _
-import { type SafeParseReturnType, z } from 'zod'
+//importOf_mongoCollections_here
 _
 import { zValidVariants } from './constants.js'
+_
+import { type SafeParseReturnType, z } from 'zod'
 
 /**Generic to get the type of an object/interface while preserving key-value typing */
 export type objectEntriesT<T, amount extends 'plural' | 'single'> = { [K in keyof T]: [K, amount extends 'plural' ? T[K][] : T[K]] }[keyof T]
@@ -34,6 +36,7 @@ export type btr_fieldsForColumnOfTable = string | {
 
 export type cachedFile = { path: string, content: string }
 export type maybePromise<T> = T | Promise<T>
+export type validMongoCollection = string
 export type timer = {
 	id: string,
 	runAt: number,

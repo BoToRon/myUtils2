@@ -1,5 +1,4 @@
 let _
-//importOf_mongoCollections_here
 import eris from 'eris'	//DELETETHISFORCLIENT
 _
 import http from 'http'	//DELETETHISFORCLIENT
@@ -27,8 +26,8 @@ _
 import { promises, readdirSync, statSync } from 'fs'	//DELETETHISFORCLIENT 
 _
 import {
-	btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo,
-	btr_trackedVueComponent, btr_validVariant, btr_bvModal, cachedFile, maybePromise, nullable, recordOfCommands, timer, zSchema
+	btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent,
+	btr_validVariant, btr_bvModal, cachedFile, maybePromise, nullable, recordOfCommands, timer, validMongoCollection, zSchema
 } from './types.js'
 _
 import { getUniqueId_generator, isNode, PACKAGE_DOT_JSON, timers, zMyEnv, zValidVariants } from './constants.js'
@@ -71,7 +70,6 @@ type arrayPredicate<T> = (arg1: T) => boolean
 type pipe_persistent_type<T> = (arg: T) => T
 type warningsCount = { count: number }
 type myEnv = z.infer<typeof zMyEnv>
-type validMongoCollection = string
 
 type bvToast = {
 	toast: (

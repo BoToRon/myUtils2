@@ -7,10 +7,10 @@ import { unlinkSync } from 'fs';
 _;
 import { execSync, execFile } from 'child_process';
 _;
-_;
 import { basicProjectChecks } from '../basicProjectChecks.js';
 _;
 import { npmVersionOptions, PACKAGE_DOT_JSON, TSC_FLAGS } from '../constants.js';
+_;
 _;
 import { allPromises, arrayToObject, asyncForEach, checkCodeThatCouldBeUpdated, checkFileExists, checkNoBtrErrorsOrWarnings, colorLog, consoleLogFull, copyToClipboard, delay, doNothing, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getContentOfPackageJson, getMongoCollectionArray, getFilesAndFoldersNames, isMyUtilsPackage, killProcess, logEmptyLine, mapCommandsForInquirePrompt, objectKeys, questionAsPromise, safeRegexMatch, selfFilter, successLog, } from '../btr.js';
 const fileWithRef = 'ref';
@@ -46,12 +46,12 @@ export function projectCommandsHandler(mongoCollections, commandsSpecificOfProje
     }
 }
 async function runCommands(commands) { await inquirePromptCommands(mapCommandsForInquirePrompt(commands), true); }
-function project_installBtrUtils_setValidMongoCollections_andKillCommandLine() {
+async function project_installBtrUtils_setValidMongoCollections_andKillCommandLine() {
     execSync('npm i @botoron/utils');
     const tEquals = 'type validMongoCollection = ';
-    const btrTs = './node_modules/@botoron/utils/btr.ts';
-    replaceStringInFile(btrTs, '//importOf_mongoCollections_here', 'import { mongoCollections } from \'../../../global/vars.js\'');
-    replaceStringInFile(btrTs, tEquals + 'string', tEquals + 'typeof mongoCollections[number]');
+    const typesTs = './node_modules/@botoron/utils/types.ts';
+    await replaceStringInFile(typesTs, tEquals + 'string', tEquals + 'typeof mongoCollections[number]');
+    await replaceStringInFile(typesTs, '//importOf_mongoCollections_here', 'import { mongoCollections } from \'../../../global/vars.js\'');
     killProcess('Reinit command line to apply updates');
 }
 function project_buildAll() { project_buildClientFilesWithVite(); project_buildServerFiles(); }
