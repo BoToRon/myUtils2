@@ -7,12 +7,12 @@ import { unlinkSync } from 'fs';
 _;
 import { execSync, execFile } from 'child_process';
 _;
-import { basicProjectChecks } from '../basicProjectChecks.js';
+import { basicProjectChecks } from './basicProjectChecks.js';
 _;
-import { npmVersionOptions, PACKAGE_DOT_JSON, TSC_FLAGS } from '../constants.js';
+import { npmVersionOptions, PACKAGE_DOT_JSON, TSC_FLAGS } from './constants.js';
 _;
 _;
-import { allPromises, arrayToObject, asyncForEach, checkCodeThatCouldBeUpdated, checkFileExists, checkNoBtrErrorsOrWarnings, colorLog, consoleLogFull, copyToClipboard, delay, doNothing, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getContentOfPackageJson, mongo_getEntireCollection, getFilesAndFoldersNames, isMyUtilsPackage, killProcess, logEmptyLine, mapCommandsForInquirePrompt, objectKeys, questionAsPromise, safeRegexMatch, selfFilter, successLog, } from '../btr.js';
+import { allPromises, arrayToObject, asyncForEach, checkCodeThatCouldBeUpdated, checkFileExists, checkNoBtrErrorsOrWarnings, colorLog, consoleLogFull, copyToClipboard, delay, doNothing, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getContentOfPackageJson, mongo_getEntireCollection, getFilesAndFoldersNames, isMyUtilsPackage, killProcess, logEmptyLine, mapCommandsForInquirePrompt, objectKeys, questionAsPromise, safeRegexMatch, selfFilter, successLog, } from './btr.js';
 const fileWithRef = 'ref';
 const serverFolder_dist = '../dist';
 const errors = [];
@@ -29,12 +29,12 @@ export function projectCommandsHandler(mongoCollections, commandsSpecificOfProje
     runCommands({
         ...getSeparator('BASIC COMMANDS'),
         ...sharedCommands,
-        ...getSeparator('DEFAULT COMMANDS FOR PROJECTS'),
-        ...commands_forProject,
-        ...getSeparator('MONGO LOG COMMANDS'),
-        ...getLogAll_forAllMongoCollections(),
         ...getSeparator('CUSTOM SPECIFIC FOR THIS PROJECT'),
         ...commandsSpecificOfProject,
+        ...getSeparator('MONGO LOG COMMANDS'),
+        ...getLogAll_forAllMongoCollections(),
+        ...getSeparator('DEFAULT COMMANDS FOR PROJECTS'),
+        ...commands_forProject,
     });
     function getLogAll_forAllMongoCollections() {
         return arrayToObject(mongoCollections, (key) => ({
@@ -122,7 +122,8 @@ async function package_transpileAll() {
     await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'));
     await transpileFiles([`client/${filename}`], './client');
     await fixRelativeImports();
-    successLog('browser versions emitted - You may now Commit & Push and then run the "versionAndPublish" command');
+    successLog('browser versions emitted');
+    colorLog('yellow', 'You may now Commit & Push and then run the "versionAndPublish" command');
     async function fixRelativeImports() {
         async function doIt(x) { await replaceStringInFile(x, /from '\.\/(?=constants|types)/g, '..'); }
         const clientFiles = [`./client/${filename}`, `./client/${filename.replace('.ts', '.js')}`];

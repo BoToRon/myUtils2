@@ -1,6 +1,4 @@
 let _
-_ //			tsc --target esnext dev/commands.ts --outDir ./dev/transpiled			//@btr-ignore
-_ // 			node dev/transpiled/dev/commands.js			2
 import inquirer from 'inquirer'
 _
 import { unlinkSync } from 'fs'
