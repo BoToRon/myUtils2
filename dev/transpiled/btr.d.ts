@@ -362,6 +362,10 @@ export declare const divine: {
     try: <T extends (...args: Parameters<T>) => maybePromise<ReturnType<T>>>(fn: T, args: Parameters<T>) => Promise<ReturnType<T>>;
 };
 export declare const mongoClient: MongoClient;
+export declare function mongo_collection(collectionName: validMongoCollection): any;
+export declare function mongo_replaceEntireCollection(collection: validMongoCollection, newDataForCollection: unknown[]): Promise<void>;
+/**Get an array with either all the items in a Mongo Collection, or an amount of sample items */
+export declare function mongo_getEntireCollection<T>(collectionName: validMongoCollection, amount: 'all' | number): Promise<T[]>;
 /**Basically custom ESlint warnings */
 export declare function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[], warningsCount: warningsCount): void;
 /**Check if a file in the provided filepath exists */
@@ -385,8 +389,6 @@ export declare function getEnviromentVariables(): z.infer<any>;
 export declare function getFilesAndFoldersNames(directory: string, extension: nullable<'.ts' | '.vue'>): string[];
 /**fetch the latest package.json of myUtils */
 export declare function getLatestPackageJsonFromGithub(): Promise<string>;
-/**Get an array with either all the items in a Mongo Collection, or an amount of sample items */
-export declare function getMongoCollectionArray<T>(collectionName: validMongoCollection, amount: 'all' | number): Promise<T[]>;
 /**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
 export declare function getSeparatingCommentBlock(message: string): string;
 /**Start and return an http Express server */
@@ -397,7 +399,6 @@ export declare function isMyUtilsPackage(): Promise<boolean>;
 /**FOR NODE DEBBUGING ONLY. Kill the process with a big ass error message :D */
 export declare function killProcess(message: string): void;
 export declare function mapCommandsForInquirePrompt<T extends string>(commands: recordOfCommands<T>): Record<string, () => maybePromise<unknown>>;
-export declare function mongoCollection(collectionName: validMongoCollection): any;
 /**Prompts a question in the terminal, awaits for the input and returns it */
 export declare function questionAsPromise(question: string): Promise<string>;
 /**Check the user input in socket.on functions and send error toasts if the validation fails */

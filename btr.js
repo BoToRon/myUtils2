@@ -1129,16 +1129,16 @@ export const divine = (function () {
     };
 })();
 // ! DELETEEVERYTHINGBELOW, as it is only meant for server-side use
-_; /********** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ***********/
-_; /********** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ***********/
-_; /********** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ***********/
-_; /********** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ***********/
-_; /********** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ***********/
-_; /********** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ***********/
-_; /********** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ***********/
-_; /********** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ***********/
-_; /********** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ***********/
-_; /********** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ******************** MONGOCLIENT ***********/
+_; /********** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ***********/
+_; /********** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ***********/
+_; /********** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ***********/
+_; /********** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ***********/
+_; /********** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ***********/
+_; /********** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ***********/
+_; /********** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ***********/
+_; /********** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ***********/
+_; /********** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ***********/
+_; /********** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ***********/
 export const mongoClient = await (async function () {
     if (await isMyUtilsPackage()) {
         return nullAs();
@@ -1157,6 +1157,24 @@ export const mongoClient = await (async function () {
     successLog('It\'s Monging time >:D');
     return mongoClient;
 })();
+//TODO: describe me
+export function mongo_collection(collectionName) {
+    return mongoClient.db(getEnviromentVariables().DATABASE_NAME).collection(collectionName);
+}
+//TODO: describ me
+export async function mongo_replaceEntireCollection(collection, newDataForCollection) {
+    const backUp = mongo_collection(collection).find({}).toArray();
+    await downloadFile('./dev/backups/replaceEntireCollection_backUp', '.json', backUp);
+    await mongo_collection(collection).deleteMany({});
+    mongo_collection(collection).insertMany(newDataForCollection);
+}
+/**Get an array with either all the items in a Mongo Collection, or an amount of sample items */
+export async function mongo_getEntireCollection(collectionName, amount) {
+    const collection = mongo_collection(collectionName);
+    return (await (amount === 'all' ?
+        collection.find({}) :
+        collection.aggregate([{ $sample: { size: amount } }])).toArray());
+}
 _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
 _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
 _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
@@ -1324,13 +1342,6 @@ export async function getLatestPackageJsonFromGithub() {
     const fetched = await fetch('https://api.github.com/repos/botoron/utils/contents/package.json', { method: 'GET' });
     return Buffer.from((await fetched.json()).content, 'base64').toString('utf8');
 }
-/**Get an array with either all the items in a Mongo Collection, or an amount of sample items */
-export async function getMongoCollectionArray(collectionName, amount) {
-    const collection = mongoCollection(collectionName);
-    return (await (amount === 'all' ?
-        collection.find({}) :
-        collection.aggregate([{ $sample: { size: amount } }])).toArray());
-}
 /**(Use with Quokka) Create an untoggable comment to separate sections, relies on "_" as a variable */
 export function getSeparatingCommentBlock(message) {
     let line = '';
@@ -1373,10 +1384,6 @@ export function mapCommandsForInquirePrompt(commands) {
     const object = {};
     objectEntries(commands).forEach(({ key, value }) => object[key + ': ' + value.description] = value.fn);
     return object;
-}
-//TODO: describe me
-export function mongoCollection(collectionName) {
-    return mongoClient.db(getEnviromentVariables().DATABASE_NAME).collection(collectionName);
 }
 /**Prompts a question in the terminal, awaits for the input and returns it */
 export async function questionAsPromise(question) {

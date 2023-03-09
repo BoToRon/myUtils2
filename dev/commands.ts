@@ -15,7 +15,7 @@ import { maybePromise, recordOfCommands, validMongoCollection } from '../types.j
 _
 import {
 	allPromises, arrayToObject, asyncForEach, checkCodeThatCouldBeUpdated, checkFileExists, checkNoBtrErrorsOrWarnings, colorLog,
-	consoleLogFull, copyToClipboard, delay, doNothing, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getContentOfPackageJson, getMongoCollectionArray, getFilesAndFoldersNames, isMyUtilsPackage, killProcess, logEmptyLine, mapCommandsForInquirePrompt,
+	consoleLogFull, copyToClipboard, delay, doNothing, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getContentOfPackageJson, mongo_getEntireCollection, getFilesAndFoldersNames, isMyUtilsPackage, killProcess, logEmptyLine, mapCommandsForInquirePrompt,
 	objectKeys, questionAsPromise, safeRegexMatch, selfFilter, successLog,
 } from '../btr.js'
 
@@ -48,7 +48,7 @@ export function projectCommandsHandler(mongoCollections: Readonly<string[]>, com
 	function getLogAll_forAllMongoCollections() {
 		return arrayToObject(mongoCollections, (key: validMongoCollection) => ({
 			description: `Log the entire '${key}' mongo collection`,
-			fn: async () => consoleLogFull(await getMongoCollectionArray(key, 'all'))
+			fn: async () => consoleLogFull(await mongo_getEntireCollection(key, 'all'))
 		}))
 	}
 

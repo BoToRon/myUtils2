@@ -12,7 +12,7 @@ _;
 import { npmVersionOptions, PACKAGE_DOT_JSON, TSC_FLAGS } from '../constants.js';
 _;
 _;
-import { allPromises, arrayToObject, asyncForEach, checkCodeThatCouldBeUpdated, checkFileExists, checkNoBtrErrorsOrWarnings, colorLog, consoleLogFull, copyToClipboard, delay, doNothing, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getContentOfPackageJson, getMongoCollectionArray, getFilesAndFoldersNames, isMyUtilsPackage, killProcess, logEmptyLine, mapCommandsForInquirePrompt, objectKeys, questionAsPromise, safeRegexMatch, selfFilter, successLog, } from '../btr.js';
+import { allPromises, arrayToObject, asyncForEach, checkCodeThatCouldBeUpdated, checkFileExists, checkNoBtrErrorsOrWarnings, colorLog, consoleLogFull, copyToClipboard, delay, doNothing, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getContentOfPackageJson, mongo_getEntireCollection, getFilesAndFoldersNames, isMyUtilsPackage, killProcess, logEmptyLine, mapCommandsForInquirePrompt, objectKeys, questionAsPromise, safeRegexMatch, selfFilter, successLog, } from '../btr.js';
 const fileWithRef = 'ref';
 const serverFolder_dist = '../dist';
 const errors = [];
@@ -38,7 +38,7 @@ export function projectCommandsHandler(mongoCollections, commandsSpecificOfProje
     function getLogAll_forAllMongoCollections() {
         return arrayToObject(mongoCollections, (key) => ({
             description: `Log the entire '${key}' mongo collection`,
-            fn: async () => consoleLogFull(await getMongoCollectionArray(key, 'all'))
+            fn: async () => consoleLogFull(await mongo_getEntireCollection(key, 'all'))
         }));
     }
     function getSeparator(name) {
