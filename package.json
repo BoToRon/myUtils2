@@ -1,7 +1,7 @@
 {
 	"name": "@botoron/utils",
 	"type": "module",
-	"version": "1.76.0",
+	"version": "1.77.0",
 	"description": "Utilities of me for me",
 	"main": "btr.js",
 	"scripts": {
