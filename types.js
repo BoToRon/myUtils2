@@ -1,6 +1,6 @@
 let _;
 //TYPES PLACEHOLDED THAT WILL BECOME IMPORTED FROM THE PROJECT USING IT
-const mongoCollections = ['SAMPLE_MONGO_COLLECTION_NAME'];
+const mongoCollections = ['SAMPLE_MONGO_COLLECTION_NAME']; //placeholder - DONOTEDIT
 _;
 _;
 export {};

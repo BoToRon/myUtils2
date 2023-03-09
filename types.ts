@@ -1,7 +1,8 @@
 let _
 
 //TYPES PLACEHOLDED THAT WILL BECOME IMPORTED FROM THE PROJECT USING IT
-const mongoCollections = ['SAMPLE_MONGO_COLLECTION_NAME'] as const
+
+const mongoCollections = ['SAMPLE_MONGO_COLLECTION_NAME'] as const //placeholder - DONOTEDIT
 _
 export type validMongoCollection = typeof mongoCollections[number]
 

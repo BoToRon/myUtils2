@@ -1,4 +1,6 @@
-let _
+let _: unknown
+const mongoCollections = ['SAMPLE_MONGO_COLLECTION_NAME'] as const //placeholder - DONOTEDIT
+_
 import { z } from 'zod'
 _
 import { cachedFile, zSchema } from './types.js'
@@ -9,8 +11,9 @@ import {
 } from './constants.js'
 _
 import {
-	getCachedFiles, checkCodeThatCouldBeUpdated, checkNoBtrErrorsOrWarnings, compareArrays, getEnviromentVariables, getFilesAndFoldersNames,
-	importFileFromProject, killProcess, nullAs, pick, safeRegexMatch, surroundedString, zodCheck_curry, zRegexGenerator, zRecord
+	getCachedFiles, checkCodeThatCouldBeUpdated, checkNoBtrErrorsOrWarnings, compareArrays, getEnviromentVariables,
+	getFilesAndFoldersNames, importFileFromProject, killProcess, mongoClient, nullAs, pick, safeRegexMatch,
+	sortAlphabetically, surroundedString, zodCheck_curry, zRegexGenerator, zRecord,
 } from './btr.js'
 
 type packageJson = { name: string, version: string, scripts: { [key: string]: string } }
@@ -25,19 +28,21 @@ const serverTsFiles: cachedFile[] = []
 
 export async function basicProjectChecks() {
 	DEV_OR_PROD = getEnviromentVariables().DEV_OR_PROD
-	await fillCachedFiles()
 
+	//0. Pre-Cache the files for easier checking
+	await fillCachedFiles()
 	await checkUtilsVersion()
-	await checkPackageJsons()
-	await checkVueDevFiles()
-	await checkVsCodeSettings()
 
 	//1. Obligatory project structure
 	checkFilesAndFolderStructure()
 	checkObligatoryTemplateFilesAreIdentical()
+	await checkPackageJsons()
+	checkValidMongoCollections()
+	await checkVsCodeSettings()
+	checkVueDevFiles()
 
 	//2. Obligatory specific-files matches
-
+	_
 	//2.1 types folder
 	checkSpecificMatches_typesIoTs()
 	checkSpecificMatches_typesTypesTs()
@@ -572,6 +577,20 @@ async function checkUtilsVersion() {
 		const [major, minor, patch] = version.split('.').map(x => Number(x)) as [number, number, number]
 		return (major * 99 * 99) + (minor * 99) + patch
 	}
+}
+
+async function checkValidMongoCollections() {
+	const namesInDatabase = (await mongoClient.db(getEnviromentVariables().DATABASE_NAME).listCollections().toArray()).map(x => x.name)
+	if (compareArrays([...mongoCollections], namesInDatabase).arraysAreEqual) { return }
+	addToErrors(
+		'checkNamesOfValidCollections',
+		`The mongoCollections in "global/vars.ts" 
+		(${sortAlphabetically([...mongoCollections])})
+		and the names in the actual database
+		(${sortAlphabetically(namesInDatabase)})
+		do NOT match ()
+		`
+	)
 }
 
 async function checkVsCodeSettings() {

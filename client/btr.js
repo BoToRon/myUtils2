@@ -224,7 +224,6 @@ export function sortBy(arr, keyWithDir, ...extraKeysWithDir) {
     });
     return arr;
 }
-/** */
 /**syntactic sugar for selfFilter(arr, predicate).removedItems */
 export function spliceIf(arr, predicate) { return selfFilter(arr, predicate).removedItems; }
 /**Remove X amount of items from the end of an array */
@@ -245,7 +244,7 @@ _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ****************
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _; /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
-//Array.prototype.forEach, but async!
+/**Array.prototype.forEach, but async! */
 export async function asyncForEach(array, resolveSequentially, asyncFn) {
     if (resolveSequentially) {
         for await (const item of array) {
@@ -256,7 +255,7 @@ export async function asyncForEach(array, resolveSequentially, asyncFn) {
         await allPromises(array, asyncFn);
     }
 }
-//Await for an asynchronous function to apply to all the items of an array
+/**Await for an asynchronous function to apply to all the items of an array */
 export async function allPromises(array, asyncFn) {
     return await Promise.all(array.map((item, index) => asyncFn(item, index))); //@btr-ignore
 }

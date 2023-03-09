@@ -57,16 +57,19 @@ export function projectCommandsHandler(mongoCollections: Readonly<string[]>, com
 }
 
 async function runCommands(commands: recordOfCommands<string>) { await inquirePromptCommands(mapCommandsForInquirePrompt(commands), true) }
+
 async function project_installBtrUtils_setValidMongoCollections_andKillCommandLine() {
 	execSync('npm i @botoron/utils')
-
-	await replaceStringInFile(
-		'./node_modules/@botoron/utils/types.ts',
-		'const mongoCollections = [\'SAMPLE_MONGO_COLLECTION_NAME\'] as const',
-		'import { mongoCollections } from \'../../../global/vars.js\''
-	)
-
+	await asyncForEach(tsFilePaths, false, (filename) => replacePlaceholdingVarsForActualImports('./node_modules/@botoron/utils/' + filename))
 	killProcess('Reinit command line to apply updates')
+
+	async function replacePlaceholdingVarsForActualImports(filepath: string) {
+		//TODO: create more placeholders than just mongoCollections?
+		const mongoCollection_actualPath = 'import { mongoCollections } from \'../../../global/vars.js\''
+		const mongoCollections_placeholder = 'const mongoCollections = [\'SAMPLE_MONGO_COLLECTION_NAME\'] as const //placeholder - DONOTEDIT'
+
+		await replaceStringInFile(filepath, mongoCollections_placeholder, mongoCollection_actualPath)
+	}
 }
 function project_buildAll() { project_buildClientFilesWithVite(); project_buildServerFiles() }
 function quitCommandLineProgram() { killProcess('devForProject\'s commands terminated') }

@@ -1165,10 +1165,6 @@ export function mongo_collection(collectionName) {
 export async function mongo_getEntireCollection(collectionName) {
     return await mongo_collection(collectionName).find({}).toArray(); //@btr-ignore
 }
-/**Get the names of all the collections in the Mongo database of the project */
-export async function mongo_getNamesOfCollections() {
-    return (await mongoClient.db(getEnviromentVariables().DATABASE_NAME).listCollections().toArray()).map(x => x.name);
-}
 /**Get an array with X amount of sample items in a Mongo collection */
 export async function mongo_getSample(collectionName, maxAmountOfItems) {
     return await mongo_collection(collectionName).aggregate([{ $sample: { size: maxAmountOfItems } }]).toArray(); //@btr-ignore

@@ -98,16 +98,19 @@ export function addOrRemoveItem<T>(arr: T[], item: T) {
 	else { removeItem(arr, item); x = 'removed' }
 	return { action: x, arr }
 }
+
 /**Adds an item to an array, or replaces the first one if found. WARNING: make sure the predicate can only find ONE item */
 export function addOrReplaceItem<T>(arr: T[], newItem: T, predicate: arrayPredicate<T>) {
 	const replaceableItem = arr.find(x => predicate(x))
 	replaceableItem ? arr[arr.indexOf(replaceableItem)] = newItem : arr.push(newItem)
 }
+
 /**Add to arrayA items from array B that it doesn't already have */
 export function addUnrepeatedItems<T>(arr: T[], newItems: T[]) {
 	newItems.forEach(x => { if (!arr.includes(x)) { arr.push(x) } })
 	return arr
 }
+
 /**
  * @param arr The array (tuple) of strings that each will become a key
  * @param mappingFn The function to determine the value of each entry
@@ -125,6 +128,7 @@ export function arrayToObject<
 	arr.forEach(x => object[x as K] = mappingFn(x))
 	return object
 }
+
 /**Converts an array of primitives into a comma-separated list, the word "and" being optional before the last item */
 export function asFormattedList(arr: (string | number | boolean)[], useAndForTheLastItem: boolean) {
 	let string = ''
@@ -138,6 +142,7 @@ export function asFormattedList(arr: (string | number | boolean)[], useAndForThe
 	})
 	return string
 }
+
 /**Return an array of sub-arrays with the items of the passed array, where each sub-array's max lenght is the passed size*/
 export function chunk<T>(arr: T[], chunkSize: number) {
 	const results: T[][] = [[]]
@@ -147,6 +152,7 @@ export function chunk<T>(arr: T[], chunkSize: number) {
 	})
 	return results.reverse()
 }
+
 /**Compare array A to array B and return the details */
 export function compareArrays<T>(baseArray: T[], testArray: T[]) {
 	const nonDesiredItems = testArray.filter(x => !baseArray.includes(x))
@@ -158,22 +164,29 @@ export function compareArrays<T>(baseArray: T[], testArray: T[]) {
 
 	return { arraysAreEqual, arraysHaveTheSameItems, lengthDifference, missingItems, nonDesiredItems }
 }
+
 /**syntax sugar for arr[arr.length - 1] */
 export function getLastItem<T>(arr: T[]) { return arr[arr.length - 1] }
+
 /**@returns a random item along its index */
 export function getRandomItem<T>(arr: T[]) { const r = roll(arr.length); return { item: arr[r] as T, index: r } }
+
 /**getRandomItem, but each items has custom chances to be selected */
 export function getRandomItem_withCustomChances<T>(items: T[], chancesDefininingFunction: (item: T) => number) {
 	const chancesAdjustItems: T[] = []
 	items.forEach(item => { for (let i = 0; i < chancesDefininingFunction(item); i++) { chancesAdjustItems.push(item) } })
 	return getRandomItem(chancesAdjustItems).item
 }
+
 /**@returns a version of the provided array without repeating items */
 export function getUniqueValues<T>(arr: T[]) { return [...new Set(arr)] }
+
 /**@returns whether an item is the last one in an array or not (warning: maybe don't use with primitives) */
 export function isLastItem<T>(arr: T[], item: T) { return item === arr.at(-1) }
+
 /**Return the last item of the given array */
 export function lastItem<T>(arr: T[]) { return arr.at(-1) as T }
+
 /**Apply multiple mapping functions to a single array at once and return an object with all the result */
 export function multiMap<
 	T,
@@ -200,6 +213,7 @@ export function multiMap<
 }
 /*Remove a single item from an array, or all copies of that item if its a primitive value and return the removedCount */
 export function removeItem<T>(arr: T[], item: T) { return selfFilter(arr, (x: T) => x !== item).removedCount }
+
 /**
  * Map an array, and filter-out the items that weren't fit
  * see filterMap for a faster (single rather than double loop) but more complex version)
@@ -207,6 +221,7 @@ export function removeItem<T>(arr: T[], item: T) { return selfFilter(arr, (x: T)
 export function safeMap<T, F extends (x: T) => ReturnType<F>>(arr: T[], mapFn: F) {
 	return arr.map(x => mapFn(x)).filter(x => x) as T[]
 }
+
 /**Remove items from an array that DONT fulfill the given condition, returns the removed items and their amount */
 export function selfFilter<T>(arr: T[], predicate: arrayPredicate<T>) {
 	let removedCount = 0
@@ -220,12 +235,14 @@ export function selfFilter<T>(arr: T[], predicate: arrayPredicate<T>) {
 	}
 	return { removedItems, removedCount }
 }
+
 /**Sort an array of numbers either upwards (A-scending) or downwards (D-escending)*/
 export function sortNumbers(numbers: number[], direction: 'A' | 'D') {
 	numbers.sort((a, b) => a > b ? 1 : -1)
 	if (direction === 'D') { numbers.reverse() }
 	return numbers
 }
+
 /**Randomizes the order of the items in the array */
 export function shuffle<T>(arr: T[]) {
 	for (let i = arr.length - 1; i > 0; i--) {
@@ -234,12 +251,14 @@ export function shuffle<T>(arr: T[]) {
 	}
 	return arr
 }
+
 /**Sort an array alphabetically, optionally backwards */
 export function sortAlphabetically<T extends string>(arr: T[], reverseArr?: boolean) {
 	arr.sort((a, b) => a > b ? 1 : -1)
 	if (reverseArr) { arr.reverse() }
 	return arr
 }
+
 /**Sort an array of objects based on the value a property. A: Ascending, D: Descesding. Chainable */
 export function sortBy<T extends object, pars extends [keyof T, 'A' | 'D']>(arr: T[], keyWithDir: pars, ...extraKeysWithDir: pars[]) {
 	if (!arr.length) { return arr }
@@ -254,11 +273,13 @@ export function sortBy<T extends object, pars extends [keyof T, 'A' | 'D']>(arr:
 
 	return arr
 }
-/** */
+
 /**syntactic sugar for selfFilter(arr, predicate).removedItems */
 export function spliceIf<T>(arr: T[], predicate: arrayPredicate<T>) { return selfFilter(arr, predicate).removedItems }
+
 /**Remove X amount of items from the end of an array */
 export function spliceLast<T>(arr: T[], count: number) { return arr.splice(-count) }
+
 /**Transfer items that meet a given condition from one array to another */
 export function transferItems<T>(origin: T[], destination: T[], predicate: arrayPredicate<T>) {
 	const x = selfFilter(origin, predicate)
@@ -276,17 +297,20 @@ _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS *****************
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 _ /********** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS ******************** FOR FUNCTIONS **********/
 
-//Array.prototype.forEach, but async!
+/**Array.prototype.forEach, but async! */
 export async function asyncForEach<T>(array: T[], resolveSequentially: boolean, asyncFn: (item: T) => Promise<unknown>) {
 	if (resolveSequentially) { for await (const item of array) { await asyncFn(item) } }  //@btr-ignore
 	if (!resolveSequentially) { await allPromises(array, asyncFn) }
 }
-//Await for an asynchronous function to apply to all the items of an array
+
+/**Await for an asynchronous function to apply to all the items of an array */
 export async function allPromises<T, returnType>(array: T[], asyncFn: (item: T, index?: number) => Promise<returnType>) {
 	return await Promise.all(array.map((item, index) => asyncFn(item, index))) as returnType[] //@btr-ignore
 }
+
 /**Set interval with try-catch and call it immediately*/
 export function doAndRepeat(fn: () => void, interval: number) { divine.try(fn, []); setInterval(() => divine.try(fn, []), interval) }
+
 /**
  * Filter and map an array in a single loop
  * @param arr The array to be filterMap'd
@@ -302,6 +326,7 @@ export function filterMap<T, C, M extends (x: T, y: C) => ReturnType<M>>(
 		return answer ? acc.concat(mapFn(item, carryOver)) : acc
 	}, [] as ReturnType<M>[])
 }
+
 /**
 * Pipes a value through a number of functions in the order that they appear.
 * Takes between 1 and 12 arguments. `pipe(x, a, b)` is equivalent to `b(a(x))`.
@@ -356,6 +381,7 @@ export function delay(x: number) {
 		function interval(i: number, ms: number) { setTimeout(() => i ? interval(i - 1, maxTimeOut) : resolve(true), ms) }
 	})
 }
+
 /**Return the time left to make a move in a compacted form and with a variant corresponding to how much of it left */
 export function getDisplayableTimeLeft(deadline: number) {
 
@@ -383,6 +409,7 @@ export function getDisplayableTimeLeft(deadline: number) {
 		return variant
 	}
 }
+
 /**
  *Formate a timestamp with Intl.DateTimeFormt. Options: short/medium/long (add +hour to include Hour) or hOnly (hour only)
  @param timestamp //The timestamp to be converted to a readable date/hour
@@ -412,15 +439,19 @@ export function formatDate(
 		}
 	}
 }
+
 /**Self-explanatory */
 export function isEven(number: number) { return !isOdd(number) }
+
 /**Self-explanatory */
 export function isOdd(number: number) { return Boolean(Number(number) % 2) }
+
 /**@returns whether a number is either the minimum provided, the maximum provided or any number in-between */
 export function isWithinRange(number: number, max: number, min: number) {
 	if (min > max) { divine.ping('"min" should be lower than "max"!') }
 	return number <= max && number >= min
 }
+
 /**Math.max and Math.min merged into one */
 export function mathMaxMin(max: number, min: number, number: number) {
 	if (min > max) { divine.ping('"min" should be lower than "max"!') }
@@ -428,8 +459,10 @@ export function mathMaxMin(max: number, min: number, number: number) {
 	if (min > number) { return min }
 	return number
 }
+
 /**@returns a number up to (but not included) provided max, eg: roll(1) will ALWAYS return zero */
 export function roll(maxRoll: number) { return Math.floor(Math.random() * Number(maxRoll)) }
+
 /**Convert duration as a timestamp to clock format (xx:xx:xx.xxx) with selectable amount of decimals */
 export function toClockDuration(timestamp: number, decimalAfterSeconds: 0 | 1 | 2 | 3) {
 	const second = 1000
@@ -448,6 +481,7 @@ export function toClockDuration(timestamp: number, decimalAfterSeconds: 0 | 1 | 
 		return decimalAfterSeconds ? `.${getClockField(1).slice(0, decimalAfterSeconds)}` : ''
 	}
 }
+
 /**1 becomes '1st' , 2 becomes '2nd', 3 becomes '3rd' and so on */
 export function toOrdinal(number: number) {
 	const asString = String(number)
@@ -478,8 +512,10 @@ export function addMissingPropsToObjects<T extends object>(original: T, defaults
 	objectKeys(defaults).forEach(key => { if (!Object.prototype.hasOwnProperty.call(original, key)) { original[key] = defaults[key] } })
 	return original as Required<T>
 }
+
 /**Console log an object to its full depth */
 export function consoleLogFull(data: unknown) { console.log(util.inspect(data, { showHidden: false, depth: null, colors: true })) } //@btr-ignore
+
 /**Return a copy that can be altered without having to worry about modifying the original */
 export function deepClone<T extends object>(originalObject: T) {
 	const copy = JSON.parse(stringify(originalObject)) as T
@@ -495,24 +531,31 @@ export function deepClone<T extends object>(originalObject: T) {
 		})
 	}
 }
+
 /**Generator for unique IDs (using Date.now and 'i') that accepts a preffix */
 export function getUniqueId(suffix: string) { return suffix + '_' + getUniqueId_generator.next().value }
+
 /**Because ESlint doesn't like Object(x).hasOwnProperty :p */
 export function hasOwnProperty<T extends object>(x: T, key: keyof T) { return Object.prototype.hasOwnProperty.call(x, key) }
+
 /**Map an object! (IMPORTANT, all values in the object must be of the same type, or mappinFn should be able to handle multiple types) */
 export function mapObject<F extends (value: O[keyof O]) => ReturnType<F>, O extends object>(object: O, mappingFn: F) {
 	const newObject = {} as { [key in keyof O]: ReturnType<F> }
 	objectEntries(object).forEach(x => { newObject[x.key] = mappingFn(x.value) })
 	return newObject as { [key in keyof O]: ReturnType<F> }
 }
+
 /**Object.Prototype.entries but with proper type-inference */
 export function objectEntries<T extends object>(object: T) {
 	return Object.entries(object).map(entry => ({ key: entry[0] as keyof T, value: entry[1] as T[keyof T] })) //@btr-ignore
 }
+
 /**Object.keys but with proper type-inference */ //@btr-ignore
 export function objectKeys<K extends string, T extends Record<K, unknown>>(object: T) { return Object.keys(object) as (keyof T)[] } //@btr-ignore
+
 /**Object.Prototype.values but with proper type-inference */
 export function objectValues<T extends object>(object: T) { return Object.values(object) as T[keyof T] } //@btr-ignore
+
 /**Create an object with only the specified properties of another base object (references are kept) */
 export function pick<T extends object, K extends keyof T>(theObject: T, properties: Readonly<K[]>) {
 	const thePartial = {} as Pick<T, K>
@@ -525,11 +568,13 @@ export function pick<T extends object, K extends keyof T>(theObject: T, properti
 	})
 	return thePartial
 }
+
 /**Replace the values of an object with those of another that shares the schema*/
 export function replaceObject<K extends keyof T, T extends Record<K, unknown>>(originalObject: T, newObject: T) {
 	objectKeys(originalObject).forEach(key => delete originalObject[key])
 	objectKeys(newObject).forEach(key => originalObject[key as keyof T] = newObject[key])
 }
+
 /**Stringy an array/object so its readable //TODO: (edit so that it doesn't excluse object methods, see deepClone) */
 export function stringify<T extends object>(object: T) {
 	const seen = new WeakSet()
@@ -589,6 +634,7 @@ export async function initializeInterval<
 		}
 	}
 }
+
 /**
  * Set a cancellable timer that runs at the specified time
  * @param id The id of the timer, so that btr.killTimer can find it
@@ -654,6 +700,7 @@ export async function initializeTimer<
 		return timer.wasCancelled ? timer : isTheLastInterval ? getResolvedTimer() : interval()
 	}
 }
+
 /**Kill a timer created with initializeTimer/Interval, the reason provided will become a divine stack */
 export async function killTimer(timerId: string, reason: string) {
 	const theTimer = timers.find(x => x.id === timerId)
@@ -682,6 +729,7 @@ _ /********** FOR STRINGS ******************** FOR STRINGS ******************** 
 
 /**Add an "S" to the end of a noun if talking about them in plural based on the amount passed */
 export function asSingularOrPlural(noun: string, amount: number) { return noun + `${amount === 1 ? '' : 's'}` }
+
 /**Log a big red message surrounded by a lot of asterisks for visibility */
 export function bigConsoleError(message: string) {
 	logAsterisksLines(3)
@@ -691,12 +739,15 @@ export function bigConsoleError(message: string) {
 	function logAsterisksLines(lines: number) { for (let i = 0; i < lines; i++) { logRed('*'.repeat(150)) } }
 	function logRed(message: string) { return colorLog('red', message) }
 }
+
 /**console.log... WITH COLOURS :D */ //@btr-ignore
 export function colorLog(color: validChalkColor, message: string) {
 	isNode ? console.log(chalk[color].bold(message)) : console.log(`%c${message}`, `color: ${color};`) //@btr-ignore
 }
+
 /**(Message) 💀 */
 export function errorLog(message: string) { return colorLog('red', message + ' 💀') }
+
 //TODO: describe me
 export function getTraceableStack(error: string | Error, type: 'debugLog' | 'divineError' | 'killTimer' | 'zodCheck_socket') {
 	const { stack } = (typeof error === 'string' ? new Error(error) : error)
@@ -705,20 +756,26 @@ export function getTraceableStack(error: string | Error, type: 'debugLog' | 'div
 		replace(/\n {4}at/g, `\n ${' * '.repeat(5)} at`). //regexHere
 		replace(/^Error/, type) //regexHere
 }
+
 /**@returns whether an string is "Guest/guest" followed by a timestamp (13 numbers), eg: isGuest(Guest1234567890123) === true */
 export function isGuest(username: string) { return /Guest[0-9]{13}/i.test(`${username}`) } //regexHere
+
 /**To know when files are fired and in what order  */
 export function logInitialization(filename: string) { colorLog(isNode ? 'cyan' : 'magenta', '*'.repeat(20) + ' ' + filename) }
+
 /**(Message) ✔️ */
 export function successLog(message: string) { return colorLog('green', message + ' ✔️') }
+
 /**@returns an string with its linebreaks converted into simple one-char spaces */
 export function toSingleLine(sentence: string) { return `${sentence}`.replace(/ {0,}\n {0,}/g, ' ') } //regexHere
+
 //TODO: describe me
 export function safeRegexMatch(theString: string, theRegex: RegExp, wantedIndex: number) {
 	const matches = theString.match(theRegex)
 	if (!matches) { divine.error(`safeRegexMatch error - theString: ${theString}, theRegex: ${theRegex} `) }
 	return (matches || [])[wantedIndex] || '' //@btr-ignore
 }
+
 /**Return an string with X amount of (character) as margin per side */
 export function surroundedString(string: string, margin: string, perSide: number) {
 	const x = margin.repeat(perSide)
@@ -747,6 +804,7 @@ export function copyToClipboard(x: unknown) {
 	document.execCommand('copy')
 	document.body.removeChild(a)
 }
+
 /**
  * Compare data B against an schema created from data A 
  * @param A The first piece of data
@@ -757,10 +815,13 @@ export function copyToClipboard(x: unknown) {
 export function dataIsEqual(A: unknown, B: unknown, errorHandler = <messageHandler>nullAs()) {
 	return zGetSafeParseResultAndHandleErrorMessage(zGetSchemaFromData(A as object), B, errorHandler)
 }
+
 /**For obligatory callbacks */
 export function doNothing(...args: unknown[]) { args }
+
 /**Margin to make reading logs easier */
 export function logEmptyLine() { console.log('') } //@btr-ignore
+
 /** @returns null, as the provided type */
 export function nullAs<T>() { return null as T } //@btr-ignore
 
@@ -787,6 +848,7 @@ export function zGetSafeParseResultAndHandleErrorMessage<T>(schema: zSchema<T>, 
 	if (result.success === false && errorHandler) { errorHandler(fromZodError(result.error).message) }
 	return result
 }
+
 /**Dynamically generate a Zod Schema from an array/object */
 export function zGetSchemaFromData(data: unknown) {
 
@@ -801,6 +863,7 @@ export function zGetSchemaFromData(data: unknown) {
 			z.literal(x as never) as z.ZodLiteral<unknown>
 	}
 }
+
 /**(generates a function that:) Tests data against an scheme, and executes a predefined errorHandler in case it isn't a fit. */
 export function zodCheck_curry(errorHandler: messageHandler) {
 	return function zodCheck<T>(schema: zSchema<T>, data: T) {
@@ -810,10 +873,12 @@ export function zodCheck_curry(errorHandler: messageHandler) {
 		return body(errorHandler, schema, data)
 	}
 }
+
 /**Simple zodCheck without any kind of error handler */
 export function zodCheck_simple<T>(schema: zSchema<T>, data: T) {
 	return zGetSafeParseResultAndHandleErrorMessage(schema, data, doNothing).success
 }
+
 /**
  * Check data against a provided schema, and execute either the success or error handler
  * @param zSchema The zSchema to test data against
@@ -831,6 +896,7 @@ export function zodCheckAndHandle<D, SH extends (...args: Parameters<SH>) => Ret
 	const zResult = zGetSafeParseResultAndHandleErrorMessage(zSchema, data, errorHandler)
 	if (zResult.success === true && successHandler) { successHandler(...args as Parameters<SH>) }
 }
+
 /**
  * Pipe with schema validation and basic error tracking/handling
  * @param zSchema The schema that must persist through the whole pipe
@@ -854,10 +920,12 @@ export function zPipe<T>(zSchema: zSchema<T>, initialValue: T, ...fns: pipe_pers
 		}
 	}, initialPipeState)
 }
+
 /**Zod's "record", but all keys are Required instead of Optional as it is the default */
 export function zRecord<T extends z.ZodTypeAny, K extends string>(keys: Readonly<K[]>, schema: T) {
 	return z.object(arrayToObject(keys, () => schema))
 }
+
 /**
  * Return the regex given with possibly an error indicating it wasn't matched.
  * MUST BE USED AS A SPREAD ARGUMENT, eg: zString.regex( ...zRegexGenerator(/hi/, false) )
@@ -898,6 +966,7 @@ export function clientSocketLogOnAny(
 		useStore().socketEvents.unshift(eventInfo)
 	})
 }
+
 /**Stringify and download the provided data */
 export async function downloadFile(filename: string, fileFormat: '.txt' | '.json', data: unknown) {
 
@@ -923,6 +992,7 @@ export async function downloadFile(filename: string, fileFormat: '.txt' | '.json
 		successLog('Done!')
 	}
 }
+
 /**
  * Register into the window's a finder and logger of all vue components, including the main instance and pinia store
  * @example getAppLog(window as never, useStore) //at the bottom of store.ts
@@ -955,6 +1025,7 @@ export function getAppLog<T extends string, useStoreT extends () => btr_trackedV
 		}))
 	})
 }
+
 /**localStorage, but better */
 export function getLocalStorageAndSetter<T extends Record<string, unknown>>(defaults: T) {
 
@@ -972,6 +1043,7 @@ export function getLocalStorageAndSetter<T extends Record<string, unknown>>(defa
 		localStorage['info'] = stringify(storedInfo)
 	}
 }
+
 /**(generates a function that..) Creates a new 5-seconds toast in the lower right corner */
 export function newToast_client_curry($bvToast: bvToast) {
 	return function body(title: string, message: string, variant: btr_validVariant) {
@@ -985,6 +1057,7 @@ export function newToast_client_curry($bvToast: bvToast) {
 		})
 	}
 }
+
 /**Add/remove a vue component to the window for easy access/debugging */
 export function trackVueComponent<T extends string>(
 	name: T,
@@ -1013,6 +1086,7 @@ export function trackVueComponent<T extends string>(
 		logAllComponents()
 	}
 }
+
 //TODO: describe me
 export async function triggerModal(useStore: () => { bvModal: btr_bvModal }, id: string, action: 'show' | 'hide') {
 	if (action === 'show') {
@@ -1042,20 +1116,28 @@ _ /********** DEPRECATED ******************** DEPRECATED ******************** DE
 
 /**@deprecated use "copyToClipboardr" instead */
 export function copyToClipboard_client() { doNothing }
+
 /**@deprecated use "copyToClipboardr" instead */
 export function copyToClipboard_server() { doNothing }
+
 /**@deprecated use "doAndRepeat" instead */
 export function doAndRepeat_server() { doNothing }
+
 /**@deprecated use "formatDate" instead */
 export function getFormattedTimestamp() { doNothing }
+
 /**@deperecated use "mongoClient" instead */
 export function getMongoClient(a: unknown) { doNothing(a) }
+
 /** @deprecated use either zPipe (persistenType with zod errors) or pipe_mutableType! */
 export function pipe_persistentType() { doNothing }
+
 /**@deprecated use "trackVueComponent" instead */
 export function trackVueComponent_curry() { doNothing }
+
 /**@deprecated use "triggerModal" instead */
 export function triggerModalWithValidation_curry() { doNothing }
+
 /**@deprecated use "divine.try" instead */
 export function tryF() { doNothing } //@btr-ignore
 

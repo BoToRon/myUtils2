@@ -1,10 +1,12 @@
 let _;
+const mongoCollections = ['SAMPLE_MONGO_COLLECTION_NAME']; //placeholder - DONOTEDIT
+_;
 import { z } from 'zod';
 _;
 _;
 import { CLIENT_SRC, CLIENT_SRC_SOCKET, ESLINT_CJS, GITIGNORE, GLOBAL_FNS_TS, GLOBAL_VARS_TS, SERVER_EVENTS_TS, SERVER_REF_TS, TSC_FLAGS, TSCONFIG_JSON, TYPES_IO_TS, TYPES_Z_TS, zMyEnv } from './constants.js';
 _;
-import { getCachedFiles, checkCodeThatCouldBeUpdated, checkNoBtrErrorsOrWarnings, compareArrays, getEnviromentVariables, getFilesAndFoldersNames, importFileFromProject, killProcess, nullAs, pick, safeRegexMatch, surroundedString, zodCheck_curry, zRegexGenerator, zRecord } from './btr.js';
+import { getCachedFiles, checkCodeThatCouldBeUpdated, checkNoBtrErrorsOrWarnings, compareArrays, getEnviromentVariables, getFilesAndFoldersNames, importFileFromProject, killProcess, mongoClient, nullAs, pick, safeRegexMatch, sortAlphabetically, surroundedString, zodCheck_curry, zRegexGenerator, zRecord, } from './btr.js';
 let DEV_OR_PROD = nullAs();
 const errors = [];
 const cachedFiles = [];
@@ -13,15 +15,18 @@ const clientTsFiles = [];
 const serverTsFiles = [];
 export async function basicProjectChecks() {
     DEV_OR_PROD = getEnviromentVariables().DEV_OR_PROD;
+    //0. Pre-Cache the files for easier checking
     await fillCachedFiles();
     await checkUtilsVersion();
-    await checkPackageJsons();
-    await checkVueDevFiles();
-    await checkVsCodeSettings();
     //1. Obligatory project structure
     checkFilesAndFolderStructure();
     checkObligatoryTemplateFilesAreIdentical();
+    await checkPackageJsons();
+    checkValidMongoCollections();
+    await checkVsCodeSettings();
+    checkVueDevFiles();
     //2. Obligatory specific-files matches
+    _;
     //2.1 types folder
     checkSpecificMatches_typesIoTs();
     checkSpecificMatches_typesTypesTs();
@@ -591,4 +596,16 @@ function getFromCachedFiles(obligatoryMatches) {
     }
     addToErrors('checks.getFromCachedFiles', `No file cached with the requested obligatory matches(${obligatoryMatches}) was found, was it added by "fillCachedFiles" ?`);
     return [{ path: 'FAILSAFE', content: '' }];
+}
+async function checkValidMongoCollections() {
+    const namesInDatabase = (await mongoClient.db(getEnviromentVariables().DATABASE_NAME).listCollections().toArray()).map(x => x.name);
+    if (compareArrays([...mongoCollections], namesInDatabase).arraysAreEqual) {
+        return;
+    }
+    addToErrors('checkNamesOfValidCollections', `The mongoCollections in "global/vars.ts" 
+		(${sortAlphabetically([...mongoCollections])})
+		and the names in the actual database
+		(${sortAlphabetically(namesInDatabase)})
+		do NOT match ()
+		`);
 }
