@@ -7,17 +7,17 @@ import { unlinkSync } from 'fs'
 _
 import { execSync, execFile } from 'child_process'
 _
-import { basicProjectChecks } from '../basicProjectChecks.js'
+import { basicProjectChecks } from './basicProjectChecks.js'
 _
-import { npmVersionOptions, PACKAGE_DOT_JSON, TSC_FLAGS } from '../constants.js'
+import { npmVersionOptions, PACKAGE_DOT_JSON, TSC_FLAGS } from './constants.js'
 _
-import { maybePromise, recordOfCommands, validMongoCollection } from '../types.js'
+import { maybePromise, recordOfCommands, validMongoCollection } from './types.js'
 _
 import {
 	allPromises, arrayToObject, asyncForEach, checkCodeThatCouldBeUpdated, checkFileExists, checkNoBtrErrorsOrWarnings, colorLog,
 	consoleLogFull, copyToClipboard, delay, doNothing, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getContentOfPackageJson, mongo_getEntireCollection, getFilesAndFoldersNames, isMyUtilsPackage, killProcess, logEmptyLine, mapCommandsForInquirePrompt,
 	objectKeys, questionAsPromise, safeRegexMatch, selfFilter, successLog,
-} from '../btr.js'
+} from './btr.js'
 
 const fileWithRef = 'ref'
 const serverFolder_dist = '../dist'
