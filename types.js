@@ -1,5 +1,6 @@
 let _;
-//importOf_mongoCollections_here
+//TYPES PLACEHOLDED THAT WILL BECOME IMPORTED FROM THE PROJECT USING IT
+const mongoCollections = ['SAMPLE_MONGO_COLLECTION_NAME'];
 _;
 _;
 export {};

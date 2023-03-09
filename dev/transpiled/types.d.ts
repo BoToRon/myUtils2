@@ -1,3 +1,5 @@
+declare const mongoCollections: readonly ["SAMPLE_MONGO_COLLECTION_NAME"];
+export type validMongoCollection = typeof mongoCollections[number];
 import { zValidVariants } from './constants.js';
 import { type SafeParseReturnType, z } from 'zod';
 /**Generic to get the type of an object/interface while preserving key-value typing */
@@ -55,7 +57,6 @@ export type cachedFile = {
     content: string;
 };
 export type maybePromise<T> = T | Promise<T>;
-export type validMongoCollection = string;
 export type timer = {
     id: string;
     runAt: number;
@@ -79,3 +80,4 @@ export type timer = {
         cancelStack: string;
     };
 };
+export {};

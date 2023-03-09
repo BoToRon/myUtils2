@@ -46,9 +46,9 @@ export function projectCommandsHandler(mongoCollections: Readonly<string[]>, com
 	})
 
 	function getLogAll_forAllMongoCollections() {
-		return arrayToObject(mongoCollections, (key: validMongoCollection) => ({
+		return arrayToObject(mongoCollections, (key: string) => ({
 			description: `Log the entire '${key}' mongo collection`,
-			fn: async () => consoleLogFull(await mongo_getEntireCollection(key, 'all'))
+			fn: async () => consoleLogFull(await mongo_getEntireCollection(key as validMongoCollection))
 		}))
 	}
 
@@ -60,10 +60,13 @@ export function projectCommandsHandler(mongoCollections: Readonly<string[]>, com
 async function runCommands(commands: recordOfCommands<string>) { await inquirePromptCommands(mapCommandsForInquirePrompt(commands), true) }
 async function project_installBtrUtils_setValidMongoCollections_andKillCommandLine() {
 	execSync('npm i @botoron/utils')
-	const tEquals = 'type validMongoCollection = '
-	const typesTs = './node_modules/@botoron/utils/types.ts'
-	await replaceStringInFile(typesTs, tEquals + 'string', tEquals + 'typeof mongoCollections[number]')
-	await replaceStringInFile(typesTs, '//importOf_mongoCollections_here', 'import { mongoCollections } from \'../../../global/vars.js\'')
+
+	await replaceStringInFile(
+		'./node_modules/@botoron/utils/types.ts',
+		'const mongoCollections = [\'SAMPLE_MONGO_COLLECTION_NAME\'] as const',
+		'import { mongoCollections } from \'../../../global/vars.js\''
+	)
+
 	killProcess('Reinit command line to apply updates')
 }
 function project_buildAll() { project_buildClientFilesWithVite(); project_buildServerFiles() }

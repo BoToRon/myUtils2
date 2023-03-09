@@ -1161,19 +1161,20 @@ export const mongoClient = await (async function () {
 export function mongo_collection(collectionName) {
     return mongoClient.db(getEnviromentVariables().DATABASE_NAME).collection(collectionName);
 }
-//TODO: describ me
+/**Get an array with all the items in a Mongo Collection*/
+export async function mongo_getEntireCollection(collectionName) {
+    return await mongo_collection(collectionName).find({}).toArray(); //@btr-ignore
+}
+/**Get an array with X amount of sample items in a Mongo collection */
+export async function mongo_getSample(collectionName, maxAmountOfItems) {
+    return await mongo_collection(collectionName).aggregate([{ $sample: { size: maxAmountOfItems } }]).toArray(); //@btr-ignore
+}
+//TODO: describe me
 export async function mongo_replaceEntireCollection(collection, newDataForCollection) {
     const backUp = mongo_collection(collection).find({}).toArray();
     await downloadFile('./dev/backups/replaceEntireCollection_backUp', '.json', backUp);
     await mongo_collection(collection).deleteMany({});
     mongo_collection(collection).insertMany(newDataForCollection);
-}
-/**Get an array with either all the items in a Mongo Collection, or an amount of sample items */
-export async function mongo_getEntireCollection(collectionName, amount) {
-    const collection = mongo_collection(collectionName);
-    return (await (amount === 'all' ?
-        collection.find({}) :
-        collection.aggregate([{ $sample: { size: amount } }])).toArray());
 }
 _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
 _; /********** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY ******************** FOR NODE-ONLY **********/
@@ -1202,21 +1203,24 @@ export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
         checkReplaceableCode(['replaceAll('], '.replace (with global flag enabled)'); //@btr-ignore )
         checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine'); //@btr-ignore
         checkReplaceableCode(['readonly ', 'ReadonlyArray<'], 'Readonly<'); //@btr-ignore
+        checkReplaceableCode(['mongoCollection('], 'mongo_collection'); //@btr-ignore )
+        checkReplaceableCode(['find({})'], 'mongo_getEntireCollection'); //@btr-ignore
         checkReplaceableCode(['{ description: string,'], ': commands'); //@btr-ignore
         checkReplaceableCode(['//@ts-ignore'], '//@ts-expect-error'); //@btr-ignore
         checkReplaceableCode(['for await'], 'await asyncForEach'); //@btr-ignore
         checkReplaceableCode(['Object.entries'], 'objectEntries'); //@btr-ignore
         checkReplaceableCode(['tsc --target'], 'transpileFiles'); //@btr-ignore
-        checkReplaceableCode(['| null', 'null |'], 'nullable'); //@btr-ignore
         checkReplaceableCode(['autologin'], 'useStore().login'); //@btr-ignore
         checkReplaceableCode(['Object.values'], 'objectValues'); //@btr-ignore
+        checkReplaceableCode(['| null', 'null |'], 'nullable'); //@btr-ignore
+        checkReplaceableCode(['$sample:'], 'mongo_getSample'); //@btr-ignore
         checkReplaceableCode(['JSON.stringify'], 'stringify'); //@btr-ignore
         checkReplaceableCode(['Promise.all'], 'allPromises'); //@btr-ignore
         checkReplaceableCode(['Object.keys'], 'objectKeys'); //@btr-ignore
         checkReplaceableCode(['])['], 'safeRegexMatch'); //@btr-ignore
-        checkReplaceableCode(['exec('], 'execSync('); //@btr-ignore 
         checkReplaceableCode([' tryF'], 'divine.try'); //@btr-ignore
         checkReplaceableCode(['z.record'], 'zRecord'); //@btr-ignore
+        checkReplaceableCode(['exec('], 'execSync('); //@btr-ignore 
         checkReplaceableCode(['null as'], 'nullAs'); //@btr-ignore
         checkReplaceableCode([').then('], 'await'); //@btr-ignore
         function checkReplaceableCode(replaceableCodeStrings, suggestedReplacement) {

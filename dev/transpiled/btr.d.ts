@@ -363,9 +363,11 @@ export declare const divine: {
 };
 export declare const mongoClient: MongoClient;
 export declare function mongo_collection(collectionName: validMongoCollection): any;
+/**Get an array with all the items in a Mongo Collection*/
+export declare function mongo_getEntireCollection<T>(collectionName: validMongoCollection): Promise<T[]>;
+/**Get an array with X amount of sample items in a Mongo collection */
+export declare function mongo_getSample<T>(collectionName: validMongoCollection, maxAmountOfItems: number): Promise<T[]>;
 export declare function mongo_replaceEntireCollection(collection: validMongoCollection, newDataForCollection: unknown[]): Promise<void>;
-/**Get an array with either all the items in a Mongo Collection, or an amount of sample items */
-export declare function mongo_getEntireCollection<T>(collectionName: validMongoCollection, amount: 'all' | number): Promise<T[]>;
 /**Basically custom ESlint warnings */
 export declare function checkCodeThatCouldBeUpdated(cachedFiles: cachedFile[], warningsCount: warningsCount): void;
 /**Check if a file in the provided filepath exists */

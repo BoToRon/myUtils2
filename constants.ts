@@ -34,4 +34,3 @@ export const zMyEnv = z.object({
 	ERIS_TOKEN: z.string(),
 	APP_NAME: z.string(),
 })
-

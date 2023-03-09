@@ -1,6 +1,12 @@
 let _
-//importOf_mongoCollections_here
+
+//TYPES PLACEHOLDED THAT WILL BECOME IMPORTED FROM THE PROJECT USING IT
+const mongoCollections = ['SAMPLE_MONGO_COLLECTION_NAME'] as const
 _
+export type validMongoCollection = typeof mongoCollections[number]
+
+//NORMAL IMPORTS
+
 import { zValidVariants } from './constants.js'
 _
 import { type SafeParseReturnType, z } from 'zod'
@@ -36,7 +42,6 @@ export type btr_fieldsForColumnOfTable = string | {
 
 export type cachedFile = { path: string, content: string }
 export type maybePromise<T> = T | Promise<T>
-export type validMongoCollection = string
 export type timer = {
 	id: string,
 	runAt: number,

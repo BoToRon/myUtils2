@@ -462,8 +462,8 @@ function checkSpecificMatches_serverRefTs() {
 		'debug, debugLog, devOrProd,',
 		'sockets: [] as serverSocket[],',
 		'alert: { message: \'\', show: false } as globalAlert,',
-		'DB_misc: mongoCollection(\'misc\'),',
-		'pageVisits: (await mongoCollection(\'misc\').findOne({}) as unknown as mongoMisc).pageVisits,',
+		'DB_misc: mongo_collection(\'misc\'),',
+		'pageVisits: (await mongo_collection(\'misc\').findOne({}) as unknown as mongoMisc).pageVisits,',
 	])
 }
 
