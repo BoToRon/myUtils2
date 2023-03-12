@@ -1161,7 +1161,8 @@ export const divine = (function (): {
 } {
 	const bot = <eris.Client>nullAs()
 
-	return isNode ? {
+	//divineForNode_start
+	const forNode = {
 		bot,
 		error: (err: string | Error) => {
 			const message = getTraceableStack(err, 'divineError')
@@ -1233,7 +1234,9 @@ export const divine = (function (): {
 			try { return await fn(...args) }
 			catch (err) { divine.error(err as string) }
 		}
-	} : {
+	} //divineForNode_end
+
+	return {
 		bot,
 		init: (() => { doNothing() })(),
 		error: (err: string | Error) => { alert(err + '\n Please report this') },
@@ -1243,8 +1246,11 @@ export const divine = (function (): {
 			catch (err) { divine.error(err as string) }
 		}
 	}
+
+	
 })()
 
 const clipboard = { write: doNothing }
+const chalk: Record<string, any> = {}
 const fsWriteFileAsync = doNothing
-const chalk = {}
+const util = <any>nullAs()

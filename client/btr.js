@@ -1021,7 +1021,8 @@ _; /********** DIVINE ******************** DIVINE ******************** DIVINE **
 _; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
 export const divine = (function () {
     const bot = nullAs();
-    return isNode ? {
+    //divineForNode_start
+    const forNode = {
         bot,
         error: (err) => {
             const message = getTraceableStack(err, 'divineError');
@@ -1103,7 +1104,8 @@ export const divine = (function () {
                 divine.error(err);
             }
         }
-    } : {
+    }; //divineForNode_end
+    return {
         bot,
         init: (() => { doNothing(); })(),
         error: (err) => { alert(err + '\n Please report this'); },
@@ -1119,5 +1121,6 @@ export const divine = (function () {
     };
 })();
 const clipboard = { write: doNothing };
-const fsWriteFileAsync = doNothing;
 const chalk = {};
+const fsWriteFileAsync = doNothing;
+const util = nullAs();

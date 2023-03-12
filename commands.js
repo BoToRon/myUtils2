@@ -116,12 +116,13 @@ async function package_transpileAll() {
     console.log({ rootTsFilenames }); //@btr-ignore
     await transpileFiles(rootTsFilenames.filter(path => !/\w\//.test(path)), '.');
     const filename = 'btr.ts';
-    const lines = (await fsReadFileAsync(filename)).replace('eris.Client', 'unknown').split('\n');
+    const lines = await getContentWithAllThingsErisStrippedOut();
     selfFilter(lines, line => !/DELETETHISFORCLIENT/.test(line)); //regexHere
     lines.splice(lines.findIndex(x => /DELETEEVERYTHINGBELOW/.test(x)), lines.length); //regexHere
     lines.push('const clipboard = { write: doNothing }');
+    lines.push('const chalk: Record<string, any> = {}');
     lines.push('const fsWriteFileAsync = doNothing');
-    lines.push('const chalk = {}');
+    lines.push('const util = <any>nullAs()');
     await fsWriteFileAsync(`./client/${filename}`, lines.join('\n'));
     await transpileFiles([`client/${filename}`], './client');
     await fixRelativeImports();
@@ -131,6 +132,14 @@ async function package_transpileAll() {
         async function doIt(x) { await replaceStringInFile(x, /from '\.\/(?=constants|types)/g, 'from \'../'); }
         const clientFiles = [`/client/${filename}`, `/client/${filename.replace('.ts', '.js')}`];
         await allPromises(clientFiles, doIt);
+    }
+    async function getContentWithAllThingsErisStrippedOut() {
+        return (await fsReadFileAsync(filename)).
+            replace(/\/\/divineForNode_start(\n|.){1,}.\/\/divineForNode_end/, '').
+            replace('return isNode ? forNode : forClient', '').
+            replace('const forClient =', 'return').
+            replace(/eris\.Client/, 'unknown').
+            split('\n');
     }
 }
 async function project_btrCheckAndTranspileToTestFolder() {

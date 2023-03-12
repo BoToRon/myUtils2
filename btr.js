@@ -1032,7 +1032,8 @@ _; /********** DIVINE ******************** DIVINE ******************** DIVINE **
 _; /********** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE ******************** DIVINE **********/
 export const divine = (function () {
     const bot = nullAs();
-    return isNode ? {
+    //divineForNode_start
+    const forNode = {
         bot,
         error: (err) => {
             const message = getTraceableStack(err, 'divineError');
@@ -1114,7 +1115,8 @@ export const divine = (function () {
                 divine.error(err);
             }
         }
-    } : {
+    }; //divineForNode_end
+    const forClient = {
         bot,
         init: (() => { doNothing(); })(),
         error: (err) => { alert(err + '\n Please report this'); },
@@ -1128,6 +1130,7 @@ export const divine = (function () {
             }
         }
     };
+    return isNode ? forNode : forClient;
 })();
 // ! DELETEEVERYTHINGBELOW, as it is only meant for server-side use
 _; /********** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ******************** M0NG0CLIENT ***********/
