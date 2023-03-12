@@ -1,4 +1,6 @@
 let _
+import { resolve } from 'path'
+_
 import inquirer from 'inquirer'
 _
 import { unlinkSync } from 'fs'
@@ -19,10 +21,9 @@ import {
 
 const fileWithRef = 'ref'
 const serverFolder_dist = '../dist'
+const rootTsFilenames = getFilepaths('.', path => path.includes('.ts') && !/(client\/|\.d\.ts)/.test(path))
 
 const errors: string[] = []
-const tsFilePaths = getFilesAndFoldersNames('.', null).filter(path => path.includes('.ts') && !/(client\/|\.d\.ts)/.test(path))
-
 process.env['prevent_divine_init'] = 'true'
 
 const sharedCommands = getSharedCommands()
@@ -72,7 +73,7 @@ async function btrCheck() {
 	if (!isUtilsPackage) { return await basicProjectChecks() }
 
 	const warningsCount = { count: 0 }
-	checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths), warningsCount)
+	checkCodeThatCouldBeUpdated(await getCachedFiles(errors, rootTsFilenames), warningsCount)
 	return checkNoBtrErrorsOrWarnings(errors, warningsCount)
 }
 
@@ -99,6 +100,10 @@ function getCommands_forProject() {
 		transpile: { description: 'Transpile the files in ./server onto ./test', fn: project_btrCheckAndTranspileToTestFolder },
 		vue: { description: 'Move to the client folder and init vite', fn: project_initVite },
 	}
+}
+
+function getFilepaths(directory: string, predicate: (string: string) => boolean) {
+	return getFilesAndFoldersNames(directory, null).filter(path => predicate(path))
 }
 
 function getSharedCommands() {
@@ -129,7 +134,8 @@ async function package_versionAndPublish() {
 
 async function package_transpileAll() {
 	if (!await btrCheck()) { return }
-	await transpileFiles(tsFilePaths.filter(path => !/\w\//.test(path)), '.')
+	console.log({ rootTsFilenames }) //@btr-ignore
+	await transpileFiles(rootTsFilenames.filter(path => !/\w\//.test(path)), '.')
 
 	const filename = 'btr.ts'
 	const lines = (await fsReadFileAsync(filename)).replace('eris.Client', 'unknown').split('\n')
@@ -149,8 +155,8 @@ async function package_transpileAll() {
 	colorLog('yellow', 'You may now Commit & Push and then run the "versionAndPublish" command')
 
 	async function fixRelativeImports() {
-		async function doIt(x: string) { await replaceStringInFile(x, /from '\.\/(?=constants|types)/g, '..') }
-		const clientFiles = [`./client/${filename}`, `./client/${filename.replace('.ts', '.js')}`]
+		async function doIt(x: string) { await replaceStringInFile(x, /from '\.\/(?=constants|types)/g, 'from \'../') }
+		const clientFiles = [`/client/${filename}`, `/client/${filename.replace('.ts', '.js')}`]
 		await allPromises(clientFiles, doIt)
 	}
 }
@@ -166,7 +172,7 @@ async function project_btrCheckAndTranspileToTestFolder() {
 async function project_buildServerFiles() {
 	if (!await basicProjectChecks()) { return }
 
-	fsWriteFileAsync('types.ts', await fsReadFileAsync('types.d.ts'))
+	await fsWriteFileAsync('types.ts', await fsReadFileAsync('types.d.ts'))
 	await transpileFiles(['types.ts'], '.')
 	unlinkSync('types.ts')
 
@@ -221,8 +227,15 @@ async function project_buildServerFiles() {
 }
 
 async function project_installBtrUtils_setValidMongoCollections_andKillCommandLine() {
+	execSync('npm uninstall @botoron/utils')
 	execSync('npm i @botoron/utils')
-	await asyncForEach(tsFilePaths, false, (filename) => replacePlaceholdingVarsForActualImports('./node_modules/@botoron/utils/' + filename))
+
+	await asyncForEach(
+		getFilepaths('./node_modules/@botoron/utils/', path => path.includes('.ts') && !/(client\/|\.d\.ts)/.test(path)),
+		false,
+		(filename) => replacePlaceholdingVarsForActualImports(filename.slice(1))
+	)
+
 	killProcess('Reinit command line to apply updates')
 
 	async function replacePlaceholdingVarsForActualImports(filepath: string) {
@@ -235,7 +248,15 @@ async function project_installBtrUtils_setValidMongoCollections_andKillCommandLi
 }
 
 async function replaceStringInFile(filepath: string, oldString: string | RegExp, newString: string) {
-	await fsWriteFileAsync(filepath, (await fsReadFileAsync(filepath)).replace(oldString, newString))
+	console.log('replacing string', { filepath, oldString, newString }) //@btr-ignore
+	const fullFilepath = resolve() + filepath
+	const content = await fsReadFileAsync(fullFilepath)
+	console.log({ fullFilepath, content }) //@btr-ignore
+	await fsWriteFileAsync(fullFilepath, content.replace(oldString, newString))
+	console.log('string replaced', { filepath, oldString, newString }) //@btr-ignore
+	console.log('') //@btr-ignore
+	console.log('') //@btr-ignore
+	//await fsWriteFileAsync(filepath, (await fsReadFileAsync(filepath)).replace(oldString, newString))
 }
 
 async function transpileAndRunTestRunTs() {
@@ -245,6 +266,8 @@ async function transpileAndRunTestRunTs() {
 
 async function transpileFiles(sourceFilesArr: string[], outputDirectory: string) {
 	if (!sourceFilesArr.length) { killProcess('transpileFiles\'s sourceFiles argument should NOT be an empty array!') }
+
+	console.log({ sourceFilesArr }) //@btr-ignore
 
 	const allJsFilenames = sourceFilesArr.map(filename => `${outputDirectory}/${safeRegexMatch(filename, /\w{1,}(?=\.ts)/g, 0)}.js`) //regexHere
 	await asyncForEach(allJsFilenames, false, deleteOldJsVersion)
@@ -264,3 +287,5 @@ async function transpileFiles(sourceFilesArr: string[], outputDirectory: string)
 		if (fileExists) { unlinkSync(filepath) }
 	}
 }
+
+//TODO: delete all things console.log() //@btr-ignore

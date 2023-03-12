@@ -235,7 +235,8 @@ async function checkPackageJsons() {
         devDependencies: zRecord(['@types/express', '@typescript-eslint/eslint-plugin', '@typescript-eslint/parser', 'dotenv', 'eslint',
             'eslint-plugin-no-floating-promise', 'eslint-plugin-sonarjs', 'eslint-plugin-vue', 'inquirer', 'nodemon'], z.string()),
         scripts: z.object({
-            dev: z.literal(`tsc ${TSC_FLAGS} dev/commands.ts --outDir ./dev/transpiled & node dev/transpiled/dev/commands.js`), //@btr-ignore
+            dev: z.literal(`tsc ${TSC_FLAGS} dev/commands.ts --outDir ./dev/transpiled & node dev/transpiled/dev/commands.js`),
+            devRun: z.literal('node dev/transpiled/dev/commands.js'),
         }).strict(),
     });
     zodCheck_toErrors('./client/package.json', desiredPackageJsonClientSchema, packageJsonOfProjectClient);

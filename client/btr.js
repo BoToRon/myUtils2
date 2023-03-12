@@ -12,9 +12,9 @@ _;
 _;
 _;
 _;
-import { btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, nullable, recordOfCommands } ..types.js';
+import { btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent, btr_validVariant, btr_bvModal, nullable, recordOfCommands } from '../types.js';
 _;
-import { getUniqueId_generator, isNode, timers, zValidVariants } ..constants.js';
+import { getUniqueId_generator, isNode, timers, zValidVariants } from '../constants.js';
 _;
 import { z } from 'zod';
 _;
@@ -683,7 +683,7 @@ export function toSingleLine(sentence) { return `${sentence}`.replace(/ {0,}\n {
 export function safeRegexMatch(theString, theRegex, wantedIndex) {
     const matches = theString.match(theRegex);
     if (!matches) {
-        divine.error(`safeRegexMatch error - theString: ${theString}, theRegex: ${theRegex} `);
+        divine.error(`safeRegexMatch error (no match found)\n\t[theString]: ${theString}\n\t[theRegex]: ${theRegex}\n`);
     }
     return (matches || [])[wantedIndex] || ''; //@btr-ignore
 }

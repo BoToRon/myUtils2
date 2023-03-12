@@ -266,6 +266,7 @@ async function checkPackageJsons() {
 			'eslint-plugin-no-floating-promise', 'eslint-plugin-sonarjs', 'eslint-plugin-vue', 'inquirer', 'nodemon'], z.string()),
 		scripts: z.object({
 			dev: z.literal(`tsc ${TSC_FLAGS} dev/commands.ts --outDir ./dev/transpiled & node dev/transpiled/dev/commands.js`), //@btr-ignore
+			devRun: z.literal('node dev/transpiled/dev/commands.js'),
 		}).strict(),
 	})
 

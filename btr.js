@@ -694,7 +694,7 @@ export function toSingleLine(sentence) { return `${sentence}`.replace(/ {0,}\n {
 export function safeRegexMatch(theString, theRegex, wantedIndex) {
     const matches = theString.match(theRegex);
     if (!matches) {
-        divine.error(`safeRegexMatch error - theString: ${theString}, theRegex: ${theRegex} `);
+        divine.error(`safeRegexMatch error (no match found)\n\t[theString]: ${theString}\n\t[theRegex]: ${theRegex}\n`);
     }
     return (matches || [])[wantedIndex] || ''; //@btr-ignore
 }
@@ -1197,13 +1197,13 @@ export function checkCodeThatCouldBeUpdated(cachedFiles, warningsCount) {
     }
     function checkFile(file) {
         const { path, content } = file;
+        checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine'); //@btr-ignore
+        checkReplaceableCode(['console.log'], 'colorLog OR consoleLogFull OR debugLog'); //@btr-ignore
         checkReplaceableCode(['triggerModalWithValidation, bvModal.show', 'bvModal.hide'], '.triggerModal(modalId, show | hide)'); //@btr-ignore
         checkReplaceableCode(['type: list'], 'replace the whole prompt with \'chooseFromPrompt\''); //@btr-ignore
         checkReplaceableCode(['console.log(stringify'], 'colorLog OR consoleLogFull OR debugLog'); //@btr-ignore
         checkReplaceableCode(['fs from \'fs\''], '{ (specific fs methods) } from \'fs\''); //@btr-ignore
-        checkReplaceableCode(['console.log'], 'colorLog OR consoleLogFull OR debugLog'); //@btr-ignore
         checkReplaceableCode(['replaceAll('], '.replace (with global flag enabled)'); //@btr-ignore )
-        checkReplaceableCode(['console.log()', 'console.log(\'\')'], 'logEmptyLine'); //@btr-ignore
         checkReplaceableCode(['readonly ', 'ReadonlyArray<'], 'Readonly<'); //@btr-ignore
         checkReplaceableCode(['mongoCollection('], 'mongo_collection'); //@btr-ignore )
         checkReplaceableCode(['find({})'], 'mongo_getEntireCollection'); //@btr-ignore
@@ -1278,7 +1278,13 @@ export function checkNoBtrErrorsOrWarnings(errors, warningsCount) {
 /**Wrapper for fs.promise.readFile that announces the start of the file-reading */
 export async function fsReadFileAsync(filePath) {
     colorLog('white', `reading '${filePath}'..`);
-    return await promises.readFile(filePath, 'utf8');
+    try {
+        return await promises.readFile(filePath, 'utf8');
+    }
+    catch (e) {
+        divine.error(`fsReadFileAsync error:\n\t[filePath]: ${filePath}\n\n${e}`);
+        return '';
+    }
 }
 /**Wrapper for fsWriteFileAsync that announces the start of the file-writing */
 export async function fsWriteFileAsync(filePath, content) {

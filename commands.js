@@ -1,4 +1,6 @@
 let _;
+import { resolve } from 'path';
+_;
 import inquirer from 'inquirer';
 _;
 import { unlinkSync } from 'fs';
@@ -13,8 +15,8 @@ _;
 import { allPromises, arrayToObject, asyncForEach, checkCodeThatCouldBeUpdated, checkFileExists, checkNoBtrErrorsOrWarnings, colorLog, consoleLogFull, copyToClipboard, delay, doNothing, errorLog, fsReadFileAsync, fsWriteFileAsync, getCachedFiles, getContentOfPackageJson, mongo_getEntireCollection, getFilesAndFoldersNames, isMyUtilsPackage, killProcess, logEmptyLine, mapCommandsForInquirePrompt, objectKeys, questionAsPromise, safeRegexMatch, selfFilter, successLog, } from './btr.js';
 const fileWithRef = 'ref';
 const serverFolder_dist = '../dist';
+const rootTsFilenames = getFilepaths('.', path => path.includes('.ts') && !/(client\/|\.d\.ts)/.test(path));
 const errors = [];
-const tsFilePaths = getFilesAndFoldersNames('.', null).filter(path => path.includes('.ts') && !/(client\/|\.d\.ts)/.test(path));
 process.env['prevent_divine_init'] = 'true';
 const sharedCommands = getSharedCommands();
 const isUtilsPackage = await isMyUtilsPackage();
@@ -59,7 +61,7 @@ async function btrCheck() {
         return await basicProjectChecks();
     }
     const warningsCount = { count: 0 };
-    checkCodeThatCouldBeUpdated(await getCachedFiles(errors, tsFilePaths), warningsCount);
+    checkCodeThatCouldBeUpdated(await getCachedFiles(errors, rootTsFilenames), warningsCount);
     return checkNoBtrErrorsOrWarnings(errors, warningsCount);
 }
 async function chooseFromPrompt(message, choices) {
@@ -83,6 +85,9 @@ function getCommands_forProject() {
         transpile: { description: 'Transpile the files in ./server onto ./test', fn: project_btrCheckAndTranspileToTestFolder },
         vue: { description: 'Move to the client folder and init vite', fn: project_initVite },
     };
+}
+function getFilepaths(directory, predicate) {
+    return getFilesAndFoldersNames(directory, null).filter(path => predicate(path));
 }
 function getSharedCommands() {
     return {
@@ -108,7 +113,8 @@ async function package_transpileAll() {
     if (!await btrCheck()) {
         return;
     }
-    await transpileFiles(tsFilePaths.filter(path => !/\w\//.test(path)), '.');
+    console.log({ rootTsFilenames }); //@btr-ignore
+    await transpileFiles(rootTsFilenames.filter(path => !/\w\//.test(path)), '.');
     const filename = 'btr.ts';
     const lines = (await fsReadFileAsync(filename)).replace('eris.Client', 'unknown').split('\n');
     selfFilter(lines, line => !/DELETETHISFORCLIENT/.test(line)); //regexHere
@@ -122,8 +128,8 @@ async function package_transpileAll() {
     successLog('browser versions emitted');
     colorLog('yellow', 'You may now Commit & Push and then run the "versionAndPublish" command');
     async function fixRelativeImports() {
-        async function doIt(x) { await replaceStringInFile(x, /from '\.\/(?=constants|types)/g, '..'); }
-        const clientFiles = [`./client/${filename}`, `./client/${filename.replace('.ts', '.js')}`];
+        async function doIt(x) { await replaceStringInFile(x, /from '\.\/(?=constants|types)/g, 'from \'../'); }
+        const clientFiles = [`/client/${filename}`, `/client/${filename.replace('.ts', '.js')}`];
         await allPromises(clientFiles, doIt);
     }
 }
@@ -139,7 +145,7 @@ async function project_buildServerFiles() {
     if (!await basicProjectChecks()) {
         return;
     }
-    fsWriteFileAsync('types.ts', await fsReadFileAsync('types.d.ts'));
+    await fsWriteFileAsync('types.ts', await fsReadFileAsync('types.d.ts'));
     await transpileFiles(['types.ts'], '.');
     unlinkSync('types.ts');
     await copyFileToDist('.env');
@@ -191,8 +197,9 @@ async function project_buildServerFiles() {
     }
 }
 async function project_installBtrUtils_setValidMongoCollections_andKillCommandLine() {
+    execSync('npm uninstall @botoron/utils');
     execSync('npm i @botoron/utils');
-    await asyncForEach(tsFilePaths, false, (filename) => replacePlaceholdingVarsForActualImports('./node_modules/@botoron/utils/' + filename));
+    await asyncForEach(getFilepaths('./node_modules/@botoron/utils/', path => path.includes('.ts') && !/(client\/|\.d\.ts)/.test(path)), false, (filename) => replacePlaceholdingVarsForActualImports(filename.slice(1)));
     killProcess('Reinit command line to apply updates');
     async function replacePlaceholdingVarsForActualImports(filepath) {
         //TODO: create more placeholders than just mongoCollections?
@@ -202,7 +209,15 @@ async function project_installBtrUtils_setValidMongoCollections_andKillCommandLi
     }
 }
 async function replaceStringInFile(filepath, oldString, newString) {
-    await fsWriteFileAsync(filepath, (await fsReadFileAsync(filepath)).replace(oldString, newString));
+    console.log('replacing string', { filepath, oldString, newString }); //@btr-ignore
+    const fullFilepath = resolve() + filepath;
+    const content = await fsReadFileAsync(fullFilepath);
+    console.log({ fullFilepath, content }); //@btr-ignore
+    await fsWriteFileAsync(fullFilepath, content.replace(oldString, newString));
+    console.log('string replaced', { filepath, oldString, newString }); //@btr-ignore
+    console.log(''); //@btr-ignore
+    console.log(''); //@btr-ignore
+    //await fsWriteFileAsync(filepath, (await fsReadFileAsync(filepath)).replace(oldString, newString))
 }
 async function transpileAndRunTestRunTs() {
     await transpileFiles(['./test/run.ts'], './test/transpiled');
@@ -212,6 +227,7 @@ async function transpileFiles(sourceFilesArr, outputDirectory) {
     if (!sourceFilesArr.length) {
         killProcess('transpileFiles\'s sourceFiles argument should NOT be an empty array!');
     }
+    console.log({ sourceFilesArr }); //@btr-ignore
     const allJsFilenames = sourceFilesArr.map(filename => `${outputDirectory}/${safeRegexMatch(filename, /\w{1,}(?=\.ts)/g, 0)}.js`); //regexHere
     await asyncForEach(allJsFilenames, false, deleteOldJsVersion);
     const sourceFiles = sourceFilesArr.join(' ');
@@ -234,3 +250,4 @@ async function transpileFiles(sourceFilesArr, outputDirectory) {
         }
     }
 }
+//TODO: delete all things console.log() //@btr-ignore

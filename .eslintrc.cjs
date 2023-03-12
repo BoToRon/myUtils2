@@ -9,9 +9,10 @@ module.exports = {
 	parser: '@typescript-eslint/parser',
 
 	rules: {
-		//'jsdoc/require-jsdoc': 1,
+		//'jsdoc/require-jsdoc': 1,\
+
 		'sonarjs/cognitive-complexity': 'off',
-		'no-floating-promise/no-floating-promise': 2,
+		'no-floating-promise/no-floating-promise': 'error',
 		'arrow-body-style': ['error', 'as-needed'],
 		'max-lines-per-function': ['error', 100],
 		'func-style': ['error', 'declaration'],

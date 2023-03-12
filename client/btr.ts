@@ -15,9 +15,9 @@ _
 import {
 	btr_adminFetch, btr_fieldsForColumnOfTable, btr_globalAlert, btr_language, btr_newToastFn, btr_socketEventInfo, btr_trackedVueComponent,
 	btr_validVariant, btr_bvModal, cachedFile, maybePromise, nullable, recordOfCommands, timer, validMongoCollection, zSchema
-} ..types.js'
+} from '../types.js'
 _
-import { getUniqueId_generator, isNode, PACKAGE_DOT_JSON, timers, zMyEnv, zValidVariants } ..constants.js'
+import { getUniqueId_generator, isNode, PACKAGE_DOT_JSON, timers, zMyEnv, zValidVariants } from '../constants.js'
 _
 import { type Primitive, z, type ZodRawShape, type ZodTypeAny } from 'zod'
 _
@@ -773,7 +773,7 @@ export function toSingleLine(sentence: string) { return `${sentence}`.replace(/ 
 //TODO: describe me
 export function safeRegexMatch(theString: string, theRegex: RegExp, wantedIndex: number) {
 	const matches = theString.match(theRegex)
-	if (!matches) { divine.error(`safeRegexMatch error - theString: ${theString}, theRegex: ${theRegex} `) }
+	if (!matches) { divine.error(`safeRegexMatch error (no match found)\n\t[theString]: ${theString}\n\t[theRegex]: ${theRegex}\n`) }
 	return (matches || [])[wantedIndex] || '' //@btr-ignore
 }
 
